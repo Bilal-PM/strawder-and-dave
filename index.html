@@ -1676,25 +1676,13 @@ function activateZone(zone){
   
   switch(zone.id){
     case'desk':
-      showZoneText('Your Desk','You review your emails and project updates.\nWeek '+weekLabel(S.week)+' \u2014 '+getPhase(S.week)+'\n\nEverything looks '+
-        (S.metrics.schedule>=60?'on track':'concerning')+'. Check the notepad for this week\'s objectives.');
-      break;
+      showDeskEmails();break;
     case'planning':
       showPlanningBoard();break;
     case'meeting':
-      showZoneText('Meeting Room','You hold a team meeting to align on progress.\n\nPhase: '+getPhase(S.week)+'\nCurrent week: '+weekLabel(S.week));
-      S.metrics.morale=Math.min(100,S.metrics.morale+1);
-      break;
+      showMeetingRoom();break;
     case'breakroom':
-      if(!S.coffeeUsed){
-        showZoneText('Break Room','You grab a coffee and take a breather.\nThe team appreciates seeing you take a moment to relax.\n\n+3 Morale');
-        S.metrics.morale=Math.min(100,S.metrics.morale+3);
-        S.coffeeUsed=true;
-        playSFX('positive');
-      } else {
-        showZoneText('Break Room','You\'ve already had your coffee break this week.\nCome back next week!');
-      }
-      break;
+      showBreakRoom();break;
     case'noticeboard':
       showZoneText('Notice Board','Project Highlights:\n\u2022 Phase: '+getPhase(S.week)+
         '\n\u2022 Team Rating: '+getStarText()+
@@ -1712,10 +1700,7 @@ function activateZone(zone){
         '\n\u2022 Phase: '+getPhase(S.week));
       break;
     case'track_a':case'track_b':case'track_c':
-      const prog=S.week<=0?100:Math.max(0,Math.min(100,Math.floor((12-Math.max(0,S.week-12))/12*100+Math.random()*20)));
-      showZoneText('Track Inspection','You inspect the track section.\n\nProgress: '+prog+'%\nQuality: '+
-        (S.metrics.quality>=70?'Good':'Needs attention')+'\nSafety: '+(S.metrics.safety>=70?'Compliant':'Review needed'));
-      break;
+      showTrackInspection(zone.id);break;
     case'materials':
       showZoneText('Materials Yard','Stock levels look '+(S.metrics.budget>=60?'adequate':'low due to budget constraints')+'.\nRails, sleepers, ballast, and fixings are stored here.');
       break;
@@ -1751,6 +1736,238 @@ function showPlanningBoard(){
   html+='<div style="margin-top:6px;color:#f7c948">Current: '+weekLabel(S.week)+' \u2014 '+getPhase(S.week)+'</div>';
   html+='</div></div><div class="dc" onclick="closeDlg()">Close</div>';
   el.innerHTML=html;el.className='on';el.style.display='block';S.dlgOpen=true;
+}
+
+// === MINI-ACTIVITIES ===
+
+// Desk Emails — 2-3 emails per phase, some need responses
+const DESK_EMAILS=[
+  // Phase 0-1: Kick-Off & Early Design
+  [{from:'Sponsor',subj:'Project Expectations',body:'I want to be clear — this project must hit the opening date. What\'s your confidence level?',
+    choices:[{t:'High confidence — we\'re well-prepared',e:{schedule:2,morale:1}},{t:'Cautiously optimistic — risks managed',e:{quality:2}},{t:'I\'ll keep you updated as we progress',e:{}}]},
+   {from:'HR',subj:'Team Onboarding',body:'Your team is assembled. Do you want to run an induction session this week?',
+    choices:[{t:'Yes — invest time in team building',e:{morale:3,schedule:-1}},{t:'Brief overview only — we need to start',e:{morale:1}}]}],
+  // Phase 2-3: Detailed Design & Procurement
+  [{from:'Legal',subj:'Contract Terms',body:'The main contractor wants to negotiate penalty clauses. How should we respond?',
+    choices:[{t:'Hold firm on penalties — protect the client',e:{budget:2,morale:-1}},{t:'Negotiate a compromise',e:{budget:1,morale:1}},{t:'Accept their terms to keep momentum',e:{schedule:2,budget:-2}}]},
+   {from:'Design Lead',subj:'Scope Change Request',body:'Network Rail wants an additional platform. This will impact budget and schedule.',
+    choices:[{t:'Accept — find savings elsewhere',e:{quality:1,budget:-3,schedule:-2}},{t:'Push back with impact assessment',e:{budget:1,quality:2}},{t:'Defer to next phase for review',e:{}}]}],
+  // Phase 4-5: Pre-Construction & Construction Early
+  [{from:'Safety Officer',subj:'Near Miss Report',body:'A near miss was reported on site. No injuries but procedure wasn\'t followed.',
+    choices:[{t:'Stop work — full safety stand-down',e:{safety:4,schedule:-3}},{t:'Investigate and brief the team',e:{safety:2,schedule:-1}},{t:'Note it and monitor',e:{safety:-1}}]},
+   {from:'Supplier',subj:'Material Delay',body:'Steel deliveries will be 2 weeks late due to supply chain issues.',
+    choices:[{t:'Source alternative supplier at premium',e:{budget:-3,schedule:2}},{t:'Adjust programme around the delay',e:{schedule:-2}},{t:'Escalate to sponsor for decision',e:{schedule:-1,budget:-1}}]}],
+  // Phase 6-7: Construction Late & Handover
+  [{from:'Test Manager',subj:'Testing Resources',body:'We need extra testers to meet the handover deadline. Budget is tight.',
+    choices:[{t:'Approve overtime for existing team',e:{budget:-2,morale:-1,quality:2}},{t:'Bring in contractors',e:{budget:-3,quality:3}},{t:'Extend testing window',e:{schedule:-2,quality:1}}]},
+   {from:'Operations',subj:'Handover Readiness',body:'Operations team wants to do a joint readiness review. It\'ll take a full day.',
+    choices:[{t:'Absolutely — get it right',e:{quality:3,schedule:-1}},{t:'Half-day review — compromise',e:{quality:1}}]}],
+  // Phase 8-9: Post-Delivery & Close-Out
+  [{from:'Finance',subj:'Final Accounts',body:'We need to settle final accounts with the contractor. Some claims are disputed.',
+    choices:[{t:'Negotiate firmly — protect the budget',e:{budget:3,morale:-1}},{t:'Settle quickly to close out',e:{budget:-2,morale:2}},{t:'Bring in commercial team to review',e:{budget:1,quality:1}}]},
+   {from:'Sponsor',subj:'Lessons Learned',body:'The board wants a lessons learned report. How thorough should it be?',
+    choices:[{t:'Comprehensive — interview all stakeholders',e:{quality:3,morale:1}},{t:'Standard template — keep it focused',e:{quality:1}},{t:'Brief summary — we\'re all busy',e:{morale:1,quality:-1}}]}]
+];
+
+let _currentDeskEmail=null;
+
+function showDeskEmails(){
+  const pi=getPhaseIdx(S.week);
+  const emailPoolIdx=Math.min(Math.floor(pi/2),DESK_EMAILS.length-1);
+  const pool=DESK_EMAILS[emailPoolIdx];
+  const emailIdx=Math.floor(Math.random()*pool.length);
+  const email=pool[emailIdx];
+  _currentDeskEmail={poolIdx:emailPoolIdx,emailIdx:emailIdx};
+
+  const el=document.getElementById('dlg');
+  let html='<div class="dn">\u2709\uFE0F Inbox \u2014 Your Desk</div>';
+  html+='<div class="dt" style="margin-bottom:8px">';
+  html+='<div style="background:#e8d4b0;border:1px solid #a07848;border-radius:4px;padding:8px;margin-bottom:8px">';
+  html+='<div style="font-size:8px;color:#7a5a38">From: <span style="color:#5a3a1e">'+email.from+'</span></div>';
+  html+='<div style="font-size:9px;color:#3a2210;margin-top:2px;font-weight:bold">'+email.subj+'</div>';
+  html+='<div style="font-size:8px;color:#5a3a1e;margin-top:4px;line-height:1.6">'+email.body+'</div>';
+  html+='</div></div>';
+
+  if(email.choices){
+    email.choices.forEach((c,i)=>{
+      const efx=Object.entries(c.e||{}).map(([k,v])=>'<span style="color:'+(v>0?'#4aca8a':'#e05577')+'">'+k+' '+(v>0?'+':'')+v+'</span>').join(' ');
+      html+='<div class="dc" onclick="chooseDeskEmail('+i+')">'+c.t+(efx?' <span style="font-size:7px">['+efx+']</span>':'')+'</div>';
+    });
+  }
+  html+='<div class="dc" onclick="closeDlg()">Close inbox</div>';
+  el.innerHTML=html;el.className='on';el.style.display='block';S.dlgOpen=true;
+}
+
+function chooseDeskEmail(ci){
+  if(!_currentDeskEmail)return;
+  const email=DESK_EMAILS[_currentDeskEmail.poolIdx][_currentDeskEmail.emailIdx];
+  const c=email.choices[ci];
+  if(!c){closeDlg();return;}
+  applyEffects(c.e||{});
+  playSFX('paper');
+  updateHUD();
+  closeDlg();
+}
+
+// Meeting Room — pick from 3 agenda items with trade-offs
+const MEETING_AGENDAS=[
+  [{t:'Risk Review',desc:'Go through the risk register and update mitigations',e:{safety:2,quality:1,schedule:-1}},
+   {t:'Programme Update',desc:'Review schedule milestones and critical path',e:{schedule:3,morale:-1}},
+   {t:'Team Check-In',desc:'How is everyone doing? Address concerns.',e:{morale:3,quality:-1}}],
+  [{t:'Design Review',desc:'Walk through design decisions and sign-offs',e:{quality:3,schedule:-1}},
+   {t:'Budget Review',desc:'Track spending against forecast',e:{budget:2,morale:-1}},
+   {t:'Stakeholder Update',desc:'Prepare comms for the sponsor and board',e:{schedule:1,quality:1}}],
+  [{t:'Safety Briefing',desc:'Review incidents and reinforce safe working',e:{safety:3,schedule:-1}},
+   {t:'Contractor Alignment',desc:'Coordinate between work packages',e:{schedule:2,budget:-1}},
+   {t:'Quality Audit Prep',desc:'Get ready for the upcoming audit',e:{quality:3,budget:-1}}],
+  [{t:'Commissioning Plan',desc:'Review test procedures and acceptance criteria',e:{quality:3,schedule:-1}},
+   {t:'Handover Prep',desc:'Prepare documentation for operations team',e:{quality:2,morale:1}},
+   {t:'Celebration Planning',desc:'Plan a milestone event for the team',e:{morale:4,budget:-1}}],
+  [{t:'Lessons Learned',desc:'Capture what went well and what to improve',e:{quality:2,morale:2}},
+   {t:'Close-Out Actions',desc:'Work through remaining punch list items',e:{quality:2,schedule:1}},
+   {t:'Thank You Round',desc:'Recognise individual contributions',e:{morale:3}}]
+];
+
+function showMeetingRoom(){
+  const pi=getPhaseIdx(S.week);
+  const agendaIdx=Math.min(Math.floor(pi/2),MEETING_AGENDAS.length-1);
+  const agendas=MEETING_AGENDAS[agendaIdx];
+
+  const el=document.getElementById('dlg');
+  let html='<div class="dn">\uD83D\uDCCB Meeting Room \u2014 Set the Agenda</div>';
+  html+='<div class="dt" style="font-size:8px;color:#7a5a38;margin-bottom:6px">Choose one agenda item for this meeting. Each has trade-offs.</div>';
+
+  agendas.forEach((a,i)=>{
+    const efx=Object.entries(a.e||{}).map(([k,v])=>'<span style="color:'+(v>0?'#4aca8a':'#e05577')+'">'+k+' '+(v>0?'+':'')+v+'</span>').join(' ');
+    html+='<div class="dc" onclick="chooseMeetingAgenda('+agendaIdx+','+i+')">';
+    html+='<div style="color:#5a3a1e;font-size:9px">'+a.t+'</div>';
+    html+='<div style="color:#7a5a38;font-size:7px;margin-top:2px">'+a.desc+'</div>';
+    html+='<div style="font-size:7px;margin-top:2px">['+efx+']</div>';
+    html+='</div>';
+  });
+  html+='<div class="dc" onclick="closeDlg()">Skip meeting</div>';
+  el.innerHTML=html;el.className='on';el.style.display='block';S.dlgOpen=true;
+}
+
+function chooseMeetingAgenda(poolIdx,ai){
+  const agenda=MEETING_AGENDAS[poolIdx][ai];
+  applyEffects(agenda.e||{});
+  S.metrics.morale=Math.min(100,S.metrics.morale+1); // meetings always give +1 morale
+  playSFX('positive');
+  updateHUD();
+  closeDlg();
+}
+
+// Break Room — overheard conversations with phase-specific hints
+const BREAK_CONVERSATIONS=[
+  ['"Did you hear? The sponsor is really keen on hitting that opening date. Might be worth planning early for risks..."',
+   '"I chatted with Sarah — she said the feasibility study flagged some ground condition issues. Worth keeping an eye on."',
+   '"Emma mentioned something about the design team being stretched. Maybe check in with her?"'],
+  ['"The procurement team is worried about long lead items. If we don\'t order early, we\'ll be waiting around."',
+   '"James was saying the contractors prefer fixed-price contracts — less risk for us but watch out for change orders."',
+   '"I heard the budget contingency is only 10%. That feels tight for a project this size."'],
+  ['"The safety officer is doing a walk-around tomorrow. Make sure the site team knows."',
+   '"Mike was telling me about a clever programme sequence — if we overlap some possessions we could save 2 weeks."',
+   '"Priya mentioned community feedback has been mixed. Might be worth proactive engagement."'],
+  ['"Testing is going to be the crunch point. The operations team needs everything signed off before they accept it."',
+   '"Someone said the punchlist is growing — might need a dedicated close-out team."',
+   '"The team is exhausted but proud. A small celebration would go a long way."'],
+  ['"Make sure the lessons learned actually get used next time. Too many projects skip this step."',
+   '"Finance is chasing final accounts. If we don\'t settle now, it drags on for months."',
+   '"Great project overall — but I think we could have communicated better with stakeholders early on."']
+];
+
+function showBreakRoom(){
+  if(!S.coffeeUsed){
+    const pi=getPhaseIdx(S.week);
+    const convIdx=Math.min(Math.floor(pi/2),BREAK_CONVERSATIONS.length-1);
+    const pool=BREAK_CONVERSATIONS[convIdx];
+    const conv=pool[Math.floor(Math.random()*pool.length)];
+
+    const el=document.getElementById('dlg');
+    let html='<div class="dn">\u2615 Break Room</div>';
+    html+='<div class="dt" style="margin-bottom:8px">';
+    html+='<div style="font-size:8px;color:#7a5a38;margin-bottom:6px">You grab a coffee and overhear a conversation...</div>';
+    html+='<div style="background:#e8d4b0;border-left:3px solid #c4a878;padding:8px;border-radius:0 4px 4px 0;font-size:8px;color:#5a3a1e;line-height:1.8;font-style:italic">'+conv+'</div>';
+    html+='<div style="font-size:8px;color:#4aca8a;margin-top:6px">+3 Morale (coffee break!)</div>';
+    html+='</div>';
+    html+='<div class="dc" onclick="closeDlg()">Back to work</div>';
+    el.innerHTML=html;el.className='on';el.style.display='block';S.dlgOpen=true;
+
+    S.metrics.morale=Math.min(100,S.metrics.morale+3);
+    S.coffeeUsed=true;
+    playSFX('positive');
+  } else {
+    showZoneText('Break Room','You\'ve already had your coffee break this week.\nCome back next week!');
+  }
+}
+
+// Track Inspection — identify issues for quality/safety
+const TRACK_ISSUES=[
+  {issue:'Loose rail fastening on the down line',correct:'Flag for immediate repair',wrong:'Note for next inspection',
+   good:{safety:2,quality:2},bad:{safety:-2}},
+  {issue:'Ballast level slightly low in section 3',correct:'Schedule ballast top-up',wrong:'Within tolerance — skip',
+   good:{quality:2},bad:{quality:-2}},
+  {issue:'Drainage channel partially blocked',correct:'Clear debris and log it',wrong:'It\'ll clear itself in rain',
+   good:{safety:1,quality:1},bad:{safety:-1,quality:-1}},
+  {issue:'Signalling cable exposed near crossing',correct:'Report to signals team urgently',wrong:'Cover with temporary protection',
+   good:{safety:3},bad:{safety:-2}},
+  {issue:'Weld joint looks rough on Track A',correct:'Request NDT testing',wrong:'It looks solid enough',
+   good:{quality:3,safety:1},bad:{quality:-2}},
+  {issue:'Workers not wearing hi-vis in active zone',correct:'Stop and brief immediately',wrong:'Remind them at end of shift',
+   good:{safety:3,morale:-1},bad:{safety:-3}},
+  {issue:'Track gauge measurement slightly off-spec',correct:'Re-measure and adjust',wrong:'Within tolerance band',
+   good:{quality:2},bad:{quality:-1}},
+  {issue:'Water pooling near formation level',correct:'Investigate drainage design',wrong:'Seasonal — will dry out',
+   good:{quality:2,schedule:-1},bad:{quality:-2}}
+];
+
+function showTrackInspection(trackId){
+  // Pick 2-3 random issues
+  const shuffled=[...TRACK_ISSUES].sort(()=>Math.random()-0.5);
+  const issues=shuffled.slice(0,2+Math.floor(Math.random()*2)); // 2-3 issues
+
+  const el=document.getElementById('dlg');
+  let html='<div class="dn">\uD83D\uDD0D Track Inspection \u2014 '+trackId.replace('_',' ').toUpperCase()+'</div>';
+  html+='<div class="dt" style="font-size:8px;color:#7a5a38;margin-bottom:6px">You walk the track and spot some issues. Choose the right response for each:</div>';
+
+  issues.forEach((iss,i)=>{
+    html+='<div style="background:#e8d4b0;border:1px solid #a07848;border-radius:4px;padding:6px;margin:6px 0">';
+    html+='<div style="font-size:8px;color:#5a3a1e;margin-bottom:4px">\u26A0\uFE0F '+iss.issue+'</div>';
+    html+='<div class="dc" style="margin:2px 0;padding:4px 8px" onclick="resolveTrackIssue(this,'+i+',true)">\u2705 '+iss.correct+'</div>';
+    html+='<div class="dc" style="margin:2px 0;padding:4px 8px" onclick="resolveTrackIssue(this,'+i+',false)">\u274C '+iss.wrong+'</div>';
+    html+='</div>';
+  });
+  html+='<div class="dc" onclick="closeDlg()" style="margin-top:8px">Finish inspection</div>';
+  el.innerHTML=html;el.className='on';el.style.display='block';S.dlgOpen=true;
+
+  // Store current issues for resolving
+  el._trackIssues=issues;
+}
+
+function resolveTrackIssue(btn,issueIdx,correct){
+  const el=document.getElementById('dlg');
+  if(!el._trackIssues)return;
+  const iss=el._trackIssues[issueIdx];
+  if(!iss)return;
+
+  // Disable both buttons in this issue group
+  const parent=btn.parentElement;
+  parent.querySelectorAll('.dc').forEach(b=>{b.style.pointerEvents='none';b.style.opacity='0.5';});
+
+  if(correct){
+    applyEffects(iss.good);
+    parent.style.borderColor='#4aca8a';
+    btn.style.background='rgba(74,202,138,0.2)';btn.style.opacity='1';
+    playSFX('positive');
+  }else{
+    applyEffects(iss.bad);
+    parent.style.borderColor='#e05577';
+    btn.style.background='rgba(224,85,119,0.2)';btn.style.opacity='1';
+    playSFX('alert');
+    triggerShake(1,100);
+  }
+  updateHUD();
 }
 
 function transitionToMap(target){
