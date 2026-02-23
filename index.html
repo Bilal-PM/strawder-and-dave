@@ -90,6 +90,13 @@ body{background:#3a2a18;color:#f0e6d3;font-family:'Press Start 2P',monospace;ove
 .skip-trans.on{display:flex}
 .skip-trans h2{font-size:14px;color:#f7c948;margin-bottom:8px}
 .skip-trans p{font-size:9px;color:#c4a878}
+.ach-toast{position:absolute;top:-80px;left:50%;transform:translateX(-50%);width:300px;background:linear-gradient(180deg,#f5ead0,#e8d4b0);border:3px solid #f7c948;border-radius:8px;padding:12px 16px;z-index:40;transition:top 0.5s ease-out;box-shadow:0 4px 16px rgba(0,0,0,0.3);display:flex;align-items:center;gap:10px}
+.ach-toast.show{top:10px}
+.ach-toast .ach-icon{font-size:24px;flex-shrink:0}
+.ach-toast .ach-info{flex:1}
+.ach-toast .ach-label{font-size:7px;color:#c4a878;letter-spacing:2px}
+.ach-toast .ach-name{font-size:10px;color:#5a3a1e;margin-top:2px}
+.ach-toast .ach-desc{font-size:7px;color:#7a5a38;margin-top:2px;line-height:1.5}
 </style>
 </head>
 <body>
@@ -161,6 +168,7 @@ body{background:#3a2a18;color:#f0e6d3;font-family:'Press Start 2P',monospace;ove
 </div>
 <div id="docsOverlay"></div>
 <div id="hint"></div>
+<div class="ach-toast" id="achToast"><div class="ach-icon"></div><div class="ach-info"><div class="ach-label">ACHIEVEMENT UNLOCKED</div><div class="ach-name"></div><div class="ach-desc"></div></div></div>
 </div>
 <script>
 // === PROJECT VALLEY — Complete Rebuilt Game Engine ===
@@ -1606,6 +1614,9 @@ function chooseDlg(npcId,pi,di,ci){
     }
   }
 
+  // Check achievements after interaction
+  checkAchievements();
+
   // NPC bounce effect
   if(npc.curY!==undefined)npc.curY-=2;
   setTimeout(()=>{if(npc.curY!==undefined)npc.curY+=2;},150);
@@ -1747,7 +1758,7 @@ function transitionToMap(target){
     S.map=target;
     PARTICLES.length=0; // Clear particles on map change
     if(target==='site'){
-      S.px=4*TS;S.py=6*TS;S.siteUnlocked=true;
+      S.px=4*TS;S.py=6*TS;S.siteUnlocked=true;_siteVisits++;
       NPCS.forEach(n=>{
         if(n.siteX>0){n.curX=n.siteX*TS;n.curY=n.siteY*TS;n.aiState='idle';n.aiTimer=2000;}
       });
@@ -1866,6 +1877,17 @@ function updateNotepad(){
       const empty='\u2661'.repeat(5-rel.hearts);
       html+='<div style="font-size:8px;color:#7a5a38">'+npc.name+' <span style="color:#e05577">'+filled+'</span><span style="color:#c4a878">'+empty+'</span></div>';
     }
+  }
+
+  // Achievements in notepad
+  if(S.achievements.length>0){
+    html+='<div class="sep" style="margin-top:8px">\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501</div>';
+    html+='<div style="color:#5a3a1e;font-size:8px;margin-bottom:4px">ACHIEVEMENTS ('+S.achievements.length+'/'+ACHIEVEMENTS.length+')</div>';
+    S.achievements.slice(-3).forEach(aid=>{
+      const a=ACHIEVEMENTS.find(x=>x.id===aid);
+      if(a)html+='<div style="font-size:7px;color:#7a5a38">'+a.icon+' '+a.name+'</div>';
+    });
+    if(S.achievements.length>3)html+='<div style="font-size:7px;color:#c4a878">...and '+(S.achievements.length-3)+' more</div>';
   }
 
   html+='<div class="tip">TIP: Walk to people and press SPACE to talk!</div>';
@@ -2029,6 +2051,8 @@ function startNewWeek(){
   S.objectives=getObjectives(S.week);
   S.completedObj=S.completedObj.filter(c=>!c.endsWith('_'+S.week));
   S.weekObjMet=false;
+  unlockPMKnowledge(getPhaseIdx(S.week));
+  checkAchievements();
   updateNotepad();
   updateHUD();
 }
@@ -2191,6 +2215,38 @@ function showDocsOverlay(){
   });
   html+='</div>';
   
+  // PM Knowledge Log
+  if(S.pmKnowledge.length>0){
+    html+='<div style="margin-top:16px;font-size:10px;color:#5a3a1e;margin-bottom:8px">\uD83C\uDF93 PM Knowledge Log ('+S.pmKnowledge.length+'/'+PM_KNOWLEDGE.length+')</div>';
+    html+='<div style="display:flex;flex-wrap:wrap;gap:8px">';
+    PM_KNOWLEDGE.forEach(k=>{
+      const unlocked=S.pmKnowledge.includes(k.id);
+      if(unlocked){
+        html+='<div style="background:rgba(74,202,138,0.1);border:1px solid #4aca8a;border-radius:6px;padding:8px;width:calc(50% - 4px);cursor:pointer" onclick="this.querySelector(\'.pk-detail\').style.display=this.querySelector(\'.pk-detail\').style.display===\'block\'?\'none\':\'block\'">';
+        html+='<div style="font-size:9px;color:#4aca8a">\u2713 '+k.name+'</div>';
+        html+='<div class="pk-detail" style="display:none;margin-top:6px;font-size:8px;color:#5a3a1e;line-height:1.6">'+k.text+'</div>';
+        html+='</div>';
+      }else{
+        html+='<div style="background:rgba(122,90,56,0.05);border:1px solid #c4a878;border-radius:6px;padding:8px;width:calc(50% - 4px);opacity:0.5">';
+        html+='<div style="font-size:9px;color:#c4a878">\uD83D\uDD12 ???</div>';
+        html+='</div>';
+      }
+    });
+    html+='</div>';
+  }
+
+  // Achievements section
+  html+='<div style="margin-top:16px;font-size:10px;color:#5a3a1e;margin-bottom:8px">\uD83C\uDFC6 Achievements ('+S.achievements.length+'/'+ACHIEVEMENTS.length+')</div>';
+  html+='<div style="display:flex;flex-wrap:wrap;gap:8px">';
+  ACHIEVEMENTS.forEach(a=>{
+    const unlocked=S.achievements.includes(a.id);
+    html+='<div style="background:'+(unlocked?'rgba(247,201,72,0.15)':'rgba(122,90,56,0.05)')+';border:1px solid '+(unlocked?'#f7c948':'#c4a878')+';border-radius:6px;padding:8px;width:calc(50% - 4px);opacity:'+(unlocked?'1':'0.4')+'">';
+    html+='<div style="font-size:9px;color:'+(unlocked?'#5a3a1e':'#c4a878')+'">'+a.icon+' '+a.name+'</div>';
+    if(unlocked)html+='<div style="font-size:7px;color:#7a5a38;margin-top:2px">'+a.desc+'</div>';
+    html+='</div>';
+  });
+  html+='</div>';
+
   html+='<div style="text-align:center;margin-top:16px"><button class="btn sm" onclick="closeDocsOverlay()">Close Documents</button></div>';
   el.innerHTML=html;
   el.className='on';
@@ -2206,19 +2262,109 @@ function closeDocsOverlay(){
 // === END SCREEN ===
 function showEndScreen(){
   S.screen='end';
+  unlockAchievement('grip_master');
+  checkAchievements();
+
   const el=document.getElementById('weekTrans');
-  const avg=Math.floor((S.metrics.schedule+S.metrics.budget+S.metrics.safety+S.metrics.quality+S.metrics.morale)/5);
+  const m=S.metrics;
+  const avg=Math.floor((m.schedule+m.budget+m.safety+m.quality+m.morale)/5);
   const rating=getPMRating();
   const titles=['In Trouble','Struggling PM','Competent PM','Strong PM','Outstanding PM'];
-  
-  let html='<h2 style="font-size:20px;color:#f7c948">PROJECT COMPLETE!</h2>';
-  html+='<p style="font-size:10px;color:#c4a878;margin:10px 0">The railway is open and running! The project is officially closed.</p>';
-  html+='<div style="font-size:16px;color:#f7c948;margin:10px 0">'+getStarText()+'</div>';
-  html+='<p style="font-size:11px;color:#f0e6d3;margin:6px 0">'+titles[rating-1]+'</p>';
-  html+='<p style="font-size:8px;color:#c4a878;margin:10px 0">Final Scores:<br>Schedule: '+S.metrics.schedule+'% | Budget: '+S.metrics.budget+'% | Safety: '+S.metrics.safety+'%<br>Quality: '+S.metrics.quality+'% | Morale: '+S.metrics.morale+'%<br>Average: '+avg+'%</p>';
-  html+='<p style="font-size:9px;color:#c4a878;margin:6px 0">'+S.playerName+', you managed the railway project from feasibility through to close-out!</p>';
-  html+='<button class="btn gld" onclick="location.reload()" style="margin-top:14px">Play Again</button>';
-  
+
+  // PM certification based on performance
+  let cert,certColor;
+  if(avg>=85){cert='APM Chartered Project Professional';certColor='#f7c948';}
+  else if(avg>=70){cert='PRINCE2 Practitioner';certColor='#4aca8a';}
+  else if(avg>=55){cert='APM Project Fundamentals';certColor='#5b8ef5';}
+  else{cert='Certificate of Participation';certColor='#c4a878';}
+
+  // Generate story narrative
+  let story='';
+  if(m.safety>=80)story+=S.playerName+' prioritised safety throughout, earning the trust of the workforce. ';
+  else if(m.safety<50)story+='Safety took a back seat under '+S.playerName+'\'s watch, drawing scrutiny from regulators. ';
+  if(m.budget>=80)story+='The budget was managed with discipline, coming in on target. ';
+  else if(m.budget<50)story+='Costs spiralled beyond forecasts, leaving the sponsor concerned. ';
+  if(m.morale>=80)story+='The team stayed motivated and cohesive, a credit to strong leadership. ';
+  else if(m.morale<50)story+='Team morale suffered, with several members considering their options. ';
+  if(m.schedule>=80)story+='Milestones were hit on time, keeping the programme on track. ';
+  else if(m.schedule<50)story+='The programme slipped repeatedly, pushing delivery further out. ';
+  if(m.quality>=80)story+='Quality standards were consistently met, producing a railway to be proud of.';
+  else if(m.quality<50)story+='Quality issues plagued the build, requiring costly rework.';
+  if(!story)story=S.playerName+' delivered the project with a mixed bag of results — some wins, some lessons learned.';
+
+  let html='<div style="max-width:520px;margin:0 auto;text-align:center">';
+  html+='<h2 style="font-size:20px;color:#f7c948;margin-bottom:4px">PROJECT COMPLETE!</h2>';
+  html+='<p style="font-size:8px;color:#c4a878;margin-bottom:12px">The railway is open and running!</p>';
+  html+='<div style="font-size:16px;color:#f7c948;margin:6px 0">'+getStarText()+'</div>';
+  html+='<p style="font-size:12px;color:#f0e6d3;margin:4px 0">'+titles[rating-1]+'</p>';
+
+  // Certification badge
+  html+='<div style="display:inline-block;margin:10px auto;padding:6px 16px;border:2px solid '+certColor+';border-radius:6px;background:rgba(0,0,0,0.2)">';
+  html+='<div style="font-size:7px;color:#c4a878;letter-spacing:2px">CERTIFICATION</div>';
+  html+='<div style="font-size:9px;color:'+certColor+';margin-top:2px">\uD83C\uDF93 '+cert+'</div>';
+  html+='</div>';
+
+  // Metric bar charts
+  html+='<div style="text-align:left;margin:12px 0">';
+  const metricData=[
+    {n:'Schedule',v:m.schedule,c:'#4aca8a'},{n:'Budget',v:m.budget,c:'#f7c948'},
+    {n:'Safety',v:m.safety,c:'#e05577'},{n:'Quality',v:m.quality,c:'#5b8ef5'},
+    {n:'Morale',v:m.morale,c:'#c4a878'}
+  ];
+  metricData.forEach(mt=>{
+    html+='<div style="display:flex;align-items:center;gap:6px;margin:4px 0;font-size:8px">';
+    html+='<span style="width:55px;color:'+mt.c+';text-align:right">'+mt.n+'</span>';
+    html+='<div style="flex:1;height:10px;background:#3a2210;border:1px solid #5a3a1e;border-radius:3px;overflow:hidden">';
+    html+='<div style="width:'+mt.v+'%;height:100%;background:'+mt.c+';border-radius:2px"></div></div>';
+    html+='<span style="width:30px;color:'+mt.c+'">'+mt.v+'%</span>';
+    html+='</div>';
+  });
+  html+='<div style="text-align:center;font-size:9px;color:#f7c948;margin-top:4px">Average: '+avg+'%</div>';
+  html+='</div>';
+
+  // Story narrative
+  html+='<div style="text-align:left;margin:10px 0;padding:8px 12px;background:rgba(0,0,0,0.15);border-radius:6px;border-left:3px solid #f7c948">';
+  html+='<div style="font-size:7px;color:#c4a878;margin-bottom:4px;letter-spacing:1px">YOUR STORY</div>';
+  html+='<p style="font-size:8px;color:#f0e6d3;line-height:1.8;margin:0">'+story+'</p>';
+  html+='</div>';
+
+  // NPC relationship summary
+  html+='<div style="text-align:left;margin:10px 0">';
+  html+='<div style="font-size:8px;color:#c4a878;margin-bottom:6px">TEAM RELATIONSHIPS</div>';
+  html+='<div style="display:flex;flex-wrap:wrap;gap:6px">';
+  NPCS.forEach(n=>{
+    const rel=S.relationships[n.id];
+    if(rel){
+      const hearts=rel.hearts;
+      const filled='\u2665'.repeat(hearts);
+      const empty='\u2661'.repeat(5-hearts);
+      let verdict='';
+      if(hearts>=4)verdict='Trusted ally';
+      else if(hearts>=2)verdict='Good rapport';
+      else if(hearts>=1)verdict='Getting there';
+      else verdict='Distant';
+      html+='<div style="flex:1;min-width:80px;padding:4px 6px;background:rgba(0,0,0,0.1);border-radius:4px;font-size:7px">';
+      html+='<div style="color:#f0e6d3">'+n.name+'</div>';
+      html+='<div style="color:#e05577">'+filled+'<span style="color:#5a3a1e">'+empty+'</span></div>';
+      html+='<div style="color:#7a5a38">'+verdict+'</div>';
+      html+='</div>';
+    }
+  });
+  html+='</div></div>';
+
+  // Achievements
+  html+='<div style="text-align:left;margin:10px 0">';
+  html+='<div style="font-size:8px;color:#c4a878;margin-bottom:4px">ACHIEVEMENTS: '+S.achievements.length+'/'+ACHIEVEMENTS.length+'</div>';
+  html+='<div style="display:flex;flex-wrap:wrap;gap:4px">';
+  ACHIEVEMENTS.forEach(a=>{
+    const got=S.achievements.includes(a.id);
+    html+='<span style="font-size:16px;opacity:'+(got?'1':'0.2')+'" title="'+(got?a.name:'Locked')+'">'+ a.icon+'</span>';
+  });
+  html+='</div></div>';
+
+  html+='<button class="btn gld" onclick="location.reload()" style="margin-top:10px">Play Again</button>';
+  html+='</div>';
+
   document.getElementById('wtTitle').innerHTML=html;
   document.getElementById('wtText').textContent='';
   document.getElementById('wtChanges').textContent='';
@@ -2245,6 +2391,114 @@ function showHelp(){
 function closeHelp(){
   document.getElementById('helpModal').className='modal';
   S.eventOpen=false;
+}
+
+// === ACHIEVEMENT SYSTEM ===
+const ACHIEVEMENTS=[
+  {id:'first_contact',name:'First Contact',desc:'Talk to an NPC for the first time',icon:'\uD83E\uDD1D'},
+  {id:'full_house',name:'Full House',desc:'Talk to all 5 team members in one week',icon:'\uD83C\uDFE0'},
+  {id:'safety_first',name:'Safety First',desc:'Keep Safety above 80% through Construction',icon:'\uD83D\uDEE1\uFE0F'},
+  {id:'budget_hawk',name:'Budget Hawk',desc:'Keep Budget above 80% through Procurement',icon:'\uD83D\uDCB0'},
+  {id:'people_person',name:'People Person',desc:'Earn 3+ hearts with any team member',icon:'\u2764\uFE0F'},
+  {id:'curveball_survivor',name:'Curveball Survivor',desc:'Resolve 5 curveball events',icon:'\u26A1'},
+  {id:'boots_on_ground',name:'Boots on Ground',desc:'Visit the site 3 times',icon:'\uD83D\uDC77'},
+  {id:'outstanding_pm',name:'Outstanding PM',desc:'Reach a 5-star PM rating',icon:'\u2B50'},
+  {id:'grip_master',name:'GRIP Master',desc:'Complete all phases from Kick-Off to Close-Out',icon:'\uD83C\uDF93'},
+  {id:'perfect_week',name:'Perfect Week',desc:'Complete all objectives with all metrics above 70%',icon:'\uD83C\uDFC6'}
+];
+
+const PM_KNOWLEDGE=[
+  {id:'grip_intro',name:'GRIP Framework',phase:0,text:'GRIP (Governance for Railway Investment Projects) is Network Rail\'s lifecycle framework. It defines stages from concept to close-out, ensuring every project follows a consistent governance structure.'},
+  {id:'feasibility',name:'Feasibility Study',phase:0,text:'Before committing resources, a feasibility study assesses whether the project is viable. It examines technical, financial, and operational factors to inform the investment decision.'},
+  {id:'risk_mgmt',name:'Risk Management',phase:1,text:'Risks are identified early and logged in a Risk Register. Each risk has an owner, a probability, an impact score, and a mitigation plan. The register is a living document reviewed regularly.'},
+  {id:'stakeholder',name:'Stakeholder Management',phase:2,text:'Stakeholders are anyone affected by or who can influence the project. A stakeholder map helps categorise them by power and interest. Engagement strategies vary: keep informed, consult, involve, or collaborate.'},
+  {id:'procurement',name:'Procurement & Contracts',phase:3,text:'Procurement involves selecting suppliers and agreeing contract terms. Common contract types include fixed price, cost-reimbursable, and target cost. Each has different risk-sharing profiles.'},
+  {id:'earned_value',name:'Earned Value Management',phase:4,text:'EVM tracks project performance by comparing planned work (PV), completed work (EV), and actual cost (AC). Key metrics: CPI = EV/AC (cost efficiency) and SPI = EV/PV (schedule efficiency).'},
+  {id:'construction',name:'Construction Management',phase:5,text:'During construction, the PM coordinates multiple workstreams, manages interfaces between contractors, and ensures safety and quality standards. Possession planning is critical for railway work.'},
+  {id:'testing',name:'Testing & Commissioning',phase:7,text:'Before handover, all systems must be tested against acceptance criteria. This includes functional testing, integration testing, and safety validation. Non-conformances must be closed before sign-off.'},
+  {id:'handover',name:'Handover & Close-Out',phase:8,text:'Handover transfers the asset to the operator. Close-out involves completing all documentation, settling final accounts, capturing lessons learned, and formally closing the project.'},
+  {id:'lessons',name:'Lessons Learned',phase:9,text:'Every project should capture what went well and what could improve. Lessons learned feed into organisational knowledge, helping future projects avoid repeating mistakes.'}
+];
+
+let _achToastQueue=[];
+let _achToastActive=false;
+let _siteVisits=0;
+
+function unlockAchievement(id){
+  if(S.achievements.includes(id))return;
+  const ach=ACHIEVEMENTS.find(a=>a.id===id);
+  if(!ach)return;
+  S.achievements.push(id);
+  playSFX('celebration');
+  _achToastQueue.push(ach);
+  if(!_achToastActive)_showNextAchToast();
+}
+
+function _showNextAchToast(){
+  if(_achToastQueue.length===0){_achToastActive=false;return;}
+  _achToastActive=true;
+  const ach=_achToastQueue.shift();
+  const el=document.getElementById('achToast');
+  el.querySelector('.ach-icon').textContent=ach.icon;
+  el.querySelector('.ach-name').textContent=ach.name;
+  el.querySelector('.ach-desc').textContent=ach.desc;
+  el.classList.add('show');
+  setTimeout(()=>{
+    el.classList.remove('show');
+    setTimeout(()=>_showNextAchToast(),500);
+  },3000);
+}
+
+function checkAchievements(){
+  // First Contact — talked to any NPC
+  for(const npc of NPCS){
+    if(S.relationships[npc.id]&&S.relationships[npc.id].talked>0){
+      unlockAchievement('first_contact');break;
+    }
+  }
+  // Full House — talked to all 5 NPCs (talked counter > 0 for all)
+  if(NPCS.every(n=>S.relationships[n.id]&&S.relationships[n.id].talked>0)){
+    unlockAchievement('full_house');
+  }
+  // Safety First — safety > 80% and past Construction Early (pi >= 6)
+  if(getPhaseIdx(S.week)>=6&&S.metrics.safety>80){
+    unlockAchievement('safety_first');
+  }
+  // Budget Hawk — budget > 80% and past Procurement (pi >= 4)
+  if(getPhaseIdx(S.week)>=4&&S.metrics.budget>80){
+    unlockAchievement('budget_hawk');
+  }
+  // People Person — any NPC has 3+ hearts
+  for(const npc of NPCS){
+    if(S.relationships[npc.id]&&S.relationships[npc.id].hearts>=3){
+      unlockAchievement('people_person');break;
+    }
+  }
+  // Curveball Survivor — resolved 5+ events
+  if(S.eventsDone.length>=5){
+    unlockAchievement('curveball_survivor');
+  }
+  // Boots on Ground — visited site 3+ times
+  if(_siteVisits>=3){
+    unlockAchievement('boots_on_ground');
+  }
+  // Outstanding PM — 5-star rating
+  if(getPMRating()>=5){
+    unlockAchievement('outstanding_pm');
+  }
+  // Perfect Week — all objectives done and all metrics above 70
+  if(S.weekObjMet&&S.metrics.schedule>70&&S.metrics.budget>70&&S.metrics.safety>70&&S.metrics.quality>70&&S.metrics.morale>70){
+    unlockAchievement('perfect_week');
+  }
+  // GRIP Master — unlocked at game end (checked in showEndScreen)
+}
+
+function unlockPMKnowledge(phaseIdx){
+  PM_KNOWLEDGE.forEach(k=>{
+    if(k.phase<=phaseIdx&&!S.pmKnowledge.includes(k.id)){
+      S.pmKnowledge.push(k.id);
+    }
+  });
 }
 
 
@@ -3331,7 +3585,8 @@ function saveGame(){
     completedObj:[...S.completedObj],dlgCooldowns:{...S.dlgCooldowns},
     relationships:JSON.parse(JSON.stringify(S.relationships)),
     achievements:[...S.achievements],
-    pmKnowledge:[...S.pmKnowledge]
+    pmKnowledge:[...S.pmKnowledge],
+    siteVisits:_siteVisits
   };
   try{localStorage.setItem('projectValley_save',JSON.stringify(data));}catch(e){}
 }
@@ -3351,6 +3606,7 @@ function loadGame(){
     if(data.relationships)S.relationships=data.relationships;
     if(data.achievements)S.achievements=data.achievements;
     if(data.pmKnowledge)S.pmKnowledge=data.pmKnowledge;
+    if(data.siteVisits)_siteVisits=data.siteVisits;
   }catch(e){return;}
   
   // Bug 4: clear keys
