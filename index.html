@@ -1034,7 +1034,7 @@ function getObjectives(week){
 
 const REPORT_WEEKS=[28,24,20,16,12,8,4,0];
 
-// === AUDIO SYSTEM ===
+// === ENHANCED AUDIO SYSTEM ===
 let audioCtx=null,masterGain=null,musicPlaying=false;
 
 function initAudio(){
@@ -1049,14 +1049,15 @@ function initAudio(){
 function playNote(freq,dur,type,vol,delay){
   if(!audioCtx||!S.musicOn)return;
   try{
+    const t=audioCtx.currentTime+(delay||0);
     const o=audioCtx.createOscillator(),g=audioCtx.createGain();
     o.type=type||'square';o.frequency.value=freq;
     g.gain.value=0;
-    g.gain.setValueAtTime(0,audioCtx.currentTime+(delay||0));
-    g.gain.linearRampToValueAtTime((vol||0.1)*masterGain.gain.value,audioCtx.currentTime+(delay||0)+0.02);
-    g.gain.linearRampToValueAtTime(0,audioCtx.currentTime+(delay||0)+dur);
+    g.gain.setValueAtTime(0,t);
+    g.gain.linearRampToValueAtTime((vol||0.1)*masterGain.gain.value,t+0.02);
+    g.gain.linearRampToValueAtTime(0,t+dur);
     o.connect(g);g.connect(audioCtx.destination);
-    o.start(audioCtx.currentTime+(delay||0));o.stop(audioCtx.currentTime+(delay||0)+dur);
+    o.start(t);o.stop(t+dur);
   }catch(e){}
 }
 
@@ -1076,24 +1077,101 @@ function playSFX(type){
   }
 }
 
-let bgmInterval=null;
+// Pentatonic scale notes (C major pentatonic) — Stardew-style warmth
+const PENTA_MAJOR=[262,294,330,392,440,524,588,660,784,880];
+const PENTA_MINOR=[262,294,311,392,440,524,588,622,784,880]; // minor for tension
+
+// Office theme — warm, gentle, contemplative
+const OFFICE_MELODY=[
+  [0,2,4,3,2,1,0,1,2,4,3,2,1,0,2,3],  // Main phrase
+  [4,3,2,4,5,4,3,2,0,1,2,3,2,1,0,2]   // Variation
+];
+const OFFICE_HARMONY=[0,0,2,2,3,3,4,4,2,2,0,0,3,3,2,2];
+const OFFICE_BASS=[0,0,2,2,3,3,2,2,0,0,4,4,3,3,0,0];
+
+// Site theme — more energetic, working rhythm
+const SITE_MELODY=[
+  [0,2,4,4,3,2,4,5,4,2,0,2,3,4,2,0],
+  [2,4,5,4,2,0,2,4,3,2,0,2,4,5,4,2]
+];
+const SITE_HARMONY=[2,2,4,4,3,3,2,2,0,0,4,4,2,2,0,0];
+const SITE_BASS=[0,0,2,2,4,4,3,3,0,0,2,2,4,4,0,0];
+
+let bgmInterval=null,bgmAmbientInterval=null;
+let _bgmStep=0,_bgmPhrase=0;
+
+function _getMoodScale(){
+  const avg=(S.metrics.schedule+S.metrics.budget+S.metrics.safety+S.metrics.quality+S.metrics.morale)/5;
+  return avg<50?PENTA_MINOR:PENTA_MAJOR;
+}
+
 function startBGM(){
   if(!audioCtx)initAudio();
   if(bgmInterval)return;
-  const melody=[262,349,440,392,349,330,262,294,330,349,392,349,330,294];
-  const bass=[131,175,220,196,131,175,220,196,131,175,220,196,131,175];
-  let mi=0;
+  _bgmStep=0;_bgmPhrase=0;
+
   bgmInterval=setInterval(()=>{
     if(!S.musicOn||S.screen!=='game')return;
-    playNote(melody[mi%melody.length],0.3,'square',0.04);
-    playNote(bass[mi%bass.length],0.4,'triangle',0.05);
-    playNote(melody[mi%melody.length]/2,0.5,'sine',0.02);
-    mi++;
-  },500);
+    const scale=_getMoodScale();
+    const inSite=S.map==='site';
+    const melody=inSite?SITE_MELODY:OFFICE_MELODY;
+    const harmony=inSite?SITE_HARMONY:OFFICE_HARMONY;
+    const bass=inSite?SITE_BASS:OFFICE_BASS;
+    const tempo=inSite?0.28:0.35; // site is punchier
+    const mIdx=melody[_bgmPhrase%melody.length][_bgmStep%16];
+    const hIdx=harmony[_bgmStep%16];
+    const bIdx=bass[_bgmStep%16];
+
+    // Melody — square wave, bright
+    playNote(scale[mIdx%scale.length],tempo,'square',0.035);
+    // Harmony pad — sine, soft
+    playNote(scale[hIdx%scale.length]*0.5,tempo*1.5,'sine',0.018);
+    // Bass — triangle, warm
+    playNote(scale[bIdx%scale.length]*0.25,tempo*1.8,'triangle',0.04);
+
+    // Every 4th beat, add a higher octave accent
+    if(_bgmStep%4===0){
+      playNote(scale[mIdx%scale.length]*2,tempo*0.5,'sine',0.012,0.05);
+    }
+
+    _bgmStep++;
+    if(_bgmStep%16===0)_bgmPhrase++;
+  },450);
+
+  // Ambient sounds layer
+  bgmAmbientInterval=setInterval(()=>{
+    if(!S.musicOn||S.screen!=='game')return;
+    if(S.map==='office'){
+      // Soft keyboard typing
+      if(Math.random()<0.3){
+        for(let i=0;i<Math.floor(Math.random()*4)+1;i++){
+          playNote(2000+Math.random()*2000,0.02,'triangle',0.008,i*0.06);
+        }
+      }
+    }else{
+      // Birds on site
+      if(Math.random()<0.25){
+        const bf=1000+Math.random()*800;
+        playNote(bf,0.06,'sine',0.015);
+        playNote(bf*1.2,0.05,'sine',0.012,0.08);
+        playNote(bf*0.9,0.07,'sine',0.01,0.15);
+      }
+      // Distant hammering
+      if(Math.random()<0.1){
+        playNote(80,0.03,'square',0.015);
+        playNote(80,0.03,'square',0.012,0.15);
+      }
+    }
+  },800);
+
   musicPlaying=true;
 }
 
-function stopBGM(){if(bgmInterval){clearInterval(bgmInterval);bgmInterval=null;musicPlaying=false;}}
+function stopBGM(){
+  if(bgmInterval){clearInterval(bgmInterval);bgmInterval=null;}
+  if(bgmAmbientInterval){clearInterval(bgmAmbientInterval);bgmAmbientInterval=null;}
+  musicPlaying=false;
+}
 
 function toggleMusic(){
   S.musicOn=!S.musicOn;
@@ -1986,7 +2064,10 @@ function transitionToMap(target){
       });
     }
     S.camX=S.px-IW/2;S.camY=S.py-IH/2;
+    // Restart BGM to switch theme (office vs site)
+    if(musicPlaying){stopBGM();startBGM();}
   },400);
+  playSFX('door');
 }
 
 // === OBJECTIVE TRACKING (Bug 10: updateNotepad called after every change) ===
