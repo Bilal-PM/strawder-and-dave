@@ -2823,6 +2823,106 @@ function drawTile(ctx,type,x,y){
   }
 }
 
+// === PHASE-BASED VISUAL PROGRESSION ===
+function drawSitePhaseOverlay(ctx,week){
+  const pi=getPhaseIdx(week);
+
+  // T-32 to T-20: Surveyor pegs and measuring tape
+  if(pi<=2){
+    for(let i=0;i<6;i++){
+      const px=(8+i*6)*TS,py=13*TS;
+      ctx.fillStyle=C.red;
+      ctx.fillRect(px+6,py-4,2,8);
+      ctx.fillStyle=C.white;
+      ctx.fillRect(px+5,py-4,4,2);
+      if(i<5){
+        ctx.strokeStyle='rgba(248,200,56,0.4)';
+        ctx.setLineDash([3,3]);
+        ctx.beginPath();ctx.moveTo(px+8,py);ctx.lineTo(px+6*TS+8,py);ctx.stroke();
+        ctx.setLineDash([]);
+      }
+    }
+  }
+
+  // T-20 to T-12: Crate stacks and partial fencing
+  if(pi>=3&&pi<=4){
+    for(let i=0;i<4;i++){
+      const cx=(38+i*2)*TS,cy=22*TS;
+      ctx.fillStyle=C.woodDark;ctx.fillRect(cx,cy,14,12);
+      ctx.fillStyle=C.woodMed;ctx.fillRect(cx+1,cy+1,12,10);
+      ctx.fillStyle=C.woodGrain;ctx.fillRect(cx+3,cy+4,8,1);ctx.fillRect(cx+3,cy+7,8,1);
+    }
+    ctx.fillStyle=C.yellow;ctx.fillRect(16*TS,9*TS,12,12);
+    ctx.fillStyle=C.black;ctx.fillRect(16*TS+4,9*TS+4,4,4);
+    for(let i=0;i<8;i++){ctx.fillStyle='rgba(232,128,48,0.6)';ctx.fillRect((14+i*2)*TS,9*TS-2,TS,3);}
+  }
+
+  // T-12 to T-4: Rails appearing progressively
+  if(pi>=5&&pi<=6){
+    const trackProgress=pi>=6?3:2;
+    for(let t=0;t<trackProgress;t++){
+      const ty=(13+t)*TS,startX=5*TS,endX=(15+t*10)*TS;
+      ctx.fillStyle=C.trackMetal;ctx.fillRect(startX,ty+4,endX-startX,2);
+      ctx.fillStyle=C.trackMetalLt;ctx.fillRect(startX,ty+4,endX-startX,1);
+      ctx.fillStyle=C.trackMetal;ctx.fillRect(startX,ty+10,endX-startX,2);
+      for(let s=startX;s<endX;s+=TS){ctx.fillStyle=C.trackBrown;ctx.fillRect(s+2,ty+2,12,12);}
+    }
+    ctx.fillStyle=C.hiVisOrange;ctx.fillRect(20*TS,10*TS,10,14);
+    ctx.fillStyle=C.metalSilver;ctx.fillRect(20*TS+2,10*TS-6,6,6);
+    if(Math.random()<0.05){
+      spawnParticle({x:20*TS+Math.random()*100,y:11*TS,vx:(Math.random()-0.5)*0.3,vy:-0.2,life:1500,size:2,color:C.pathA,type:'dust'});
+    }
+  }
+
+  // T-4 to T-0: Full track, signal lights
+  if(pi>=7){
+    for(let i=0;i<3;i++){
+      const sx=(10+i*12)*TS,sy=12*TS;
+      ctx.fillStyle=C.metalDk;ctx.fillRect(sx+6,sy-10,3,14);
+      ctx.fillStyle=C.black;ctx.fillRect(sx+4,sy-14,7,6);
+      ctx.fillStyle=pi>=8?'#40e848':'#e84040';
+      ctx.fillRect(sx+6,sy-12,3,3);
+    }
+  }
+
+  // T+0 onwards: Bunting, flowers
+  if(pi>=8){
+    const buntColors=[C.red,C.yellow,C.shirtBlue,C.plantGreen,C.flowerPink];
+    for(let i=0;i<20;i++){
+      const bx=(3+i*2)*TS,by=8*TS;
+      ctx.fillStyle=buntColors[i%5];
+      ctx.beginPath();ctx.moveTo(bx,by);ctx.lineTo(bx+8,by+10);ctx.lineTo(bx+16,by);ctx.fill();
+    }
+    for(let i=0;i<10;i++){
+      const fx=(5+i*4)*TS+Math.sin(i*7)*4,fy=16*TS+Math.cos(i*5)*4;
+      ctx.fillStyle=[C.flowerRed,C.flowerYellow,C.flowerPink,C.flowerBlue][i%4];
+      ctx.fillRect(fx,fy,3,3);
+      ctx.fillStyle=C.plantStem;ctx.fillRect(fx+1,fy+3,1,3);
+    }
+  }
+}
+
+function drawOfficePhaseOverlay(ctx,week){
+  const pi=getPhaseIdx(week);
+  // Notice board papers accumulate
+  const boardX=14*TS,boardY=1*TS;
+  const numPapers=Math.min(pi+1,8);
+  for(let i=0;i<numPapers;i++){
+    const px=boardX+2+(i%3)*4,py=boardY+2+Math.floor(i/3)*5;
+    ctx.fillStyle=[C.paperWhite,C.yellow,C.flowerPink,C.shirtBlue][i%4];
+    ctx.fillRect(px,py,3,4);
+    ctx.fillStyle=C.black;ctx.fillRect(px+0.5,py+1,2,0.5);
+  }
+  // Planning board fills with items
+  if(pi>=3){
+    const planX=3*TS,planY=4*TS;
+    for(let i=0;i<Math.min(pi-2,5);i++){
+      ctx.fillStyle=[C.shirtBlue,C.red,C.plantGreen,C.yellow,C.flowerPink][i];
+      ctx.fillRect(planX+2+i*2,planY+3,2,3);
+    }
+  }
+}
+
 // === AREA LABELS ===
 function drawAreaLabels(ctx){
   const labels=AREA_LABELS[S.map]||[];
@@ -2891,6 +2991,10 @@ function render(){
     }
   }
   
+  // Phase-based visual progression overlays
+  if(S.map==='site')drawSitePhaseOverlay(CTX,S.week);
+  else drawOfficePhaseOverlay(CTX,S.week);
+
   // Area labels (after tiles, before entities)
   drawAreaLabels(CTX);
   
