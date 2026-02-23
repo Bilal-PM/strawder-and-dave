@@ -1,0 +1,2935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Project Valley</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0c0c1d;color:#f0e6d3;font-family:'Press Start 2P',monospace;overflow:hidden;height:100vh;width:100vw;display:flex;align-items:center;justify-content:center}
+#gc{position:relative;width:960px;height:640px;background:#0f0f23;border:4px solid #533a7b;border-radius:2px;overflow:hidden;image-rendering:pixelated}
+#cv{position:absolute;top:0;left:0;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}
+.scr{position:absolute;top:0;left:0;width:100%;height:100%;display:none;z-index:10}
+.scr.on{display:flex;flex-direction:column;align-items:center;justify-content:center}
+#loadScr{background:#0c0c1d;z-index:100}
+#loadScr .bar{width:300px;height:20px;border:2px solid #533a7b;border-radius:4px;margin:16px 0;overflow:hidden}
+#loadScr .bf{height:100%;background:linear-gradient(90deg,#7c5cbf,#f7c948);width:0%;transition:width .3s}
+#title{background:linear-gradient(180deg,#0c0c1d 0%,#1a1535 40%,#2a1f4a 100%)}
+#title h1{font-size:36px;color:#f7c948;text-shadow:0 0 20px rgba(247,201,72,0.5),3px 3px 0 #1a1535;margin-bottom:8px;text-align:center;letter-spacing:2px}
+#title .sub{font-size:10px;color:#b08fd8;margin-bottom:30px;letter-spacing:3px}
+.btn{font-family:'Press Start 2P',monospace;font-size:11px;padding:14px 32px;margin:6px;border:2px solid #7c5cbf;background:linear-gradient(180deg,#2a1f4a,#1a1535);color:#f0e6d3;cursor:pointer;transition:all .2s;min-width:200px;border-radius:4px}
+.btn:hover{background:linear-gradient(180deg,#7c5cbf,#533a7b);color:#fff;transform:scale(1.05)}
+.btn.gld{border-color:#f7c948}.btn.gld:hover{background:linear-gradient(180deg,#f7c948,#c9a020);color:#1a1535}
+.btn.sm{font-size:8px;padding:8px 16px;min-width:auto}
+.btn:disabled{opacity:0.4;cursor:not-allowed;transform:none!important}
+#hud{position:absolute;top:0;left:0;right:220px;height:56px;background:linear-gradient(180deg,rgba(12,12,29,0.97),rgba(26,21,53,0.95));border-bottom:2px solid #533a7b;display:none;z-index:20;padding:0 8px;align-items:center;justify-content:space-between;font-size:10px}
+#hud.on{display:flex}
+.hg{display:flex;align-items:center;gap:6px}
+.hi{display:flex;align-items:center;gap:3px}
+.hi img{width:14px;height:14px;image-rendering:pixelated}
+.hl{color:#8a7fad;font-size:9px}.hv{color:#f7c948;font-size:11px}
+.hpct{font-size:8px;min-width:24px;text-align:right}
+.meter{width:70px;height:12px;background:#1a1535;border:1px solid #3a3060;border-radius:3px;overflow:hidden}
+.mf{height:100%;border-radius:2px;transition:width .5s}
+.mf.grn{background:linear-gradient(90deg,#2a8a5a,#4aca8a)}
+.mf.gld{background:linear-gradient(90deg,#c9a020,#f7c948)}
+.mf.red{background:linear-gradient(90deg,#a03355,#e05577)}
+.mf.blu{background:linear-gradient(90deg,#3a5eb5,#5b8ef5)}
+.mf.pur{background:linear-gradient(90deg,#533a7b,#b08fd8)}
+#notepad{position:absolute;top:0;right:0;width:220px;height:100%;background:linear-gradient(180deg,#1e1a30,#16122a);border-left:2px solid #533a7b;z-index:20;display:none;overflow-y:auto;padding:10px;font-size:9px;line-height:1.8}
+#notepad.on{display:block}
+#notepad h3{color:#f7c948;font-size:10px;margin-bottom:6px}
+#notepad .sep{color:#533a7b;margin:4px 0}
+.obj{padding:2px 0;color:#b08fd8;font-size:9px}
+.obj.done{color:#4aca8a;text-decoration:line-through}
+.tip{color:#5b8ef5;font-size:8px;margin-top:8px;line-height:2}
+#dlg{position:absolute;bottom:10px;left:10px;right:230px;background:linear-gradient(180deg,#1f1840ee,#1a1535ee);border:2px solid #7c5cbf;border-radius:8px;padding:14px;z-index:25;display:none}
+#dlg.on{display:block}
+#dlg .dn{color:#f7c948;font-size:11px;margin-bottom:6px}
+#dlg .dt{color:#f0e6d3;font-size:9px;line-height:2;margin-bottom:8px}
+#dlg .dc{padding:6px 10px;margin:4px 0;background:#0f0d1f;border:1px solid #3a3060;border-radius:4px;cursor:pointer;color:#b08fd8;font-size:9px;font-family:'Press Start 2P',monospace;line-height:1.8;transition:all .2s}
+#dlg .dc:hover{border-color:#f7c948;color:#f7c948}
+#dlg .metric-change{font-size:8px;margin:2px 4px;display:inline-block}
+.modal{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:580px;max-height:90%;overflow-y:auto;background:linear-gradient(180deg,#1f1840,#1a1535);border:3px solid #e05577;border-radius:8px;padding:24px;z-index:30;display:none}
+.modal.on{display:block}
+.modal h3{font-size:12px;color:#e05577;margin-bottom:10px}
+.modal p{font-size:9px;line-height:2;color:#ccc;margin-bottom:14px}
+.modal .ch{background:#0f0d1f;border:2px solid #3a3060;border-radius:6px;padding:12px;margin:6px 0;cursor:pointer;transition:all .2s;font-family:'Press Start 2P',monospace;font-size:8px;color:#b08fd8;line-height:1.8}
+.modal .ch:hover{border-color:#f7c948;color:#f7c948}
+.modal.no-click .ch{pointer-events:none;opacity:0.5}
+.report{border-color:#f7c948}
+.report h3{color:#f7c948}
+.report .mb{display:flex;align-items:center;gap:6px;margin:6px 0;font-size:8px}
+.report .bar{flex:1;height:10px;background:#0f0d1f;border:1px solid #2a2050;border-radius:4px;overflow:hidden}
+.report .bf{height:100%;border-radius:3px;transition:width .8s}
+#hint{position:absolute;bottom:60px;left:50%;transform:translateX(-50%);font-size:8px;color:#f7c948;z-index:20;display:none;background:rgba(31,24,64,0.95);padding:6px 14px;border:2px solid #533a7b;border-radius:6px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+#charSel{background:linear-gradient(180deg,#0c0c1d,#1a1535)}
+#charSel .chars{display:flex;gap:16px;margin:20px 0}
+#charSel .chOpt{border:2px solid #3a3060;border-radius:8px;padding:12px;cursor:pointer;text-align:center;transition:all .2s}
+#charSel .chOpt:hover,.chOpt.sel{border-color:#f7c948;box-shadow:0 0 15px rgba(247,201,72,0.3)}
+#charSel canvas{image-rendering:pixelated}
+#charSel input{font-family:'Press Start 2P',monospace;font-size:10px;padding:8px 12px;background:#1a1535;border:2px solid #533a7b;color:#f7c948;border-radius:4px;text-align:center;width:200px;margin:10px 0}
+#charSel input.err{border-color:#e05577;box-shadow:0 0 8px rgba(224,85,119,0.4)}
+#weekTrans{background:rgba(12,12,29,0.98);z-index:35}
+#weekTrans h2{font-size:16px;color:#f7c948;margin-bottom:12px}
+#weekTrans p{font-size:9px;color:#b08fd8;line-height:2}
+#helpModal{border-color:#5b8ef5}
+#helpModal h3{color:#5b8ef5}
+#docsOverlay{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(12,12,29,0.97);z-index:28;display:none;overflow-y:auto;padding:30px 40px}
+#docsOverlay.on{display:block}
+#docsOverlay h2{color:#f7c948;font-size:14px;margin-bottom:16px}
+#docsOverlay .gantt-row{display:flex;align-items:center;margin:4px 0;font-size:8px}
+#docsOverlay .gantt-label{width:120px;color:#b08fd8}
+#docsOverlay .gantt-bar{height:14px;border-radius:3px;position:relative}
+#docsOverlay .gantt-marker{position:absolute;width:2px;height:100%;background:#f7c948;z-index:2}
+#docsOverlay .doc-item{display:flex;align-items:center;gap:8px;padding:6px 8px;margin:3px 0;background:#1a1535;border:1px solid #3a3060;border-radius:4px;font-size:9px;color:#b08fd8}
+#docsOverlay .doc-item img{width:16px;height:16px;image-rendering:pixelated}
+#docsOverlay .doc-status{margin-left:auto;font-size:8px;padding:2px 6px;border-radius:3px}
+.skip-trans{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(12,12,29,0.96);z-index:36;display:none;flex-direction:column;align-items:center;justify-content:center}
+.skip-trans.on{display:flex}
+.skip-trans h2{font-size:14px;color:#8a7fad;margin-bottom:8px}
+.skip-trans p{font-size:9px;color:#b08fd8}
+</style>
+</head>
+<body>
+<div id="gc">
+<canvas id="cv" width="480" height="320"></canvas>
+<div id="loadScr" class="scr on">
+  <h2 style="font-size:14px;color:#f7c948;margin-bottom:8px">PROJECT VALLEY</h2>
+  <p style="font-size:8px;color:#b08fd8" id="loadText">Loading assets...</p>
+  <div class="bar"><div class="bf" id="loadBar"></div></div>
+</div>
+<div id="title" class="scr">
+  <h1>PROJECT VALLEY</h1>
+  <p class="sub">Build the Railway. Deliver the Project.</p>
+  <canvas id="titleArt" width="320" height="100" style="image-rendering:pixelated;margin-bottom:16px"></canvas>
+  <button class="btn gld" onclick="showCharSelect()">New Game</button>
+  <button class="btn sm" onclick="loadGame()" id="contBtn" style="display:none">Continue</button>
+  <p style="font-size:6px;color:#533a7b;margin-top:20px">Arrow Keys / WASD to move | SPACE to interact</p>
+</div>
+<div id="charSel" class="scr">
+  <h2 style="font-size:14px;color:#f7c948;margin-bottom:4px">Choose Your Character</h2>
+  <p style="font-size:8px;color:#8a7fad;margin-bottom:10px">You've been appointed Project Manager for a major railway upgrade!</p>
+  <div class="chars" id="charGrid"></div>
+  <input type="text" id="pName" placeholder="Enter your name" maxlength="12">
+  <button class="btn gld" id="startBtn" onclick="startGame()">Start Project</button>
+</div>
+<div id="introScr" class="scr">
+  <div style="max-width:500px;text-align:center;padding:20px">
+    <h2 style="font-size:14px;color:#f7c948;margin-bottom:16px" id="introTitle"></h2>
+    <p style="font-size:9px;color:#b08fd8;line-height:2.2;margin-bottom:20px" id="introText"></p>
+    <button class="btn" onclick="advanceIntro()">Next</button>
+  </div>
+</div>
+<div id="weekTrans" class="scr">
+  <h2 id="wtTitle"></h2>
+  <p id="wtText"></p>
+  <div id="wtChanges" style="margin:12px 0;font-size:8px"></div>
+  <button class="btn sm" onclick="closeWeekTrans()">Continue</button>
+</div>
+<div id="skipTrans" class="skip-trans">
+  <h2 id="skipTitle"></h2>
+  <p id="skipText"></p>
+</div>
+<div id="hud">
+  <div class="hg">
+    <div class="hi"><span class="hv" id="hWeek">T-32</span></div>
+    <div class="hi"><span class="hl" id="hPhase">Kick-Off</span></div>
+  </div>
+  <div class="hg" id="hudMetrics">
+    <div class="hi"><img src="img/icon/Gear.png" alt=""><span class="hl">SCH</span><div class="meter"><div class="mf grn" id="mSch" style="width:70%"></div></div><span class="hpct" id="pSch" style="color:#4aca8a">70</span></div>
+    <div class="hi"><img src="img/icon/Cash.png" alt=""><span class="hl">BUD</span><div class="meter"><div class="mf gld" id="mBud" style="width:70%"></div></div><span class="hpct" id="pBud" style="color:#f7c948">70</span></div>
+    <div class="hi"><img src="img/icon/Wrench.png" alt=""><span class="hl">SAF</span><div class="meter"><div class="mf red" id="mSaf" style="width:70%"></div></div><span class="hpct" id="pSaf" style="color:#e05577">70</span></div>
+    <div class="hi"><img src="img/icon/Monitor.png" alt=""><span class="hl">QTY</span><div class="meter"><div class="mf blu" id="mQty" style="width:70%"></div></div><span class="hpct" id="pQty" style="color:#5b8ef5">70</span></div>
+    <div class="hi"><img src="img/icon/Team.png" alt=""><span class="hl">MOR</span><div class="meter"><div class="mf pur" id="mMor" style="width:70%"></div></div><span class="hpct" id="pMor" style="color:#b08fd8">70</span></div>
+  </div>
+  <div class="hg">
+    <span id="hStars" style="color:#f7c948;font-size:10px"></span>
+    <button style="background:none;border:none;color:#8a7fad;cursor:pointer;font-family:'Press Start 2P',monospace;font-size:8px" onclick="toggleMusic()" id="musBtn">&#9835;</button>
+    <button style="background:none;border:none;color:#5b8ef5;cursor:pointer;font-family:'Press Start 2P',monospace;font-size:10px" onclick="showHelp()">?</button>
+  </div>
+</div>
+<div id="notepad"></div>
+<div id="dlg"></div>
+<div class="modal" id="eventModal"></div>
+<div class="modal report" id="reportModal"></div>
+<div class="modal" id="helpModal">
+  <h3>How to Play</h3>
+  <p id="helpText"></p>
+  <button class="btn sm" onclick="closeHelp()" style="margin-top:10px">Got it!</button>
+</div>
+<div id="docsOverlay"></div>
+<div id="hint"></div>
+</div>
+<script>
+// === PROJECT VALLEY — Complete Rebuilt Game Engine ===
+const CV=document.getElementById('cv'),CTX=CV.getContext('2d');
+const IW=480,IH=320,TS=16;
+CTX.imageSmoothingEnabled=false;
+
+// === ASSET LOADING ===
+const ASSETS={};
+// Only load small UI icons — all tiles and characters are procedurally rendered
+const ASSET_LIST=[
+  {key:'ui_chat',src:'img/ui/expression_chat.png'},
+  {key:'ui_stress',src:'img/ui/expression_stress.png'},
+  {key:'ui_confused',src:'img/ui/expression_confused.png'},
+  {key:'ui_alerted',src:'img/ui/expression_alerted.png'},
+  {key:'ui_working',src:'img/ui/expression_working.png'},
+  {key:'ui_love',src:'img/ui/expression_love.png'},
+  {key:'icon_briefcase',src:'img/icon/Briefcase.png'},
+  {key:'icon_document',src:'img/icon/Document.png'},
+  {key:'icon_cash',src:'img/icon/Cash.png'},
+  {key:'icon_gear',src:'img/icon/Gear.png'},
+  {key:'icon_hammer',src:'img/icon/Hammer.png'},
+  {key:'icon_team',src:'img/icon/Team.png'}
+];
+
+let assetsLoaded=0;
+function loadAllAssets(){
+  return new Promise(resolve=>{
+    if(ASSET_LIST.length===0){resolve();return;}
+    let loaded=0;
+    const total=ASSET_LIST.length;
+    ASSET_LIST.forEach(a=>{
+      const img=new Image();
+      img.onload=()=>{
+        ASSETS[a.key]=img;
+        loaded++;
+        const pct=Math.floor(loaded/total*100);
+        document.getElementById('loadBar').style.width=pct+'%';
+        document.getElementById('loadText').textContent='Loading... '+pct+'%';
+        if(loaded>=total){assetsLoaded=total;resolve();}
+      };
+      img.onerror=()=>{
+        console.warn('Failed to load:',a.src);
+        loaded++;
+        const pct=Math.floor(loaded/total*100);
+        document.getElementById('loadBar').style.width=pct+'%';
+        if(loaded>=total){assetsLoaded=total;resolve();}
+      };
+      img.src=a.src;
+    });
+  });
+}
+
+// === GAME STATE ===
+const S={
+  screen:'loading',week:32,phase:'Kick-Off & Feasibility',
+  metrics:{schedule:70,budget:70,safety:70,quality:70,morale:70},
+  playerName:'PM',playerChar:0,
+  map:'office',px:7*16,py:10*16,pdir:0,pframe:0,pmoving:false,
+  camX:0,camY:0,
+  objectives:[],completedObj:[],
+  eventsDone:[],dlgCooldowns:{},
+  coffeeUsed:false,siteUnlocked:false,
+  introStep:0,weekTransOpen:false,
+  musicOn:true,gameRunning:false,
+  nearZone:null,nearNPC:null,dlgOpen:false,eventOpen:false,
+  keys:{},lastTime:0,animTimer:0,
+  weekObjMet:false,
+  savedExists:false,
+  docsOpen:false
+};
+
+// === TIMELINE — Key Weeks ===
+const KEY_WEEKS=[32,30,28,24,20,16,14,12,10,8,6,4,2,0,-2,-4,-8];
+// Negative weeks = post-delivery (displayed as T+2, T+4, T+8)
+
+function weekLabel(w){
+  if(w>0)return 'T-'+w;
+  if(w===0)return 'T-0';
+  return 'T+'+Math.abs(w);
+}
+
+// === COLORS ===
+const C={
+  // Background & UI
+  bg:'#f5e6c8',uiBg:'#faf3e0',uiBorder:'#c4956a',uiText:'#5a3a1e',uiHighlight:'#ffe4a0',
+  // Walls
+  wallDk:'#b8946e',wallMd:'#d4b896',wallLt:'#e8d4b8',wallAccent:'#c9a57a',
+  // Floors
+  floorA:'#d4a868',floorB:'#c49858',floorC:'#b88a4c',floorHighlight:'#e4c088',floorShadow:'#a07838',
+  // Carpet
+  carpet:'#c45c48',carpetLt:'#d47868',carpetDk:'#a04438',carpetPattern:'#d46858',
+  // Desk & Furniture
+  deskBrown:'#9e6b3a',deskTop:'#c4944e',deskHighlight:'#d8ae6e',deskShadow:'#7a5028',
+  // Wood tones
+  woodLight:'#dbb878',woodMed:'#b88c4e',woodDark:'#8e6830',woodGrain:'#a47a3c',
+  woodPine:'#c8a458',woodCherry:'#a04830',woodMaple:'#d4a460',woodOak:'#9e7840',
+  // Brick & Stone
+  brickRed:'#c4583c',brickDk:'#a04030',brickMortar:'#d8c8a8',
+  stone:'#b8a888',stoneDk:'#988870',stoneLt:'#d0c4a8',
+  concrete:'#c4b8a0',concreteDk:'#a89880',concreteLt:'#d8d0bc',
+  // Roof
+  roofRed:'#c85040',roofBrown:'#8e5e30',roofTile:'#d46848',roofHighlight:'#e88060',
+  // Screen & Tech
+  screenGlow:'#a8e8a0',screenDk:'#408040',screenBright:'#c0f8b8',
+  techGray:'#889098',techDk:'#606870',techLed:'#40e848',techLedRed:'#e84040',
+  // Grass
+  grassA:'#78c858',grassB:'#60b840',grassC:'#88d468',grassDk:'#489828',grassHighlight:'#a8e878',grassShadow:'#388818',
+  // Path
+  pathA:'#d8b878',pathB:'#c4a464',pathHighlight:'#e8cc98',pathShadow:'#a88848',
+  // Track & Rail
+  trackBrown:'#8e6830',trackMetal:'#a0a0a8',trackMetalLt:'#c0c0c8',trackMetalDk:'#707078',
+  trackWood:'#a07838',trackGravel:'#b0a490',
+  // Fence
+  fenceA:'#b88c4e',fenceHighlight:'#d4ae6e',fenceShadow:'#8e6830',
+  // Water
+  water:'#58a8d8',waterDk:'#4088b8',waterLt:'#80c8e8',waterHighlight:'#b0e0f8',
+  // Plants & Flora
+  plantGreen:'#58a838',plantDk:'#387818',plantLt:'#78c858',plantStem:'#488828',leafDk:'#306810',leafLt:'#68b848',
+  // Flowers
+  flowerRed:'#e85848',flowerPink:'#f088a0',flowerYellow:'#f8d848',flowerBlue:'#6898e0',
+  flowerPurple:'#a868c8',flowerWhite:'#f8f0e0',flowerOrange:'#f89838',flowerPetal:'#f8b8c8',
+  // Primary accent colors
+  red:'#e04838',orange:'#f08830',yellow:'#f8c838',hiVis:'#e8e038',hiVisOrange:'#f89028',
+  // Basics
+  white:'#f8f0e8',black:'#2a2018',cream:'#f8f0d8',offWhite:'#f0e8d8',
+  // Skin tones
+  skinA:'#f8c8a0',skinB:'#c89060',skinC:'#8e6038',skinHighlight:'#ffd8b8',skinShadow:'#d0a070',skinBlush:'#f0a0a0',
+  // Hair
+  hairBlonde:'#e8c848',hairBrown:'#8e5e28',hairRed:'#c84828',hairBlack:'#383028',
+  hairGray:'#a8a098',hairPink:'#e888a8',hairHighlight:'#f8e088',hairShadow:'#684818',
+  // Clothing - Shirts
+  shirtBlue:'#5888c8',shirtGreen:'#58a858',shirtPurple:'#8858b8',shirtPink:'#e878a0',
+  shirtRed:'#d84838',shirtYellow:'#e8c038',shirtOrange:'#e88838',shirtWhite:'#f0e8d8',
+  // Suits & Formal
+  suitGray:'#787880',suitDk:'#484850',suitNavy:'#384868',
+  // Pants
+  pantsBlue:'#4868a0',pantsDk:'#383848',pantsKhaki:'#c4a868',pantsBrown:'#7e5830',
+  // Shoes
+  shoe:'#584028',shoeLt:'#785838',shoeDk:'#382818',
+  // Safety & Construction
+  safetyYellow:'#f0d828',hardHat:'#f0c820',hardHatWhite:'#f0e8d0',cone:'#f06020',
+  // Misc objects
+  paperWhite:'#f8f4e8',bookRed:'#c84038',bookBlue:'#4870a8',bookGreen:'#48884e',
+  mugWhite:'#f0e8d8',mugBrown:'#9e6838',coffeeColor:'#6e4018',
+  metalSilver:'#c0bcc0',metalDk:'#888890'
+};
+
+// === CHARACTER DEFINITIONS ===
+const CHARS=[
+  {name:'Alex',hair:C.hairBrown,hairStyle:'short',skin:C.skinA,shirt:C.shirtBlue,pants:C.pantsBlue,eye:'#2848a0',walkSheet:'char_adam_walk',idleSheet:'char_adam_idle'},
+  {name:'Jordan',hair:C.hairBlack,hairStyle:'short',skin:C.skinB,shirt:C.shirtGreen,pants:C.pantsDk,eye:'#284828',walkSheet:'char_alex_walk',idleSheet:'char_alex_idle'},
+  {name:'Casey',hair:C.hairBlonde,hairStyle:'long',skin:C.skinA,shirt:C.shirtPurple,pants:C.pantsBlue,eye:'#284878',walkSheet:'char_amelia_walk',idleSheet:'char_amelia_idle'},
+  {name:'Morgan',hair:C.hairPink,hairStyle:'long',skin:C.skinC,shirt:C.shirtPink,pants:C.pantsDk,eye:'#483828',walkSheet:'char_bob_walk',idleSheet:'char_bob_idle'}
+];
+
+// NPC walk sprite assignments
+const NPCS=[
+  {id:'sarah',name:'Sarah',role:'Design Lead',hair:C.hairBlonde,hairStyle:'long',skin:C.skinA,shirt:C.shirtBlue,pants:C.pantsBlue,eye:'#2848a0',
+   officeX:12,officeY:6,siteX:-1,siteY:-1,walkSheet:'char_amelia_walk',idleSheet:'char_amelia_idle',
+   aiState:'idle',aiTimer:0,aiTargetX:12,aiTargetY:6,aiFacing:0,aiFrame:0,aiExpr:'working',aiExprTimer:0,curX:12*16,curY:6*16},
+  {id:'mike',name:'Mike',role:'Site Manager',hair:C.hairBrown,hairStyle:'short',skin:C.skinB,shirt:C.hiVisOrange,pants:C.pantsDk,eye:'#284828',
+   officeX:14,officeY:9,siteX:10,siteY:12,walkSheet:'char_bob_walk',idleSheet:'char_bob_idle',
+   aiState:'idle',aiTimer:0,aiTargetX:14,aiTargetY:9,aiFacing:0,aiFrame:0,aiExpr:'chat',aiExprTimer:0,curX:14*16,curY:9*16},
+  {id:'emma',name:'Emma',role:'Safety Lead',hair:C.hairRed,hairStyle:'long',skin:C.skinA,shirt:C.hiVis,pants:C.pantsDk,eye:'#285828',hat:C.yellow,
+   officeX:10,officeY:6,siteX:20,siteY:12,walkSheet:'char_alex_walk',idleSheet:'char_alex_idle',
+   aiState:'idle',aiTimer:0,aiTargetX:10,aiTargetY:6,aiFacing:0,aiFrame:0,aiExpr:'stress',aiExprTimer:0,curX:10*16,curY:6*16},
+  {id:'james',name:'James',role:'Commercial Mgr',hair:C.hairGray,hairStyle:'short',skin:C.skinB,shirt:C.suitGray,pants:C.pantsDk,eye:'#3a3020',
+   officeX:16,officeY:9,siteX:-1,siteY:-1,walkSheet:'char_adam_walk',idleSheet:'char_adam_idle',
+   aiState:'idle',aiTimer:0,aiTargetX:16,aiTargetY:9,aiFacing:0,aiFrame:0,aiExpr:'working',aiExprTimer:0,curX:16*16,curY:9*16},
+  {id:'priya',name:'Priya',role:'Comms Lead',hair:C.hairBlack,hairStyle:'long',skin:C.skinC,shirt:C.shirtPurple,pants:C.pantsBlue,eye:'#1a2848',
+   officeX:18,officeY:6,siteX:-1,siteY:-1,walkSheet:'char_amelia_walk',idleSheet:'char_amelia_idle',
+   aiState:'idle',aiTimer:0,aiTargetX:18,aiTargetY:6,aiFacing:0,aiFrame:0,aiExpr:'chat',aiExprTimer:0,curX:18*16,curY:6*16}
+];
+
+// NPC wander targets in office
+const NPC_WANDER_OFFICE=[
+  {x:12,y:6},{x:14,y:9},{x:10,y:6},{x:16,y:9},{x:18,y:6},
+  {x:23,y:5},{x:23,y:15},{x:9,y:12},{x:15,y:3},{x:7,y:10},
+  {x:11,y:10},{x:17,y:10},{x:22,y:16},{x:3,y:3}
+];
+
+// === SPRITE SHEET CONFIG ===
+// Asset files are named _16x16.png — frame width is 16px
+// Walk sheets: 384x224 = 24 cols x 7 rows of 16x32 frames (16 wide, 32 tall)
+// Idle sheets: 384x32 = 24 cols x 1 row of 16x32 frames
+const SPRITE_FW=16,SPRITE_FH=32;
+const SPRITE_COLS=24;
+// Walk sheet rows (16x32 effective frames, 7 rows at 32px each):
+// Rows 2,3,6 are consistently full across all 4 characters
+// Row 6=walk down(front), Row 2=walk right(side), Row 3=walk up(back)
+// Walk left = horizontally flip walk right (row 2)
+const WALK_DIR_ROW=[6,2,3,2]; // [down=row6, right=row2, up=row3, left=row2(flipped)]
+const WALK_FRAMES=6; // 6 walk frames per direction (cols 0-5)
+// Idle sheet: 24 cols, groups of 6 per direction
+const IDLE_DIR_COL=[0,6,12,18]; // [down, right, up, left] - first frame of each 6-frame group
+
+// === TILE SPRITE LOOKUPS ===
+// Maps tile IDs to {sheet:'tile_rooms', sx, sy} for ctx.drawImage source rect
+// sx,sy are pixel coordinates of top-left of the 16x16 tile in the sheet
+const TILE_SPRITES={
+  // Floors from rooms.png (272x368, 16px tiles, 17 cols x 23 rows)
+  // Wooden floor planks visible around rows 6-10 (y=96-160)
+  0:{sheet:'tile_rooms',sx:0,sy:112},   // floor A - warm wood plank
+  // Walls from rooms.png - colored wall panels in rows 2-4
+  1:{sheet:'tile_rooms',sx:0,sy:48},    // wall panel
+  // Grass from outdoor.png (1024x1024, 16px tiles)
+  // Green grass is in top-left quadrant
+  20:{sheet:'tile_outdoor',sx:16,sy:16}, // grass
+  // Trees from outdoor.png - tree canopies in top-right area
+  24:{sheet:'tile_outdoor',sx:864,sy:16}, // tree
+  // Path / dirt from outdoor.png
+  21:{sheet:'tile_outdoor',sx:48,sy:16},  // dirt path
+  // Gravel
+  22:{sheet:'tile_outdoor',sx:64,sy:16},
+  // Furniture from interior.png (256x1424, 16px, 16 cols x 89 rows)
+  // Brown desk tops around row 11 (y=176)
+  2:{sheet:'tile_interior',sx:64,sy:64},    // desk
+  14:{sheet:'tile_interior',sx:80,sy:64},   // computer desk
+  // Chairs
+  3:{sheet:'tile_interior',sx:0,sy:560},
+  // Bookshelves
+  5:{sheet:'tile_interior',sx:0,sy:336},
+  // Meeting table
+  11:{sheet:'tile_interior',sx:64,sy:80},
+  // Sofa
+  8:{sheet:'tile_interior',sx:0,sy:816},
+  // Plants
+  4:{sheet:'tile_interior',sx:0,sy:976},
+  // Filing cabinet
+  12:{sheet:'tile_interior',sx:48,sy:336},
+  // Coffee/counter
+  7:{sheet:'tile_interior',sx:64,sy:176},
+};
+
+// === MAP DATA ===
+const SOLID=new Set([1,2,4,5,6,7,8,11,12,13,17,18,24,23,26,27,28]);
+
+// Office: 30x20
+const OFFICE_W=30,OFFICE_H=20;
+const OMAP=(()=>{
+  const m=[];
+  for(let y=0;y<OFFICE_H;y++){
+    const r=[];
+    for(let x=0;x<OFFICE_W;x++){
+      if(x===2&&y===OFFICE_H-1){r.push(9);continue;}
+      if(y===0||y===OFFICE_H-1||x===0||x===OFFICE_W-1){r.push(1);continue;}
+      if(y===0){r.push(18);continue;}
+      if(y===8&&x>=20&&x<=28){r.push(1);continue;}
+      if(x===20&&y>=1&&y<=8){if(y===5)r.push(0);else r.push(1);continue;}
+      if(x===6&&y>=1&&y<=8){if(y===5)r.push(0);else r.push(1);continue;}
+      if(y===13&&x>=20&&x<=28){r.push(1);continue;}
+      if(x===20&&y>=13&&y<=18){if(y===15)r.push(0);else r.push(1);continue;}
+      if(x===3&&y===2){r.push(14);continue;}
+      if(x===2&&y===2){r.push(2);continue;}
+      if(x===4&&y===2){r.push(2);continue;}
+      if(x===3&&y===4){r.push(6);continue;}
+      if(x>=2&&x<=5&&y===2&&x!==3){r.push(12);continue;}
+      if(x>=2&&x<=5&&y===7){r.push(12);continue;}
+      if(x===4&&y===5){r.push(13);continue;}
+      if((x===10||x===14||x===18)&&(y===5||y===8)){r.push(2);continue;}
+      if((x===11||x===15||x===19)&&(y===5||y===8)){r.push(14);continue;}
+      if((x===8&&y===4)||(x===19&&y===4)||(x===8&&y===12)){r.push(4);continue;}
+      if(x>=22&&x<=26&&y===4){r.push(11);continue;}
+      if(x===21&&y===3){r.push(6);continue;}
+      if(x>=22&&x<=24&&y===14){r.push(7);continue;}
+      if(x===26&&y===15){r.push(8);continue;}
+      if(x===27&&y===15){r.push(8);continue;}
+      if(x===24&&y===16){r.push(2);continue;}
+      if(x>=13&&x<=16&&y===17){r.push(17);continue;}
+      if(x===9&&y===12){r.push(16);continue;}
+      if(x===15&&y===1){r.push(15);continue;}
+      r.push(0);
+    }
+    m.push(r);
+  }
+  return m;
+})();
+
+// Site map: 50x30
+const SITE_W=50,SITE_H=30;
+const SMAP=(()=>{
+  const m=[];
+  for(let y=0;y<SITE_H;y++){
+    const r=[];
+    for(let x=0;x<SITE_W;x++){
+      if(y===0||y===SITE_H-1||x===0||x===SITE_W-1){r.push(23);continue;}
+      if(x===4&&y===5){r.push(10);continue;}
+      if(x>=2&&x<=7&&y>=2&&y<=5){
+        if(y===2||y===5||x===2||x===7)r.push(25);
+        else r.push(0);
+        continue;
+      }
+      if(y>=13&&y<=15){r.push(22);continue;}
+      if(x>=4&&x<=6&&y>=6&&y<=12){r.push(21);continue;}
+      if(y>=25&&y<=28){r.push(21);continue;}
+      if(x>=22&&x<=24&&y>=16&&y<=24){r.push(21);continue;}
+      if(x>=16&&x<=30&&y>=10&&y<=12){
+        if(x===16||x===30)r.push(27);
+        else r.push(21);
+        continue;
+      }
+      if(x>=36&&x<=44&&y>=20&&y<=25){
+        if(x===36||x===44||y===20||y===25)r.push(23);
+        else r.push(26);
+        continue;
+      }
+      if((x===1&&y===8)||(x===48&&y===3)||(x===42&&y===7)||(x===12&&y===22)||
+         (x===35&&y===3)||(x===46&&y===18)||(x===3&&y===24)||(x===14&&y===3)||
+         (x===8&&y===20)||(x===30&&y===4)||(x===45&&y===10)||(x===2&&y===15)){
+        r.push(24);continue;
+      }
+      if(x===24&&y===11){r.push(28);continue;}
+      if(x===26&&y===11){r.push(28);continue;}
+      r.push(20);
+    }
+    m.push(r);
+  }
+  return m;
+})();
+
+// === ZONE LABELS (for drawing on map) ===
+const AREA_LABELS={
+  office:[
+    {x:3,y:1,text:'Your Desk',color:'#f7c948'},
+    {x:23,y:2,text:'Meeting Room',color:'#5b8ef5'},
+    {x:23,y:14,text:'Break Room',color:'#4aca8a'},
+    {x:3,y:6,text:'Documents',color:'#b08fd8'},
+    {x:15,y:1,text:'Notice Board',color:'#8a7fad'},
+    {x:9,y:11,text:'Water Cooler',color:'#88c8f0'},
+    {x:13,y:16,text:'Reception',color:'#8a7fad'},
+    {x:1,y:18,text:'Exit to Site',color:'#e05577'},
+    {x:10,y:10,text:'Open Plan',color:'#8a7fad'}
+  ],
+  site:[
+    {x:3,y:1,text:'Site Office',color:'#f7c948'},
+    {x:4,y:6,text:'Return',color:'#4aca8a'},
+    {x:7,y:13,text:'Track A',color:'#5b8ef5'},
+    {x:20,y:13,text:'Track B',color:'#5b8ef5'},
+    {x:35,y:13,text:'Track C',color:'#5b8ef5'},
+    {x:37,y:19,text:'Materials',color:'#e88030'},
+    {x:20,y:9,text:'Construction',color:'#e05577'}
+  ]
+};
+
+// === INTERACTION ZONES ===
+const ZONES={
+  office:[
+    {id:'desk',name:'Your Desk',x:3,y:2,w:2,h:2,hint:'Press SPACE \u2014 Your Desk'},
+    {id:'planning',name:'Planning Board',x:3,y:4,w:1,h:1,hint:'Press SPACE \u2014 Planning Board'},
+    {id:'meeting',name:'Meeting Room',x:22,y:4,w:5,h:2,hint:'Press SPACE \u2014 Meeting Room'},
+    {id:'breakroom',name:'Break Room',x:22,y:15,w:4,h:3,hint:'Press SPACE \u2014 Break Room'},
+    {id:'documents',name:'Document Room',x:2,y:5,w:4,h:3,hint:'Press SPACE \u2014 Documents'},
+    {id:'noticeboard',name:'Notice Board',x:15,y:1,w:1,h:1,hint:'Press SPACE \u2014 Notice Board'},
+    {id:'watercooler',name:'Water Cooler',x:9,y:12,w:1,h:1,hint:'Press SPACE \u2014 Water Cooler'},
+    {id:'reception',name:'Reception',x:13,y:17,w:4,h:1,hint:'Press SPACE \u2014 Reception'},
+    {id:'exit_site',name:'Exit to Site',x:2,y:19,w:1,h:1,hint:'Press SPACE \u2014 Go to Railway Site'}
+  ],
+  site:[
+    {id:'site_office',name:'Site Office',x:3,y:3,w:3,h:2,hint:'Press SPACE \u2014 Site Office'},
+    {id:'return_office',name:'Return to Office',x:4,y:5,w:1,h:1,hint:'Press SPACE \u2014 Return to Office'},
+    {id:'track_a',name:'Track Section A',x:5,y:13,w:5,h:3,hint:'Press SPACE \u2014 Inspect Track A'},
+    {id:'track_b',name:'Track Section B',x:18,y:13,w:5,h:3,hint:'Press SPACE \u2014 Inspect Track B'},
+    {id:'track_c',name:'Track Section C',x:33,y:13,w:5,h:3,hint:'Press SPACE \u2014 Inspect Track C'},
+    {id:'materials',name:'Materials Yard',x:37,y:21,w:6,h:3,hint:'Press SPACE \u2014 Materials Yard'},
+    {id:'construction',name:'Construction Zone',x:18,y:10,w:10,h:2,hint:'Press SPACE \u2014 Construction Zone'}
+  ]
+};
+
+// === PHASE HELPER ===
+function getPhase(w){
+  if(w>=28)return 'Kick-Off & Feasibility';
+  if(w>=20)return 'Design Phase';
+  if(w>=14)return 'Procurement & Planning';
+  if(w>=8)return 'Pre-Construction';
+  if(w>=2)return 'Construction';
+  if(w>=0)return 'Testing & Handover';
+  if(w>=-4)return 'Post-Delivery';
+  return 'Project Close-Out';
+}
+
+function getPhaseShort(w){
+  if(w>=28)return 'Kick-Off';
+  if(w>=20)return 'Design';
+  if(w>=14)return 'Procurement';
+  if(w>=8)return 'Pre-Construct';
+  if(w>=2)return 'Construction';
+  if(w>=0)return 'Handover';
+  if(w>=-4)return 'Post-Delivery';
+  return 'Close-Out';
+}
+
+function getPhaseIdx(w){
+  if(w>=28)return 0;if(w>=20)return 1;if(w>=14)return 2;if(w>=8)return 3;if(w>=2)return 4;if(w>=0)return 5;if(w>=-4)return 6;return 7;
+}
+
+
+// === NPC DIALOGUES ===
+// Each NPC has dialogues per phase index (0-7), each with text + choices with effects
+const DLG={
+  sarah:[
+    // Phase 0: Kick-Off
+    [{text:"Hi! I'm Sarah, your Design Lead. I handle all the engineering drawings and design reviews. Excited to get started!",
+      choices:[{t:"Great to meet you, Sarah!",e:{morale:3}},{t:"What's our biggest design challenge?",e:{quality:2}},{t:"Let's get straight to work.",e:{schedule:2,morale:-1}}]},
+     {text:"I've been looking at the existing track layout. There's some old infrastructure we'll need to work around.",
+      choices:[{t:"Can you map out all the constraints?",e:{quality:3,schedule:-1}},{t:"We'll deal with it as we go.",e:{schedule:1,quality:-2}},{t:"Good catch. Flag it as a risk.",e:{quality:2}}]},
+     {text:"The initial survey data is coming in. Some of it's surprising — the ground conditions aren't what we expected.",
+      choices:[{t:"Let's get more detailed surveys.",e:{budget:-3,quality:5}},{t:"Work with what we have for now.",e:{quality:-2,schedule:2}},{t:"What's the worst case scenario?",e:{quality:2}}]}],
+    // Phase 1: Design
+    [{text:"The design review is taking longer than expected. We might need another week.",
+      choices:[{t:"Take the time — quality matters.",e:{quality:5,morale:3,schedule:-3}},{t:"Can we fast-track it?",e:{schedule:3,quality:-5,morale:-2}},{t:"Split the review into two parts?",e:{schedule:2,quality:2}}]},
+     {text:"I've found a clever design solution that could save money, but it's untested.",
+      choices:[{t:"Let's try it — innovation is good!",e:{budget:5,quality:-3}},{t:"Stick with proven methods.",e:{quality:3,budget:-2}},{t:"Can we test it on a small section first?",e:{quality:3,budget:2,schedule:-2}}]},
+     {text:"The stakeholders want changes to the platform design. Again.",
+      choices:[{t:"Push back — we've agreed the design.",e:{schedule:3,quality:2,morale:-1}},{t:"Accommodate the changes.",e:{schedule:-4,budget:-3,quality:2}},{t:"Find a compromise that works.",e:{schedule:-1,quality:2}}]}],
+    // Phase 2: Procurement
+    [{text:"We need to finalize the technical specifications for procurement. Some details are still fuzzy.",
+      choices:[{t:"Get them perfect before we proceed.",e:{quality:4,schedule:-3}},{t:"Good enough is good enough. Send them.",e:{schedule:3,quality:-3}},{t:"Mark uncertainties clearly for bidders.",e:{quality:2,schedule:1}}]},
+     {text:"One of the design packages needs rework after the review feedback.",
+      choices:[{t:"Prioritize quality — fix it properly.",e:{quality:4,schedule:-2,morale:2}},{t:"Can we patch it later?",e:{schedule:2,quality:-3}},{t:"Who can help speed up the rework?",e:{schedule:1,quality:2,morale:1}}]},
+     {text:"I'm worried we're designing in isolation. We should coordinate more with Mike's construction team.",
+      choices:[{t:"Set up weekly design-construction meetings.",e:{quality:3,morale:2,schedule:-1}},{t:"Share the drawings — they'll figure it out.",e:{quality:-2,morale:-2}},{t:"Good idea. Arrange a workshop.",e:{quality:3,morale:3,schedule:-2}}]}],
+    // Phase 3: Pre-Construction
+    [{text:"The construction drawings are nearly complete. A few details left on signaling.",
+      choices:[{t:"Take the time to get signaling right.",e:{quality:4,safety:3,schedule:-2}},{t:"Can the signal engineers fill in gaps on site?",e:{schedule:2,quality:-2,safety:-2}},{t:"What's the risk if signaling is incomplete?",e:{quality:2,safety:2}}]},
+     {text:"I've been double-checking the track alignment calculations. Found a small error.",
+      choices:[{t:"Great catch! Fix it immediately.",e:{quality:5,safety:3,schedule:-1}},{t:"How small is small?",e:{quality:2,safety:2}},{t:"Good attention to detail, Sarah.",e:{quality:3,morale:2}}]},
+     {text:"The design team is feeling stretched thin. We're supporting too many queries from site.",
+      choices:[{t:"I'll talk to Mike about reducing queries.",e:{morale:3,quality:-1}},{t:"Can we hire temporary support?",e:{budget:-3,morale:3,quality:2}},{t:"Prioritize — only answer critical queries.",e:{quality:1,morale:1}}]}],
+    // Phase 4: Construction
+    [{text:"Site is finding discrepancies between the drawings and what's actually on the ground.",
+      choices:[{t:"Issue revised drawings ASAP.",e:{quality:4,schedule:-2,budget:-1}},{t:"Can they work around the differences?",e:{schedule:2,quality:-4,safety:-2}},{t:"Send a designer to site to resolve on the spot.",e:{quality:3,schedule:-1,budget:-1}}]},
+     {text:"The as-built records need updating. We're falling behind on documentation.",
+      choices:[{t:"Dedicate someone to documentation.",e:{quality:4,budget:-2}},{t:"We'll catch up after construction.",e:{quality:-3,schedule:2}},{t:"Can we simplify the documentation process?",e:{quality:2,schedule:1}}]},
+     {text:"I'm proud of the design work we've done. The team has really delivered.",
+      choices:[{t:"You've done amazing work, Sarah!",e:{morale:5,quality:2}},{t:"Let's not celebrate until it's built.",e:{morale:-2,quality:1}},{t:"The design is only as good as the build.",e:{morale:-1,quality:2}}]}],
+    // Phase 5: Handover
+    [{text:"The final design verification is complete. Everything checks out!",
+      choices:[{t:"Fantastic work!",e:{morale:4,quality:3}},{t:"Any lingering concerns?",e:{quality:2}},{t:"Let's document lessons learned.",e:{quality:3,morale:2}}]},
+     {text:"We should compile a handover pack with all design records and as-built drawings.",
+      choices:[{t:"Absolutely — get it done properly.",e:{quality:5,schedule:-1}},{t:"Keep it brief — key documents only.",e:{schedule:2,quality:-1}},{t:"Good thinking. Include maintenance notes too.",e:{quality:4,schedule:-1}}]},
+     {text:"I've really enjoyed this project. One of the best teams I've worked with.",
+      choices:[{t:"The feeling is mutual!",e:{morale:5}},{t:"There's still work to do!",e:{schedule:1,morale:-2}},{t:"Let's make sure we finish strong.",e:{morale:2,quality:2}}]}],
+    // Phase 6: Post-Delivery
+    [{text:"The maintenance team has questions about some of the design details. They need our support.",
+      choices:[{t:"Set up a design clinic for them.",e:{quality:4,morale:2,schedule:-1}},{t:"The handover pack should cover it.",e:{quality:-1,morale:-1}},{t:"I'll ask you to brief them personally.",e:{quality:3,morale:2}}]},
+     {text:"I've been reviewing the design against actual performance. Some things worked better than expected!",
+      choices:[{t:"Capture those wins for future projects.",e:{quality:4,morale:3}},{t:"What about things that didn't work?",e:{quality:3}},{t:"Share the findings with the whole team.",e:{quality:2,morale:3}}]},
+     {text:"I'm thinking of writing a technical paper about our innovative solutions on this project.",
+      choices:[{t:"That's a great idea — go for it!",e:{morale:4,quality:2}},{t:"Make sure it doesn't reveal anything confidential.",e:{quality:2}},{t:"Include the whole design team as co-authors.",e:{morale:4,quality:1}}]}]
+  ],
+  mike:[
+    [{text:"Hey! Mike here, Site Manager. I'll be running things on the ground once construction starts.",
+      choices:[{t:"Good to have you on board, Mike!",e:{morale:3}},{t:"What's the site like right now?",e:{quality:2}},{t:"When can we do a site visit?",e:{schedule:1,safety:1}}]},
+     {text:"I've done a preliminary site walkover. Access is going to be tricky — narrow roads and residential areas.",
+      choices:[{t:"Start planning access routes now.",e:{schedule:2,safety:2}},{t:"We'll sort it closer to construction.",e:{schedule:-1,safety:-2}},{t:"Talk to Priya about community comms.",e:{morale:2,safety:1}}]},
+     {text:"We should think about where to set up the site compound. I've got a couple of options.",
+      choices:[{t:"Show me the options — let's decide together.",e:{morale:2,quality:2}},{t:"You know best — your call.",e:{morale:1,schedule:1}},{t:"What are the pros and cons?",e:{quality:2}}]}],
+    [{text:"I'm reviewing the design drawings. Some of this won't work on site — too tight for equipment access.",
+      choices:[{t:"Raise it with Sarah formally.",e:{quality:3,morale:-1}},{t:"Can you find workarounds?",e:{schedule:2,quality:-2}},{t:"Let's get you both in a room together.",e:{quality:3,morale:2,schedule:-1}}]},
+     {text:"I've been talking to potential subcontractors. Prices are higher than last year.",
+      choices:[{t:"Shop around more — find better deals.",e:{budget:3,schedule:-2}},{t:"We need reliable people, not cheap ones.",e:{budget:-2,quality:3}},{t:"Can we do more work in-house?",e:{budget:2,quality:1,morale:-1}}]},
+     {text:"The design keeps changing. Every change means rework on my construction plans.",
+      choices:[{t:"I'll push for a design freeze.",e:{schedule:3,quality:-1,morale:2}},{t:"That's part of the process, Mike.",e:{morale:-3,quality:2}},{t:"Let's minimize changes from now on.",e:{schedule:2,morale:1}}]}],
+    [{text:"We need to order long-lead materials soon or they won't arrive in time.",
+      choices:[{t:"Order them now.",e:{schedule:3,budget:-2}},{t:"Wait until designs are final.",e:{schedule:-3,quality:2}},{t:"Order the definite items, hold on the rest.",e:{schedule:1,quality:1,budget:-1}}]},
+     {text:"I've lined up a great construction crew. Experienced, reliable, but not cheap.",
+      choices:[{t:"Hire them — experience matters.",e:{budget:-3,quality:4,safety:3}},{t:"Find someone more affordable.",e:{budget:2,quality:-2,safety:-1}},{t:"Can we negotiate the rate down?",e:{budget:1,quality:2}}]},
+     {text:"Health and safety regs have changed. We need to update our risk assessments.",
+      choices:[{t:"Get Emma on it immediately.",e:{safety:4,schedule:-1}},{t:"We'll update as we go.",e:{safety:-3,schedule:1}},{t:"How big are the changes?",e:{safety:2}}]}],
+    [{text:"Everything's ready for construction to start. The team is chomping at the bit!",
+      choices:[{t:"Let's do this! Start strong.",e:{morale:4,schedule:2}},{t:"Safety briefing first, then we start.",e:{safety:4,morale:1}},{t:"Double-check everything one more time.",e:{quality:3,schedule:-1}}]},
+     {text:"I've mapped out the construction sequence. Track work first, then signals, then finishes.",
+      choices:[{t:"Sounds like a solid plan.",e:{schedule:2,morale:2}},{t:"What if signals go wrong — any buffer?",e:{schedule:1,quality:2}},{t:"Can we overlap some activities?",e:{schedule:3,safety:-2,quality:-1}}]},
+     {text:"Found some underground services not on the drawings. We'll need to work around them.",
+      choices:[{t:"Stop and survey properly.",e:{safety:4,quality:3,schedule:-3}},{t:"Work carefully around them.",e:{safety:1,schedule:1}},{t:"Get the utility companies involved.",e:{safety:3,schedule:-2,budget:-1}}]}],
+    [{text:"Construction is going well! We're slightly ahead on track work.",
+      choices:[{t:"Great work! Keep the momentum.",e:{morale:3,schedule:2}},{t:"Don't rush — steady and safe.",e:{safety:2,quality:2}},{t:"Use the buffer for contingency.",e:{schedule:1,quality:1}}]},
+     {text:"One of the subcontractors isn't performing. Quality of work is poor.",
+      choices:[{t:"Replace them immediately.",e:{quality:4,budget:-3,schedule:-2}},{t:"Give them a warning and monitor.",e:{quality:1,schedule:1}},{t:"Put your best supervisor on their team.",e:{quality:3,morale:-1}}]},
+     {text:"The lads are working hard but they're tired. Weekend work is taking its toll.",
+      choices:[{t:"Give them a day off.",e:{morale:5,schedule:-2}},{t:"Push through — we're nearly there.",e:{morale:-4,schedule:2}},{t:"Rotate the crews so everyone gets rest.",e:{morale:2,schedule:1}}]}],
+    [{text:"Snagging list is almost clear. Just a few items left.",
+      choices:[{t:"Let's close them all out.",e:{quality:4,schedule:-1}},{t:"Which ones can we defer?",e:{schedule:2,quality:-2}},{t:"Good progress, Mike!",e:{morale:3,quality:1}}]},
+     {text:"The site is looking good. Ready for handover inspection.",
+      choices:[{t:"Do a final walkthrough together?",e:{quality:3,safety:2}},{t:"I trust your judgment — submit it.",e:{schedule:2,morale:2}},{t:"Any last concerns?",e:{quality:2,safety:1}}]},
+     {text:"It's been a tough project but we've delivered. Proud of the team.",
+      choices:[{t:"Couldn't have done it without you!",e:{morale:5}},{t:"The hard work paid off.",e:{morale:3,quality:2}},{t:"We'll celebrate properly soon.",e:{morale:4}}]}],
+    // Phase 6: Post-Delivery
+    [{text:"The snag list from handover is longer than I expected. 47 items and counting.",
+      choices:[{t:"Prioritize safety-critical snags first.",e:{safety:3,quality:3,schedule:-1}},{t:"Get the team back to close them out.",e:{quality:4,budget:-2}},{t:"How many are actually serious?",e:{quality:2}}]},
+     {text:"Some of the construction team want to stay on for the defects period. Good people.",
+      choices:[{t:"Keep the best ones — we need continuity.",e:{quality:3,morale:3,budget:-2}},{t:"Let them move to their next project.",e:{morale:-1,budget:2}},{t:"Keep a small core team only.",e:{quality:2,budget:1}}]},
+     {text:"I'm already being asked about the next project. They want me to start in two weeks.",
+      choices:[{t:"I need you here until defects are closed.",e:{quality:3,morale:-1}},{t:"Go for it — you've earned the next challenge.",e:{morale:3,quality:-2}},{t:"Can you split your time?",e:{quality:1,morale:2}}]}]
+  ],
+  emma:[
+    [{text:"Hello! I'm Emma, Safety Lead. My job is making sure everyone goes home safe every day.",
+      choices:[{t:"Safety is our top priority.",e:{safety:3,morale:2}},{t:"How's the safety record looking?",e:{safety:2}},{t:"Let's not let safety slow us down too much.",e:{safety:-3,schedule:1,morale:-2}}]},
+     {text:"I need to set up the project safety management plan. It takes time but it's essential.",
+      choices:[{t:"Take whatever time you need.",e:{safety:4,schedule:-2,morale:2}},{t:"Use the template from last project.",e:{safety:1,schedule:2}},{t:"What are our highest risks?",e:{safety:3}}]},
+     {text:"I want to run monthly safety training for the whole team. Even the office staff.",
+      choices:[{t:"Great idea — book it in.",e:{safety:4,morale:2,schedule:-1}},{t:"Just the site team, surely?",e:{safety:1,morale:-1}},{t:"How about quarterly instead?",e:{safety:2,schedule:1}}]}],
+    [{text:"I've reviewed the design for safety hazards. Found a few issues with platform edges.",
+      choices:[{t:"Flag them all formally.",e:{safety:4,quality:3,schedule:-1}},{t:"Are they serious?",e:{safety:2}},{t:"Can Sarah redesign those sections?",e:{safety:3,quality:3,schedule:-2}}]},
+     {text:"We need a construction phase safety plan before any work starts on site.",
+      choices:[{t:"Start drafting it now.",e:{safety:4,schedule:-1}},{t:"Isn't it too early for that?",e:{safety:-2,schedule:1}},{t:"Can Mike's team help with the hazard list?",e:{safety:3,morale:2}}]},
+     {text:"I've arranged safety walkthroughs of similar projects to learn from others' experience.",
+      choices:[{t:"Excellent initiative!",e:{safety:3,morale:2,quality:2}},{t:"Do we have time for field trips?",e:{schedule:1,safety:-1}},{t:"Share the findings with the team.",e:{safety:2,morale:1}}]}],
+    [{text:"The safety documentation for tender packages needs my review before it goes out.",
+      choices:[{t:"It's all yours — take the time needed.",e:{safety:4,schedule:-1}},{t:"Just check the critical sections.",e:{safety:2,schedule:1}},{t:"Can you review alongside procurement?",e:{safety:3,schedule:1}}]},
+     {text:"I'm concerned about night work safety. We need proper lighting plans.",
+      choices:[{t:"Add it to the specifications.",e:{safety:4,budget:-2}},{t:"We'll sort it when we get to site.",e:{safety:-3,schedule:1}},{t:"Good catch. Get quotes for temp lighting.",e:{safety:3,budget:-1}}]},
+     {text:"Two near-misses were reported on a nearby project. We should learn from them.",
+      choices:[{t:"Circulate the lessons to everyone.",e:{safety:4,morale:1}},{t:"That's their problem, not ours.",e:{safety:-3}},{t:"Update our risk register.",e:{safety:3,quality:2}}]}],
+    [{text:"Safety induction program is ready. Everyone on site needs it before they start.",
+      choices:[{t:"No exceptions — everyone gets inducted.",e:{safety:5,schedule:-1,morale:1}},{t:"Can we do a quick version?",e:{safety:1,schedule:1,morale:-1}},{t:"Well done getting it ready.",e:{safety:3,morale:2}}]},
+     {text:"I want to assign safety champions in each work crew. Local people who watch out for hazards.",
+      choices:[{t:"Brilliant idea — do it.",e:{safety:4,morale:3}},{t:"Isn't that your job?",e:{safety:-1,morale:-2}},{t:"Will the crews buy into it?",e:{safety:2,morale:1}}]},
+     {text:"The personal protective equipment order is ready. It's expensive but necessary.",
+      choices:[{t:"Order the best quality available.",e:{safety:4,budget:-3,morale:2}},{t:"Find a cheaper supplier.",e:{safety:-1,budget:2}},{t:"Approve it — safety isn't where we cut costs.",e:{safety:3,budget:-2,morale:2}}]}],
+    [{text:"Safety record on site is excellent so far. Zero lost-time incidents!",
+      choices:[{t:"Amazing! Thank the safety team.",e:{safety:3,morale:4}},{t:"Don't get complacent.",e:{safety:2,morale:-1}},{t:"Can we share this good news?",e:{morale:3,safety:1}}]},
+     {text:"Workers are getting tired and cutting corners. I've seen hard hats off, gloves not worn.",
+      choices:[{t:"Stop work. Safety stand-down now.",e:{safety:5,schedule:-3,morale:-1}},{t:"Verbal warnings first.",e:{safety:2,morale:1}},{t:"Increase safety patrols.",e:{safety:3,budget:-1}}]},
+     {text:"The testing phase has its own safety hazards. Live equipment, energized systems.",
+      choices:[{t:"New safety briefing for testing phase.",e:{safety:4,schedule:-1}},{t:"The team knows the risks.",e:{safety:-2,schedule:1}},{t:"Isolate live areas with barriers.",e:{safety:3,budget:-1}}]}],
+    [{text:"Final safety audit is clean. I'm signing off on the safety file.",
+      choices:[{t:"Outstanding work, Emma!",e:{safety:3,morale:4}},{t:"Any recommendations for the future?",e:{safety:2,quality:2}},{t:"Can we get the certificate this week?",e:{safety:2,schedule:1}}]},
+     {text:"I've compiled the safety statistics for the project. Best record in the region!",
+      choices:[{t:"That's a real achievement!",e:{morale:5,safety:2}},{t:"It's because of your leadership.",e:{morale:3,safety:2}},{t:"Let's present it at handover.",e:{quality:2,morale:2}}]},
+     {text:"Remember — safety doesn't end at handover. The maintenance team needs a full briefing.",
+      choices:[{t:"Absolutely — schedule it.",e:{safety:4,quality:3,schedule:-1}},{t:"That's their responsibility now.",e:{safety:-2,quality:-1}},{t:"Include it in the handover pack.",e:{safety:3,quality:3}}]}],
+    // Phase 6: Post-Delivery
+    [{text:"The operational safety review is due. We need to check everything is working as designed.",
+      choices:[{t:"Full review — leave nothing to chance.",e:{safety:4,quality:3,schedule:-1}},{t:"Spot checks should be enough.",e:{safety:1,schedule:1}},{t:"Get the maintenance team involved too.",e:{safety:3,morale:2}}]},
+     {text:"A minor incident was reported — a door sensor failed. No one hurt, but it needs fixing.",
+      choices:[{t:"Investigate root cause immediately.",e:{safety:4,quality:3}},{t:"Replace the sensor and move on.",e:{safety:2,schedule:1}},{t:"Check all similar sensors across the project.",e:{safety:4,quality:2,budget:-1}}]},
+     {text:"I'm putting together the safety legacy document. Lessons for future projects.",
+      choices:[{t:"Make it comprehensive — this is valuable.",e:{safety:3,quality:4,morale:2}},{t:"Keep it to the highlights.",e:{quality:1}},{t:"Present it to the wider organization.",e:{safety:2,quality:3,morale:3}}]}]
+  ],
+  james:[
+    [{text:"James here, Commercial Manager. I keep track of the money and contracts.",
+      choices:[{t:"What's our starting budget position?",e:{budget:2}},{t:"Any financial risks already?",e:{budget:2,quality:1}},{t:"Keep it tight, James.",e:{budget:1}}]},
+     {text:"The budget is tight. We have some contingency but not as much as I'd like.",
+      choices:[{t:"How much contingency exactly?",e:{budget:2}},{t:"We'll manage — stay disciplined.",e:{budget:2,morale:1}},{t:"Can we request more from the client?",e:{budget:3,schedule:-1}}]},
+     {text:"I'm setting up the cost tracking system. We'll know exactly where every penny goes.",
+      choices:[{t:"Good — transparency is key.",e:{budget:3,quality:2}},{t:"Don't make it too bureaucratic.",e:{budget:1,morale:1}},{t:"Weekly cost reports, please.",e:{budget:2,quality:1}}]}],
+    [{text:"Design changes are costing money. Each revision has a price tag.",
+      choices:[{t:"Track all change costs carefully.",e:{budget:3,quality:1}},{t:"It's investment in quality.",e:{budget:-2,quality:3}},{t:"Can we limit design iterations?",e:{budget:2,schedule:1,quality:-2}}]},
+     {text:"I've spotted an opportunity to consolidate some contracts and save money.",
+      choices:[{t:"Go for it!",e:{budget:4,schedule:1}},{t:"Will it affect quality?",e:{budget:2,quality:2}},{t:"Run the numbers and show me.",e:{budget:3}}]},
+     {text:"The client wants to add scope but doesn't want to increase the budget.",
+      choices:[{t:"No extra scope without extra budget.",e:{budget:4,schedule:2,morale:-1}},{t:"See what we can absorb.",e:{budget:-3,morale:2}},{t:"Negotiate — scope for scope trade.",e:{budget:2,quality:1}}]}],
+    [{text:"Procurement is going well. Most bids are within budget.",
+      choices:[{t:"Any surprises?",e:{budget:2}},{t:"Focus on value, not just price.",e:{quality:3,budget:-1}},{t:"Good work, James.",e:{morale:2,budget:1}}]},
+     {text:"One of the contract packages came in way over budget. 30% higher than estimated.",
+      choices:[{t:"Re-tender with tighter spec.",e:{budget:3,schedule:-3}},{t:"Negotiate with the best bidder.",e:{budget:2,schedule:-1}},{t:"Accept it — we need to move on.",e:{budget:-4,schedule:2}}]},
+     {text:"Cash flow is looking tight for next quarter. We might need to reschedule some payments.",
+      choices:[{t:"Manage it carefully — no delays.",e:{budget:2,schedule:1}},{t:"Talk to finance about bridging.",e:{budget:3,schedule:-1}},{t:"Delay non-critical spend.",e:{budget:2,morale:-1}}]}],
+    [{text:"Final contracts are being signed. All within budget so far.",
+      choices:[{t:"Excellent contract management!",e:{morale:3,budget:2}},{t:"Any penalty clauses I should know about?",e:{budget:2,quality:1}},{t:"Keep monitoring closely.",e:{budget:2}}]},
+     {text:"I recommend holding back 10% of each payment until work is verified complete.",
+      choices:[{t:"Smart thinking — do it.",e:{budget:3,quality:3}},{t:"Won't that upset the contractors?",e:{morale:1,budget:1}},{t:"Standard practice — go ahead.",e:{budget:2,quality:2}}]},
+     {text:"We're spending the contingency faster than planned. Down to 40%.",
+      choices:[{t:"Freeze non-essential spending.",e:{budget:4,morale:-2}},{t:"We still have enough — stay calm.",e:{budget:1}},{t:"What's driving the spend?",e:{budget:3,quality:1}}]}],
+    [{text:"Construction costs are tracking well. A few overruns on materials but within tolerance.",
+      choices:[{t:"Keep tracking weekly.",e:{budget:3}},{t:"Where are the overruns?",e:{budget:2,quality:1}},{t:"Can we claw anything back?",e:{budget:2}}]},
+     {text:"A contractor is claiming extra money for work they say wasn't in scope.",
+      choices:[{t:"Review the contract — push back if wrong.",e:{budget:4,morale:-1}},{t:"Negotiate a fair settlement.",e:{budget:2,morale:1}},{t:"Pay it — not worth the fight.",e:{budget:-4,schedule:1}}]},
+     {text:"I've found savings in the testing phase by combining some inspections.",
+      choices:[{t:"Good find! Any quality risk?",e:{budget:3,quality:1}},{t:"Do it — every saving helps.",e:{budget:3}},{t:"Run it past Emma first.",e:{budget:2,safety:2}}]}],
+    [{text:"Final cost report is looking healthy. We're within budget!",
+      choices:[{t:"That's a great result, James!",e:{morale:4,budget:3}},{t:"How close to the wire?",e:{budget:2}},{t:"Client will be pleased.",e:{morale:2,budget:2}}]},
+     {text:"All final accounts are being settled. No disputes.",
+      choices:[{t:"Clean finish — well done.",e:{morale:3,budget:2}},{t:"Any lessons for next time?",e:{budget:2,quality:2}},{t:"Make sure everything is documented.",e:{quality:3,budget:1}}]},
+     {text:"I've prepared the financial closeout report. Ready for your review.",
+      choices:[{t:"I'll review it today.",e:{budget:3,quality:2}},{t:"I trust your numbers.",e:{morale:2,budget:1}},{t:"Include it in the handover pack.",e:{quality:3,budget:1}}]}],
+    // Phase 6: Post-Delivery
+    [{text:"The final account is being negotiated with the main contractor. A few sticking points.",
+      choices:[{t:"Get it settled fairly — no loose ends.",e:{budget:3,quality:2}},{t:"Push hard on every penny.",e:{budget:4,morale:-2}},{t:"What are the main disputes?",e:{budget:2,quality:1}}]},
+     {text:"Retention money is due for release. I need your sign-off that the work is satisfactory.",
+      choices:[{t:"Do a proper inspection first.",e:{quality:4,budget:1}},{t:"The snags are minor — release it.",e:{budget:2,morale:2,quality:-1}},{t:"Hold back until all snags are closed.",e:{quality:3,budget:2,morale:-1}}]},
+     {text:"The project came in under budget. That's a real achievement in this market.",
+      choices:[{t:"Fantastic work, James!",e:{morale:5,budget:3}},{t:"How much under?",e:{budget:2}},{t:"Let's highlight this in the closeout report.",e:{budget:2,quality:3,morale:2}}]}]
+  ],
+  priya:[
+    [{text:"Hi there! I'm Priya, Communications Lead. I manage stakeholders and keep everyone informed.",
+      choices:[{t:"Who are our key stakeholders?",e:{morale:2,quality:1}},{t:"Good to meet you, Priya!",e:{morale:3}},{t:"Communications is crucial. Welcome!",e:{morale:2}}]},
+     {text:"I've mapped out all our stakeholders. There are more than you'd think — residents, businesses, rail users...",
+      choices:[{t:"Let's meet the key ones early.",e:{morale:2,schedule:-1,quality:2}},{t:"Keep them informed by newsletter.",e:{morale:1,quality:1}},{t:"Focus on the ones who can block us.",e:{schedule:2,morale:-1}}]},
+     {text:"The local council wants a presentation about the project. Good idea to get them onside early.",
+      choices:[{t:"Prepare a great presentation.",e:{morale:3,quality:2,schedule:-1}},{t:"Send them the project brief.",e:{schedule:1,morale:-1}},{t:"I'll attend personally.",e:{morale:3,quality:2,schedule:-1}}]}],
+    [{text:"Stakeholder feedback on the design is mixed. Some love it, some have concerns about noise.",
+      choices:[{t:"Address the concerns directly.",e:{morale:2,quality:2,schedule:-1}},{t:"You can't please everyone.",e:{morale:-2,schedule:1}},{t:"What specific concerns?",e:{quality:2,morale:1}}]},
+     {text:"I think we should set up a project website. Keep the public informed proactively.",
+      choices:[{t:"Great idea — go for it.",e:{morale:3,budget:-1}},{t:"Social media would be cheaper.",e:{morale:2,budget:1}},{t:"Is there demand for it?",e:{morale:1}}]},
+     {text:"A local newspaper wants to run a story about the project. Could be good or bad press.",
+      choices:[{t:"Cooperate — control the narrative.",e:{morale:3,quality:1}},{t:"No comment — too risky.",e:{morale:-2}},{t:"Offer them an exclusive site visit.",e:{morale:4,safety:1,schedule:-1}}]}],
+    [{text:"Residents near the site are asking when construction starts and how noisy it'll be.",
+      choices:[{t:"Hold community drop-in sessions.",e:{morale:4,schedule:-2,budget:-1}},{t:"Send an information leaflet.",e:{morale:2,budget:-1}},{t:"Direct them to the council.",e:{morale:-1}}]},
+     {text:"Good news — the local MP supports the project. Could be useful for political backing.",
+      choices:[{t:"Invite them for a project visit.",e:{morale:3,schedule:-1}},{t:"Good, but don't rely on politicians.",e:{morale:1}},{t:"Ask them to help with planning permissions.",e:{schedule:3,morale:2}}]},
+     {text:"Our newsletter got great feedback. People feel informed and included.",
+      choices:[{t:"Keep up the good work!",e:{morale:4}},{t:"Any negative feedback?",e:{morale:1,quality:1}},{t:"Share it with the team — they should know.",e:{morale:3}}]}],
+    [{text:"We need to notify residents about upcoming construction. Timing is important.",
+      choices:[{t:"Give them 4 weeks' notice.",e:{morale:3,schedule:-1}},{t:"2 weeks is standard.",e:{morale:1}},{t:"Personal door-knocking for nearest neighbors.",e:{morale:4,schedule:-2}}]},
+     {text:"A complaint has come in about construction vehicles blocking a residential street.",
+      choices:[{t:"Investigate and fix immediately.",e:{morale:2,safety:2,schedule:-1}},{t:"It's temporary — they'll cope.",e:{morale:-3,safety:-1}},{t:"Reroute the vehicles.",e:{morale:2,schedule:-1,budget:-1}}]},
+     {text:"I'm preparing communications for if things go wrong. Crisis comms plan.",
+      choices:[{t:"Smart thinking — hope for the best, plan for the worst.",e:{quality:3,morale:2}},{t:"Don't be negative — things will be fine.",e:{morale:-1,quality:-1}},{t:"Include me in the approval chain.",e:{quality:2,morale:1}}]}],
+    [{text:"Public perception of the project is positive. Our comms strategy is working.",
+      choices:[{t:"That's great news, Priya!",e:{morale:4}},{t:"Don't let up now.",e:{morale:1,quality:1}},{t:"What's driving the positive sentiment?",e:{morale:2,quality:1}}]},
+     {text:"A social media post about the project has gone viral. Mostly positive, some trolls.",
+      choices:[{t:"Engage positively with genuine questions.",e:{morale:3}},{t:"Don't feed the trolls.",e:{morale:1}},{t:"Use it to promote the project benefits.",e:{morale:3,quality:1}}]},
+     {text:"Rail user groups want to know about service disruptions during testing.",
+      choices:[{t:"Full transparency — publish the schedule.",e:{morale:3,quality:2}},{t:"Tell them as late as possible.",e:{morale:-3}},{t:"Work with operators on messaging.",e:{morale:2,quality:2}}]}],
+    [{text:"Handover communications are ready. Press release, social media, stakeholder letters.",
+      choices:[{t:"Brilliant preparation!",e:{morale:4}},{t:"Let me review before sending.",e:{quality:2,morale:1}},{t:"Include thanks to the community.",e:{morale:4}}]},
+     {text:"The client wants a grand opening ceremony. I can organize it.",
+      choices:[{t:"Go for it — we've earned a celebration!",e:{morale:5,budget:-2}},{t:"Keep it simple and professional.",e:{morale:2,budget:1}},{t:"Make sure the team gets recognized.",e:{morale:4}}]},
+     {text:"Thank you for always supporting good communications. It made such a difference.",
+      choices:[{t:"The whole team made it happen.",e:{morale:4}},{t:"You were the key to our stakeholder success.",e:{morale:5}},{t:"Comms is underrated — you proved its value.",e:{morale:4,quality:2}}]}],
+    // Phase 6: Post-Delivery
+    [{text:"The grand opening went perfectly! Great media coverage and happy stakeholders.",
+      choices:[{t:"You made that happen, Priya!",e:{morale:5}},{t:"Time to shift focus to ongoing comms.",e:{morale:2,quality:2}},{t:"Let's keep the positive momentum going.",e:{morale:3,quality:1}}]},
+     {text:"Some residents are still complaining about noise from train testing. The new schedule is different.",
+      choices:[{t:"Meet with them — listen to their concerns.",e:{morale:3,schedule:-1}},{t:"Testing is temporary — send a letter.",e:{morale:1}},{t:"Can we adjust testing times?",e:{morale:3,schedule:-1,quality:1}}]},
+     {text:"I'm compiling the final stakeholder satisfaction survey results. Overall very positive!",
+      choices:[{t:"Excellent — share with the team!",e:{morale:4,quality:2}},{t:"What can we learn from the negative feedback?",e:{quality:3,morale:1}},{t:"Include it in the closeout report.",e:{quality:3,morale:2}}]}]
+  ]
+};
+
+// === CURVEBALL EVENTS ===
+const EVENTS=[
+  {week:30,title:'Scope Surprise',
+   text:'Your client wants to add a pedestrian crossing to the project. "It\'ll only take a few weeks extra," they say.',
+   choices:[
+     {t:'Accept it \u2014 keep the client happy.',desc:'More scope means more work and cost.',e:{schedule:-5,budget:-4,morale:2}},
+     {t:'Push back firmly.',desc:'Protect your plan, but may upset the client.',e:{schedule:2,budget:2,morale:-2}},
+     {t:'Negotiate a trade-off.',desc:'Swap some scope to fit it in. Smart PM move.',e:{schedule:-1,budget:-1,quality:2,morale:1}}
+   ]},
+  {week:28,title:'Survey Shock',
+   text:'Ground surveys found unexpected utilities under the track. The design needs updating.',
+   choices:[
+     {t:'Redesign immediately.',desc:'Costs money but gets it right.',e:{budget:-4,quality:4,schedule:-2}},
+     {t:'Delay to assess options.',desc:'Take time to find the best solution.',e:{schedule:-4,quality:3}},
+     {t:'Proceed with caution.',desc:'Risky \u2014 could cause problems later.',e:{schedule:2,quality:-3,safety:-2}}
+   ]},
+  {week:24,title:'Team Trouble',
+   text:'Sarah and Mike disagree about the design approach. The tension is affecting the team.',
+   choices:[
+     {t:'Back Sarah\'s approach.',desc:'Better design quality, Mike may feel sidelined.',e:{quality:4,morale:-2,schedule:-1}},
+     {t:'Back Mike\'s approach.',desc:'Faster to build, design might suffer.',e:{quality:-3,schedule:3,morale:-1}},
+     {t:'Mediate and find middle ground.',desc:'Takes time but brings the team together.',e:{morale:4,schedule:-2,quality:1}}
+   ]},
+  {week:20,title:'Budget Alert',
+   text:'Finance says you\'re trending 10% over budget. Management wants a plan.',
+   choices:[
+     {t:'Cut scope to save money.',desc:'Reduces what you deliver but gets costs down.',e:{quality:-4,budget:5}},
+     {t:'Ask for more funding.',desc:'Risky \u2014 they might say no.',e:{budget:3,morale:1}},
+     {t:'Find efficiencies.',desc:'Smarter working, small savings add up.',e:{budget:3,quality:1}}
+   ]},
+  {week:16,title:'Community Concern',
+   text:'Local residents are worried about noise during construction. A petition is circulating.',
+   choices:[
+     {t:'Hold a public meeting.',desc:'Shows you care. Costs time and effort.',e:{morale:4,schedule:-2,budget:-1}},
+     {t:'Send a letter explaining plans.',desc:'Minimal effort but might not be enough.',e:{morale:1,schedule:1}},
+     {t:'Adjust work hours.',desc:'Less noise impact but slower progress.',e:{morale:3,safety:2,schedule:-3}}
+   ]},
+  {week:14,title:'Supplier Problem',
+   text:'Your key materials supplier has gone into administration. Materials delivery is at risk.',
+   choices:[
+     {t:'Find alternative supplier urgently.',desc:'Costs more but keeps things moving.',e:{budget:-5,schedule:2,quality:1}},
+     {t:'Wait and hope they recover.',desc:'Big gamble \u2014 could work out or be a disaster.',e:{schedule:-3,budget:-2}},
+     {t:'Redesign for different materials.',desc:'Expensive and slow but improves long-term quality.',e:{schedule:-4,budget:-3,quality:4}}
+   ]},
+  {week:12,title:'Safety Scare',
+   text:'A near-miss incident on site \u2014 worker nearly hit by equipment. No one hurt, but it\'s serious.',
+   choices:[
+     {t:'Stop all work for safety review.',desc:'The right thing to do. Costs time.',e:{schedule:-4,safety:6,morale:3}},
+     {t:'Review procedures but continue work.',desc:'Balanced approach \u2014 address the issue.',e:{safety:3,morale:1}},
+     {t:'Brief the team and move on.',desc:'Risky. The next near-miss might not be a miss.',e:{safety:-4,schedule:2,morale:-2}}
+   ]},
+  {week:10,title:'Political Pressure',
+   text:'A local politician is pushing for early completion. There\'s talk of moving the deadline forward.',
+   choices:[
+     {t:'Explain the risks of rushing.',desc:'Professional and honest. Politician may push back.',e:{safety:3,quality:3,schedule:-1}},
+     {t:'Agree to try.',desc:'Please the politician but risk safety and quality.',e:{safety:-4,quality:-3,schedule:3}},
+     {t:'Offer a partial early opening.',desc:'Compromise \u2014 open part of the railway early.',e:{schedule:1,quality:1,budget:-2}}
+   ]},
+  {week:8,title:'Weather Warning',
+   text:'Major storms forecast during your planned construction window.',
+   choices:[
+     {t:'Delay work by 2 weeks.',desc:'Safe but costly in time.',e:{schedule:-5,safety:4}},
+     {t:'Proceed with extra precautions.',desc:'Extra cost, some risk remains.',e:{budget:-3,safety:1}},
+     {t:'Reschedule to night shifts.',desc:'Costs more, tires the team, but protects schedule.',e:{budget:-3,morale:-3,schedule:2}}
+   ]},
+  {week:6,title:'Key Person Lost',
+   text:'Your best engineer has been headhunted. They want to leave immediately.',
+   choices:[
+     {t:'Counter-offer to keep them.',desc:'Expensive but keeps your best talent.',e:{budget:-4,quality:4,morale:2}},
+     {t:'Let them go, redistribute work.',desc:'Cheaper but impacts quality and team spirit.',e:{quality:-4,morale:-3}},
+     {t:'Negotiate a handover period.',desc:'They stay 4 weeks to transfer knowledge.',e:{schedule:-2,quality:2,morale:1}}
+   ]},
+  {week:4,title:'Quality Question',
+   text:'Inspections found some work doesn\'t meet specification. Not safety-critical, but below standard.',
+   choices:[
+     {t:'Rip it out and redo properly.',desc:'Expensive and slow, but right.',e:{schedule:-4,budget:-4,quality:6}},
+     {t:'Apply for a concession.',desc:'Ask to accept lower standard. Risky.',e:{quality:-2}},
+     {t:'Patch and monitor.',desc:'Quick fix, but may not last.',e:{budget:-1,quality:1}}
+   ]},
+  {week:2,title:'Testing Trouble',
+   text:'Signal testing has failed. The system won\'t work until it\'s fixed.',
+   choices:[
+     {t:'Bring in specialist team.',desc:'Expensive but resolves it fast.',e:{budget:-5,schedule:2,quality:3}},
+     {t:'Let your team debug it.',desc:'Slower but they\'ll learn from it.',e:{schedule:-3,quality:2,morale:2}},
+     {t:'Revert to simpler design.',desc:'Less capability but works reliably.',e:{quality:-3,schedule:2}}
+   ]},
+  // Post-delivery events
+  {week:-2,title:'Snag List Growing',
+   text:'47 snags found since handover. The maintenance team is reporting new issues daily. Some are minor cosmetic items, others affect operations.',
+   choices:[
+     {t:'Mobilize a dedicated snag team.',desc:'Costs money but shows commitment to quality.',e:{budget:-4,quality:5,morale:2}},
+     {t:'Prioritize \u2014 fix critical only.',desc:'Pragmatic but some items may linger.',e:{quality:2,schedule:2,morale:-1}},
+     {t:'Dispute non-genuine snags.',desc:'Push back on items that aren\'t defects.',e:{budget:2,quality:-1,morale:-2}}
+   ]},
+  {week:-4,title:'Team Member Leaving',
+   text:'Sarah has been offered the Design Lead role on a bigger project. She wants to take it but feels loyal to this team.',
+   choices:[
+     {t:'Congratulate her and let her go.',desc:'Shows good leadership. You\'ll miss her expertise.',e:{morale:4,quality:-2}},
+     {t:'Ask her to stay until close-out.',desc:'Selfish but practical \u2014 you need her knowledge.',e:{quality:3,morale:-2}},
+     {t:'Negotiate a phased handover.',desc:'She transitions over 4 weeks. Best of both worlds.',e:{quality:2,morale:3,schedule:-1}}
+   ]},
+  {week:-8,title:'Lessons Learned',
+   text:'Final project review meeting. The whole team gathers to reflect on what went well and what could improve for next time.',
+   choices:[
+     {t:'Open and honest review.',desc:'Some uncomfortable truths but valuable learning.',e:{quality:5,morale:3}},
+     {t:'Focus on the positives.',desc:'Good for morale but misses learning opportunities.',e:{morale:4,quality:-1}},
+     {t:'Structured workshop with actions.',desc:'Formal approach \u2014 turns lessons into real improvements.',e:{quality:4,morale:2,schedule:-1}}
+   ]}
+];
+
+
+// === WEEKLY OBJECTIVES ===
+function getObjectives(week){
+  const w=week;
+  // Post-delivery objectives
+  if(w<0){
+    const objs=[{id:'desk'+w,text:'Review project status at desk',type:'zone',target:'desk'}];
+    if(w===-2){
+      objs.push({id:'talk_mike'+w,text:'Discuss snag list with Mike',type:'npc',target:'mike'});
+      objs.push({id:'talk_emma'+w,text:'Safety review with Emma',type:'npc',target:'emma'});
+      objs.push({id:'docs'+w,text:'Review handover documents',type:'zone',target:'documents'});
+    }else if(w===-4){
+      objs.push({id:'talk_sarah'+w,text:'Talk to Sarah about her plans',type:'npc',target:'sarah'});
+      objs.push({id:'talk_james'+w,text:'Final account with James',type:'npc',target:'james'});
+      objs.push({id:'meet'+w,text:'Team catch-up meeting',type:'zone',target:'meeting'});
+    }else{
+      objs.push({id:'talk_priya'+w,text:'Closeout comms with Priya',type:'npc',target:'priya'});
+      objs.push({id:'meet'+w,text:'Lessons learned session',type:'zone',target:'meeting'});
+      objs.push({id:'docs'+w,text:'Finalize project closeout',type:'zone',target:'documents'});
+    }
+    return objs;
+  }
+  switch(w){
+    case 32: return [
+      {id:'meet_sarah',text:'Meet Sarah (Design Lead)',type:'npc',target:'sarah'},
+      {id:'meet_mike',text:'Meet Mike (Site Manager)',type:'npc',target:'mike'},
+      {id:'meet_emma',text:'Meet Emma (Safety Lead)',type:'npc',target:'emma'},
+      {id:'meet_james',text:'Meet James (Commercial Mgr)',type:'npc',target:'james'},
+      {id:'meet_priya',text:'Meet Priya (Comms Lead)',type:'npc',target:'priya'},
+      {id:'visit_desk',text:'Visit your desk \u2014 review project brief',type:'zone',target:'desk'},
+      {id:'visit_break',text:'Find the break room',type:'zone',target:'breakroom'}
+    ];
+    case 30: return [
+      {id:'desk30',text:'Review project plan at desk',type:'zone',target:'desk'},
+      {id:'talk_emma30',text:'Discuss safety plan with Emma',type:'npc',target:'emma'},
+      {id:'docs30',text:'Check document room for surveys',type:'zone',target:'documents'}
+    ];
+    case 28: return [
+      {id:'meeting28',text:'Feasibility presentation (meeting room)',type:'zone',target:'meeting'},
+      {id:'talk_sarah28',text:'Get Sarah\'s final design input',type:'npc',target:'sarah'},
+      {id:'desk28',text:'Submit feasibility report',type:'zone',target:'desk'}
+    ];
+    default:{
+      const phase=getPhaseIdx(w);
+      const objs=[];
+      objs.push({id:'desk'+w,text:'Check updates at your desk',type:'zone',target:'desk'});
+      if(w%4===0)objs.push({id:'meet'+w,text:'Monthly team meeting',type:'zone',target:'meeting'});
+      const npcPool=['sarah','mike','emma','james','priya'];
+      const n1=npcPool[Math.abs(w)%5],n2=npcPool[(Math.abs(w)+2)%5];
+      const npcName=n=>NPCS.find(np=>np.id===n).name;
+      objs.push({id:'talk_'+n1+w,text:'Talk to '+npcName(n1),type:'npc',target:n1});
+      if(w%2===0)objs.push({id:'talk_'+n2+w,text:'Talk to '+npcName(n2),type:'npc',target:n2});
+      if(phase>=3&&w%3===0)objs.push({id:'board'+w,text:'Update planning board',type:'zone',target:'planning'});
+      // Site always accessible now
+      if(phase>=1){
+        if(w%4===0)objs.push({id:'site'+w,text:'Visit the railway site',type:'zone',target:'exit_site'});
+        if(phase>=4&&w%2===0)objs.push({id:'inspect'+w,text:'Inspect track section',type:'zone',target:'track_b'});
+      }
+      if(w<=4&&w>=0)objs.push({id:'docs'+w,text:'Review handover documents',type:'zone',target:'documents'});
+      return objs;
+    }
+  }
+}
+
+const REPORT_WEEKS=[28,24,20,16,12,8,4,0];
+
+// === AUDIO SYSTEM ===
+let audioCtx=null,masterGain=null,musicPlaying=false;
+
+function initAudio(){
+  try{
+    audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+    masterGain=audioCtx.createGain();
+    masterGain.gain.value=0.3;
+    masterGain.connect(audioCtx.destination);
+  }catch(e){console.warn('Audio init failed',e);}
+}
+
+function playNote(freq,dur,type,vol,delay){
+  if(!audioCtx||!S.musicOn)return;
+  try{
+    const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+    o.type=type||'square';o.frequency.value=freq;
+    g.gain.value=0;
+    g.gain.setValueAtTime(0,audioCtx.currentTime+(delay||0));
+    g.gain.linearRampToValueAtTime((vol||0.1)*masterGain.gain.value,audioCtx.currentTime+(delay||0)+0.02);
+    g.gain.linearRampToValueAtTime(0,audioCtx.currentTime+(delay||0)+dur);
+    o.connect(g);g.connect(audioCtx.destination);
+    o.start(audioCtx.currentTime+(delay||0));o.stop(audioCtx.currentTime+(delay||0)+dur);
+  }catch(e){}
+}
+
+function playSFX(type){
+  if(!audioCtx)initAudio();
+  switch(type){
+    case'step':playNote(100+Math.random()*50,0.05,'triangle',0.03);break;
+    case'interact':playNote(523,0.08,'square',0.08);playNote(659,0.08,'square',0.07,0.06);break;
+    case'alert':playNote(440,0.15,'sawtooth',0.1);playNote(550,0.15,'sawtooth',0.09,0.1);playNote(660,0.15,'sawtooth',0.08,0.2);break;
+    case'positive':playNote(523,0.1,'square',0.08);playNote(659,0.1,'square',0.07,0.08);playNote(784,0.15,'square',0.08,0.16);break;
+    case'negative':playNote(300,0.2,'sawtooth',0.08);playNote(250,0.25,'sawtooth',0.07,0.15);break;
+    case'weekup':playNote(523,0.12,'square',0.07);playNote(659,0.12,'square',0.06,0.1);playNote(784,0.12,'square',0.06,0.2);playNote(1047,0.2,'square',0.07,0.3);break;
+  }
+}
+
+let bgmInterval=null;
+function startBGM(){
+  if(!audioCtx)initAudio();
+  if(bgmInterval)return;
+  const melody=[262,349,440,392,349,330,262,294,330,349,392,349,330,294];
+  const bass=[131,175,220,196,131,175,220,196,131,175,220,196,131,175];
+  let mi=0;
+  bgmInterval=setInterval(()=>{
+    if(!S.musicOn||S.screen!=='game')return;
+    playNote(melody[mi%melody.length],0.3,'square',0.04);
+    playNote(bass[mi%bass.length],0.4,'triangle',0.05);
+    playNote(melody[mi%melody.length]/2,0.5,'sine',0.02);
+    mi++;
+  },500);
+  musicPlaying=true;
+}
+
+function stopBGM(){if(bgmInterval){clearInterval(bgmInterval);bgmInterval=null;musicPlaying=false;}}
+
+function toggleMusic(){
+  S.musicOn=!S.musicOn;
+  document.getElementById('musBtn').textContent=S.musicOn?'\u266B ON':'\u266B OFF';
+  if(S.musicOn&&S.screen==='game')startBGM();else stopBGM();
+}
+
+// === INPUT (Bug 4 fix: stopPropagation on name input) ===
+document.addEventListener('keydown',e=>{
+  if(document.activeElement&&document.activeElement.tagName==='INPUT')return;
+  S.keys[e.key]=true;
+  if(e.key===' '||e.key==='Enter'){e.preventDefault();handleInteract();}
+  if(e.key==='Escape'){closeAllModals();}
+});
+document.addEventListener('keyup',e=>{
+  if(document.activeElement&&document.activeElement.tagName==='INPUT')return;
+  S.keys[e.key]=false;
+});
+
+// Bug 4: Prevent keyboard bleed from name input
+document.addEventListener('DOMContentLoaded',()=>{
+  const nameInput=document.getElementById('pName');
+  if(nameInput){
+    nameInput.addEventListener('keydown',e=>{e.stopPropagation();});
+    nameInput.addEventListener('keyup',e=>{e.stopPropagation();});
+  }
+});
+
+// === COLLISION ===
+function isSolid(mx,my){
+  const map=S.map==='office'?OMAP:SMAP;
+  const mw=S.map==='office'?OFFICE_W:SITE_W;
+  const mh=S.map==='office'?OFFICE_H:SITE_H;
+  if(mx<0||my<0||mx>=mw||my>=mh)return true;
+  return SOLID.has(map[my][mx]);
+}
+
+function canMove(nx,ny){
+  const ft=16,fw=6,fh=6;
+  const fx=nx+5,fy=ny+ft;
+  const corners=[[fx,fy],[fx+fw,fy],[fx,fy+fh],[fx+fw,fy+fh]];
+  for(const[cx,cy] of corners){
+    if(isSolid(Math.floor(cx/TS),Math.floor(cy/TS)))return false;
+  }
+  return true;
+}
+
+// === CAMERA (Bug 6 fix: subtract notepad from viewport) ===
+function updateCamera(){
+  const mw=(S.map==='office'?OFFICE_W:SITE_W)*TS;
+  const mh=(S.map==='office'?OFFICE_H:SITE_H)*TS;
+  // 220px CSS notepad at 2x scale = 110px internal
+  const vpw=IW-110;
+  const vph=IH;
+  const tx=S.px+8-vpw/2;
+  const ty=S.py+12-vph/2;
+  S.camX+=(tx-S.camX)*0.08;
+  S.camY+=(ty-S.camY)*0.08;
+  S.camX=Math.max(0,Math.min(mw-vpw,S.camX));
+  S.camY=Math.max(0,Math.min(mh-vph,S.camY));
+}
+
+// === MOVEMENT (Bug 5 fix: clamp to map bounds) ===
+const SPEED=1.2;
+let stepTimer=0;
+
+function updatePlayer(dt){
+  if(S.screen!=='game'||S.dlgOpen||S.eventOpen||S.weekTransOpen||S.docsOpen)return;
+  let dx=0,dy=0;
+  if(S.keys['ArrowLeft']||S.keys['a']||S.keys['A'])dx=-1;
+  if(S.keys['ArrowRight']||S.keys['d']||S.keys['D'])dx=1;
+  if(S.keys['ArrowUp']||S.keys['w']||S.keys['W'])dy=-1;
+  if(S.keys['ArrowDown']||S.keys['s']||S.keys['S'])dy=1;
+  
+  if(dx!==0||dy!==0){
+    const len=Math.sqrt(dx*dx+dy*dy);
+    dx/=len;dy/=len;
+    const nx=S.px+dx*SPEED,ny=S.py+dy*SPEED;
+    if(canMove(nx,S.py))S.px=nx;
+    if(canMove(S.px,ny))S.py=ny;
+    // Bug 5: Clamp to map bounds
+    const mw=(S.map==='office'?OFFICE_W:SITE_W)*TS;
+    const mh=(S.map==='office'?OFFICE_H:SITE_H)*TS;
+    S.px=Math.max(0,Math.min(mw-16,S.px));
+    S.py=Math.max(0,Math.min(mh-24,S.py));
+    // Direction: 0=down,1=right,2=up,3=left
+    if(Math.abs(dy)>=Math.abs(dx)){S.pdir=dy>0?0:2;}
+    else{S.pdir=dx>0?1:3;}
+    S.pmoving=true;
+    S.animTimer+=dt;
+    if(S.animTimer>150){S.pframe=(S.pframe+1)%WALK_FRAMES;S.animTimer=0;}
+    stepTimer+=dt;
+    if(stepTimer>250){playSFX('step');stepTimer=0;}
+  } else {
+    S.pmoving=false;S.pframe=0;S.animTimer=0;
+  }
+}
+
+
+// === NPC AI MOVEMENT ===
+const NPC_SPEED=0.5; // pixels per frame (~30px/sec at 60fps)
+
+function updateNPCAI(dt){
+  if(S.screen!=='game')return;
+  const npcsOnMap=getNPCsOnMap();
+  for(const npc of NPCS){
+    // Only update if NPC is on current map
+    const onMap=S.map==='office'?npc.officeX>0:npc.siteX>0;
+    if(!onMap)continue;
+    
+    // Initialize curX/curY if needed
+    if(npc.curX===undefined){
+      npc.curX=(S.map==='office'?npc.officeX:npc.siteX)*TS;
+      npc.curY=(S.map==='office'?npc.officeY:npc.siteY)*TS;
+    }
+    
+    npc.aiTimer-=dt;
+    npc.aiExprTimer-=dt;
+    
+    if(npc.aiExprTimer<=0){
+      const exprs=['working','chat','stress','confused'];
+      npc.aiExpr=exprs[Math.floor(Math.random()*exprs.length)];
+      npc.aiExprTimer=5000+Math.random()*8000;
+    }
+    
+    if(npc.aiState==='idle'){
+      if(npc.aiTimer<=0){
+        // Pick a new wander target
+        const targets=NPC_WANDER_OFFICE;
+        const tgt=targets[Math.floor(Math.random()*targets.length)];
+        npc.aiTargetX=tgt.x*TS;
+        npc.aiTargetY=tgt.y*TS;
+        npc.aiState='walking';
+        npc.aiTimer=10000; // max walk time before giving up
+      }
+    } else if(npc.aiState==='walking'){
+      const tdx=npc.aiTargetX-npc.curX;
+      const tdy=npc.aiTargetY-npc.curY;
+      const dist=Math.abs(tdx)+Math.abs(tdy);
+      
+      if(dist<4||npc.aiTimer<=0){
+        // Arrived or timed out
+        npc.aiState='idle';
+        npc.aiTimer=3000+Math.random()*5000; // wait 3-8 sec
+        npc.aiFrame=0;
+      } else {
+        // L-path movement: move X first, then Y
+        let mx=0,my=0;
+        if(Math.abs(tdx)>2){
+          mx=tdx>0?NPC_SPEED:-NPC_SPEED;
+        } else if(Math.abs(tdy)>2){
+          my=tdy>0?NPC_SPEED:-NPC_SPEED;
+        }
+        
+        npc.curX+=mx;
+        npc.curY+=my;
+        
+        // Clamp to map
+        const mw=(S.map==='office'?OFFICE_W:SITE_W)*TS;
+        const mh=(S.map==='office'?OFFICE_H:SITE_H)*TS;
+        npc.curX=Math.max(16,Math.min(mw-32,npc.curX));
+        npc.curY=Math.max(16,Math.min(mh-32,npc.curY));
+        
+        // Update facing
+        if(Math.abs(mx)>Math.abs(my)){
+          npc.aiFacing=mx>0?1:3;
+        } else if(Math.abs(my)>0){
+          npc.aiFacing=my>0?0:2;
+        }
+        
+        // Animate
+        npc.aiFrame=(npc.aiFrame+0.1)%WALK_FRAMES;
+      }
+    }
+  }
+}
+
+// === CHECK PROXIMITY ===
+function checkProximity(){
+  if(S.screen!=='game')return;
+  const zones=ZONES[S.map]||[];
+  const hint=document.getElementById('hint');
+  let found=null;
+  
+  for(const z of zones){
+    const zx=z.x*TS,zy=z.y*TS,zw=z.w*TS,zh=z.h*TS;
+    const cx=S.px+8,cy=S.py+16;
+    if(cx>=zx-12&&cx<=zx+zw+12&&cy>=zy-12&&cy<=zy+zh+12){
+      found={type:'zone',data:z};break;
+    }
+  }
+  
+  if(!found){
+    for(const n of NPCS){
+      const onMap=S.map==='office'?n.officeX>0:n.siteX>0;
+      if(!onMap)continue;
+      const nx=n.curX!==undefined?n.curX:(S.map==='office'?n.officeX:n.siteX)*TS;
+      const ny=n.curY!==undefined?n.curY:(S.map==='office'?n.officeY:n.siteY)*TS;
+      const dist=Math.abs(S.px+8-nx-8)+Math.abs(S.py+16-ny-16);
+      if(dist<32){found={type:'npc',data:n};break;}
+    }
+  }
+  
+  S.nearZone=found&&found.type==='zone'?found.data:null;
+  S.nearNPC=found&&found.type==='npc'?found.data:null;
+  
+  if(found&&!S.dlgOpen&&!S.eventOpen&&!S.docsOpen){
+    hint.style.display='block';
+    hint.textContent=found.type==='zone'?found.data.hint:('Press SPACE \u2014 Talk to '+found.data.name);
+  } else {
+    hint.style.display='none';
+  }
+}
+
+function getNPCsOnMap(){
+  return NPCS.filter(n=>{
+    if(S.map==='office')return n.officeX>0;
+    return n.siteX>0;
+  }).map(n=>({
+    ...n,
+    x:n.curX!==undefined?n.curX/TS:(S.map==='office'?n.officeX:n.siteX),
+    y:n.curY!==undefined?n.curY/TS:(S.map==='office'?n.officeY:n.siteY)
+  }));
+}
+
+// === INTERACTION ===
+function handleInteract(){
+  if(S.screen!=='game')return;
+  if(S.docsOpen){closeDocsOverlay();return;}
+  if(S.dlgOpen){return;} // Don't close dialogue on space — must click buttons
+  if(S.eventOpen)return;
+  
+  if(S.nearNPC){
+    openNPCDialogue(S.nearNPC);
+    return;
+  }
+  if(S.nearZone){
+    activateZone(S.nearZone);
+    return;
+  }
+}
+
+// === NPC DIALOGUE (Bug 11 fix: show reaction + metric changes) ===
+function openNPCDialogue(npc){
+  playSFX('interact');
+  const phaseIdx=getPhaseIdx(S.week);
+  const npcDlgs=DLG[npc.id];
+  if(!npcDlgs||!npcDlgs[phaseIdx])return;
+  
+  const coolKey=npc.id+'_'+S.week;
+  const lastIdx=S.dlgCooldowns[coolKey]||0;
+  const pool=npcDlgs[phaseIdx];
+  const dlgIdx=lastIdx%pool.length;
+  S.dlgCooldowns[coolKey]=lastIdx+1;
+  
+  const dlg=pool[dlgIdx];
+  const el=document.getElementById('dlg');
+  let html='<div class="dn">'+npc.name+' ('+npc.role+')</div>';
+  html+='<div class="dt">'+dlg.text+'</div>';
+  dlg.choices.forEach((c,i)=>{
+    html+='<div class="dc" onclick="chooseDlg(\''+npc.id+'\','+phaseIdx+','+dlgIdx+','+i+')">'+c.t+'</div>';
+  });
+  el.innerHTML=html;
+  el.className='on';
+  el.style.display='block';
+  S.dlgOpen=true;
+  
+  completeObj('npc',npc.id);
+}
+
+// === NPC PERSONALITY-DRIVEN REACTION SYSTEM ===
+const NPC_REACTIONS={
+  sarah:{
+    vpositive:[
+      '"Oh, that\'s exactly what I was hoping you\'d say! This is going to be a really elegant solution — I\'m already sketching it out in my head."',
+      '"Yes! That\'s the kind of thinking that makes a good project great. The design team will be delighted."',
+      '"Now we\'re talking. That\'s the right call — it protects the integrity of the work and gives us something we can actually be proud of."',
+      '"Brilliant. I know it might not look like the easy path, but trust me — getting this right at this stage saves us so much pain later."',
+      '"That\'s what I love about this project. When we make the right decision, even the hard ones, the design just... sings. Thank you."'
+    ],
+    positive:[
+      '"Good, that works for me. Not quite how I\'d have done it, but the principle is sound and I can design around it."',
+      '"Okay, yes. That\'s a sensible approach. I\'ll need to cross-reference a few things but we\'re heading in the right direction."',
+      '"That\'ll do nicely. I was worried you might push back more, but this gives the team room to breathe."',
+      '"Happy with that. It\'s not the most exciting option, but technically it\'s solid and I can defend it if anyone asks questions."',
+      '"Fair enough. That keeps the design programme on track, which is what matters right now. I\'ll get the team moving."'
+    ],
+    neutral:[
+      '"Right, okay. I can work with that, though I\'d have liked a bit more space to do this properly. We\'ll manage."',
+      '"Hmm. It\'s... workable. I might have to simplify a few details, but nothing that should affect performance."',
+      '"Noted. It\'s not my first choice, but I understand there are constraints. I\'ll flag it in the design register just so it\'s documented."',
+      '"Alright. We\'ll press on. I just want to make sure we don\'t let the pressure squeeze out the quality — that\'s where projects go wrong."',
+      '"Fine. Just... let me know if anything changes. The design is quite sensitive to decisions like this and I don\'t want surprises later."'
+    ],
+    negative:[
+      '"I\'m... not entirely comfortable with that, if I\'m honest. It puts some of the detail work at risk. Can we at least revisit it at the next review?"',
+      '"That worries me a bit. We\'ve worked hard to get the design to where it is. I\'d hate to see us cut corners at this stage."',
+      '"Okay... I\'ll make it work. But I want that on record — we\'re accepting a quality trade-off here and I think we should be clear-eyed about it."',
+      '"I hear you, and I\'ll do my best. But I want you to know — this isn\'t the approach I\'d recommend. If issues come up later, we\'ll need to revisit."',
+      '"Right. Well. I\'ll get on with it. Just... promise me we don\'t make a habit of this? Good design needs proper time and attention."'
+    ],
+    vnegative:[
+      '"I\'m going to be blunt — I think that\'s a mistake. Not from a personal point of view, just... the engineering. This could come back to bite us."',
+      '"I really don\'t like this. I\'m not being precious about the design, I genuinely think we\'re storing up problems for later. I\'ll document my concerns."',
+      '"Right, well. You\'re the PM and I\'ll follow your lead, but I\'m formally flagging this as a design risk. I need that to be on the record."',
+      '"Honestly? That\'s going to keep me up at night. I\'ll do what I can to mitigate it, but there\'s only so much I can compensate for with good detailing."',
+      '"I understand the pressure we\'re under. I do. But please, just have a read of the technical note I\'m going to send you. Then if you still want to proceed, I\'ll accept it."'
+    ]
+  },
+  mike:{
+    vpositive:[
+      '"Now that\'s what I\'m talking about. Straight bat, right call. The lads\'ll be well happy with that."',
+      '"Sorted. That\'s exactly how I\'d have played it. Right, I\'ll get on the blower to the site team and get things moving."',
+      '"Brilliant. Honestly, that\'s the kind of decision that makes my job a hell of a lot easier. We\'re on the front foot now."',
+      '"Top drawer, that. I\'ve been on sites where the PM would\'ve dithered for a week. Not here. Right, let\'s crack on."',
+      '"That\'s the way. Nice and decisive. I\'ll brief the crew this afternoon — they\'ll be chuffed to know we\'re not messing about."'
+    ],
+    positive:[
+      '"Fair enough. Works for me. Nothing fancy but it gets the job done, which is what this game\'s all about."',
+      '"Yeah, that\'s reasonable. I can work with that. Give me a day or so to adjust the programme and we\'re away."',
+      '"Alright, I\'m on board. It\'s not exactly the way I\'d have done it but I\'ve seen worse. We\'ll make it work."',
+      '"Good enough. The lads are flexible — we\'ll adapt. That\'s what site teams do, isn\'t it."',
+      '"Yeah, that\'ll do. I\'ll keep a close eye on progress and shout if anything starts looking dodgy."'
+    ],
+    neutral:[
+      '"Right. Not what I was hoping for, but I\'ve been on worse sites. We\'ll manage."',
+      '"Okay. I\'ll do it, but I want it on record that I flagged the issue. If it goes sideways, I\'m not carrying that."',
+      '"Can\'t say I love it, but alright. I\'ll crack on and we\'ll see how it plays out."',
+      '"Fine. I\'ll tell the crew. They won\'t be dancing about it but they\'re professionals — they\'ll get it done."',
+      '"Noted. Right. Let\'s not waste any more time chatting — there\'s actual work that needs doing out there."'
+    ],
+    negative:[
+      '"Look, I\'ll do it \'cause you\'re the PM. But I\'m telling you now — that\'s going to cause grief down the line. Mark my words."',
+      '"I\'ve been in construction twenty-two years and I know when something\'s going to come back and bite you. This is one of those times."',
+      '"I don\'t like it. Not one bit. But fine. Just don\'t be surprised if we\'re back here in a fortnight having this same conversation."',
+      '"Right. I\'ll relay that to the crew. They\'re not going to be thrilled but they\'re not paid to be thrilled, are they."',
+      '"That\'s going to make things difficult on site. I\'ll manage it but I need you to trust me if I have to make calls to compensate."'
+    ],
+    vnegative:[
+      '"No offence, but that\'s a terrible idea. I\'m saying it how it is because I\'d rather have this argument now than a proper incident later."',
+      '"I\'m not happy. And when I\'m not happy, my crew notices. Low morale on a construction site is a safety risk — full stop."',
+      '"Right, I\'ll do it. But I want it in writing — this came from above, not from me. My crew\'s safety is my number one responsibility."',
+      '"Bloody hell. Right. Okay. I\'ll sort it. But this is exactly the kind of decision that ends up in the accident report. I hope I\'m wrong."',
+      '"I\'ve had PMs make calls like that before. Sometimes it works out. Sometimes I end up visiting someone in hospital. So yeah, I\'m worried."'
+    ]
+  },
+  emma:{
+    vpositive:[
+      '"Thank you. Genuinely. That\'s the right decision and I don\'t think it gets said enough — getting safety right actually makes everything else easier."',
+      '"That\'s exactly what I was hoping to hear. I know it costs us something in the short term, but I can sleep at night knowing the team is properly protected."',
+      '"Oh, that\'s wonderful. I\'ll get the team briefed this afternoon. You know, on a lot of projects I have to fight for this. It means a lot that you just... get it."',
+      '"Perfect. Absolutely the right call. The safety file is going to look very strong because of decisions like this one."',
+      '"Right, good. I\'ll make sure this is documented properly. When everything goes well, nobody remembers what we prevented — but I do."'
+    ],
+    positive:[
+      '"Good. I\'m glad we\'re aligned on this. It\'s not perfect from a safety standpoint but it\'s proportionate and I can work with it."',
+      '"That\'s a reasonable approach. It keeps people safe and doesn\'t bring the project to a standstill. I appreciate the balance."',
+      '"Okay, yes. That works. I\'ll add a few monitoring measures to be sure, but the core decision is sound."',
+      '"Fair enough. We\'re managing the risk rather than eliminating it, which is sometimes the pragmatic answer. I\'ll document the controls."',
+      '"That\'s sensible. I can see you\'ve thought about the wellbeing side of this, not just the programme. That matters to me."'
+    ],
+    neutral:[
+      '"Alright. I\'ll accept that, but I want to put some additional controls in place. Safety doesn\'t happen by accident — no pun intended."',
+      '"I\'ll go along with it, but I\'m going to increase my site walkround frequency. If I see anything that concerns me, I\'m stopping work."',
+      '"Okay. It\'s not the approach I\'d advocate but I understand the constraints. Please make sure the team are aware of the increased vigilance required."',
+      '"Fine. But I want a written commitment that we review this decision in two weeks. Circumstances change and I won\'t let this drift."',
+      '"I\'ll go with it. But I want you to know — there is a residual risk here that I\'m not entirely comfortable with. I trust you\'re aware of that."'
+    ],
+    negative:[
+      '"I\'m concerned. I want to be clear about that — not to be difficult, but because it\'s my job to tell you when I think we\'re stepping into dangerous territory."',
+      '"That worries me. Not just from a compliance point of view — I genuinely care about these people going home safely. Can we talk through the risk again?"',
+      '"I\'ll implement it, but I\'m flagging it as a near-miss risk in the safety register. That might feel bureaucratic, but it\'s how we catch these things before they escalate."',
+      '"I understand why you\'ve made that call. I just need you to understand that the risk has increased. I\'ll do my very best to compensate."',
+      '"Okay. I\'ll trust your judgement on this one. But please — if you hear anything from the site team that sounds alarming, come to me immediately."'
+    ],
+    vnegative:[
+      '"I have to be honest with you. I cannot support that decision as it stands. I\'m not trying to be obstructive — this is a genuine safety concern."',
+      '"I\'m sorry, but no. If something happens to one of our people because of this, I don\'t think either of us could live with it. Please, let\'s find another way."',
+      '"I\'ll do what I\'m told. But I want it formally recorded that I objected, and I\'m going to escalate this to the Safety Director. That\'s not a threat — it\'s my duty."',
+      '"This puts me in a very difficult position. I\'m the Safety Lead. If I sign off on something I believe is dangerous, what does that even mean? I need to think about this."',
+      '"I\'ve been on projects where decisions like this were made. I\'ve also attended the incident investigations afterwards. Please — let me put together an alternative."'
+    ]
+  },
+  james:{
+    vpositive:[
+      '"Now that\'s a financially astute decision. The numbers are going to look very healthy because of choices like that one."',
+      '"Excellent. That\'s exactly what I needed to hear. I can already see how this improves our cost-at-completion forecast."',
+      '"Right call. And I\'ll tell you — that\'s not just good project management, that\'s good commercial management. You\'ve got an instinct for this."',
+      '"Splendid. I\'ll update the cost report accordingly. When the client sees these numbers at the next review, they\'ll be very pleased indeed."',
+      '"That\'s going to make a material difference to the bottom line. Well played. I\'ll start working up the revised forecast straight away."'
+    ],
+    positive:[
+      '"Fair enough. It\'s not the most efficient use of the budget, but it\'s within tolerance and I can defend it to the client."',
+      '"Okay, that works. I\'d have pushed a bit harder commercially, but the end result is acceptable. I\'ll adjust the forecasts."',
+      '"Fine by me. It\'s a reasonable call. Not every decision has to be about saving money — sometimes you spend to protect."',
+      '"Good enough. The variance is manageable and it keeps the programme moving, which has its own cost-benefit. Noted."',
+      '"Alright, I\'ll run with that. It\'s a touch more expensive than I\'d like, but the risk mitigation justifies it. Marginally."'
+    ],
+    neutral:[
+      '"Hmm. It\'s... not ideal from a cost perspective. We can absorb it, but it\'s chipping away at the contingency and I want you aware of that."',
+      '"Right. I\'ll make it work. But I\'m going to need to have a conversation with you about where we\'re trending on budget before the month end."',
+      '"Noted. It\'s a decision, and decisions have costs. I\'ll capture it in the change log and we\'ll see what the cumulative picture looks like."',
+      '"Okay. I\'m not going to pretend I\'m thrilled, but I\'ve seen worse. Just... no more surprises this week, please."',
+      '"Fine. I\'ll update the cost plan. My only ask is that we don\'t let decisions like this become habits. The contingency isn\'t infinite."'
+    ],
+    negative:[
+      '"That\'s going to put a dent in the budget. Not catastrophic, but it\'s a trend I don\'t love. I\'ll need to find savings elsewhere."',
+      '"I\'m going to be blunt — that\'s not great value for money. I understand the rationale, but the numbers don\'t lie. We\'re eroding our position."',
+      '"I\'ll make the numbers work, but I want you to see the revised cost-at-completion before we commit to anything else. It\'s not pretty."',
+      '"Right, okay. I\'ll absorb it. But I want a budget review in the diary before end of week. We need to have an honest conversation about where we are."',
+      '"Understood. For the record, this is the kind of decision that tends to have a compound effect. One this week, one next week — it adds up."'
+    ],
+    vnegative:[
+      '"That is going to be very difficult to explain to the client. And when I say difficult, I mean I will be in that meeting and I will need answers."',
+      '"I\'ll be honest — that decision concerns me considerably. We\'re not just talking about a budget overrun, we\'re talking about financial credibility with the client."',
+      '"Right. Well. I\'ll update the forecast. Just be aware — if this project finishes over budget, there will be a very detailed post-mortem and today\'s decision will feature in it."',
+      '"I\'ve been in commercial management for fifteen years. I\'ve seen projects recover from all sorts. But decisions like this one are the hardest to come back from."',
+      '"I understand you\'re the PM and the final call is yours. I just want to make absolutely sure you\'ve seen the numbers. Because the numbers are not good."'
+    ]
+  },
+  priya:{
+    vpositive:[
+      '"Oh, that\'s brilliant. Seriously, that\'s going to land so well with the community. You\'ve got a real feel for the people side of this."',
+      '"That\'s exactly the kind of thing that turns a project from a disruption into something the community actually gets behind. Love it."',
+      '"Wonderful! I\'ll get that drafted up and on social media by end of day. This is genuinely good news and people deserve to hear it."',
+      '"Perfect. And honestly, being proactive like this — rather than waiting until someone complains — is exactly what builds trust. Brilliant call."',
+      '"Yes! That\'s the approach. Stakeholders can sense when they\'re being managed versus when they\'re genuinely being included. This is the latter. Thank you."'
+    ],
+    positive:[
+      '"Good, I can work with that. It might not grab the headlines, but it\'s transparent and honest, which is always the right foundation."',
+      '"That works. I\'ll craft the messaging carefully — there\'s always a way to frame things positively if the underlying decision is sound."',
+      '"Okay, yes. That\'s a sensible middle ground. I\'ll make sure the key stakeholders hear it from us first, before anyone hears it on the grapevine."',
+      '"Nice. It gives me something concrete to communicate, which is always helpful. People need to feel informed, not speculated at."',
+      '"Good call. The community\'s been broadly supportive and this kind of decision helps maintain that goodwill. I\'ll make sure they know."'
+    ],
+    neutral:[
+      '"Alright. It\'s not the most inspiring message to take out there, but I\'ll find the positive angle — there\'s always one if you look hard enough."',
+      '"Okay. I can communicate that. It might be a bit of a tough sell with some of the more sceptical stakeholders, but I\'ve handled worse."',
+      '"Fine. I\'ll make sure it\'s communicated clearly and promptly. Ambiguity is our enemy — people fill in the blanks with their worst fears."',
+      '"Right. I\'ll do my best with it. Just... please loop me in before any other decisions like this one. The last thing we need is for people to hear through the back channels."',
+      '"Okay. I\'ll manage expectations and keep the dialogue open. People are generally reasonable if you treat them with respect."'
+    ],
+    negative:[
+      '"That\'s going to be a tricky one to communicate. Not impossible, but we\'ll need to be very careful about how we position it."',
+      '"Hmm. The residents aren\'t going to love that. I\'ll try to cushion the blow, but I want to be honest with you — there\'s a risk of negative coverage."',
+      '"I can spin a lot of things, but I can\'t spin everything. This one\'s going to take real care. Let\'s talk about how we get ahead of it."',
+      '"Right. I\'ll manage it. But I want to flag — stakeholder trust takes a long time to build and very little time to lose. Let\'s be mindful of that."',
+      '"Okay, I\'ll handle it. But I\'d really appreciate a heads up before things like this are decided — it lets me prepare rather than react."'
+    ],
+    vnegative:[
+      '"Oh. Right. I\'m not going to sugarcoat this — that\'s going to be very hard to communicate without it looking like we don\'t care about the community. And we do care."',
+      '"I\'m worried. Genuinely. We\'ve worked so hard to build goodwill with the local residents and something like this could undo a lot of it very quickly."',
+      '"I\'ll do my best. But I want to be transparent with you — there is a real chance this ends up in the local paper, and not in a flattering way. Just be prepared."',
+      '"Okay. I\'ll deal with it. But I think we need a crisis comms plan in place, just in case. Can we carve out thirty minutes this week to talk through it?"',
+      '"I\'ll manage it. But I want you to know — this kind of decision is exactly what undermines community confidence in big infrastructure projects. I really hope it\'s the right call."'
+    ]
+  }
+};
+
+// Picks a random item from an array, avoiding the last-used index if possible
+function _pickReaction(arr,key){
+  if(!_pickReaction._last)_pickReaction._last={};
+  const last=_pickReaction._last[key];
+  let idx;
+  if(arr.length===1){idx=0;}
+  else{
+    do{idx=Math.floor(Math.random()*arr.length);}while(idx===last);
+  }
+  _pickReaction._last[key]=idx;
+  return arr[idx];
+}
+
+function chooseDlg(npcId,pi,di,ci){
+  const dlg=DLG[npcId][pi][di];
+  const choice=dlg.choices[ci];
+  const effects=choice.e||{};
+  applyEffects(effects);
+
+  const npc=NPCS.find(n=>n.id===npcId);
+  const el=document.getElementById('dlg');
+  let html='<div class="dn">'+npc.name+' ('+npc.role+')</div>';
+
+  // Determine sentiment tier from total effect score
+  const totalEffect=Object.values(effects).reduce((a,b)=>a+b,0);
+  let tier;
+  if(totalEffect>=5)tier='vpositive';
+  else if(totalEffect>=2)tier='positive';
+  else if(totalEffect>=0)tier='neutral';
+  else if(totalEffect>=-3)tier='negative';
+  else tier='vnegative';
+
+  // Pick a personality-driven reaction, rotating to avoid repetition
+  const reactions=NPC_REACTIONS[npcId]||NPC_REACTIONS.sarah;
+  const pool=reactions[tier]||reactions.neutral;
+  const reactionKey=npcId+'_'+tier;
+  const reaction=_pickReaction(pool,reactionKey);
+
+  html+='<div class="dt">'+reaction+'</div>';
+
+  // Show metric changes with coloured arrows
+  html+='<div style="margin:6px 0">';
+  const metricNames={schedule:'Schedule',budget:'Budget',safety:'Safety',quality:'Quality',morale:'Morale'};
+  for(const[k,v] of Object.entries(effects)){
+    if(metricNames[k]){
+      const color=v>0?'#4aca8a':'#e05577';
+      const arrow=v>0?'\u2191':'\u2193';
+      const sign=v>0?'+':'';
+      html+='<span class="metric-change" style="color:'+color+'">'+sign+v+' '+metricNames[k]+' '+arrow+'</span> ';
+    }
+  }
+  html+='</div>';
+  html+='<div class="dc" onclick="closeDlg()">Continue</div>';
+  el.innerHTML=html;
+
+  updateNotepad();
+}
+
+function closeDlg(){
+  const el=document.getElementById('dlg');
+  el.className='';el.style.display='none';
+  S.dlgOpen=false;
+}
+
+function activateZone(zone){
+  playSFX('interact');
+  
+  // Map transitions — Bug: remove T-12 restriction for site access
+  if(zone.id==='exit_site'){
+    transitionToMap('site');
+    completeObj('zone','exit_site');
+    return;
+  }
+  if(zone.id==='return_office'){
+    transitionToMap('office');
+    return;
+  }
+  
+  // Documents zone opens overlay
+  if(zone.id==='documents'){
+    showDocsOverlay();
+    completeObj('zone','documents');
+    return;
+  }
+  
+  switch(zone.id){
+    case'desk':
+      showZoneText('Your Desk','You review your emails and project updates.\nWeek '+weekLabel(S.week)+' \u2014 '+getPhase(S.week)+'\n\nEverything looks '+
+        (S.metrics.schedule>=60?'on track':'concerning')+'. Check the notepad for this week\'s objectives.');
+      break;
+    case'planning':
+      showPlanningBoard();break;
+    case'meeting':
+      showZoneText('Meeting Room','You hold a team meeting to align on progress.\n\nPhase: '+getPhase(S.week)+'\nCurrent week: '+weekLabel(S.week));
+      S.metrics.morale=Math.min(100,S.metrics.morale+1);
+      break;
+    case'breakroom':
+      if(!S.coffeeUsed){
+        showZoneText('Break Room','You grab a coffee and take a breather.\nThe team appreciates seeing you take a moment to relax.\n\n+3 Morale');
+        S.metrics.morale=Math.min(100,S.metrics.morale+3);
+        S.coffeeUsed=true;
+        playSFX('positive');
+      } else {
+        showZoneText('Break Room','You\'ve already had your coffee break this week.\nCome back next week!');
+      }
+      break;
+    case'noticeboard':
+      showZoneText('Notice Board','Project Highlights:\n\u2022 Phase: '+getPhase(S.week)+
+        '\n\u2022 Team Rating: '+getStarText()+
+        '\n\u2022 Week: '+weekLabel(S.week));
+      break;
+    case'watercooler':
+      showZoneText('Water Cooler','You overhear some office chat. The team seems '+(S.metrics.morale>=70?'happy':'a bit stressed')+'.');
+      break;
+    case'reception':
+      showZoneText('Reception','The reception area. Visitors check in here.\nA poster reads: "Safety First \u2014 Everyone Goes Home Safe"');
+      break;
+    case'site_office':
+      showZoneText('Site Office','The site briefing board shows:\n\u2022 Workers on site: '+(S.week<=8&&S.week>=0?Math.floor(Math.random()*20+30):Math.floor(Math.random()*10+5))+
+        '\n\u2022 Days without incident: '+Math.floor(S.metrics.safety/5)+
+        '\n\u2022 Phase: '+getPhase(S.week));
+      break;
+    case'track_a':case'track_b':case'track_c':
+      const prog=S.week<=0?100:Math.max(0,Math.min(100,Math.floor((12-Math.max(0,S.week-12))/12*100+Math.random()*20)));
+      showZoneText('Track Inspection','You inspect the track section.\n\nProgress: '+prog+'%\nQuality: '+
+        (S.metrics.quality>=70?'Good':'Needs attention')+'\nSafety: '+(S.metrics.safety>=70?'Compliant':'Review needed'));
+      break;
+    case'materials':
+      showZoneText('Materials Yard','Stock levels look '+(S.metrics.budget>=60?'adequate':'low due to budget constraints')+'.\nRails, sleepers, ballast, and fixings are stored here.');
+      break;
+    case'construction':
+      showZoneText('Construction Zone','Active work area! '+
+        (S.metrics.safety>=70?'All safety measures in place.':'Some safety concerns need addressing.')+
+        '\n\nCrew is working '+(S.metrics.morale>=60?'with good energy.':'but morale is low.'));
+      break;
+  }
+  completeObj('zone',zone.id);
+  updateNotepad();
+}
+
+function showZoneText(title,text){
+  const el=document.getElementById('dlg');
+  el.innerHTML='<div class="dn">'+title+'</div><div class="dt" style="white-space:pre-line">'+text+'</div><div class="dc" onclick="closeDlg()">OK</div>';
+  el.className='on';el.style.display='block';
+  S.dlgOpen=true;
+}
+
+function showPlanningBoard(){
+  const el=document.getElementById('dlg');
+  let html='<div class="dn">Planning Board \u2014 Project Timeline</div><div class="dt"><div style="margin:4px 0">';
+  const phases=[{n:'Kick-Off',s:32,e:28,c:'#4aca8a'},{n:'Design',s:28,e:20,c:'#5b8ef5'},
+    {n:'Procurement',s:20,e:14,c:'#f7c948'},{n:'Pre-Construct',s:14,e:8,c:'#e88030'},
+    {n:'Construction',s:8,e:2,c:'#e05577'},{n:'Handover',s:2,e:0,c:'#b08fd8'},
+    {n:'Post-Delivery',s:0,e:-4,c:'#8a7fad'},{n:'Close-Out',s:-4,e:-8,c:'#533a7b'}];
+  phases.forEach(p=>{
+    const pw=((p.s-p.e)/40*100);
+    const inPhase=S.week<=p.s&&S.week>p.e;
+    const past=S.week<=p.e;
+    html+='<div style="margin:2px 0;font-size:7px"><span style="display:inline-block;width:80px;color:'+(past?'#4aca8a':(inPhase?'#f7c948':'#8a7fad'))+'">'+(inPhase?'\u25B6 ':'')+p.n+'</span>';
+    html+='<span style="display:inline-block;width:'+pw+'%;height:8px;background:'+(past?'#4aca8a33':p.c)+';border:1px solid '+p.c+';border-radius:2px"></span></div>';
+  });
+  html+='<div style="margin-top:6px;color:#f7c948">Current: '+weekLabel(S.week)+' \u2014 '+getPhase(S.week)+'</div>';
+  html+='</div></div><div class="dc" onclick="closeDlg()">Close</div>';
+  el.innerHTML=html;el.className='on';el.style.display='block';S.dlgOpen=true;
+}
+
+function transitionToMap(target){
+  S.map=target;
+  if(target==='site'){
+    S.px=4*TS;S.py=6*TS;S.siteUnlocked=true;
+    // Reset NPC positions for site
+    NPCS.forEach(n=>{
+      if(n.siteX>0){n.curX=n.siteX*TS;n.curY=n.siteY*TS;n.aiState='idle';n.aiTimer=2000;}
+    });
+  } else {
+    S.px=7*TS;S.py=10*TS;
+    // Reset NPC positions for office
+    NPCS.forEach(n=>{
+      if(n.officeX>0){n.curX=n.officeX*TS;n.curY=n.officeY*TS;n.aiState='idle';n.aiTimer=2000;}
+    });
+  }
+  S.camX=S.px-IW/2;S.camY=S.py-IH/2;
+}
+
+// === OBJECTIVE TRACKING (Bug 10: updateNotepad called after every change) ===
+function completeObj(type,target){
+  const key=type+'_'+target+'_'+S.week;
+  if(S.completedObj.includes(key))return;
+  for(const obj of S.objectives){
+    if(obj.type===type&&obj.target===target&&!S.completedObj.includes(type+'_'+obj.target+'_'+S.week)){
+      S.completedObj.push(type+'_'+obj.target+'_'+S.week);
+      playSFX('positive');
+      break;
+    }
+  }
+  updateNotepad();
+  checkWeekComplete();
+}
+
+function checkWeekComplete(){
+  if(S.objectives.length===0)return;
+  const allDone=S.objectives.every(o=>S.completedObj.includes(o.type+'_'+o.target+'_'+S.week));
+  S.weekObjMet=allDone;
+  updateNotepad();
+}
+
+// === METRICS ===
+function applyEffects(e){
+  if(!e)return;
+  let anyPos=false,anyNeg=false;
+  for(const[k,v] of Object.entries(e)){
+    if(S.metrics[k]!==undefined){
+      S.metrics[k]=Math.max(0,Math.min(100,S.metrics[k]+v));
+      if(v>0)anyPos=true;if(v<0)anyNeg=true;
+    }
+  }
+  if(anyPos)playSFX('positive');
+  if(anyNeg&&!anyPos)playSFX('negative');
+  updateHUD();
+  updateNotepad();
+}
+
+function getPMRating(){
+  const avg=(S.metrics.schedule+S.metrics.budget+S.metrics.safety+S.metrics.quality+S.metrics.morale)/5;
+  if(avg>=90)return 5;if(avg>=75)return 4;if(avg>=60)return 3;if(avg>=45)return 2;return 1;
+}
+
+function getStarText(){
+  const r=getPMRating();
+  return '\u2605'.repeat(r)+'\u2606'.repeat(5-r);
+}
+
+// === HUD UPDATE ===
+function updateHUD(){
+  document.getElementById('hWeek').textContent=weekLabel(S.week);
+  document.getElementById('hPhase').textContent=getPhaseShort(S.week);
+  document.getElementById('mSch').style.width=S.metrics.schedule+'%';
+  document.getElementById('mBud').style.width=S.metrics.budget+'%';
+  document.getElementById('mSaf').style.width=S.metrics.safety+'%';
+  document.getElementById('mQty').style.width=S.metrics.quality+'%';
+  document.getElementById('mMor').style.width=S.metrics.morale+'%';
+  document.getElementById('pSch').textContent=S.metrics.schedule;
+  document.getElementById('pBud').textContent=S.metrics.budget;
+  document.getElementById('pSaf').textContent=S.metrics.safety;
+  document.getElementById('pQty').textContent=S.metrics.quality;
+  document.getElementById('pMor').textContent=S.metrics.morale;
+  document.getElementById('hStars').textContent=getStarText();
+}
+
+// === NOTEPAD ===
+function updateNotepad(){
+  const np=document.getElementById('notepad');
+  if(!np)return;
+  let html='<h3>WEEK '+weekLabel(S.week)+'</h3>';
+  html+='<div class="sep">\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501</div>';
+  html+='<div style="color:#8a7fad;margin-bottom:6px;font-size:9px">Phase: '+getPhase(S.week)+'</div>';
+  
+  S.objectives.forEach(o=>{
+    const done=S.completedObj.includes(o.type+'_'+o.target+'_'+S.week);
+    html+='<div class="obj'+(done?' done':'')+'">'+(done?'\u2611 ':'\u2610 ')+o.text+'</div>';
+  });
+  
+  if(S.weekObjMet){
+    html+='<div style="margin-top:8px"><button class="btn sm gld" onclick="advanceWeek()" style="font-size:7px;padding:6px 10px;min-width:auto">Week Complete \u2192</button></div>';
+  }
+  
+  const milestones=[{w:28,t:'Feasibility Complete'},{w:24,t:'Design Started'},{w:20,t:'Design Approved'},
+    {w:16,t:'Contracts Awarded'},{w:12,t:'Construction Starts!'},{w:8,t:'Mid-Construction Review'},
+    {w:4,t:'Testing Begins'},{w:2,t:'Pre-Handover Inspection'},{w:0,t:'DELIVERY DAY!'},
+    {w:-2,t:'Snag Clearance'},{w:-4,t:'Team Transition'},{w:-8,t:'Project Close-Out'}];
+  const next=milestones.find(m=>m.w<S.week);
+  if(next){
+    html+='<div class="sep" style="margin-top:8px">\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501</div>';
+    html+='<div style="color:#f7c948;font-size:8px">NEXT MILESTONE</div>';
+    html+='<div style="color:#b08fd8;font-size:9px">'+weekLabel(next.w)+': '+next.t+'</div>';
+  }
+  
+  html+='<div class="tip">TIP: Walk to people and press SPACE to talk!</div>';
+  np.innerHTML=html;
+}
+
+
+// === WEEK ADVANCEMENT ===
+function advanceWeek(){
+  // Find next key week
+  const curIdx=KEY_WEEKS.indexOf(S.week);
+  let nextWeek;
+  if(curIdx>=0&&curIdx<KEY_WEEKS.length-1){
+    nextWeek=KEY_WEEKS[curIdx+1];
+  }else{
+    // Find the next key week below current
+    nextWeek=KEY_WEEKS.find(w=>w<S.week);
+    if(nextWeek===undefined)return; // game over
+  }
+  
+  const skippedWeeks=S.week-nextWeek;
+  
+  if(skippedWeeks>1){
+    // Show skip transition with metric drift
+    showSkipTransition(S.week,nextWeek,()=>{
+      S.week=nextWeek;
+      S.coffeeUsed=false;
+      // Small random metric drift for skipped weeks
+      const drift=Math.floor(skippedWeeks/2);
+      S.metrics.morale=Math.max(0,S.metrics.morale-drift);
+      S.metrics.schedule=Math.max(0,Math.min(100,S.metrics.schedule+Math.floor(Math.random()*3-1)));
+      showWeekTransition();
+      saveGame();
+    });
+  }else{
+    S.week=nextWeek;
+    S.coffeeUsed=false;
+    S.metrics.morale=Math.max(0,S.metrics.morale-1);
+    showWeekTransition();
+    saveGame();
+  }
+}
+
+function showSkipTransition(fromWeek,toWeek,callback){
+  const el=document.getElementById('skipTrans');
+  const diff=fromWeek-toWeek;
+  document.getElementById('skipTitle').textContent=diff+' weeks later...';
+  document.getElementById('skipText').textContent='Time passes. '+weekLabel(fromWeek)+' \u2192 '+weekLabel(toWeek);
+  el.className='skip-trans on';
+  setTimeout(()=>{
+    el.className='skip-trans';
+    callback();
+  },1500);
+}
+
+function showWeekTransition(){
+  playSFX('weekup');
+  S.weekTransOpen=true;
+  const el=document.getElementById('weekTrans');
+  const prevWeek=KEY_WEEKS[KEY_WEEKS.indexOf(S.week)-1]||S.week+1;
+  document.getElementById('wtTitle').textContent=weekLabel(prevWeek)+' Complete!';
+  document.getElementById('wtText').textContent='Moving to '+weekLabel(S.week)+' \u2014 '+getPhase(S.week);
+  
+  let changes='<div style="color:#8a7fad">';
+  changes+='Schedule: '+S.metrics.schedule+'% | Budget: '+S.metrics.budget+'% | Safety: '+S.metrics.safety+'%<br>';
+  changes+='Quality: '+S.metrics.quality+'% | Morale: '+S.metrics.morale+'%';
+  changes+='</div>';
+  if(S.week===0)changes+='<div style="color:#4aca8a;margin-top:6px">DELIVERY DAY! The railway is ready!</div>';
+  if(S.week<0)changes+='<div style="color:#b08fd8;margin-top:6px">Post-delivery phase: '+getPhase(S.week)+'</div>';
+  document.getElementById('wtChanges').innerHTML=changes;
+  
+  el.className='scr on';
+}
+
+function closeWeekTrans(){
+  document.getElementById('weekTrans').className='scr';
+  S.weekTransOpen=false;
+  
+  // Check if game is over (after T+8)
+  if(S.week<=-8){
+    showEndScreen();return;
+  }
+  
+  // Check for curveball event
+  const ev=EVENTS.find(e=>e.week===S.week&&!S.eventsDone.includes(e.week));
+  if(ev){
+    showEvent(ev);return;
+  }
+  
+  // Check for monthly report
+  if(REPORT_WEEKS.includes(S.week)){
+    showReport();return;
+  }
+  
+  startNewWeek();
+}
+
+function startNewWeek(){
+  S.objectives=getObjectives(S.week);
+  S.completedObj=S.completedObj.filter(c=>!c.endsWith('_'+S.week));
+  S.weekObjMet=false;
+  updateNotepad();
+  updateHUD();
+}
+
+// === CURVEBALL EVENTS (Bug 8 fix: defensive desc check, Bug 9 fix: delay pointer events) ===
+function showEvent(ev){
+  playSFX('alert');
+  S.eventOpen=true;
+  const el=document.getElementById('eventModal');
+  let html='<h3>\u26A0\uFE0F '+ev.title+'</h3>';
+  html+='<p>'+ev.text+'</p>';
+  ev.choices.forEach((c,i)=>{
+    html+='<div class="ch" onclick="chooseEvent('+ev.week+','+i+')">';
+    html+='<div style="color:#f7c948;font-size:9px;margin-bottom:4px">'+c.t+'</div>';
+    html+='<div style="color:#8a7fad;font-size:8px">'+(c.desc||'')+'</div>';
+    html+='</div>';
+  });
+  el.innerHTML=html;
+  el.className='modal on no-click';
+  // Bug 9: Disable clicks for 500ms
+  setTimeout(()=>{el.className='modal on';},500);
+}
+
+function chooseEvent(week,ci){
+  const ev=EVENTS.find(e=>e.week===week);
+  if(!ev)return;
+  const choice=ev.choices[ci];
+  applyEffects(choice.e);
+  S.eventsDone.push(week);
+  document.getElementById('eventModal').className='modal';
+  S.eventOpen=false;
+  
+  if(REPORT_WEEKS.includes(S.week)){
+    showReport();return;
+  }
+  startNewWeek();
+}
+
+// === MONTHLY REPORT ===
+function showReport(){
+  S.eventOpen=true;
+  const el=document.getElementById('reportModal');
+  const m=S.metrics;
+  const metrics=[
+    {n:'Schedule',v:m.schedule,c:'#4aca8a'},{n:'Budget',v:m.budget,c:'#f7c948'},
+    {n:'Safety',v:m.safety,c:'#e05577'},{n:'Quality',v:m.quality,c:'#5b8ef5'},
+    {n:'Morale',v:m.morale,c:'#b08fd8'}
+  ];
+  let html='<h3>MONTHLY REPORT \u2014 '+weekLabel(S.week)+'</h3>';
+  html+='<p>Phase: '+getPhase(S.week)+'</p>';
+  
+  metrics.forEach(mt=>{
+    const trend=mt.v>=70?'\u2191':(mt.v>=50?'\u2192':'\u2193');
+    html+='<div class="mb"><span style="width:60px;color:'+mt.c+'">'+mt.n+'</span>';
+    html+='<div class="bar"><div class="bf" style="width:'+mt.v+'%;background:'+mt.c+'"></div></div>';
+    html+='<span style="color:'+mt.c+'">'+mt.v+'% '+trend+'</span></div>';
+  });
+  
+  html+='<div style="text-align:center;margin:10px 0;font-size:12px;color:#f7c948">PM Rating: '+getStarText()+'</div>';
+  
+  const spent=Math.floor((1-m.budget/100)*10*100)/100;
+  html+='<div style="font-size:8px;color:#8a7fad;margin:6px 0">Budget: \u00A3'+spent.toFixed(1)+'M spent of \u00A310M</div>';
+  
+  html+='<div style="font-size:8px;color:#e05577;margin:6px 0">Risks to Watch:</div>';
+  if(m.schedule<60)html+='<div style="font-size:7px;color:#e05577">\u2022 Schedule is slipping \u2014 review timeline</div>';
+  if(m.budget<60)html+='<div style="font-size:7px;color:#e05577">\u2022 Budget under pressure \u2014 control costs</div>';
+  if(m.safety<60)html+='<div style="font-size:7px;color:#e05577">\u2022 Safety concerns \u2014 immediate review needed</div>';
+  if(m.quality<60)html+='<div style="font-size:7px;color:#e05577">\u2022 Quality issues \u2014 increase inspections</div>';
+  if(m.morale<60)html+='<div style="font-size:7px;color:#e05577">\u2022 Team morale low \u2014 support your people</div>';
+  if(m.schedule>=60&&m.budget>=60&&m.safety>=60&&m.quality>=60&&m.morale>=60)
+    html+='<div style="font-size:7px;color:#4aca8a">\u2022 All metrics healthy \u2014 keep it up!</div>';
+  
+  html+='<div style="text-align:center;margin-top:12px"><button class="btn sm gld" onclick="closeReport()">Continue</button></div>';
+  el.innerHTML=html;
+  el.className='modal report on';
+}
+
+function closeReport(){
+  document.getElementById('reportModal').className='modal report';
+  S.eventOpen=false;
+  startNewWeek();
+}
+
+// === DOCUMENTS OVERLAY ===
+function showDocsOverlay(){
+  S.docsOpen=true;
+  const el=document.getElementById('docsOverlay');
+  let html='<h2><img src="img/icon/Document.png" style="width:16px;height:16px;vertical-align:middle"> Project Documents</h2>';
+  
+  // Gantt-style timeline
+  html+='<div style="margin:12px 0;padding:12px;background:#0f0d1f;border:1px solid #3a3060;border-radius:6px">';
+  html+='<div style="font-size:10px;color:#f7c948;margin-bottom:8px">Project Timeline</div>';
+  
+  const phases=[
+    {n:'Kick-Off & Feasibility',s:32,e:28,c:'#4aca8a'},
+    {n:'Design Phase',s:28,e:20,c:'#5b8ef5'},
+    {n:'Procurement & Planning',s:20,e:14,c:'#f7c948'},
+    {n:'Pre-Construction',s:14,e:8,c:'#e88030'},
+    {n:'Construction',s:8,e:2,c:'#e05577'},
+    {n:'Testing & Handover',s:2,e:0,c:'#b08fd8'},
+    {n:'Post-Delivery',s:0,e:-4,c:'#8a7fad'},
+    {n:'Project Close-Out',s:-4,e:-8,c:'#533a7b'}
+  ];
+  
+  const totalWeeks=40; // T-32 to T+8
+  const barWidth=380;
+  
+  // Header with week markers
+  html+='<div style="display:flex;margin-left:130px;margin-bottom:4px;font-size:7px;color:#8a7fad">';
+  const markers=[32,24,16,8,0,-8];
+  markers.forEach(w=>{
+    const left=((32-w)/totalWeeks)*barWidth;
+    html+='<span style="position:absolute;margin-left:'+left+'px">'+weekLabel(w)+'</span>';
+  });
+  html+='</div>';
+  
+  phases.forEach(p=>{
+    const startPx=((32-p.s)/totalWeeks)*barWidth;
+    const widthPx=((p.s-p.e)/totalWeeks)*barWidth;
+    const inPhase=S.week<=p.s&&S.week>p.e;
+    const past=S.week<=p.e;
+    
+    html+='<div class="gantt-row">';
+    html+='<div class="gantt-label" style="color:'+(inPhase?'#f7c948':(past?'#4aca8a':'#8a7fad'))+'">'+(inPhase?'\u25B6 ':'')+p.n+'</div>';
+    html+='<div style="position:relative;width:'+barWidth+'px;height:16px;background:#1a1535;border-radius:3px">';
+    html+='<div class="gantt-bar" style="position:absolute;left:'+startPx+'px;width:'+widthPx+'px;background:'+(past?'#4aca8a55':p.c)+(inPhase?';box-shadow:0 0 6px '+p.c:'')+'"></div>';
+    
+    // "You are here" marker
+    const youPx=((32-S.week)/totalWeeks)*barWidth;
+    html+='<div class="gantt-marker" style="left:'+youPx+'px;top:0;height:16px" title="You are here"></div>';
+    html+='</div></div>';
+  });
+  html+='<div style="font-size:8px;color:#f7c948;margin-top:6px;text-align:center">You are here: '+weekLabel(S.week)+' \u2014 '+getPhase(S.week)+'</div>';
+  html+='</div>';
+  
+  // Key Documents
+  html+='<div style="margin-top:12px;font-size:10px;color:#f7c948;margin-bottom:8px"><img src="img/icon/Briefcase.png" style="width:14px;height:14px;vertical-align:middle"> Key Documents</div>';
+  
+  const docs=[
+    {name:'Project Brief',icon:'Briefcase',readyWeek:32},
+    {name:'Risk Register',icon:'Info',readyWeek:30},
+    {name:'Design Pack',icon:'Pencil',readyWeek:20},
+    {name:'Construction Plan',icon:'Hammer',readyWeek:14},
+    {name:'Budget Report',icon:'Cash',readyWeek:28},
+    {name:'Quality Log',icon:'Monitor',readyWeek:8},
+    {name:'Handover Pack',icon:'Key',readyWeek:2}
+  ];
+  
+  docs.forEach(d=>{
+    let status,statusColor;
+    if(S.week<=d.readyWeek-4){
+      status='Complete';statusColor='#4aca8a';
+    }else if(S.week<=d.readyWeek){
+      status='In Progress';statusColor='#f7c948';
+    }else{
+      status='Pending';statusColor='#8a7fad';
+    }
+    
+    html+='<div class="doc-item">';
+    html+='<img src="img/icon/'+d.icon+'.png" alt="">';
+    html+='<span>'+d.name+'</span>';
+    html+='<span class="doc-status" style="color:'+statusColor+';border:1px solid '+statusColor+'">'+status+'</span>';
+    html+='</div>';
+  });
+  
+  html+='<div style="text-align:center;margin-top:16px"><button class="btn sm" onclick="closeDocsOverlay()">Close Documents</button></div>';
+  el.innerHTML=html;
+  el.className='on';
+  el.style.display='block';
+}
+
+function closeDocsOverlay(){
+  const el=document.getElementById('docsOverlay');
+  el.className='';el.style.display='none';
+  S.docsOpen=false;
+}
+
+// === END SCREEN ===
+function showEndScreen(){
+  S.screen='end';
+  const el=document.getElementById('weekTrans');
+  const avg=Math.floor((S.metrics.schedule+S.metrics.budget+S.metrics.safety+S.metrics.quality+S.metrics.morale)/5);
+  const rating=getPMRating();
+  const titles=['In Trouble','Struggling PM','Competent PM','Strong PM','Outstanding PM'];
+  
+  let html='<h2 style="font-size:20px;color:#f7c948">PROJECT COMPLETE!</h2>';
+  html+='<p style="font-size:10px;color:#b08fd8;margin:10px 0">The railway is open and running! The project is officially closed.</p>';
+  html+='<div style="font-size:16px;color:#f7c948;margin:10px 0">'+getStarText()+'</div>';
+  html+='<p style="font-size:11px;color:#f0e6d3;margin:6px 0">'+titles[rating-1]+'</p>';
+  html+='<p style="font-size:8px;color:#8a7fad;margin:10px 0">Final Scores:<br>Schedule: '+S.metrics.schedule+'% | Budget: '+S.metrics.budget+'% | Safety: '+S.metrics.safety+'%<br>Quality: '+S.metrics.quality+'% | Morale: '+S.metrics.morale+'%<br>Average: '+avg+'%</p>';
+  html+='<p style="font-size:9px;color:#b08fd8;margin:6px 0">'+S.playerName+', you managed the railway project from feasibility through to close-out!</p>';
+  html+='<button class="btn gld" onclick="location.reload()" style="margin-top:14px">Play Again</button>';
+  
+  document.getElementById('wtTitle').innerHTML=html;
+  document.getElementById('wtText').textContent='';
+  document.getElementById('wtChanges').textContent='';
+  document.querySelector('#weekTrans .btn').style.display='none';
+  el.className='scr on';
+}
+
+function closeAllModals(){
+  if(S.docsOpen){closeDocsOverlay();return;}
+  if(S.dlgOpen)closeDlg();
+}
+
+// Bug 7: Use S.playerName dynamically in help modal
+function showHelp(){
+  const helpEl=document.getElementById('helpText');
+  helpEl.innerHTML=S.playerName+', you have 32 weeks (T-32 to T-0) to deliver a railway upgrade project, then 8 weeks of post-delivery close-out.<br><br>'+
+  weekLabel(S.week)+' means '+(S.week>0?S.week+' weeks until delivery':Math.abs(S.week)+' weeks after delivery')+'.<br><br>'+
+  'Walk around with Arrow Keys or WASD. Press SPACE to talk to people and interact with things.<br><br>'+
+  'Keep your 5 metrics healthy: Schedule, Budget, Safety, Quality, and Team Morale.<br><br>'+
+  'Make smart decisions when curveball events hit. Good luck, '+S.playerName+'!';
+  document.getElementById('helpModal').className='modal on';
+  S.eventOpen=true;
+}
+function closeHelp(){
+  document.getElementById('helpModal').className='modal';
+  S.eventOpen=false;
+}
+
+
+// === COLOR UTILITY FUNCTIONS ===
+function lightenColor(hex,amt){
+  if(!hex||hex.charAt(0)!=='#')return hex;
+  let r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  r=Math.min(255,r+amt);g=Math.min(255,g+amt);b=Math.min(255,b+amt);
+  return '#'+[r,g,b].map(c=>c.toString(16).padStart(2,'0')).join('');
+}
+function darkenColor(hex,amt){
+  if(!hex||hex.charAt(0)!=='#')return hex;
+  let r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  r=Math.max(0,r-amt);g=Math.max(0,g-amt);b=Math.max(0,b-amt);
+  return '#'+[r,g,b].map(c=>c.toString(16).padStart(2,'0')).join('');
+}
+
+// === PROCEDURAL SPRITE DRAWING ===
+function drawCharProcedural(ctx,cfg,dir,frame,x,y){
+  const f=Math.floor(frame)%4;
+  const bobY=(f===1||f===3)?-1:0;
+  const armSwing=[0,1,0,-1];
+  const armL=armSwing[f],armR=armSwing[(f+2)%4];
+  const legSwing=[0,1,0,-1];
+  const legL=legSwing[f],legR=legSwing[(f+2)%4];
+
+  const skin=cfg.skin||C.skinA;
+  const hair=cfg.hair||C.hairBrown;
+  const shirt=cfg.shirt||C.shirtBlue;
+  const pants=cfg.pants||C.pantsBlue;
+  const shoes=cfg.shoe||C.shoe;
+  const hairHL=lightenColor(hair,40),hairSH=darkenColor(hair,30);
+  const shirtHL=lightenColor(shirt,25),shirtSH=darkenColor(shirt,30);
+  const pantsHL=lightenColor(pants,20),pantsSH=darkenColor(pants,25);
+  const skinHL=lightenColor(skin,20),skinSH=darkenColor(skin,25);
+
+  function px(rx,ry,rw,rh,col){ctx.fillStyle=col;ctx.fillRect(x+rx,y+ry+bobY,rw,rh);}
+  function dot(dx,dy,col){ctx.fillStyle=col;ctx.fillRect(x+dx,y+dy+bobY,1,1);}
+
+  // Shadow ellipse
+  ctx.fillStyle='rgba(40,24,8,0.2)';
+  ctx.beginPath();ctx.ellipse(x+8,y+23,5,2,0,0,Math.PI*2);ctx.fill();
+
+  // === LEGS & SHOES ===
+  if(dir===0||dir===2){
+    px(4,18+legL,3,4,pants);px(4,18+legL,3,1,pantsHL);px(4,21+legL,3,1,pantsSH);
+    px(9,18+legR,3,4,pants);px(9,18+legR,3,1,pantsHL);px(9,21+legR,3,1,pantsSH);
+    px(4,22+legL,3,1,shoes);dot(4,22+legL,C.shoeDk);
+    px(9,22+legR,3,1,shoes);dot(9,22+legR,C.shoeDk);
+  }else{
+    px(6,18+legR,3,4,pantsSH);px(6,22+legR,3,1,C.shoeDk);
+    px(5,18+legL,3,4,pants);px(5,18+legL,3,1,pantsHL);px(5,21+legL,3,1,pantsSH);
+    px(5,22+legL,3,1,shoes);
+  }
+
+  // === BODY / SHIRT ===
+  if(dir===0||dir===2){
+    px(4,12,8,6,shirt);px(4,12,8,1,shirtHL);px(4,17,8,1,shirtSH);
+    if(dir===0){
+      px(7,12,2,1,skin);dot(8,14,shirtSH);dot(8,16,shirtSH);
+      px(4,14,2,3,shirtSH);px(10,14,2,3,shirtSH);
+    }else{
+      px(6,13,4,1,shirtSH);px(7,14,2,3,shirtSH);
+    }
+    px(2,12+armL,2,5,shirt);px(2,12+armL,2,1,shirtHL);px(2,16+armL,2,1,skin);dot(2,16+armL,skinHL);
+    px(12,12+armR,2,5,shirt);px(12,12+armR,2,1,shirtHL);px(12,16+armR,2,1,skin);dot(13,16+armR,skinHL);
+  }else{
+    px(4,12,7,6,shirt);px(4,12,7,1,shirtHL);px(4,17,7,1,shirtSH);
+    if(dir===1){px(9,13,2,4,shirtSH);}else{px(4,13,2,4,shirtSH);}
+    const armFX=dir===1?10:2,armBX=dir===1?3:9;
+    px(armBX,12+armR,2,5,shirtSH);px(armBX,16+armR,2,1,skinSH);
+    px(armFX,12+armL,2,5,shirt);px(armFX,12+armL,2,1,shirtHL);px(armFX,16+armL,2,1,skin);dot(armFX,16+armL,skinHL);
+  }
+
+  // === HEAD ===
+  const hX=3,hY=1,hW=10,hH=10;
+  if(dir===0){
+    px(hX,hY,hW,3,hair);px(hX,hY,hW,1,hairHL);
+    px(hX,hY+1,1,5,hair);px(hX+hW-1,hY+1,1,5,hair);
+    if(cfg.hairStyle==='long'){px(hX,hY+1,2,7,hair);px(hX+hW-2,hY+1,2,7,hair);}
+    px(hX+1,hY+2,hW-2,hH-3,skin);px(hX+1,hY+2,hW-2,1,skinHL);
+    // Eyes
+    px(hX+2,hY+4,3,2,C.white);px(hX+6,hY+4,3,2,C.white);
+    dot(hX+3,hY+5,C.black);dot(hX+7,hY+5,C.black);
+    dot(hX+3,hY+4,cfg.eye||C.shirtBlue);dot(hX+7,hY+4,cfg.eye||C.shirtBlue);
+    px(hX+2,hY+3,3,1,hairSH);px(hX+6,hY+3,3,1,hairSH);
+    // Cheeks & mouth
+    dot(hX+1,hY+6,C.skinBlush);dot(hX+2,hY+6,C.skinBlush);
+    dot(hX+8,hY+6,C.skinBlush);dot(hX+9,hY+6,C.skinBlush);
+    px(hX+4,hY+7,3,1,darkenColor(skin,40));dot(hX+5,hY+7,C.red);
+    dot(hX+5,hY+6,skinSH);px(hX+3,hY+8,5,1,skinSH);
+  }else if(dir===2){
+    px(hX,hY,hW,hH,hair);px(hX+1,hY,hW-2,1,hairHL);
+    px(hX+2,hY+2,1,4,hairHL);px(hX+5,hY+1,1,5,hairHL);px(hX+7,hY+3,1,3,hairHL);
+    px(hX,hY+hH-2,hW,2,hairSH);
+    px(hX-1,hY+4,1,2,skin);dot(hX-1,hY+4,skinHL);
+    px(hX+hW,hY+4,1,2,skin);dot(hX+hW,hY+4,skinHL);
+  }else{
+    px(hX,hY,hW,3,hair);px(hX,hY,hW,1,hairHL);px(hX+3,hY,4,1,hairHL);
+    if(dir===1){px(hX+hW-2,hY+1,2,6,hair);px(hX+hW-1,hY+2,1,4,hairSH);
+      if(cfg.hairStyle==='long')px(hX+hW-2,hY+1,2,8,hair);
+    }else{px(hX,hY+1,2,6,hair);px(hX,hY+2,1,4,hairSH);
+      if(cfg.hairStyle==='long')px(hX,hY+1,2,8,hair);
+    }
+    const faceX=dir===1?hX+1:hX+2,faceW=hW-3;
+    px(faceX,hY+2,faceW,hH-3,skin);px(faceX,hY+2,faceW,1,skinHL);
+    const eyeX=dir===1?hX+6:hX+3;
+    px(eyeX,hY+4,2,2,C.white);dot(dir===1?eyeX+1:eyeX,hY+5,C.black);
+    dot(dir===1?eyeX+1:eyeX,hY+4,cfg.eye||C.shirtBlue);
+    px(eyeX,hY+3,2,1,hairSH);
+    const noseX=dir===1?hX+hW-2:hX+1;
+    dot(noseX,hY+5,skinSH);dot(noseX,hY+6,skin);
+    const cheekX=dir===1?hX+7:hX+2;
+    dot(cheekX,hY+6,C.skinBlush);dot(cheekX,hY+7,C.skinBlush);
+    const mouthX=dir===1?hX+7:hX+3;
+    dot(mouthX,hY+7,darkenColor(skin,40));
+    const earX=dir===1?hX:hX+hW-1;
+    px(earX,hY+4,1,2,skin);dot(earX,hY+4,skinHL);
+  }
+  px(5,11,6,1,shirtSH);
+
+  // === HAT ===
+  if(cfg.hat){
+    const hatCol=cfg.hat;
+    const hatHL2=lightenColor(hatCol,30),hatSH2=darkenColor(hatCol,25);
+    px(hX-1,hY-1,hW+2,3,hatCol);px(hX,hY-1,hW,1,hatHL2);
+    px(hX-2,hY+1,hW+4,2,hatCol);px(hX-2,hY+1,hW+4,1,hatHL2);px(hX-2,hY+2,hW+4,1,hatSH2);
+  }
+}
+
+// === SPRITE-BASED CHARACTER DRAWING ===
+function drawCharSprite(ctx,sheetKey,dir,frame,x,y,isMoving){
+  const sheet=ASSETS[sheetKey];
+  if(!sheet||!sheet.naturalWidth)return false;
+
+  try{
+    const isIdleSheet=sheet.naturalHeight<=SPRITE_FH; // 384x32 = single row
+    let sx,sy,flipH=false;
+
+    if(isIdleSheet){
+      // Idle sheet: 24 cols x 1 row of 16x32 frames
+      // Groups of 6: cols 0-5=down, 6-11=right, 12-17=up, 18-23=left
+      const col=IDLE_DIR_COL[dir]||0;
+      sx=col*SPRITE_FW;
+      sy=0;
+    }else{
+      // Walk sheet: 24 cols x 7 rows of 16x32 frames
+      const row=WALK_DIR_ROW[dir]||6;
+      const col=Math.floor(frame)%WALK_FRAMES;
+      sx=col*SPRITE_FW;
+      sy=row*SPRITE_FH;
+      flipH=(dir===3); // left = flip right-facing sprites
+    }
+
+    // Draw 16x32 source at 16x32 destination (native pixel size)
+    // x aligned to tile, y-16 so feet sit at tile position
+    const dx=Math.floor(x);
+    const dy=Math.floor(y)-16;
+
+    if(flipH){
+      ctx.save();
+      ctx.scale(-1,1);
+      ctx.drawImage(sheet,sx,sy,SPRITE_FW,SPRITE_FH,-(dx+SPRITE_FW),dy,SPRITE_FW,SPRITE_FH);
+      ctx.restore();
+    }else{
+      ctx.drawImage(sheet,sx,sy,SPRITE_FW,SPRITE_FH,dx,dy,SPRITE_FW,SPRITE_FH);
+    }
+    return true;
+  }catch(e){
+    return false;
+  }
+}
+
+function drawChar(ctx,cfg,dir,frame,x,y,isMoving){
+  drawCharProcedural(ctx,cfg,dir,frame,x,y);
+}
+
+// === TILE RENDERER (sprite-based with procedural fallback) ===
+function drawTileSprite(ctx,type,x,y){
+  const px=x*TS,py=y*TS;
+  const lookup=TILE_SPRITES[type];
+  if(lookup){
+    const sheet=ASSETS[lookup.sheet];
+    if(sheet){
+      try{
+        ctx.drawImage(sheet,lookup.sx,lookup.sy,16,16,px,py,TS,TS);
+        return true;
+      }catch(e){}
+    }
+  }
+  return false;
+}
+
+function drawTile(ctx,type,x,y){
+  const TS2=16;
+  const px=x*TS2,py=y*TS2;
+  const hash=(x*7919+y*6271)%256;
+  const h2=(x*3571+y*9281)%256;
+  const h3=(x*4813+y*7127)%256;
+  function rect(rx,ry,rw,rh,col){ctx.fillStyle=col;ctx.fillRect(px+rx,py+ry,rw,rh);}
+  function dot(dx,dy,col){ctx.fillStyle=col;ctx.fillRect(px+dx,py+dy,1,1);}
+
+  switch(type){
+    case 0:{
+      // Clean warm wood checkerboard
+      const light=(x+y)%2===0;
+      rect(0,0,TS2,TS2,light?C.floorA:C.floorB);
+      rect(0,0,TS2,1,light?C.floorHighlight:C.floorA);
+      rect(0,0,1,TS2,light?C.floorHighlight:C.floorA);
+      if(hash%5===0)dot(hash%12+2,h2%12+2,C.woodGrain);
+      if(hash%7===0)dot(h2%10+3,hash%10+3,C.floorShadow);
+      break;}
+    case 1:{
+      rect(0,0,TS2,TS2,C.wallMd);rect(0,10,TS2,6,C.wallDk);rect(0,10,TS2,1,C.wallAccent);
+      rect(0,0,TS2,2,C.wallLt);rect(2,2,12,7,C.wallAccent);rect(3,3,10,5,C.wallLt);
+      rect(0,9,TS2,1,C.wallDk);
+      if(hash%4===0){dot(5,5,C.wallMd);dot(9,4,C.wallMd);}
+      break;}
+    case 2:{
+      rect(0,0,TS2,TS2,C.floorA);rect(1,4,14,11,C.deskBrown);rect(2,4,12,10,C.deskShadow);
+      rect(2,6,12,3,C.deskBrown);rect(2,10,12,3,C.deskBrown);
+      rect(6,7,4,1,C.trackMetal);rect(6,11,4,1,C.trackMetal);
+      rect(0,2,TS2,3,C.deskTop);rect(0,2,TS2,1,C.deskHighlight);rect(0,4,TS2,1,C.deskShadow);
+      rect(1,14,2,2,C.deskShadow);rect(13,14,2,2,C.deskShadow);
+      break;}
+    case 3:{
+      rect(0,0,TS2,TS2,C.floorA);
+      rect(4,13,1,3,C.trackMetalDk);rect(11,13,1,3,C.trackMetalDk);
+      rect(3,15,3,1,C.trackMetalDk);rect(10,15,3,1,C.trackMetalDk);
+      rect(3,9,10,4,C.suitGray);rect(4,9,8,1,C.techGray);
+      rect(4,2,8,8,C.suitGray);rect(5,2,6,1,C.techGray);rect(5,3,6,6,C.suitDk);
+      rect(2,7,2,3,C.trackMetalDk);rect(12,7,2,3,C.trackMetalDk);
+      break;}
+    case 4:{
+      rect(0,0,TS2,TS2,C.floorA);
+      rect(5,11,6,4,C.brickRed);rect(4,11,8,1,C.roofTile);rect(6,14,4,2,C.brickDk);
+      rect(6,11,4,1,C.pantsBrown);
+      rect(7,5,1,6,C.plantStem);rect(8,4,1,7,C.plantStem);
+      rect(4,2,8,5,C.plantGreen);rect(3,3,10,3,C.plantGreen);rect(5,1,6,2,C.plantLt);
+      dot(5,2,C.leafLt);dot(9,3,C.leafLt);dot(7,1,C.grassHighlight);
+      dot(4,5,C.plantDk);dot(10,4,C.plantDk);
+      if(hash%4===0){dot(5,1,C.flowerRed);dot(10,2,C.flowerYellow);}
+      break;}
+    case 5:{
+      rect(0,0,TS2,TS2,C.woodMed);rect(1,0,14,TS2,C.woodDark);
+      rect(0,0,TS2,1,C.woodLight);rect(0,5,TS2,1,C.woodLight);rect(0,10,TS2,1,C.woodLight);rect(0,15,TS2,1,C.woodLight);
+      const bc2=[C.bookRed,C.bookBlue,C.bookGreen,C.shirtPurple,C.orange,C.yellow];
+      for(let i=0;i<5;i++){const bw=2+(hash+i*37)%2,bx=1+i*3;rect(bx,1,bw,4,bc2[(hash+i)%6]);rect(bx,1,bw,1,C.wallLt);}
+      for(let i=0;i<4;i++){const bw=2+(h2+i*41)%2,bx=1+i*3+((h2+i)%2);rect(bx,6,bw,4,bc2[(h2+i)%6]);if(i%2===0)rect(bx,6,bw,1,C.cream);}
+      rect(1,11,3,4,C.bookRed);rect(4,11,4,4,C.shirtBlue);rect(8,12,3,3,C.bookGreen);rect(11,11,3,4,C.suitGray);
+      rect(5,12,2,1,C.white);rect(12,12,1,1,C.white);
+      break;}
+    case 6:{
+      rect(0,0,TS2,TS2,C.wallMd);rect(1,1,14,13,C.metalSilver);rect(2,2,12,11,C.white);
+      rect(3,3,8,1,C.shirtBlue);rect(3,5,6,1,C.red);rect(3,7,9,1,C.black);rect(3,9,5,1,C.shirtBlue);
+      rect(2,13,12,2,C.metalDk);rect(3,13,2,1,C.red);rect(6,13,2,1,C.shirtBlue);rect(9,13,2,1,C.black);
+      dot(11,3,C.offWhite);dot(12,4,C.offWhite);
+      break;}
+    case 7:{
+      rect(0,0,TS2,TS2,C.floorA);rect(2,8,12,7,C.woodMed);rect(2,8,12,1,C.woodLight);
+      rect(4,2,8,7,C.trackMetalDk);rect(5,2,6,1,C.techGray);
+      rect(5,3,4,2,C.screenGlow);rect(6,4,2,1,C.screenDk);
+      rect(6,6,4,2,C.black);rect(7,7,2,1,C.trackMetal);
+      rect(6,8,4,3,C.mugWhite);rect(7,9,2,2,C.coffeeColor);rect(10,9,1,2,C.mugWhite);
+      if(hash%3!==0){dot(7,1,C.offWhite);dot(8,0,C.offWhite);dot(9,1,C.offWhite);}
+      dot(10,3,C.techLed);dot(10,4,C.techLedRed);
+      break;}
+    case 8:{
+      rect(0,0,TS2,TS2,C.floorA);
+      rect(1,7,14,7,C.red);rect(1,7,14,1,C.flowerRed);
+      rect(2,8,5,4,C.carpetLt);rect(8,8,5,4,C.carpetLt);rect(2,8,5,1,C.flowerRed);rect(8,8,5,1,C.flowerRed);
+      rect(1,3,14,5,C.red);rect(1,3,14,1,C.flowerRed);
+      rect(0,5,2,9,C.carpetDk);rect(14,5,2,9,C.carpetDk);rect(0,5,2,1,C.carpet);rect(14,5,2,1,C.carpet);
+      rect(7,8,1,4,C.red);rect(1,14,14,2,C.deskShadow);
+      dot(3,9,C.flowerPink);dot(10,9,C.flowerPink);
+      break;}
+    case 9:{
+      rect(0,0,TS2,TS2,C.floorA);
+      rect(2,0,12,TS2,C.woodDark);rect(3,0,10,15,C.woodMed);
+      rect(4,1,8,5,C.woodOak);rect(5,2,6,3,C.woodLight);
+      rect(4,8,8,5,C.woodOak);rect(5,9,6,3,C.woodLight);
+      rect(10,7,2,2,C.trackMetal);rect(10,7,2,1,C.trackMetalLt);
+      rect(2,0,1,TS2,C.woodLight);rect(2,15,12,1,C.woodDark);
+      break;}
+    case 10:{
+      rect(0,0,TS2,TS2,C.grassA);
+      if(hash%2===0)dot(1,13,C.grassC);if(hash%3===0)dot(12,14,C.grassB);
+      rect(2,0,12,TS2,C.woodDark);rect(3,0,10,15,C.woodMed);
+      rect(4,1,8,5,C.woodOak);rect(5,2,6,3,C.woodMaple);
+      rect(4,8,8,5,C.woodOak);rect(5,9,6,3,C.woodMaple);
+      rect(10,7,2,2,C.trackMetal);rect(10,7,2,1,C.trackMetalLt);
+      rect(2,0,1,TS2,C.woodLight);rect(3,15,10,1,C.stone);
+      break;}
+    case 11:{
+      rect(0,0,TS2,TS2,C.floorA);
+      rect(2,12,2,4,C.woodDark);rect(12,12,2,4,C.woodDark);
+      rect(0,6,TS2,6,C.woodPine);rect(0,6,TS2,1,C.woodLight);rect(0,11,TS2,1,C.woodDark);
+      rect(3,8,6,1,C.woodMaple);rect(8,9,5,1,C.woodMaple);
+      if(hash%3===0){rect(2,7,4,3,C.paperWhite);rect(3,7,2,1,C.shirtBlue);}
+      if(hash%3===1){rect(10,7,3,3,C.mugWhite);rect(11,8,1,1,C.coffeeColor);rect(13,8,1,1,C.mugWhite);}
+      break;}
+    case 12:{
+      rect(0,0,TS2,TS2,C.floorA);rect(3,1,10,14,C.metalDk);rect(4,1,8,13,C.techGray);
+      for(let d=0;d<4;d++){const dy=1+d*3;
+        rect(4,dy,8,3,C.metalSilver);rect(4,dy,8,1,C.trackMetalLt);rect(4,dy+2,8,1,C.metalDk);
+        rect(6,dy+1,4,1,C.trackMetalDk);rect(7,dy,2,1,C.paperWhite);}
+      rect(3,0,10,1,C.trackMetalLt);rect(3,15,10,1,C.floorShadow);
+      break;}
+    case 13:{
+      rect(0,0,TS2,TS2,C.floorA);rect(2,0,12,TS2,C.trackMetalDk);rect(3,1,10,14,C.suitDk);
+      for(let u=0;u<4;u++){const uy=1+u*3+u;
+        rect(3,uy,10,3,C.techGray);rect(3,uy,10,1,C.metalSilver);
+        for(let v=0;v<4;v++)dot(4+v*2,uy+1,C.suitDk);
+        dot(12,uy+1,((hash+u*17)%3===0)?C.techLedRed:C.techLed);dot(11,uy+1,C.techLed);}
+      rect(4,14,2,1,C.shirtBlue);rect(7,14,1,1,C.yellow);rect(9,14,2,1,C.red);
+      break;}
+    case 14:{
+      rect(0,0,TS2,TS2,C.floorA);
+      rect(0,8,TS2,3,C.deskTop);rect(0,8,TS2,1,C.deskHighlight);rect(0,10,TS2,1,C.deskShadow);
+      rect(1,11,14,4,C.deskBrown);rect(1,11,14,1,C.deskShadow);
+      rect(1,14,2,2,C.deskShadow);rect(13,14,2,2,C.deskShadow);
+      rect(4,1,8,7,C.black);rect(5,2,6,5,C.screenGlow);
+      rect(6,3,4,1,C.screenBright);rect(6,5,3,1,C.white);
+      rect(7,8,2,1,C.trackMetalDk);rect(2,9,6,1,C.metalSilver);rect(10,9,2,1,C.metalSilver);
+      break;}
+    case 15:{
+      rect(0,0,TS2,TS2,C.wallMd);rect(1,1,14,14,C.woodMaple);rect(2,2,12,12,C.deskTop);
+      rect(3,3,4,3,C.paperWhite);dot(4,3,C.red);rect(3,3,3,1,C.shirtBlue);
+      rect(8,2,5,4,C.yellow);dot(10,2,C.red);rect(9,3,3,1,C.black);rect(9,4,2,1,C.black);
+      rect(3,8,5,5,C.flowerPink);dot(5,8,C.shirtGreen);rect(4,9,3,1,C.black);rect(4,10,2,1,C.black);
+      rect(9,7,4,5,C.paperWhite);dot(11,7,C.shirtBlue);rect(10,8,2,1,C.red);rect(10,9,3,1,C.black);
+      rect(1,14,14,1,C.woodDark);rect(14,1,1,14,C.woodDark);
+      break;}
+    case 16:{
+      rect(0,0,TS2,TS2,C.floorA);
+      rect(5,12,6,4,C.metalSilver);rect(5,12,6,1,C.trackMetalLt);
+      rect(5,5,6,7,C.metalSilver);rect(5,5,6,1,C.trackMetalLt);rect(5,11,6,1,C.metalDk);
+      rect(6,0,4,6,C.waterLt);rect(7,1,2,4,C.waterHighlight);
+      rect(5,8,2,2,C.shirtBlue);rect(9,8,2,2,C.red);
+      rect(6,2,4,3,C.water);rect(7,2,2,1,C.waterHighlight);
+      rect(11,5,2,4,C.paperWhite);
+      break;}
+    case 17:{
+      rect(0,0,TS2,TS2,C.floorA);
+      rect(0,4,TS2,12,C.woodCherry);rect(0,4,TS2,2,C.deskTop);rect(0,4,TS2,1,C.deskHighlight);
+      rect(0,6,TS2,9,C.woodMed);rect(1,7,14,7,C.woodOak);
+      rect(2,8,5,5,C.woodDark);rect(9,8,5,5,C.woodDark);
+      rect(0,5,TS2,1,C.deskShadow);
+      rect(2,2,4,2,C.black);rect(3,2,2,1,C.screenGlow);
+      rect(10,3,3,1,C.paperWhite);rect(8,3,2,1,C.trackMetal);dot(8,2,C.trackMetalLt);
+      break;}
+    case 18:{
+      rect(0,0,TS2,TS2,C.wallMd);rect(1,1,14,14,C.woodLight);
+      rect(2,2,5,5,C.waterLt);rect(9,2,5,5,C.waterLt);rect(2,9,5,5,C.waterLt);rect(9,9,5,5,C.waterLt);
+      rect(7,1,2,14,C.woodLight);rect(1,7,14,2,C.woodLight);
+      rect(3,3,3,2,C.waterHighlight);rect(10,3,3,2,C.waterHighlight);
+      rect(0,1,1,14,C.cream);rect(15,1,1,14,C.cream);rect(0,15,TS2,1,C.woodMed);
+      break;}
+    case 20:{
+      const gBase=hash%3===0?C.grassA:hash%3===1?C.grassB:C.grassC;
+      rect(0,0,TS2,TS2,gBase);
+      for(let i=0;i<6;i++){const gx=(hash*3+i*37)%14+1,gy=(h2*5+i*23)%14+1;dot(gx,gy,i%2===0?C.grassHighlight:C.grassDk);}
+      if(hash%3===0){rect(3,3,1,2,C.grassDk);rect(10,8,1,2,C.grassHighlight);}
+      if(hash%5===0){rect(7,5,1,2,C.grassShadow);rect(13,2,1,2,C.grassHighlight);}
+      if(hash%11===0){const fc=[C.flowerRed,C.flowerYellow,C.flowerWhite,C.flowerBlue,C.flowerPurple][h2%5];
+        dot(h3%12+2,h3%12+2,fc);dot(h3%12+2,h3%12+3,C.plantStem);}
+      if(hash%7===0)rect(h2%10+2,h2%10+2,3,2,C.grassDk);
+      break;}
+    case 21:{
+      rect(0,0,TS2,TS2,C.pathA);
+      for(let i=0;i<4;i++){const px2=(hash+i*43)%12+2,py2=(h2+i*31)%12+2;dot(px2,py2,i%2===0?C.pathHighlight:C.pathShadow);}
+      if(hash%3===0){rect(3,5,2,1,C.pathShadow);dot(10,11,C.stone);}
+      if(hash%4===0){dot(7,3,C.stoneDk);dot(12,8,C.pathB);}
+      if(hash%5===0){dot(0,h2%TS2,C.grassA);dot(15,h3%TS2,C.grassB);}
+      if(hash%9===0){rect(5,4,2,3,C.pathShadow);rect(9,9,2,3,C.pathShadow);}
+      break;}
+    case 22:{
+      // Gravel ballast base
+      rect(0,0,TS2,TS2,C.trackGravel);
+      for(let i=0;i<6;i++)dot((hash+i*31)%14+1,(h2+i*19)%14+1,i%2?C.stoneDk:C.stoneLt);
+      // Thin wooden sleepers behind rails
+      for(let t=0;t<4;t++){const ty=t*4+1;rect(2,ty,12,1,C.trackBrown);}
+      // LEFT RAIL — bold 3px with 3D shading
+      rect(3,0,3,TS2,C.trackMetalDk);
+      rect(3,0,1,TS2,C.trackMetalLt);
+      rect(4,0,1,TS2,C.trackMetal);
+      rect(5,0,1,TS2,C.trackMetalDk);
+      // RIGHT RAIL — mirror
+      rect(10,0,3,TS2,C.trackMetalDk);
+      rect(10,0,1,TS2,C.trackMetalLt);
+      rect(11,0,1,TS2,C.trackMetal);
+      rect(12,0,1,TS2,C.trackMetalDk);
+      // Rail spikes
+      for(let s=0;s<4;s++){dot(3,s*4+1,C.trackMetalDk);dot(12,s*4+1,C.trackMetalDk);}
+      break;}
+    case 23:{
+      rect(0,0,TS2,TS2,C.grassA);
+      for(let i=0;i<3;i++)dot((hash+i*29)%14+1,(h2+i*17)%14+1,C.grassHighlight);
+      rect(2,2,3,12,C.fenceA);rect(2,2,3,1,C.fenceHighlight);rect(2,13,3,1,C.fenceShadow);
+      rect(11,2,3,12,C.fenceA);rect(11,2,3,1,C.fenceHighlight);rect(11,13,3,1,C.fenceShadow);
+      rect(0,4,TS2,2,C.fenceA);rect(0,4,TS2,1,C.fenceHighlight);rect(0,5,TS2,1,C.fenceShadow);
+      rect(0,10,TS2,2,C.fenceA);rect(0,10,TS2,1,C.fenceHighlight);rect(0,11,TS2,1,C.fenceShadow);
+      rect(2,1,3,1,C.fenceHighlight);rect(11,1,3,1,C.fenceHighlight);
+      dot(3,5,C.trackMetalDk);dot(12,5,C.trackMetalDk);dot(3,11,C.trackMetalDk);dot(12,11,C.trackMetalDk);
+      break;}
+    case 24:{
+      rect(0,0,TS2,TS2,C.grassA);
+      dot(2,14,C.grassB);dot(11,13,C.grassC);dot(5,15,C.grassDk);
+      rect(1,13,14,3,C.grassDk);
+      rect(6,8,4,7,C.woodDark);rect(7,8,2,7,C.woodMed);rect(6,8,1,7,C.woodDark);
+      dot(7,10,C.woodDark);dot(8,12,C.woodDark);
+      rect(2,0,12,9,C.plantGreen);rect(1,1,14,7,C.plantGreen);rect(3,0,10,1,C.plantLt);
+      rect(3,1,4,3,C.leafLt);rect(8,2,4,2,C.plantLt);
+      dot(5,4,C.grassHighlight);dot(10,3,C.grassHighlight);
+      rect(2,6,5,2,C.plantDk);rect(9,5,4,3,C.leafDk);
+      if(hash%5===0){dot(4,3,C.flowerRed);dot(10,5,C.flowerRed);}
+      if(hash%7===0){dot(6,2,C.flowerOrange);dot(11,4,C.flowerOrange);}
+      break;}
+    case 25:{
+      rect(0,0,TS2,TS2,C.concrete);
+      if((x+y)%2===0)rect(0,0,TS2,TS2,C.concreteLt);
+      rect(TS2-1,0,1,TS2,C.concreteDk);rect(0,TS2-1,TS2,1,C.concreteDk);
+      for(let i=0;i<5;i++)dot((hash+i*41)%14+1,(h2+i*29)%14+1,C.concreteDk);
+      if(hash%6===0){dot(5,3,C.concreteDk);dot(6,4,C.concreteDk);dot(6,5,C.concreteDk);dot(7,5,C.concreteDk);dot(7,6,C.concreteDk);}
+      if(hash%4===0){rect(0,14,TS2,2,C.yellow);rect(0,14,TS2,1,C.hiVis);}
+      break;}
+    case 26:{
+      rect(0,0,TS2,TS2,C.grassA);
+      rect(1,2,14,13,C.woodMaple);rect(2,3,12,11,C.woodPine);
+      rect(1,2,14,2,C.woodDark);rect(1,13,14,2,C.woodDark);rect(1,2,2,13,C.woodDark);rect(13,2,2,13,C.woodDark);
+      rect(7,2,2,13,C.woodMed);rect(1,7,14,2,C.woodMed);
+      rect(4,4,3,1,C.woodGrain);rect(9,10,3,1,C.woodGrain);
+      dot(2,3,C.trackMetalDk);dot(13,3,C.trackMetalDk);dot(2,13,C.trackMetalDk);dot(13,13,C.trackMetalDk);
+      rect(1,2,14,1,C.woodLight);rect(1,15,14,1,C.grassDk);
+      break;}
+    case 27:{
+      rect(0,0,TS2,TS2,C.grassA);
+      rect(1,4,3,11,C.metalSilver);rect(1,4,3,1,C.trackMetalLt);
+      rect(12,4,3,11,C.metalSilver);rect(12,4,3,1,C.trackMetalLt);
+      for(let s=0;s<4;s++){const sx2=s*4;rect(sx2,6,2,4,C.hiVisOrange);rect(sx2+2,6,2,4,C.white);}
+      rect(0,6,TS2,1,C.flowerOrange);rect(0,9,TS2,1,C.deskShadow);
+      dot(2,7,C.yellow);dot(6,8,C.yellow);dot(10,7,C.yellow);dot(14,8,C.yellow);
+      rect(0,14,5,2,C.concreteDk);rect(11,14,5,2,C.concreteDk);
+      break;}
+    case 28:{
+      rect(0,0,TS2,TS2,C.grassA);rect(1,4,14,11,C.brickRed);
+      for(let by2=0;by2<5;by2++){for(let bx2=0;bx2<4;bx2++){const ox=(by2%2)*2;
+        rect(1+bx2*3+ox,4+by2*2,3,2,by2%2===0?C.brickRed:C.brickDk);
+        rect(1+bx2*3+ox,4+by2*2+1,3,1,C.brickMortar);}}
+      rect(0,2,TS2,3,C.roofRed);rect(0,2,TS2,1,C.roofHighlight);rect(0,4,TS2,1,C.roofBrown);
+      rect(5,6,6,4,C.woodDark);rect(6,7,4,2,C.screenGlow);
+      rect(14,6,2,2,C.black);dot(14,6,C.techLed);dot(15,7,C.techLedRed);
+      rect(3,10,4,5,C.woodMed);rect(4,11,2,3,C.woodDark);rect(6,12,1,1,C.trackMetal);
+      rect(12,0,1,3,C.trackMetalDk);dot(12,0,C.red);
+      break;}
+    default:{
+      rect(0,0,TS2,TS2,C.floorA);
+      break;}
+  }
+}
+
+// === AREA LABELS ===
+function drawAreaLabels(ctx){
+  const labels=AREA_LABELS[S.map]||[];
+  ctx.font='bold 8px monospace';
+  ctx.textBaseline='middle';
+  labels.forEach(l=>{
+    const tx=l.x*TS;
+    const ty=l.y*TS;
+    const tw=ctx.measureText(l.text).width+10;
+    ctx.fillStyle='rgba(20,10,5,0.85)';
+    ctx.fillRect(tx-5,ty-7,tw,14);
+    ctx.fillStyle='#ffffff';
+    ctx.fillText(l.text,tx,ty);
+  });
+  ctx.textBaseline='alphabetic';
+}
+
+// === EXPRESSION BUBBLES ===
+function drawExpressionBubble(ctx,npc,nx,ny){
+  const exprKey='ui_'+npc.aiExpr;
+  const exprImg=ASSETS[exprKey];
+  // Procedural chars: head at ~ny+1, name tag at ~ny-4, so bubble above that
+  const bx=nx+8;
+  const by=ny-18;
+  if(exprImg&&exprImg.naturalWidth){
+    try{
+      ctx.fillStyle='rgba(255,255,255,0.85)';
+      ctx.beginPath();
+      ctx.arc(bx,by,7,0,Math.PI*2);
+      ctx.fill();
+      ctx.drawImage(exprImg,0,0,exprImg.width,exprImg.height,bx-5,by-5,10,10);
+    }catch(e){}
+  }else{
+    const colors={working:'#4aca8a',chat:'#5b8ef5',stress:'#e05577',confused:'#f7c948'};
+    ctx.fillStyle='rgba(255,255,255,0.8)';
+    ctx.beginPath();ctx.arc(bx,by,5,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=colors[npc.aiExpr]||'#8a7fad';
+    ctx.fillRect(bx-3,by-3,6,6);
+  }
+}
+
+// === MAIN RENDERING ===
+function render(){
+  CTX.fillStyle=C.bg;
+  CTX.fillRect(0,0,IW,IH);
+  
+  if(S.screen!=='game')return;
+  
+  const map=S.map==='office'?OMAP:SMAP;
+  const mw=S.map==='office'?OFFICE_W:SITE_W;
+  const mh=S.map==='office'?OFFICE_H:SITE_H;
+  
+  CTX.save();
+  CTX.translate(-Math.floor(S.camX),-Math.floor(S.camY));
+  
+  // Draw tiles
+  const sx=Math.max(0,Math.floor(S.camX/TS));
+  const sy=Math.max(0,Math.floor(S.camY/TS));
+  const ex=Math.min(mw,Math.ceil((S.camX+IW)/TS)+1);
+  const ey=Math.min(mh,Math.ceil((S.camY+IH)/TS)+1);
+  
+  for(let y=sy;y<ey;y++){
+    for(let x=sx;x<ex;x++){
+      drawTile(CTX,map[y][x],x,y);
+    }
+  }
+  
+  // Area labels (after tiles, before entities)
+  drawAreaLabels(CTX);
+  
+  // Collect all entities for Y-sorting
+  const entities=[];
+  
+  // Player
+  entities.push({y:S.py+24,draw:()=>{
+    const pcfg=CHARS[S.playerChar];
+    drawChar(CTX,pcfg,S.pdir,S.pmoving?S.pframe:0,Math.floor(S.px),Math.floor(S.py),S.pmoving);
+  }});
+  
+  // NPCs
+  for(const n of NPCS){
+    const onMap=S.map==='office'?n.officeX>0:n.siteX>0;
+    if(!onMap)continue;
+    const nx=n.curX!==undefined?Math.floor(n.curX):(S.map==='office'?n.officeX:n.siteX)*TS;
+    const ny=n.curY!==undefined?Math.floor(n.curY):(S.map==='office'?n.officeY:n.siteY)*TS;
+    const npcRef=n;
+    entities.push({y:ny+24,draw:()=>{
+      const isWalking=npcRef.aiState==='walking';
+      drawChar(CTX,npcRef,npcRef.aiFacing,isWalking?npcRef.aiFrame:0,nx,ny,isWalking);
+      // Name tag above procedural character head
+      CTX.font='bold 8px monospace';
+      CTX.textBaseline='middle';
+      const nameW=CTX.measureText(npcRef.name).width+8;
+      const nameX=nx+8-nameW/2;
+      const nameY=ny-6;
+      CTX.fillStyle='rgba(20,10,5,0.85)';
+      CTX.fillRect(nameX-2,nameY-6,nameW+4,12);
+      CTX.fillStyle='#ffffff';
+      CTX.fillText(npcRef.name,nameX+2,nameY);
+      CTX.textBaseline='alphabetic';
+      // Expression bubble
+      if(npcRef.aiExpr){
+        drawExpressionBubble(CTX,npcRef,nx,ny);
+      }
+    }});
+  }
+  
+  // Sort and draw
+  entities.sort((a,b)=>a.y-b.y);
+  entities.forEach(e=>e.draw());
+  
+  // Zone glow indicators
+  if(!S.dlgOpen&&!S.eventOpen&&!S.docsOpen){
+    const zones=ZONES[S.map]||[];
+    zones.forEach(z=>{
+      const dist=Math.abs(S.px+8-z.x*TS-z.w*8)+Math.abs(S.py+16-z.y*TS-z.h*8);
+      if(dist<80){
+        CTX.fillStyle='rgba(247,201,72,'+((Math.sin(Date.now()/500)*0.15)+0.1)+')';
+        CTX.fillRect(z.x*TS,z.y*TS,z.w*TS,z.h*TS);
+      }
+    });
+  }
+  
+  CTX.restore();
+}
+
+
+// === TITLE SCREEN ART ===
+function drawTitleArt(){
+  const tc=document.getElementById('titleArt');
+  if(!tc)return;
+  const tx=tc.getContext('2d');
+  tx.imageSmoothingEnabled=false;
+  const w=320,h=100;
+  tx.fillStyle='#1a2040';tx.fillRect(0,0,w,h);
+  tx.fillStyle='#2a3060';tx.fillRect(0,40,w,60);
+  for(let i=0;i<30;i++){
+    tx.fillStyle='rgba(255,255,200,'+(0.3+Math.random()*0.7)+')';
+    tx.fillRect(Math.random()*w,Math.random()*45,1,1);
+  }
+  tx.fillStyle='#1a3828';
+  tx.beginPath();tx.moveTo(0,70);
+  for(let x=0;x<=w;x+=20){tx.lineTo(x,60+Math.sin(x/40)*10);}
+  tx.lineTo(w,h);tx.lineTo(0,h);tx.fill();
+  tx.fillStyle='#2a4838';tx.fillRect(0,75,w,25);
+  tx.fillStyle='#7a6850';tx.fillRect(0,78,w,12);
+  tx.fillStyle='#8a8890';tx.fillRect(0,80,w,2);tx.fillRect(0,86,w,2);
+  for(let x=10;x<w;x+=12){tx.fillStyle='#5a4830';tx.fillRect(x,78,6,12);}
+  const trainX=80;
+  tx.fillStyle='#4060a0';tx.fillRect(trainX,64,50,14);
+  tx.fillStyle='#5080c0';tx.fillRect(trainX+2,66,46,10);
+  tx.fillStyle='#88c8f0';tx.fillRect(trainX+5,67,8,5);tx.fillRect(trainX+16,67,8,5);tx.fillRect(trainX+27,67,8,5);
+  tx.fillStyle='#e05577';tx.fillRect(trainX,69,3,5);
+  tx.fillStyle='#f7c948';tx.fillRect(trainX+47,69,3,5);
+  tx.fillStyle='#303030';
+  tx.fillRect(trainX+8,78,4,3);tx.fillRect(trainX+22,78,4,3);tx.fillRect(trainX+38,78,4,3);
+  tx.fillStyle='#4a4565';tx.fillRect(220,48,60,30);
+  tx.fillStyle='#5a5575';tx.fillRect(222,50,56,26);
+  for(let wx=226;wx<275;wx+=12){
+    for(let wy=52;wy<72;wy+=10){
+      tx.fillStyle=(Math.random()>0.3)?'#f7c948':'#88c8f0';
+      tx.fillRect(wx,wy,8,6);
+    }
+  }
+  tx.fillStyle='#6a5830';tx.fillRect(245,68,10,10);
+  tx.fillStyle='#f0e6d3';
+  tx.beginPath();tx.arc(50,25,12,0,Math.PI*2);tx.fill();
+  tx.fillStyle='#d0c6b3';
+  tx.beginPath();tx.arc(47,23,3,0,Math.PI*2);tx.fill();
+  tx.beginPath();tx.arc(54,28,2,0,Math.PI*2);tx.fill();
+}
+
+// === CHARACTER SELECT ===
+function showCharSelect(){
+  if(!audioCtx)initAudio();
+  document.getElementById('title').className='scr';
+  document.getElementById('charSel').className='scr on';
+  S.screen='charSelect';
+  
+  const grid=document.getElementById('charGrid');
+  grid.innerHTML='';
+  CHARS.forEach((ch,i)=>{
+    const div=document.createElement('div');
+    div.className='chOpt'+(i===0?' sel':'');
+    div.onclick=()=>{
+      document.querySelectorAll('.chOpt').forEach(d=>d.className='chOpt');
+      div.className='chOpt sel';
+      S.playerChar=i;
+      playSFX('interact');
+    };
+    const cv=document.createElement('canvas');
+    cv.width=48;cv.height=72;cv.style.width='48px';cv.style.height='72px';
+    cv.style.imageRendering='pixelated';
+    const cx=cv.getContext('2d');
+    cx.imageSmoothingEnabled=false;
+    cx.scale(3,3);
+    drawCharProcedural(cx,ch,0,0,0,0);
+    div.appendChild(cv);
+    const name=document.createElement('div');
+    name.style.cssText='font-size:8px;color:#b08fd8;margin-top:4px';
+    name.textContent=ch.name;
+    div.appendChild(name);
+    grid.appendChild(div);
+  });
+  S.playerChar=0;
+  
+  // Bug 1: validate name input
+  const nameInput=document.getElementById('pName');
+  const startBtn=document.getElementById('startBtn');
+  nameInput.value='';
+  startBtn.disabled=true;
+  nameInput.addEventListener('input',()=>{
+    const val=nameInput.value.trim();
+    if(val.length===0){
+      nameInput.classList.add('err');
+      startBtn.disabled=true;
+    }else{
+      nameInput.classList.remove('err');
+      startBtn.disabled=false;
+    }
+  });
+}
+
+// Bug 1: Block start if name is empty
+function startGame(){
+  const nameInput=document.getElementById('pName');
+  const name=nameInput.value.trim();
+  if(!name){
+    nameInput.classList.add('err');
+    nameInput.focus();
+    return;
+  }
+  S.playerName=name;
+  // Bug 4: Clear keys when transitioning
+  S.keys={};
+  document.getElementById('charSel').className='scr';
+  S.screen='intro';
+  S.introStep=0;
+  showIntroStep();
+}
+
+// === INTRO SCREENS (Bug 2: Use S.playerName) ===
+function getIntroSteps(){
+  return[
+    {title:'Welcome, '+S.playerName+'!',text:'You\'ve just been appointed to deliver a major railway upgrade project. Your mission: get it done on time, on budget, and safely.\n\nNo pressure!'},
+    {title:'How It Works',text:'In this game, we count DOWN to delivery day.\n\nT-32 means 32 weeks until the railway opens. Each week, you\'ll manage your team, make decisions, and handle whatever gets thrown at you.\n\nAfter delivery (T-0), you\'ll manage handover and close-out until T+8.'},
+    {title:'Your Team',text:S.playerName+', you have 5 team members, each an expert:\n\n- Sarah (Design Lead) \u2014 Engineering drawings\n- Mike (Site Manager) \u2014 Construction work\n- Emma (Safety Lead) \u2014 Keeping everyone safe\n- James (Commercial Mgr) \u2014 Money & contracts\n- Priya (Comms Lead) \u2014 Stakeholder comms'},
+    {title:'Your Goal',text:'Keep 5 key metrics healthy:\n\n- Schedule \u2014 Are you on time?\n- Budget \u2014 Are you on budget?\n- Safety \u2014 Is everyone safe?\n- Quality \u2014 Is the work good?\n- Morale \u2014 Is the team happy?\n\nGet to project close-out with the best scores possible. Good luck, '+S.playerName+'!'}
+  ];
+}
+
+function showIntroStep(){
+  const steps=getIntroSteps();
+  const step=steps[S.introStep];
+  document.getElementById('introScr').className='scr on';
+  document.getElementById('introTitle').textContent=step.title;
+  document.getElementById('introText').style.whiteSpace='pre-line';
+  document.getElementById('introText').textContent=step.text;
+}
+
+function advanceIntro(){
+  S.introStep++;
+  const steps=getIntroSteps();
+  if(S.introStep>=steps.length){
+    document.getElementById('introScr').className='scr';
+    beginGame();
+  } else {
+    showIntroStep();
+  }
+}
+
+function beginGame(){
+  S.screen='game';
+  S.week=32;
+  S.map='office';
+  S.px=7*TS;S.py=10*TS;
+  S.camX=S.px-IW/2;S.camY=S.py-IH/2;
+  S.objectives=getObjectives(32);
+  S.completedObj=[];
+  S.eventsDone=[];
+  S.dlgCooldowns={};
+  S.metrics={schedule:70,budget:70,safety:70,quality:70,morale:70};
+  // Bug 4: clear keys
+  S.keys={};
+  
+  // Init NPC positions
+  NPCS.forEach(n=>{
+    n.curX=n.officeX*TS;
+    n.curY=n.officeY*TS;
+    n.aiState='idle';
+    n.aiTimer=2000+Math.random()*3000;
+    n.aiExprTimer=3000+Math.random()*5000;
+  });
+  
+  document.getElementById('hud').className='on';
+  document.getElementById('hud').style.display='flex';
+  document.getElementById('notepad').className='on';
+  
+  updateHUD();
+  updateNotepad();
+  if(S.musicOn)startBGM();
+}
+
+// === SAVE/LOAD ===
+function saveGame(){
+  const data={
+    week:S.week,metrics:{...S.metrics},playerName:S.playerName,
+    playerChar:S.playerChar,eventsDone:[...S.eventsDone],
+    map:S.map,px:S.px,py:S.py,siteUnlocked:S.siteUnlocked,
+    completedObj:[...S.completedObj],dlgCooldowns:{...S.dlgCooldowns}
+  };
+  try{localStorage.setItem('projectValley_save',JSON.stringify(data));}catch(e){}
+}
+
+function loadGame(){
+  const raw=localStorage.getItem('projectValley_save');
+  if(!raw)return;
+  try{
+    const data=JSON.parse(raw);
+    S.week=data.week;S.metrics={...data.metrics};
+    S.playerName=data.playerName||'PM';S.playerChar=data.playerChar||0;
+    S.eventsDone=data.eventsDone||[];
+    S.map=data.map||'office';S.px=data.px;S.py=data.py;
+    S.siteUnlocked=data.siteUnlocked||false;
+    S.completedObj=data.completedObj||[];
+    S.dlgCooldowns=data.dlgCooldowns||{};
+  }catch(e){return;}
+  
+  // Bug 4: clear keys
+  S.keys={};
+  
+  document.getElementById('title').className='scr';
+  S.screen='game';
+  S.objectives=getObjectives(S.week);
+  
+  // Init NPC positions
+  NPCS.forEach(n=>{
+    if(S.map==='office'&&n.officeX>0){n.curX=n.officeX*TS;n.curY=n.officeY*TS;}
+    else if(S.map==='site'&&n.siteX>0){n.curX=n.siteX*TS;n.curY=n.siteY*TS;}
+    n.aiState='idle';n.aiTimer=2000+Math.random()*3000;
+  });
+  
+  document.getElementById('hud').className='on';
+  document.getElementById('hud').style.display='flex';
+  document.getElementById('notepad').className='on';
+  
+  updateHUD();
+  updateNotepad();
+  S.camX=S.px-IW/2;S.camY=S.py-IH/2;
+  if(S.musicOn)startBGM();
+}
+
+// === GAME LOOP ===
+function gameLoop(ts){
+  const dt=S.lastTime?Math.min(ts-S.lastTime,50):16; // cap delta to avoid jumps
+  S.lastTime=ts;
+  
+  updatePlayer(dt);
+  updateNPCAI(dt);
+  updateCamera();
+  checkProximity();
+  render();
+  
+  requestAnimationFrame(gameLoop);
+}
+
+// === INIT ===
+async function init(){
+  // Load all assets
+  await loadAllAssets();
+  
+  // Hide loading screen, show title
+  document.getElementById('loadScr').className='scr';
+  document.getElementById('title').className='scr on';
+  S.screen='title';
+  
+  // Check for save
+  if(localStorage.getItem('projectValley_save')){
+    document.getElementById('contBtn').style.display='inline-block';
+  }
+  
+  // Draw title art
+  drawTitleArt();
+  
+  // Start game loop
+  requestAnimationFrame(gameLoop);
+}
+
+init();
+</script>
+</body>
+</html>
