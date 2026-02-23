@@ -1703,21 +1703,22 @@ function showPlanningBoard(){
 }
 
 function transitionToMap(target){
-  S.map=target;
-  if(target==='site'){
-    S.px=4*TS;S.py=6*TS;S.siteUnlocked=true;
-    // Reset NPC positions for site
-    NPCS.forEach(n=>{
-      if(n.siteX>0){n.curX=n.siteX*TS;n.curY=n.siteY*TS;n.aiState='idle';n.aiTimer=2000;}
-    });
-  } else {
-    S.px=7*TS;S.py=10*TS;
-    // Reset NPC positions for office
-    NPCS.forEach(n=>{
-      if(n.officeX>0){n.curX=n.officeX*TS;n.curY=n.officeY*TS;n.aiState='idle';n.aiTimer=2000;}
-    });
-  }
-  S.camX=S.px-IW/2;S.camY=S.py-IH/2;
+  startTransition(()=>{
+    S.map=target;
+    PARTICLES.length=0; // Clear particles on map change
+    if(target==='site'){
+      S.px=4*TS;S.py=6*TS;S.siteUnlocked=true;
+      NPCS.forEach(n=>{
+        if(n.siteX>0){n.curX=n.siteX*TS;n.curY=n.siteY*TS;n.aiState='idle';n.aiTimer=2000;}
+      });
+    } else {
+      S.px=7*TS;S.py=10*TS;
+      NPCS.forEach(n=>{
+        if(n.officeX>0){n.curX=n.officeX*TS;n.curY=n.officeY*TS;n.aiState='idle';n.aiTimer=2000;}
+      });
+    }
+    S.camX=S.px-IW/2;S.camY=S.py-IH/2;
+  },400);
 }
 
 // === OBJECTIVE TRACKING (Bug 10: updateNotepad called after every change) ===
@@ -2194,6 +2195,175 @@ function closeHelp(){
   S.eventOpen=false;
 }
 
+
+// === PARTICLE SYSTEM ===
+const PARTICLES=[];
+const MAX_PARTICLES=80;
+
+function spawnParticle(opts){
+  if(PARTICLES.length>=MAX_PARTICLES)PARTICLES.shift();
+  PARTICLES.push({
+    x:opts.x||0,y:opts.y||0,
+    vx:opts.vx||0,vy:opts.vy||0,
+    life:opts.life||1000,maxLife:opts.life||1000,
+    size:opts.size||2,color:opts.color||'#f7c948',
+    type:opts.type||'dust',
+    gravity:opts.gravity||0,drift:opts.drift||0,
+    rotation:Math.random()*Math.PI*2,rotSpeed:(Math.random()-0.5)*0.02
+  });
+}
+
+function updateParticles(dt){
+  for(let i=PARTICLES.length-1;i>=0;i--){
+    const p=PARTICLES[i];
+    p.life-=dt;
+    if(p.life<=0){PARTICLES.splice(i,1);continue;}
+    p.x+=p.vx*dt/16;
+    p.y+=p.vy*dt/16;
+    p.vy+=p.gravity*dt/16;
+    p.x+=Math.sin(Date.now()/800+i)*p.drift*dt/16;
+    p.rotation+=p.rotSpeed;
+  }
+}
+
+function drawParticles(ctx){
+  for(const p of PARTICLES){
+    const alpha=Math.max(0,p.life/p.maxLife);
+    ctx.globalAlpha=alpha;
+    if(p.type==='dust'){
+      ctx.fillStyle=p.color;
+      ctx.fillRect(p.x-p.size/2,p.y-p.size/2,p.size,p.size);
+    }else if(p.type==='leaf'){
+      ctx.save();
+      ctx.translate(p.x,p.y);
+      ctx.rotate(p.rotation);
+      ctx.fillStyle=p.color;
+      ctx.fillRect(-2,-1,4,2);
+      ctx.fillRect(-1,-2,2,4);
+      ctx.restore();
+    }else if(p.type==='sparkle'){
+      const pulse=0.5+Math.sin(Date.now()/150)*0.5;
+      ctx.fillStyle=p.color;
+      const s=p.size*pulse;
+      ctx.fillRect(p.x-s/2,p.y-s/2,s,s);
+      ctx.fillRect(p.x-1,p.y-s,2,s*2);
+      ctx.fillRect(p.x-s,p.y-1,s*2,2);
+    }
+  }
+  ctx.globalAlpha=1;
+}
+
+// Ambient particle spawners
+let particleSpawnTimer=0;
+function spawnAmbientParticles(dt){
+  particleSpawnTimer+=dt;
+  if(particleSpawnTimer<500)return;
+  particleSpawnTimer=0;
+
+  if(S.map==='office'){
+    // Golden dust motes near windows (top of office)
+    spawnParticle({
+      x:S.camX+Math.random()*(IW-110),
+      y:S.camY+Math.random()*60,
+      vx:(Math.random()-0.5)*0.1,vy:0.15+Math.random()*0.1,
+      life:3000+Math.random()*2000,size:1+Math.random(),
+      color:['#f7c948','#e8d4b0','#d4ae6e'][Math.floor(Math.random()*3)],
+      type:'dust',drift:0.05
+    });
+  }else{
+    // Leaves and seeds on site
+    if(Math.random()<0.5){
+      spawnParticle({
+        x:S.camX+Math.random()*(IW-110),
+        y:S.camY-10,
+        vx:0.2+Math.random()*0.3,vy:0.3+Math.random()*0.2,
+        life:4000+Math.random()*3000,size:2,
+        color:['#78c858','#60b840','#a07838'][Math.floor(Math.random()*3)],
+        type:'leaf',drift:0.1,gravity:0.005
+      });
+    }else{
+      spawnParticle({
+        x:S.camX+Math.random()*(IW-110),
+        y:S.camY+Math.random()*IH,
+        vx:(Math.random()-0.5)*0.08,vy:-0.1-Math.random()*0.1,
+        life:5000+Math.random()*3000,size:1,
+        color:'#f8f0d8',type:'dust',drift:0.08
+      });
+    }
+  }
+}
+
+// === SCREEN TRANSITIONS ===
+const TRANS={active:false,alpha:0,phase:'none',callback:null,duration:400};
+
+function startTransition(callback,duration){
+  TRANS.active=true;
+  TRANS.alpha=0;
+  TRANS.phase='out';
+  TRANS.callback=callback;
+  TRANS.duration=duration||400;
+}
+
+function updateTransition(dt){
+  if(!TRANS.active)return;
+  const speed=dt/TRANS.duration;
+  if(TRANS.phase==='out'){
+    TRANS.alpha+=speed;
+    if(TRANS.alpha>=1){
+      TRANS.alpha=1;
+      TRANS.phase='in';
+      if(TRANS.callback)TRANS.callback();
+    }
+  }else if(TRANS.phase==='in'){
+    TRANS.alpha-=speed;
+    if(TRANS.alpha<=0){
+      TRANS.alpha=0;
+      TRANS.active=false;
+      TRANS.phase='none';
+    }
+  }
+}
+
+function drawTransition(ctx){
+  if(!TRANS.active||TRANS.alpha<=0)return;
+  ctx.fillStyle='rgba(58,42,24,'+TRANS.alpha+')';
+  ctx.fillRect(0,0,IW,IH);
+}
+
+// === SCREEN SHAKE ===
+let shakeIntensity=0,shakeDuration=0,shakeTimer=0;
+function triggerShake(intensity,duration){
+  shakeIntensity=intensity||3;
+  shakeDuration=duration||300;
+  shakeTimer=0;
+}
+function getShakeOffset(){
+  if(shakeTimer>=shakeDuration)return{x:0,y:0};
+  const progress=shakeTimer/shakeDuration;
+  const decay=1-progress;
+  return{
+    x:Math.sin(shakeTimer*0.1)*shakeIntensity*decay*(Math.random()>0.5?1:-1),
+    y:Math.cos(shakeTimer*0.13)*shakeIntensity*decay*(Math.random()>0.5?1:-1)
+  };
+}
+
+// === SCREEN FLASH ===
+let flashColor='',flashAlpha=0,flashDuration=0,flashTimer=0;
+function triggerFlash(color,duration){
+  flashColor=color||'#f7c948';
+  flashAlpha=0.4;
+  flashDuration=duration||200;
+  flashTimer=0;
+}
+function drawFlash(ctx){
+  if(flashTimer>=flashDuration||flashAlpha<=0)return;
+  const progress=flashTimer/flashDuration;
+  const alpha=flashAlpha*(1-progress);
+  ctx.fillStyle=flashColor;
+  ctx.globalAlpha=alpha;
+  ctx.fillRect(0,0,IW,IH);
+  ctx.globalAlpha=1;
+}
 
 // === COLOR UTILITY FUNCTIONS ===
 function lightenColor(hex,amt){
@@ -2706,8 +2876,9 @@ function render(){
   const mh=S.map==='office'?OFFICE_H:SITE_H;
   
   CTX.save();
-  CTX.translate(-Math.floor(S.camX),-Math.floor(S.camY));
-  
+  const shake=getShakeOffset();
+  CTX.translate(-Math.floor(S.camX)+shake.x,-Math.floor(S.camY)+shake.y);
+
   // Draw tiles
   const sx=Math.max(0,Math.floor(S.camX/TS));
   const sy=Math.max(0,Math.floor(S.camY/TS));
@@ -2776,7 +2947,14 @@ function render(){
     });
   }
   
+  // Draw particles (in world space)
+  drawParticles(CTX);
+
   CTX.restore();
+
+  // Draw screen-space effects
+  drawTransition(CTX);
+  drawFlash(CTX);
 }
 
 
@@ -3009,13 +3187,20 @@ function loadGame(){
 function gameLoop(ts){
   const dt=S.lastTime?Math.min(ts-S.lastTime,50):16; // cap delta to avoid jumps
   S.lastTime=ts;
-  
+
   updatePlayer(dt);
   updateNPCAI(dt);
   updateCamera();
   checkProximity();
+  updateParticles(dt);
+  updateTransition(dt);
+  if(S.screen==='game')spawnAmbientParticles(dt);
+  // Update shake/flash timers
+  shakeTimer+=dt;
+  flashTimer+=dt;
+
   render();
-  
+
   requestAnimationFrame(gameLoop);
 }
 
