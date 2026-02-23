@@ -234,8 +234,8 @@ const S={
 };
 
 // === TIMELINE — Key Weeks ===
-const KEY_WEEKS=[32,30,28,24,20,16,14,12,10,8,6,4,2,0,-2,-4,-8];
-// Negative weeks = post-delivery (displayed as T+2, T+4, T+8)
+const KEY_WEEKS=[32,28,24,20,16,12,8,4,0,-4,-8];
+// Clean 4-week increments: 10 playable rounds
 
 function weekLabel(w){
   if(w>0)return 'T-'+w;
@@ -320,27 +320,27 @@ const CHARS=[
 // NPC walk sprite assignments
 const NPCS=[
   {id:'sarah',name:'Sarah',role:'Design Lead',hair:C.hairBlonde,hairStyle:'long',skin:C.skinA,shirt:C.shirtBlue,pants:C.pantsBlue,eye:'#2848a0',
-   officeX:12,officeY:6,siteX:-1,siteY:-1,walkSheet:'char_amelia_walk',idleSheet:'char_amelia_idle',
-   aiState:'idle',aiTimer:0,aiTargetX:12,aiTargetY:6,aiFacing:0,aiFrame:0,aiExpr:'working',aiExprTimer:0,curX:12*16,curY:6*16},
+   officeX:10,officeY:5,siteX:-1,siteY:-1,walkSheet:'char_amelia_walk',idleSheet:'char_amelia_idle',
+   aiState:'idle',aiTimer:0,aiTargetX:10,aiTargetY:5,aiFacing:0,aiFrame:0,aiExpr:'working',aiExprTimer:0,curX:10*16,curY:5*16},
   {id:'mike',name:'Mike',role:'Site Manager',hair:C.hairBrown,hairStyle:'short',skin:C.skinB,shirt:C.hiVisOrange,pants:C.pantsDk,eye:'#284828',
-   officeX:14,officeY:9,siteX:10,siteY:12,walkSheet:'char_bob_walk',idleSheet:'char_bob_idle',
-   aiState:'idle',aiTimer:0,aiTargetX:14,aiTargetY:9,aiFacing:0,aiFrame:0,aiExpr:'chat',aiExprTimer:0,curX:14*16,curY:9*16},
+   officeX:10,officeY:10,siteX:10,siteY:12,walkSheet:'char_bob_walk',idleSheet:'char_bob_idle',
+   aiState:'idle',aiTimer:0,aiTargetX:10,aiTargetY:10,aiFacing:0,aiFrame:0,aiExpr:'chat',aiExprTimer:0,curX:10*16,curY:10*16},
   {id:'emma',name:'Emma',role:'Safety Lead',hair:C.hairRed,hairStyle:'long',skin:C.skinA,shirt:C.hiVis,pants:C.pantsDk,eye:'#285828',hat:C.yellow,
-   officeX:10,officeY:6,siteX:20,siteY:12,walkSheet:'char_alex_walk',idleSheet:'char_alex_idle',
-   aiState:'idle',aiTimer:0,aiTargetX:10,aiTargetY:6,aiFacing:0,aiFrame:0,aiExpr:'stress',aiExprTimer:0,curX:10*16,curY:6*16},
+   officeX:15,officeY:5,siteX:20,siteY:12,walkSheet:'char_alex_walk',idleSheet:'char_alex_idle',
+   aiState:'idle',aiTimer:0,aiTargetX:15,aiTargetY:5,aiFacing:0,aiFrame:0,aiExpr:'stress',aiExprTimer:0,curX:15*16,curY:5*16},
   {id:'james',name:'James',role:'Commercial Mgr',hair:C.hairGray,hairStyle:'short',skin:C.skinB,shirt:C.suitGray,pants:C.pantsDk,eye:'#3a3020',
-   officeX:16,officeY:9,siteX:-1,siteY:-1,walkSheet:'char_adam_walk',idleSheet:'char_adam_idle',
-   aiState:'idle',aiTimer:0,aiTargetX:16,aiTargetY:9,aiFacing:0,aiFrame:0,aiExpr:'working',aiExprTimer:0,curX:16*16,curY:9*16},
+   officeX:16,officeY:10,siteX:-1,siteY:-1,walkSheet:'char_adam_walk',idleSheet:'char_adam_idle',
+   aiState:'idle',aiTimer:0,aiTargetX:16,aiTargetY:10,aiFacing:0,aiFrame:0,aiExpr:'working',aiExprTimer:0,curX:16*16,curY:10*16},
   {id:'priya',name:'Priya',role:'Comms Lead',hair:C.hairBlack,hairStyle:'long',skin:C.skinC,shirt:C.shirtPurple,pants:C.pantsBlue,eye:'#1a2848',
-   officeX:18,officeY:6,siteX:-1,siteY:-1,walkSheet:'char_amelia_walk',idleSheet:'char_amelia_idle',
-   aiState:'idle',aiTimer:0,aiTargetX:18,aiTargetY:6,aiFacing:0,aiFrame:0,aiExpr:'chat',aiExprTimer:0,curX:18*16,curY:6*16}
+   officeX:18,officeY:5,siteX:-1,siteY:-1,walkSheet:'char_amelia_walk',idleSheet:'char_amelia_idle',
+   aiState:'idle',aiTimer:0,aiTargetX:18,aiTargetY:5,aiFacing:0,aiFrame:0,aiExpr:'chat',aiExprTimer:0,curX:18*16,curY:5*16}
 ];
 
 // NPC wander targets in office
 const NPC_WANDER_OFFICE=[
-  {x:12,y:6},{x:14,y:9},{x:10,y:6},{x:16,y:9},{x:18,y:6},
-  {x:23,y:5},{x:23,y:15},{x:9,y:12},{x:15,y:3},{x:7,y:10},
-  {x:11,y:10},{x:17,y:10},{x:22,y:16},{x:3,y:3}
+  {x:10,y:5},{x:15,y:5},{x:18,y:5},{x:10,y:10},{x:16,y:10},
+  {x:23,y:5},{x:23,y:15},{x:9,y:10},{x:14,y:8},{x:7,y:8},
+  {x:12,y:12},{x:17,y:12},{x:22,y:16},{x:3,y:3},{x:6,y:10},{x:14,y:15}
 ];
 
 // === SPRITE SHEET CONFIG ===
@@ -399,40 +399,77 @@ const TILE_SPRITES={
 // === MAP DATA ===
 const SOLID=new Set([1,2,4,5,6,7,8,11,12,13,17,18,24,23,26,27,28]);
 
-// Office: 30x20
+// Office: 30x20 — Redesigned with even spacing
 const OFFICE_W=30,OFFICE_H=20;
 const OMAP=(()=>{
   const m=[];
   for(let y=0;y<OFFICE_H;y++){
     const r=[];
     for(let x=0;x<OFFICE_W;x++){
+      // Exit door at bottom-left
       if(x===2&&y===OFFICE_H-1){r.push(9);continue;}
+      // Outer walls
       if(y===0||y===OFFICE_H-1||x===0||x===OFFICE_W-1){r.push(1);continue;}
+      // Windows along top wall
       if(y===0){r.push(18);continue;}
-      if(y===8&&x>=20&&x<=28){r.push(1);continue;}
-      if(x===20&&y>=1&&y<=8){if(y===5)r.push(0);else r.push(1);continue;}
-      if(x===6&&y>=1&&y<=8){if(y===5)r.push(0);else r.push(1);continue;}
+
+      // === MEETING ROOM (top-right, walled off) ===
+      if(y===7&&x>=20&&x<=28){r.push(1);continue;}
+      if(x===20&&y>=1&&y<=7){if(y===4)r.push(0);else r.push(1);continue;}
+      // Meeting table inside
+      if(x>=22&&x<=26&&y===3){r.push(11);continue;}
+      if(x===21&&y===2){r.push(6);continue;} // whiteboard
+
+      // === BREAK ROOM (bottom-right, walled off) ===
       if(y===13&&x>=20&&x<=28){r.push(1);continue;}
       if(x===20&&y>=13&&y<=18){if(y===15)r.push(0);else r.push(1);continue;}
-      if(x===3&&y===2){r.push(14);continue;}
-      if(x===2&&y===2){r.push(2);continue;}
-      if(x===4&&y===2){r.push(2);continue;}
-      if(x===3&&y===4){r.push(6);continue;}
-      if(x>=2&&x<=5&&y===2&&x!==3){r.push(12);continue;}
-      if(x>=2&&x<=5&&y===7){r.push(12);continue;}
-      if(x===4&&y===5){r.push(13);continue;}
-      if((x===10||x===14||x===18)&&(y===5||y===8)){r.push(2);continue;}
-      if((x===11||x===15||x===19)&&(y===5||y===8)){r.push(14);continue;}
-      if((x===8&&y===4)||(x===19&&y===4)||(x===8&&y===12)){r.push(4);continue;}
-      if(x>=22&&x<=26&&y===4){r.push(11);continue;}
-      if(x===21&&y===3){r.push(6);continue;}
-      if(x>=22&&x<=24&&y===14){r.push(7);continue;}
-      if(x===26&&y===15){r.push(8);continue;}
-      if(x===27&&y===15){r.push(8);continue;}
-      if(x===24&&y===16){r.push(2);continue;}
-      if(x>=13&&x<=16&&y===17){r.push(17);continue;}
-      if(x===9&&y===12){r.push(16);continue;}
-      if(x===15&&y===1){r.push(15);continue;}
+      // Break room contents
+      if(x>=22&&x<=24&&y===14){r.push(7);continue;} // coffee machine
+      if(x===26&&y===15){r.push(8);continue;} // sofa
+      if(x===27&&y===15){r.push(8);continue;} // sofa
+
+      // === YOUR DESK (top-left area) ===
+      if(x===3&&y===2){r.push(14);continue;} // computer desk
+      if(x===2&&y===2){r.push(2);continue;}   // desk
+      if(x===4&&y===2){r.push(2);continue;}   // desk
+
+      // === DOCUMENT ROOM (left side, below desk) ===
+      if(x>=2&&x<=4&&y===6){r.push(5);continue;} // bookshelves
+      if(x===5&&y===6){r.push(12);continue;} // filing cabinet
+      if(x===2&&y===7){r.push(12);continue;} // filing cabinet
+
+      // === PLANNING BOARD (left side) ===
+      if(x===3&&y===4){r.push(6);continue;} // whiteboard
+
+      // === NOTICE BOARD (center-top) ===
+      if(x===14&&y===1){r.push(15);continue;}
+
+      // === WATER COOLER (center) ===
+      if(x===9&&y===10){r.push(16);continue;}
+
+      // === NPC DESK AREAS (spread evenly in open plan) ===
+      // Sarah: x=10, y=4
+      if(x===10&&y===4){r.push(14);continue;}
+      if(x===9&&y===4){r.push(2);continue;}
+      // Emma: x=15, y=4
+      if(x===15&&y===4){r.push(14);continue;}
+      if(x===14&&y===4){r.push(2);continue;}
+      // Priya: x=18, y===4
+      if(x===18&&y===4){r.push(14);continue;}
+      // Mike: x=10, y=9
+      if(x===10&&y===9){r.push(2);continue;}
+      if(x===11&&y===9){r.push(14);continue;}
+      // James: x=16, y=9
+      if(x===16&&y===9){r.push(2);continue;}
+      if(x===17&&y===9){r.push(14);continue;}
+
+      // === PLANTS (decoration) ===
+      if((x===1&&y===1)||(x===19&&y===1)||(x===8&&y===12)||(x===1&&y===12)){r.push(4);continue;}
+
+      // === RECEPTION (bottom center) ===
+      if(x>=12&&x<=16&&y===17){r.push(17);continue;}
+
+      // Floor
       r.push(0);
     }
     m.push(r);
@@ -486,14 +523,15 @@ const SMAP=(()=>{
 const AREA_LABELS={
   office:[
     {x:3,y:1,text:'Your Desk',color:'#f7c948'},
-    {x:23,y:2,text:'Meeting Room',color:'#5b8ef5'},
-    {x:23,y:14,text:'Break Room',color:'#4aca8a'},
-    {x:3,y:6,text:'Documents',color:'#b08fd8'},
-    {x:15,y:1,text:'Notice Board',color:'#8a7fad'},
-    {x:9,y:11,text:'Water Cooler',color:'#88c8f0'},
-    {x:13,y:16,text:'Reception',color:'#8a7fad'},
+    {x:22,y:1,text:'Meeting Room',color:'#5b8ef5'},
+    {x:22,y:14,text:'Break Room',color:'#4aca8a'},
+    {x:2,y:5,text:'Documents',color:'#b08fd8'},
+    {x:14,y:1,text:'Notice Board',color:'#8a7fad'},
+    {x:9,y:9,text:'Water Cooler',color:'#88c8f0'},
+    {x:12,y:16,text:'Reception',color:'#8a7fad'},
     {x:1,y:18,text:'Exit to Site',color:'#e05577'},
-    {x:10,y:10,text:'Open Plan',color:'#8a7fad'}
+    {x:3,y:3,text:'Planning Board',color:'#f7c948'},
+    {x:10,y:7,text:'Open Plan',color:'#8a7fad'}
   ],
   site:[
     {x:3,y:1,text:'Site Office',color:'#f7c948'},
@@ -509,14 +547,14 @@ const AREA_LABELS={
 // === INTERACTION ZONES ===
 const ZONES={
   office:[
-    {id:'desk',name:'Your Desk',x:3,y:2,w:2,h:2,hint:'Press SPACE \u2014 Your Desk'},
+    {id:'desk',name:'Your Desk',x:2,y:2,w:3,h:1,hint:'Press SPACE \u2014 Your Desk'},
     {id:'planning',name:'Planning Board',x:3,y:4,w:1,h:1,hint:'Press SPACE \u2014 Planning Board'},
-    {id:'meeting',name:'Meeting Room',x:22,y:4,w:5,h:2,hint:'Press SPACE \u2014 Meeting Room'},
-    {id:'breakroom',name:'Break Room',x:22,y:15,w:4,h:3,hint:'Press SPACE \u2014 Break Room'},
-    {id:'documents',name:'Document Room',x:2,y:5,w:4,h:3,hint:'Press SPACE \u2014 Documents'},
-    {id:'noticeboard',name:'Notice Board',x:15,y:1,w:1,h:1,hint:'Press SPACE \u2014 Notice Board'},
-    {id:'watercooler',name:'Water Cooler',x:9,y:12,w:1,h:1,hint:'Press SPACE \u2014 Water Cooler'},
-    {id:'reception',name:'Reception',x:13,y:17,w:4,h:1,hint:'Press SPACE \u2014 Reception'},
+    {id:'meeting',name:'Meeting Room',x:22,y:2,w:5,h:4,hint:'Press SPACE \u2014 Meeting Room'},
+    {id:'breakroom',name:'Break Room',x:22,y:14,w:5,h:3,hint:'Press SPACE \u2014 Break Room'},
+    {id:'documents',name:'Document Room',x:2,y:6,w:4,h:2,hint:'Press SPACE \u2014 Documents'},
+    {id:'noticeboard',name:'Notice Board',x:14,y:1,w:1,h:1,hint:'Press SPACE \u2014 Notice Board'},
+    {id:'watercooler',name:'Water Cooler',x:9,y:10,w:1,h:1,hint:'Press SPACE \u2014 Water Cooler'},
+    {id:'reception',name:'Reception',x:12,y:17,w:5,h:1,hint:'Press SPACE \u2014 Reception'},
     {id:'exit_site',name:'Exit to Site',x:2,y:19,w:1,h:1,hint:'Press SPACE \u2014 Go to Railway Site'}
   ],
   site:[
@@ -531,30 +569,38 @@ const ZONES={
 };
 
 // === PHASE HELPER ===
-function getPhase(w){
-  if(w>=28)return 'Kick-Off & Feasibility';
-  if(w>=20)return 'Design Phase';
-  if(w>=14)return 'Procurement & Planning';
-  if(w>=8)return 'Pre-Construction';
-  if(w>=2)return 'Construction';
-  if(w>=0)return 'Testing & Handover';
-  if(w>=-4)return 'Post-Delivery';
-  return 'Project Close-Out';
-}
-
-function getPhaseShort(w){
-  if(w>=28)return 'Kick-Off';
-  if(w>=20)return 'Design';
-  if(w>=14)return 'Procurement';
-  if(w>=8)return 'Pre-Construct';
-  if(w>=2)return 'Construction';
-  if(w>=0)return 'Handover';
-  if(w>=-4)return 'Post-Delivery';
-  return 'Close-Out';
-}
+// Phase boundaries aligned to 4-week cadence
+const PHASES=[
+  {name:'Kick-Off & Feasibility',short:'Kick-Off',start:32,end:28},
+  {name:'Design (Early)',short:'Design Early',start:28,end:24},
+  {name:'Design (Detailed)',short:'Design Detail',start:24,end:20},
+  {name:'Procurement',short:'Procurement',start:20,end:16},
+  {name:'Pre-Construction',short:'Pre-Construct',start:16,end:12},
+  {name:'Construction (Early)',short:'Construct Early',start:12,end:8},
+  {name:'Construction (Late)',short:'Construct Late',start:8,end:4},
+  {name:'Testing & Handover',short:'Handover',start:4,end:0},
+  {name:'Post-Delivery',short:'Post-Delivery',start:0,end:-4},
+  {name:'Close-Out',short:'Close-Out',start:-4,end:-8}
+];
 
 function getPhaseIdx(w){
-  if(w>=28)return 0;if(w>=20)return 1;if(w>=14)return 2;if(w>=8)return 3;if(w>=2)return 4;if(w>=0)return 5;if(w>=-4)return 6;return 7;
+  for(let i=0;i<PHASES.length;i++){
+    if(w>PHASES[i].end)return i;
+  }
+  return PHASES.length-1;
+}
+function getPhase(w){return PHASES[getPhaseIdx(w)].name;}
+function getPhaseShort(w){return PHASES[getPhaseIdx(w)].short;}
+// Map new phase indices to old DLG indices (DLG has 7 phase pools: 0-6)
+function getDlgPhaseIdx(w){
+  const pi=getPhaseIdx(w);
+  if(pi<=0)return 0; // Kick-Off
+  if(pi<=2)return 1; // Both Design phases → Design dialogues
+  if(pi<=3)return 2; // Procurement
+  if(pi<=4)return 3; // Pre-Construction
+  if(pi<=6)return 4; // Both Construction phases → Construction dialogues
+  if(pi<=7)return 5; // Testing & Handover
+  return 6; // Post-Delivery & Close-Out
 }
 
 
@@ -796,13 +842,6 @@ const DLG={
 
 // === CURVEBALL EVENTS ===
 const EVENTS=[
-  {week:30,title:'Scope Surprise',
-   text:'Your client wants to add a pedestrian crossing to the project. "It\'ll only take a few weeks extra," they say.',
-   choices:[
-     {t:'Accept it \u2014 keep the client happy.',desc:'More scope means more work and cost.',e:{schedule:-5,budget:-4,morale:2}},
-     {t:'Push back firmly.',desc:'Protect your plan, but may upset the client.',e:{schedule:2,budget:2,morale:-2}},
-     {t:'Negotiate a trade-off.',desc:'Swap some scope to fit it in. Smart PM move.',e:{schedule:-1,budget:-1,quality:2,morale:1}}
-   ]},
   {week:28,title:'Survey Shock',
    text:'Ground surveys found unexpected utilities under the track. The design needs updating.',
    choices:[
@@ -810,90 +849,61 @@ const EVENTS=[
      {t:'Delay to assess options.',desc:'Take time to find the best solution.',e:{schedule:-4,quality:3}},
      {t:'Proceed with caution.',desc:'Risky \u2014 could cause problems later.',e:{schedule:2,quality:-3,safety:-2}}
    ]},
-  {week:24,title:'Team Trouble',
+  {week:24,title:'Scope Surprise',
+   text:'Your client wants to add a pedestrian crossing to the project. "It\'ll only take a few weeks extra," they say.',
+   choices:[
+     {t:'Accept it \u2014 keep the client happy.',desc:'More scope means more work and cost.',e:{schedule:-5,budget:-4,morale:2}},
+     {t:'Push back firmly.',desc:'Protect your plan, but may upset the client.',e:{schedule:2,budget:2,morale:-2}},
+     {t:'Negotiate a trade-off.',desc:'Swap some scope to fit it in. Smart PM move.',e:{schedule:-1,budget:-1,quality:2,morale:1}}
+   ]},
+  {week:20,title:'Team Trouble',
    text:'Sarah and Mike disagree about the design approach. The tension is affecting the team.',
    choices:[
      {t:'Back Sarah\'s approach.',desc:'Better design quality, Mike may feel sidelined.',e:{quality:4,morale:-2,schedule:-1}},
      {t:'Back Mike\'s approach.',desc:'Faster to build, design might suffer.',e:{quality:-3,schedule:3,morale:-1}},
      {t:'Mediate and find middle ground.',desc:'Takes time but brings the team together.',e:{morale:4,schedule:-2,quality:1}}
    ]},
-  {week:20,title:'Budget Alert',
+  {week:16,title:'Budget Alert',
    text:'Finance says you\'re trending 10% over budget. Management wants a plan.',
    choices:[
      {t:'Cut scope to save money.',desc:'Reduces what you deliver but gets costs down.',e:{quality:-4,budget:5}},
      {t:'Ask for more funding.',desc:'Risky \u2014 they might say no.',e:{budget:3,morale:1}},
      {t:'Find efficiencies.',desc:'Smarter working, small savings add up.',e:{budget:3,quality:1}}
    ]},
-  {week:16,title:'Community Concern',
-   text:'Local residents are worried about noise during construction. A petition is circulating.',
-   choices:[
-     {t:'Hold a public meeting.',desc:'Shows you care. Costs time and effort.',e:{morale:4,schedule:-2,budget:-1}},
-     {t:'Send a letter explaining plans.',desc:'Minimal effort but might not be enough.',e:{morale:1,schedule:1}},
-     {t:'Adjust work hours.',desc:'Less noise impact but slower progress.',e:{morale:3,safety:2,schedule:-3}}
-   ]},
-  {week:14,title:'Supplier Problem',
+  {week:12,title:'Supplier Problem',
    text:'Your key materials supplier has gone into administration. Materials delivery is at risk.',
    choices:[
      {t:'Find alternative supplier urgently.',desc:'Costs more but keeps things moving.',e:{budget:-5,schedule:2,quality:1}},
      {t:'Wait and hope they recover.',desc:'Big gamble \u2014 could work out or be a disaster.',e:{schedule:-3,budget:-2}},
      {t:'Redesign for different materials.',desc:'Expensive and slow but improves long-term quality.',e:{schedule:-4,budget:-3,quality:4}}
    ]},
-  {week:12,title:'Safety Scare',
+  {week:8,title:'Safety Scare',
    text:'A near-miss incident on site \u2014 worker nearly hit by equipment. No one hurt, but it\'s serious.',
    choices:[
      {t:'Stop all work for safety review.',desc:'The right thing to do. Costs time.',e:{schedule:-4,safety:6,morale:3}},
      {t:'Review procedures but continue work.',desc:'Balanced approach \u2014 address the issue.',e:{safety:3,morale:1}},
      {t:'Brief the team and move on.',desc:'Risky. The next near-miss might not be a miss.',e:{safety:-4,schedule:2,morale:-2}}
    ]},
-  {week:10,title:'Political Pressure',
-   text:'A local politician is pushing for early completion. There\'s talk of moving the deadline forward.',
-   choices:[
-     {t:'Explain the risks of rushing.',desc:'Professional and honest. Politician may push back.',e:{safety:3,quality:3,schedule:-1}},
-     {t:'Agree to try.',desc:'Please the politician but risk safety and quality.',e:{safety:-4,quality:-3,schedule:3}},
-     {t:'Offer a partial early opening.',desc:'Compromise \u2014 open part of the railway early.',e:{schedule:1,quality:1,budget:-2}}
-   ]},
-  {week:8,title:'Weather Warning',
+  {week:4,title:'Weather Warning',
    text:'Major storms forecast during your planned construction window.',
    choices:[
      {t:'Delay work by 2 weeks.',desc:'Safe but costly in time.',e:{schedule:-5,safety:4}},
      {t:'Proceed with extra precautions.',desc:'Extra cost, some risk remains.',e:{budget:-3,safety:1}},
      {t:'Reschedule to night shifts.',desc:'Costs more, tires the team, but protects schedule.',e:{budget:-3,morale:-3,schedule:2}}
    ]},
-  {week:6,title:'Key Person Lost',
-   text:'Your best engineer has been headhunted. They want to leave immediately.',
-   choices:[
-     {t:'Counter-offer to keep them.',desc:'Expensive but keeps your best talent.',e:{budget:-4,quality:4,morale:2}},
-     {t:'Let them go, redistribute work.',desc:'Cheaper but impacts quality and team spirit.',e:{quality:-4,morale:-3}},
-     {t:'Negotiate a handover period.',desc:'They stay 4 weeks to transfer knowledge.',e:{schedule:-2,quality:2,morale:1}}
-   ]},
-  {week:4,title:'Quality Question',
+  {week:0,title:'Quality Question',
    text:'Inspections found some work doesn\'t meet specification. Not safety-critical, but below standard.',
    choices:[
      {t:'Rip it out and redo properly.',desc:'Expensive and slow, but right.',e:{schedule:-4,budget:-4,quality:6}},
      {t:'Apply for a concession.',desc:'Ask to accept lower standard. Risky.',e:{quality:-2}},
      {t:'Patch and monitor.',desc:'Quick fix, but may not last.',e:{budget:-1,quality:1}}
    ]},
-  {week:2,title:'Testing Trouble',
-   text:'Signal testing has failed. The system won\'t work until it\'s fixed.',
-   choices:[
-     {t:'Bring in specialist team.',desc:'Expensive but resolves it fast.',e:{budget:-5,schedule:2,quality:3}},
-     {t:'Let your team debug it.',desc:'Slower but they\'ll learn from it.',e:{schedule:-3,quality:2,morale:2}},
-     {t:'Revert to simpler design.',desc:'Less capability but works reliably.',e:{quality:-3,schedule:2}}
-   ]},
-  // Post-delivery events
-  {week:-2,title:'Snag List Growing',
+  {week:-4,title:'Snag List Growing',
    text:'47 snags found since handover. The maintenance team is reporting new issues daily. Some are minor cosmetic items, others affect operations.',
    choices:[
      {t:'Mobilize a dedicated snag team.',desc:'Costs money but shows commitment to quality.',e:{budget:-4,quality:5,morale:2}},
      {t:'Prioritize \u2014 fix critical only.',desc:'Pragmatic but some items may linger.',e:{quality:2,schedule:2,morale:-1}},
      {t:'Dispute non-genuine snags.',desc:'Push back on items that aren\'t defects.',e:{budget:2,quality:-1,morale:-2}}
-   ]},
-  {week:-4,title:'Team Member Leaving',
-   text:'Sarah has been offered the Design Lead role on a bigger project. She wants to take it but feels loyal to this team.',
-   choices:[
-     {t:'Congratulate her and let her go.',desc:'Shows good leadership. You\'ll miss her expertise.',e:{morale:4,quality:-2}},
-     {t:'Ask her to stay until close-out.',desc:'Selfish but practical \u2014 you need her knowledge.',e:{quality:3,morale:-2}},
-     {t:'Negotiate a phased handover.',desc:'She transitions over 4 weeks. Best of both worlds.',e:{quality:2,morale:3,schedule:-1}}
    ]},
   {week:-8,title:'Lessons Learned',
    text:'Final project review meeting. The whole team gathers to reflect on what went well and what could improve for next time.',
@@ -908,26 +918,14 @@ const EVENTS=[
 // === WEEKLY OBJECTIVES ===
 function getObjectives(week){
   const w=week;
-  // Post-delivery objectives
-  if(w<0){
-    const objs=[{id:'desk'+w,text:'Review project status at desk',type:'zone',target:'desk'}];
-    if(w===-2){
-      objs.push({id:'talk_mike'+w,text:'Discuss snag list with Mike',type:'npc',target:'mike'});
-      objs.push({id:'talk_emma'+w,text:'Safety review with Emma',type:'npc',target:'emma'});
-      objs.push({id:'docs'+w,text:'Review handover documents',type:'zone',target:'documents'});
-    }else if(w===-4){
-      objs.push({id:'talk_sarah'+w,text:'Talk to Sarah about her plans',type:'npc',target:'sarah'});
-      objs.push({id:'talk_james'+w,text:'Final account with James',type:'npc',target:'james'});
-      objs.push({id:'meet'+w,text:'Team catch-up meeting',type:'zone',target:'meeting'});
-    }else{
-      objs.push({id:'talk_priya'+w,text:'Closeout comms with Priya',type:'npc',target:'priya'});
-      objs.push({id:'meet'+w,text:'Lessons learned session',type:'zone',target:'meeting'});
-      objs.push({id:'docs'+w,text:'Finalize project closeout',type:'zone',target:'documents'});
-    }
-    return objs;
-  }
-  switch(w){
-    case 32: return [
+  const pi=getPhaseIdx(w);
+  const npcPool=['sarah','mike','emma','james','priya'];
+  const npcName=n=>NPCS.find(np=>np.id===n).name;
+  const n1=npcPool[Math.abs(w)%5],n2=npcPool[(Math.abs(w)+2)%5];
+
+  // Phase 0: Kick-Off — meet everyone
+  if(pi===0){
+    return [
       {id:'meet_sarah',text:'Meet Sarah (Design Lead)',type:'npc',target:'sarah'},
       {id:'meet_mike',text:'Meet Mike (Site Manager)',type:'npc',target:'mike'},
       {id:'meet_emma',text:'Meet Emma (Safety Lead)',type:'npc',target:'emma'},
@@ -936,36 +934,89 @@ function getObjectives(week){
       {id:'visit_desk',text:'Visit your desk \u2014 review project brief',type:'zone',target:'desk'},
       {id:'visit_break',text:'Find the break room',type:'zone',target:'breakroom'}
     ];
-    case 30: return [
-      {id:'desk30',text:'Review project plan at desk',type:'zone',target:'desk'},
-      {id:'talk_emma30',text:'Discuss safety plan with Emma',type:'npc',target:'emma'},
-      {id:'docs30',text:'Check document room for surveys',type:'zone',target:'documents'}
-    ];
-    case 28: return [
-      {id:'meeting28',text:'Feasibility presentation (meeting room)',type:'zone',target:'meeting'},
-      {id:'talk_sarah28',text:'Get Sarah\'s final design input',type:'npc',target:'sarah'},
-      {id:'desk28',text:'Submit feasibility report',type:'zone',target:'desk'}
-    ];
-    default:{
-      const phase=getPhaseIdx(w);
-      const objs=[];
-      objs.push({id:'desk'+w,text:'Check updates at your desk',type:'zone',target:'desk'});
-      if(w%4===0)objs.push({id:'meet'+w,text:'Monthly team meeting',type:'zone',target:'meeting'});
-      const npcPool=['sarah','mike','emma','james','priya'];
-      const n1=npcPool[Math.abs(w)%5],n2=npcPool[(Math.abs(w)+2)%5];
-      const npcName=n=>NPCS.find(np=>np.id===n).name;
-      objs.push({id:'talk_'+n1+w,text:'Talk to '+npcName(n1),type:'npc',target:n1});
-      if(w%2===0)objs.push({id:'talk_'+n2+w,text:'Talk to '+npcName(n2),type:'npc',target:n2});
-      if(phase>=3&&w%3===0)objs.push({id:'board'+w,text:'Update planning board',type:'zone',target:'planning'});
-      // Site always accessible now
-      if(phase>=1){
-        if(w%4===0)objs.push({id:'site'+w,text:'Visit the railway site',type:'zone',target:'exit_site'});
-        if(phase>=4&&w%2===0)objs.push({id:'inspect'+w,text:'Inspect track section',type:'zone',target:'track_b'});
-      }
-      if(w<=4&&w>=0)objs.push({id:'docs'+w,text:'Review handover documents',type:'zone',target:'documents'});
-      return objs;
-    }
   }
+  // Phase 1: Design (Early)
+  if(pi===1){
+    return [
+      {id:'meet'+w,text:'Feasibility review (meeting room)',type:'zone',target:'meeting'},
+      {id:'talk_sarah'+w,text:'Get Sarah\'s design input',type:'npc',target:'sarah'},
+      {id:'desk'+w,text:'Review project plan at desk',type:'zone',target:'desk'},
+      {id:'talk_emma'+w,text:'Discuss safety plan with Emma',type:'npc',target:'emma'}
+    ];
+  }
+  // Phase 2: Design (Detailed)
+  if(pi===2){
+    return [
+      {id:'desk'+w,text:'Review detailed design at desk',type:'zone',target:'desk'},
+      {id:'talk_sarah'+w,text:'Design review with Sarah',type:'npc',target:'sarah'},
+      {id:'docs'+w,text:'Check document room for specs',type:'zone',target:'documents'},
+      {id:'talk_'+n2+w,text:'Talk to '+npcName(n2),type:'npc',target:n2}
+    ];
+  }
+  // Phase 3: Procurement
+  if(pi===3){
+    return [
+      {id:'desk'+w,text:'Check procurement updates',type:'zone',target:'desk'},
+      {id:'talk_james'+w,text:'Budget review with James',type:'npc',target:'james'},
+      {id:'talk_mike'+w,text:'Construction planning with Mike',type:'npc',target:'mike'},
+      {id:'meet'+w,text:'Team alignment meeting',type:'zone',target:'meeting'}
+    ];
+  }
+  // Phase 4: Pre-Construction
+  if(pi===4){
+    return [
+      {id:'desk'+w,text:'Check updates at your desk',type:'zone',target:'desk'},
+      {id:'talk_emma'+w,text:'Safety briefing with Emma',type:'npc',target:'emma'},
+      {id:'board'+w,text:'Update planning board',type:'zone',target:'planning'},
+      {id:'talk_'+n1+w,text:'Talk to '+npcName(n1),type:'npc',target:n1},
+      {id:'site'+w,text:'Visit the railway site',type:'zone',target:'exit_site'}
+    ];
+  }
+  // Phase 5: Construction (Early)
+  if(pi===5){
+    return [
+      {id:'desk'+w,text:'Check construction updates',type:'zone',target:'desk'},
+      {id:'talk_mike'+w,text:'Site progress with Mike',type:'npc',target:'mike'},
+      {id:'talk_emma'+w,text:'Safety check with Emma',type:'npc',target:'emma'},
+      {id:'site'+w,text:'Visit the railway site',type:'zone',target:'exit_site'},
+      {id:'inspect'+w,text:'Inspect track section',type:'zone',target:'track_b'}
+    ];
+  }
+  // Phase 6: Construction (Late)
+  if(pi===6){
+    return [
+      {id:'desk'+w,text:'Review progress at desk',type:'zone',target:'desk'},
+      {id:'talk_'+n1+w,text:'Talk to '+npcName(n1),type:'npc',target:n1},
+      {id:'talk_'+n2+w,text:'Talk to '+npcName(n2),type:'npc',target:n2},
+      {id:'site'+w,text:'Site inspection',type:'zone',target:'exit_site'},
+      {id:'inspect'+w,text:'Inspect track section',type:'zone',target:'track_b'}
+    ];
+  }
+  // Phase 7: Testing & Handover
+  if(pi===7){
+    return [
+      {id:'desk'+w,text:'Prepare handover at desk',type:'zone',target:'desk'},
+      {id:'meet'+w,text:'Handover meeting',type:'zone',target:'meeting'},
+      {id:'docs'+w,text:'Review handover documents',type:'zone',target:'documents'},
+      {id:'talk_'+n1+w,text:'Talk to '+npcName(n1),type:'npc',target:n1}
+    ];
+  }
+  // Phase 8: Post-Delivery
+  if(pi===8){
+    return [
+      {id:'desk'+w,text:'Review project status at desk',type:'zone',target:'desk'},
+      {id:'talk_mike'+w,text:'Discuss snag list with Mike',type:'npc',target:'mike'},
+      {id:'talk_emma'+w,text:'Safety review with Emma',type:'npc',target:'emma'},
+      {id:'docs'+w,text:'Review handover documents',type:'zone',target:'documents'}
+    ];
+  }
+  // Phase 9: Close-Out
+  return [
+    {id:'desk'+w,text:'Finalize project at desk',type:'zone',target:'desk'},
+    {id:'talk_priya'+w,text:'Closeout comms with Priya',type:'npc',target:'priya'},
+    {id:'meet'+w,text:'Lessons learned session',type:'zone',target:'meeting'},
+    {id:'docs'+w,text:'Finalize project closeout',type:'zone',target:'documents'}
+  ];
 }
 
 const REPORT_WEEKS=[28,24,20,16,12,8,4,0];
@@ -1271,7 +1322,7 @@ function handleInteract(){
 // === NPC DIALOGUE (Bug 11 fix: show reaction + metric changes) ===
 function openNPCDialogue(npc){
   playSFX('interact');
-  const phaseIdx=getPhaseIdx(S.week);
+  const phaseIdx=getDlgPhaseIdx(S.week);
   const npcDlgs=DLG[npc.id];
   if(!npcDlgs||!npcDlgs[phaseIdx])return;
   
@@ -1634,17 +1685,15 @@ function showZoneText(title,text){
 
 function showPlanningBoard(){
   const el=document.getElementById('dlg');
+  const phaseColors=['#4aca8a','#5b8ef5','#5b8ef5','#f7c948','#e88030','#e05577','#e05577','#b08fd8','#8a7fad','#533a7b'];
   let html='<div class="dn">Planning Board \u2014 Project Timeline</div><div class="dt"><div style="margin:4px 0">';
-  const phases=[{n:'Kick-Off',s:32,e:28,c:'#4aca8a'},{n:'Design',s:28,e:20,c:'#5b8ef5'},
-    {n:'Procurement',s:20,e:14,c:'#f7c948'},{n:'Pre-Construct',s:14,e:8,c:'#e88030'},
-    {n:'Construction',s:8,e:2,c:'#e05577'},{n:'Handover',s:2,e:0,c:'#b08fd8'},
-    {n:'Post-Delivery',s:0,e:-4,c:'#8a7fad'},{n:'Close-Out',s:-4,e:-8,c:'#533a7b'}];
-  phases.forEach(p=>{
-    const pw=((p.s-p.e)/40*100);
-    const inPhase=S.week<=p.s&&S.week>p.e;
-    const past=S.week<=p.e;
-    html+='<div style="margin:2px 0;font-size:7px"><span style="display:inline-block;width:80px;color:'+(past?'#4aca8a':(inPhase?'#f7c948':'#8a7fad'))+'">'+(inPhase?'\u25B6 ':'')+p.n+'</span>';
-    html+='<span style="display:inline-block;width:'+pw+'%;height:8px;background:'+(past?'#4aca8a33':p.c)+';border:1px solid '+p.c+';border-radius:2px"></span></div>';
+  PHASES.forEach((p,i)=>{
+    const pw=((p.start-p.end)/40*100);
+    const inPhase=S.week<=p.start&&S.week>p.end;
+    const past=S.week<=p.end;
+    const c=phaseColors[i]||'#8a7fad';
+    html+='<div style="margin:2px 0;font-size:7px"><span style="display:inline-block;width:90px;color:'+(past?'#4aca8a':(inPhase?'#f7c948':'#8a7fad'))+'">'+(inPhase?'\u25B6 ':'')+p.short+'</span>';
+    html+='<span style="display:inline-block;width:'+pw+'%;height:8px;background:'+(past?'#4aca8a33':c)+';border:1px solid '+c+';border-radius:2px"></span></div>';
   });
   html+='<div style="margin-top:6px;color:#f7c948">Current: '+weekLabel(S.week)+' \u2014 '+getPhase(S.week)+'</div>';
   html+='</div></div><div class="dc" onclick="closeDlg()">Close</div>';
@@ -1750,11 +1799,13 @@ function updateNotepad(){
   if(S.weekObjMet){
     html+='<div style="margin-top:8px"><button class="btn sm gld" onclick="advanceWeek()" style="font-size:7px;padding:6px 10px;min-width:auto">Week Complete \u2192</button></div>';
   }
+  // Skip Phase button — always visible
+  html+='<div style="margin-top:6px"><button class="btn sm" onclick="skipPhase()" style="font-size:7px;padding:5px 8px;min-width:auto;opacity:0.7">Skip This Phase \u2192</button></div>';
   
-  const milestones=[{w:28,t:'Feasibility Complete'},{w:24,t:'Design Started'},{w:20,t:'Design Approved'},
-    {w:16,t:'Contracts Awarded'},{w:12,t:'Construction Starts!'},{w:8,t:'Mid-Construction Review'},
-    {w:4,t:'Testing Begins'},{w:2,t:'Pre-Handover Inspection'},{w:0,t:'DELIVERY DAY!'},
-    {w:-2,t:'Snag Clearance'},{w:-4,t:'Team Transition'},{w:-8,t:'Project Close-Out'}];
+  const milestones=[{w:28,t:'Feasibility Complete'},{w:24,t:'Early Design Done'},{w:20,t:'Detailed Design Approved'},
+    {w:16,t:'Contracts Awarded'},{w:12,t:'Construction Starts!'},{w:8,t:'Construction Midpoint'},
+    {w:4,t:'Testing & Handover'},{w:0,t:'DELIVERY DAY!'},
+    {w:-4,t:'Post-Delivery Review'},{w:-8,t:'Project Close-Out'}];
   const next=milestones.find(m=>m.w<S.week);
   if(next){
     html+='<div class="sep" style="margin-top:8px">\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501</div>';
@@ -1766,6 +1817,68 @@ function updateNotepad(){
   np.innerHTML=html;
 }
 
+
+// === SKIP PHASE — "Worry About It Later" ===
+function skipPhase(){
+  // Find next 4-week boundary
+  const curIdx=KEY_WEEKS.indexOf(S.week);
+  let nextWeek;
+  if(curIdx>=0&&curIdx<KEY_WEEKS.length-1){
+    nextWeek=KEY_WEEKS[curIdx+1];
+  }else{
+    nextWeek=KEY_WEEKS.find(w=>w<S.week);
+    if(nextWeek===undefined)return;
+  }
+
+  // Random metric drift: -8 to +3 per metric (biased negative)
+  const drifts={};
+  const metricKeys=['schedule','budget','safety','quality','morale'];
+  metricKeys.forEach(k=>{
+    const d=Math.floor(Math.random()*12)-8; // -8 to +3
+    drifts[k]=d;
+    S.metrics[k]=Math.max(0,Math.min(100,S.metrics[k]+d));
+  });
+
+  // Auto-resolve any curveball events in skipped range
+  EVENTS.forEach(ev=>{
+    if(ev.week<=S.week&&ev.week>nextWeek&&!S.eventsDone.includes(ev.week)){
+      const rci=Math.floor(Math.random()*ev.choices.length);
+      applyEffects(ev.choices[rci].e);
+      S.eventsDone.push(ev.week);
+    }
+  });
+
+  const fromWeek=S.week;
+  S.week=nextWeek;
+  S.coffeeUsed=false;
+
+  // Show skip transition with results
+  const el=document.getElementById('skipTrans');
+  document.getElementById('skipTitle').textContent=(fromWeek-nextWeek)+' weeks later...';
+  let resultHtml='You let the team handle things. Let\'s see how that went.<br><br>';
+  const metricNames={schedule:'Schedule',budget:'Budget',safety:'Safety',quality:'Quality',morale:'Morale'};
+  metricKeys.forEach(k=>{
+    const d=drifts[k];
+    const color=d>=0?'#4aca8a':'#e05577';
+    const arrow=d>=0?'\u2191':'\u2193';
+    const sign=d>=0?'+':'';
+    resultHtml+='<span style="color:'+color+'">'+metricNames[k]+': '+sign+d+' '+arrow+'</span>  ';
+  });
+  document.getElementById('skipText').innerHTML=resultHtml;
+  el.className='skip-trans on';
+
+  playSFX('weekup');
+  setTimeout(()=>{
+    el.className='skip-trans';
+    // Check for game end
+    if(S.week<=-8){showEndScreen();return;}
+    // Check for report
+    if(REPORT_WEEKS.includes(S.week)){showReport();return;}
+    startNewWeek();
+    updateHUD();
+    saveGame();
+  },2500);
+}
 
 // === WEEK ADVANCEMENT ===
 function advanceWeek(){
@@ -1954,20 +2067,11 @@ function showDocsOverlay(){
   html+='<div style="margin:12px 0;padding:12px;background:#0f0d1f;border:1px solid #3a3060;border-radius:6px">';
   html+='<div style="font-size:10px;color:#f7c948;margin-bottom:8px">Project Timeline</div>';
   
-  const phases=[
-    {n:'Kick-Off & Feasibility',s:32,e:28,c:'#4aca8a'},
-    {n:'Design Phase',s:28,e:20,c:'#5b8ef5'},
-    {n:'Procurement & Planning',s:20,e:14,c:'#f7c948'},
-    {n:'Pre-Construction',s:14,e:8,c:'#e88030'},
-    {n:'Construction',s:8,e:2,c:'#e05577'},
-    {n:'Testing & Handover',s:2,e:0,c:'#b08fd8'},
-    {n:'Post-Delivery',s:0,e:-4,c:'#8a7fad'},
-    {n:'Project Close-Out',s:-4,e:-8,c:'#533a7b'}
-  ];
-  
+  const phaseColors=['#4aca8a','#5b8ef5','#5b8ef5','#f7c948','#e88030','#e05577','#e05577','#b08fd8','#8a7fad','#533a7b'];
+
   const totalWeeks=40; // T-32 to T+8
   const barWidth=380;
-  
+
   // Header with week markers
   html+='<div style="display:flex;margin-left:130px;margin-bottom:4px;font-size:7px;color:#8a7fad">';
   const markers=[32,24,16,8,0,-8];
@@ -1976,17 +2080,18 @@ function showDocsOverlay(){
     html+='<span style="position:absolute;margin-left:'+left+'px">'+weekLabel(w)+'</span>';
   });
   html+='</div>';
-  
-  phases.forEach(p=>{
-    const startPx=((32-p.s)/totalWeeks)*barWidth;
-    const widthPx=((p.s-p.e)/totalWeeks)*barWidth;
-    const inPhase=S.week<=p.s&&S.week>p.e;
-    const past=S.week<=p.e;
+
+  PHASES.forEach((p,pi)=>{
+    const startPx=((32-p.start)/totalWeeks)*barWidth;
+    const widthPx=((p.start-p.end)/totalWeeks)*barWidth;
+    const inPhase=S.week<=p.start&&S.week>p.end;
+    const past=S.week<=p.end;
     
+    const pc=phaseColors[pi]||'#8a7fad';
     html+='<div class="gantt-row">';
-    html+='<div class="gantt-label" style="color:'+(inPhase?'#f7c948':(past?'#4aca8a':'#8a7fad'))+'">'+(inPhase?'\u25B6 ':'')+p.n+'</div>';
+    html+='<div class="gantt-label" style="color:'+(inPhase?'#f7c948':(past?'#4aca8a':'#8a7fad'))+'">'+(inPhase?'\u25B6 ':'')+p.name+'</div>';
     html+='<div style="position:relative;width:'+barWidth+'px;height:16px;background:#1a1535;border-radius:3px">';
-    html+='<div class="gantt-bar" style="position:absolute;left:'+startPx+'px;width:'+widthPx+'px;background:'+(past?'#4aca8a55':p.c)+(inPhase?';box-shadow:0 0 6px '+p.c:'')+'"></div>';
+    html+='<div class="gantt-bar" style="position:absolute;left:'+startPx+'px;width:'+widthPx+'px;background:'+(past?'#4aca8a55':pc)+(inPhase?';box-shadow:0 0 6px '+pc:'')+'"></div>';
     
     // "You are here" marker
     const youPx=((32-S.week)/totalWeeks)*barWidth;
@@ -1996,35 +2101,40 @@ function showDocsOverlay(){
   html+='<div style="font-size:8px;color:#f7c948;margin-top:6px;text-align:center">You are here: '+weekLabel(S.week)+' \u2014 '+getPhase(S.week)+'</div>';
   html+='</div>';
   
-  // Key Documents
+  // Key Documents — Card Grid Layout
   html+='<div style="margin-top:12px;font-size:10px;color:#f7c948;margin-bottom:8px"><img src="img/icon/Briefcase.png" style="width:14px;height:14px;vertical-align:middle"> Key Documents</div>';
-  
+
   const docs=[
-    {name:'Project Brief',icon:'Briefcase',readyWeek:32},
-    {name:'Risk Register',icon:'Info',readyWeek:30},
-    {name:'Design Pack',icon:'Pencil',readyWeek:20},
-    {name:'Construction Plan',icon:'Hammer',readyWeek:14},
-    {name:'Budget Report',icon:'Cash',readyWeek:28},
-    {name:'Quality Log',icon:'Monitor',readyWeek:8},
-    {name:'Handover Pack',icon:'Key',readyWeek:2}
+    {name:'Project Brief',icon:'Briefcase',readyWeek:32,desc:'Scope, objectives, success criteria'},
+    {name:'Risk Register',icon:'Info',readyWeek:28,desc:'Identified risks and mitigations'},
+    {name:'Design Pack',icon:'Pencil',readyWeek:20,desc:'Engineering drawings and specs'},
+    {name:'Budget Report',icon:'Cash',readyWeek:28,desc:'Cost tracking and forecasts'},
+    {name:'Construction Plan',icon:'Hammer',readyWeek:12,desc:'Build sequence and methodology'},
+    {name:'Quality Log',icon:'Monitor',readyWeek:8,desc:'Inspection results and NCRs'},
+    {name:'Handover Pack',icon:'Key',readyWeek:4,desc:'Completion docs and certificates'}
   ];
-  
+
+  html+='<div style="display:flex;flex-wrap:wrap;gap:8px">';
   docs.forEach(d=>{
-    let status,statusColor;
-    if(S.week<=d.readyWeek-4){
-      status='Complete';statusColor='#4aca8a';
+    let status,statusColor,statusBg;
+    if(S.week<=d.readyWeek-8){
+      status='Complete';statusColor='#4aca8a';statusBg='rgba(74,202,138,0.15)';
     }else if(S.week<=d.readyWeek){
-      status='In Progress';statusColor='#f7c948';
+      status='In Progress';statusColor='#f7c948';statusBg='rgba(247,201,72,0.15)';
     }else{
-      status='Pending';statusColor='#8a7fad';
+      status='Pending';statusColor='#8a7fad';statusBg='rgba(138,127,173,0.1)';
     }
-    
-    html+='<div class="doc-item">';
-    html+='<img src="img/icon/'+d.icon+'.png" alt="">';
-    html+='<span>'+d.name+'</span>';
-    html+='<span class="doc-status" style="color:'+statusColor+';border:1px solid '+statusColor+'">'+status+'</span>';
+
+    html+='<div style="background:'+statusBg+';border:1px solid '+statusColor+';border-radius:6px;padding:8px;width:calc(50% - 4px);cursor:pointer" onclick="this.querySelector(\'.doc-detail\').style.display=this.querySelector(\'.doc-detail\').style.display===\'block\'?\'none\':\'block\'">';
+    html+='<div style="display:flex;align-items:center;gap:6px">';
+    html+='<img src="img/icon/'+d.icon+'.png" style="width:14px;height:14px;image-rendering:pixelated">';
+    html+='<span style="font-size:9px;color:#f0e6d3">'+d.name+'</span>';
+    html+='<span style="margin-left:auto;font-size:7px;color:'+statusColor+';padding:2px 4px;border:1px solid '+statusColor+';border-radius:3px">'+status+'</span>';
+    html+='</div>';
+    html+='<div class="doc-detail" style="display:none;margin-top:6px;font-size:8px;color:#8a7fad;line-height:1.6">'+d.desc+'<br>Due: '+weekLabel(d.readyWeek)+'</div>';
     html+='</div>';
   });
+  html+='</div>';
   
   html+='<div style="text-align:center;margin-top:16px"><button class="btn sm" onclick="closeDocsOverlay()">Close Documents</button></div>';
   el.innerHTML=html;
