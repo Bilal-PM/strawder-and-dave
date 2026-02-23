@@ -230,7 +230,10 @@ const S={
   keys:{},lastTime:0,animTimer:0,
   weekObjMet:false,
   savedExists:false,
-  docsOpen:false
+  docsOpen:false,
+  relationships:{sarah:{hearts:0,talked:0},mike:{hearts:0,talked:0},emma:{hearts:0,talked:0},james:{hearts:0,talked:0},priya:{hearts:0,talked:0}},
+  achievements:[],
+  pmKnowledge:[]
 };
 
 // === TIMELINE — Key Weeks ===
@@ -1058,6 +1061,10 @@ function playSFX(type){
     case'positive':playNote(523,0.1,'square',0.08);playNote(659,0.1,'square',0.07,0.08);playNote(784,0.15,'square',0.08,0.16);break;
     case'negative':playNote(300,0.2,'sawtooth',0.08);playNote(250,0.25,'sawtooth',0.07,0.15);break;
     case'weekup':playNote(523,0.12,'square',0.07);playNote(659,0.12,'square',0.06,0.1);playNote(784,0.12,'square',0.06,0.2);playNote(1047,0.2,'square',0.07,0.3);break;
+    case'celebration':playNote(523,0.1,'square',0.06);playNote(659,0.1,'square',0.06,0.06);playNote(784,0.1,'square',0.06,0.12);playNote(1047,0.15,'square',0.07,0.18);playNote(1319,0.2,'square',0.06,0.24);break;
+    case'door':playNote(200,0.15,'triangle',0.06);playNote(150,0.2,'triangle',0.05,0.1);break;
+    case'paper':playNote(800+Math.random()*400,0.04,'triangle',0.03);playNote(1000+Math.random()*500,0.04,'triangle',0.02,0.03);break;
+    case'bird':playNote(1200+Math.random()*400,0.08,'sine',0.03);playNote(1400+Math.random()*300,0.06,'sine',0.02,0.1);break;
   }
 }
 
@@ -1570,7 +1577,40 @@ function chooseDlg(npcId,pi,di,ci){
   else if(totalEffect>=-3)tier='negative';
   else tier='vnegative';
 
-  // Pick a personality-driven reaction, rotating to avoid repetition
+  // Update relationship hearts
+  if(S.relationships[npcId]){
+    S.relationships[npcId].talked++;
+    if(tier==='vpositive')S.relationships[npcId].hearts=Math.min(5,S.relationships[npcId].hearts+1);
+    else if(tier==='positive'&&Math.random()<0.5)S.relationships[npcId].hearts=Math.min(5,S.relationships[npcId].hearts+1);
+    else if(tier==='vnegative')S.relationships[npcId].hearts=Math.max(0,S.relationships[npcId].hearts-1);
+  }
+
+  // Trigger screen effects based on sentiment
+  if(tier==='vpositive'){
+    triggerFlash('#4aca8a',200);
+    // Sparkles around NPC
+    const nx=npc.curX||0,ny=npc.curY||0;
+    for(let i=0;i<5;i++){
+      spawnParticle({x:nx+Math.random()*16,y:ny-10+Math.random()*20,vx:(Math.random()-0.5)*0.5,vy:-0.3-Math.random()*0.2,life:800,size:2,color:'#f7c948',type:'sparkle'});
+    }
+    playSFX('celebration');
+  }else if(tier==='vnegative'){
+    triggerShake(3,300);
+    triggerFlash('#e05577',150);
+  }else if(tier==='negative'){
+    triggerShake(1.5,150);
+  }else if(tier==='positive'){
+    const nx=npc.curX||0,ny=npc.curY||0;
+    for(let i=0;i<2;i++){
+      spawnParticle({x:nx+Math.random()*16,y:ny-5,vx:(Math.random()-0.5)*0.3,vy:-0.2,life:600,size:1.5,color:'#f7c948',type:'sparkle'});
+    }
+  }
+
+  // NPC bounce effect
+  if(npc.curY!==undefined)npc.curY-=2;
+  setTimeout(()=>{if(npc.curY!==undefined)npc.curY+=2;},150);
+
+  // Pick a personality-driven reaction
   const reactions=NPC_REACTIONS[npcId]||NPC_REACTIONS.sarah;
   const pool=reactions[tier]||reactions.neutral;
   const reactionKey=npcId+'_'+tier;
@@ -1816,6 +1856,18 @@ function updateNotepad(){
     html+='<div style="color:#7a5a38;font-size:9px">'+weekLabel(next.w)+': '+next.t+'</div>';
   }
   
+  // Team relationships
+  html+='<div class="sep" style="margin-top:8px">\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501</div>';
+  html+='<div style="color:#5a3a1e;font-size:8px;margin-bottom:4px">TEAM</div>';
+  for(const npc of NPCS){
+    const rel=S.relationships[npc.id];
+    if(rel){
+      const filled='\u2665'.repeat(rel.hearts);
+      const empty='\u2661'.repeat(5-rel.hearts);
+      html+='<div style="font-size:8px;color:#7a5a38">'+npc.name+' <span style="color:#e05577">'+filled+'</span><span style="color:#c4a878">'+empty+'</span></div>';
+    }
+  }
+
   html+='<div class="tip">TIP: Walk to people and press SPACE to talk!</div>';
   np.innerHTML=html;
 }
@@ -3028,6 +3080,22 @@ function render(){
       CTX.fillStyle='#ffffff';
       CTX.fillText(npcRef.name,nameX+2,nameY);
       CTX.textBaseline='alphabetic';
+      // Heart display under name tag
+      const rel=S.relationships[npcRef.id];
+      if(rel){
+        const hearts=rel.hearts;
+        const heartY=ny-14;
+        const heartStartX=nx+8-(5*4)/2;
+        for(let h=0;h<5;h++){
+          CTX.fillStyle=h<hearts?'#e05577':'rgba(100,80,60,0.4)';
+          // Tiny pixel heart shape
+          const hx=heartStartX+h*4;
+          CTX.fillRect(hx,heartY,1,1);CTX.fillRect(hx+2,heartY,1,1);
+          CTX.fillRect(hx-0.5,heartY+1,4,1);
+          CTX.fillRect(hx,heartY+2,2,1);
+          CTX.fillRect(hx+0.5,heartY+3,1,1);
+        }
+      }
       // Expression bubble
       if(npcRef.aiExpr){
         drawExpressionBubble(CTX,npcRef,nx,ny);
@@ -3039,14 +3107,30 @@ function render(){
   entities.sort((a,b)=>a.y-b.y);
   entities.forEach(e=>e.draw());
   
-  // Zone glow indicators
+  // Zone glow indicators — pulsing border
   if(!S.dlgOpen&&!S.eventOpen&&!S.docsOpen){
     const zones=ZONES[S.map]||[];
+    const now=Date.now();
     zones.forEach(z=>{
       const dist=Math.abs(S.px+8-z.x*TS-z.w*8)+Math.abs(S.py+16-z.y*TS-z.h*8);
       if(dist<80){
-        CTX.fillStyle='rgba(247,201,72,'+((Math.sin(Date.now()/500)*0.15)+0.1)+')';
-        CTX.fillRect(z.x*TS,z.y*TS,z.w*TS,z.h*TS);
+        const pulse=Math.sin(now/400)*0.3+0.5;
+        const zx=z.x*TS, zy=z.y*TS, zw=z.w*TS, zh=z.h*TS;
+        CTX.strokeStyle='rgba(247,201,72,'+pulse+')';
+        CTX.lineWidth=2;
+        CTX.strokeRect(zx+1,zy+1,zw-2,zh-2);
+        // Corner accents
+        const corner=4;
+        CTX.strokeStyle='rgba(247,201,72,'+(pulse*1.3)+')';
+        CTX.lineWidth=1;
+        // Top-left
+        CTX.beginPath();CTX.moveTo(zx,zy+corner);CTX.lineTo(zx,zy);CTX.lineTo(zx+corner,zy);CTX.stroke();
+        // Top-right
+        CTX.beginPath();CTX.moveTo(zx+zw-corner,zy);CTX.lineTo(zx+zw,zy);CTX.lineTo(zx+zw,zy+corner);CTX.stroke();
+        // Bottom-left
+        CTX.beginPath();CTX.moveTo(zx,zy+zh-corner);CTX.lineTo(zx,zy+zh);CTX.lineTo(zx+corner,zy+zh);CTX.stroke();
+        // Bottom-right
+        CTX.beginPath();CTX.moveTo(zx+zw-corner,zy+zh);CTX.lineTo(zx+zw,zy+zh);CTX.lineTo(zx+zw,zy+zh-corner);CTX.stroke();
       }
     });
   }
@@ -3244,7 +3328,10 @@ function saveGame(){
     week:S.week,metrics:{...S.metrics},playerName:S.playerName,
     playerChar:S.playerChar,eventsDone:[...S.eventsDone],
     map:S.map,px:S.px,py:S.py,siteUnlocked:S.siteUnlocked,
-    completedObj:[...S.completedObj],dlgCooldowns:{...S.dlgCooldowns}
+    completedObj:[...S.completedObj],dlgCooldowns:{...S.dlgCooldowns},
+    relationships:JSON.parse(JSON.stringify(S.relationships)),
+    achievements:[...S.achievements],
+    pmKnowledge:[...S.pmKnowledge]
   };
   try{localStorage.setItem('projectValley_save',JSON.stringify(data));}catch(e){}
 }
@@ -3261,6 +3348,9 @@ function loadGame(){
     S.siteUnlocked=data.siteUnlocked||false;
     S.completedObj=data.completedObj||[];
     S.dlgCooldowns=data.dlgCooldowns||{};
+    if(data.relationships)S.relationships=data.relationships;
+    if(data.achievements)S.achievements=data.achievements;
+    if(data.pmKnowledge)S.pmKnowledge=data.pmKnowledge;
   }catch(e){return;}
   
   // Bug 4: clear keys
