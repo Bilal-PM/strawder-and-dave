@@ -6,90 +6,90 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#0c0c1d;color:#f0e6d3;font-family:'Press Start 2P',monospace;overflow:hidden;height:100vh;width:100vw;display:flex;align-items:center;justify-content:center}
-#gc{position:relative;width:960px;height:640px;background:#0f0f23;border:4px solid #533a7b;border-radius:2px;overflow:hidden;image-rendering:pixelated}
+body{background:#3a2a18;color:#f0e6d3;font-family:'Press Start 2P',monospace;overflow:hidden;height:100vh;width:100vw;display:flex;align-items:center;justify-content:center}
+#gc{position:relative;width:960px;height:640px;background:#5a3a1e;border:4px solid #7a5c3a;border-radius:2px;overflow:hidden;image-rendering:pixelated}
 #cv{position:absolute;top:0;left:0;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}
 .scr{position:absolute;top:0;left:0;width:100%;height:100%;display:none;z-index:10}
 .scr.on{display:flex;flex-direction:column;align-items:center;justify-content:center}
-#loadScr{background:#0c0c1d;z-index:100}
-#loadScr .bar{width:300px;height:20px;border:2px solid #533a7b;border-radius:4px;margin:16px 0;overflow:hidden}
-#loadScr .bf{height:100%;background:linear-gradient(90deg,#7c5cbf,#f7c948);width:0%;transition:width .3s}
-#title{background:linear-gradient(180deg,#0c0c1d 0%,#1a1535 40%,#2a1f4a 100%)}
-#title h1{font-size:36px;color:#f7c948;text-shadow:0 0 20px rgba(247,201,72,0.5),3px 3px 0 #1a1535;margin-bottom:8px;text-align:center;letter-spacing:2px}
-#title .sub{font-size:10px;color:#b08fd8;margin-bottom:30px;letter-spacing:3px}
-.btn{font-family:'Press Start 2P',monospace;font-size:11px;padding:14px 32px;margin:6px;border:2px solid #7c5cbf;background:linear-gradient(180deg,#2a1f4a,#1a1535);color:#f0e6d3;cursor:pointer;transition:all .2s;min-width:200px;border-radius:4px}
-.btn:hover{background:linear-gradient(180deg,#7c5cbf,#533a7b);color:#fff;transform:scale(1.05)}
-.btn.gld{border-color:#f7c948}.btn.gld:hover{background:linear-gradient(180deg,#f7c948,#c9a020);color:#1a1535}
+#loadScr{background:#3a2a18;z-index:100}
+#loadScr .bar{width:300px;height:20px;border:2px solid #7a5c3a;border-radius:4px;margin:16px 0;overflow:hidden}
+#loadScr .bf{height:100%;background:linear-gradient(90deg,#a07848,#f7c948);width:0%;transition:width .3s}
+#title{background:linear-gradient(180deg,#2a1a0c 0%,#3a2a18 40%,#4a3a24 100%)}
+#title h1{font-size:36px;color:#f7c948;text-shadow:0 0 20px rgba(247,201,72,0.5),3px 3px 0 #2a1a0c;margin-bottom:8px;text-align:center;letter-spacing:2px}
+#title .sub{font-size:10px;color:#c4a878;margin-bottom:30px;letter-spacing:3px}
+.btn{font-family:'Press Start 2P',monospace;font-size:11px;padding:14px 32px;margin:6px;border:2px solid #a07848;background:linear-gradient(180deg,#5a3a1e,#3a2210);color:#f0e6d3;cursor:pointer;transition:all .2s;min-width:200px;border-radius:4px}
+.btn:hover{background:linear-gradient(180deg,#7a5c3a,#5a3a1e);color:#fff;transform:scale(1.05)}
+.btn.gld{border-color:#f7c948}.btn.gld:hover{background:linear-gradient(180deg,#f7c948,#c9a020);color:#3a2210}
 .btn.sm{font-size:8px;padding:8px 16px;min-width:auto}
 .btn:disabled{opacity:0.4;cursor:not-allowed;transform:none!important}
-#hud{position:absolute;top:0;left:0;right:220px;height:56px;background:linear-gradient(180deg,rgba(12,12,29,0.97),rgba(26,21,53,0.95));border-bottom:2px solid #533a7b;display:none;z-index:20;padding:0 8px;align-items:center;justify-content:space-between;font-size:10px}
+#hud{position:absolute;top:0;left:0;right:220px;height:56px;background:linear-gradient(180deg,rgba(90,58,30,0.97),rgba(58,34,16,0.95));border-bottom:2px solid #7a5c3a;display:none;z-index:20;padding:0 8px;align-items:center;justify-content:space-between;font-size:10px}
 #hud.on{display:flex}
 .hg{display:flex;align-items:center;gap:6px}
 .hi{display:flex;align-items:center;gap:3px}
 .hi img{width:14px;height:14px;image-rendering:pixelated}
-.hl{color:#8a7fad;font-size:9px}.hv{color:#f7c948;font-size:11px}
+.hl{color:#c4a878;font-size:9px}.hv{color:#f7c948;font-size:11px}
 .hpct{font-size:8px;min-width:24px;text-align:right}
-.meter{width:70px;height:12px;background:#1a1535;border:1px solid #3a3060;border-radius:3px;overflow:hidden}
+.meter{width:70px;height:12px;background:#3a2210;border:1px solid #5a3a1e;border-radius:3px;overflow:hidden}
 .mf{height:100%;border-radius:2px;transition:width .5s}
 .mf.grn{background:linear-gradient(90deg,#2a8a5a,#4aca8a)}
 .mf.gld{background:linear-gradient(90deg,#c9a020,#f7c948)}
 .mf.red{background:linear-gradient(90deg,#a03355,#e05577)}
 .mf.blu{background:linear-gradient(90deg,#3a5eb5,#5b8ef5)}
-.mf.pur{background:linear-gradient(90deg,#533a7b,#b08fd8)}
-#notepad{position:absolute;top:0;right:0;width:220px;height:100%;background:linear-gradient(180deg,#1e1a30,#16122a);border-left:2px solid #533a7b;z-index:20;display:none;overflow-y:auto;padding:10px;font-size:9px;line-height:1.8}
+.mf.pur{background:linear-gradient(90deg,#8a6040,#c4a878)}
+#notepad{position:absolute;top:0;right:0;width:220px;height:100%;background:linear-gradient(180deg,#f5ead0,#e8d4b0);border-left:3px solid #7a5c3a;z-index:20;display:none;overflow-y:auto;padding:10px;font-size:9px;line-height:1.8;color:#3a2210}
 #notepad.on{display:block}
-#notepad h3{color:#f7c948;font-size:10px;margin-bottom:6px}
-#notepad .sep{color:#533a7b;margin:4px 0}
-.obj{padding:2px 0;color:#b08fd8;font-size:9px}
-.obj.done{color:#4aca8a;text-decoration:line-through}
-.tip{color:#5b8ef5;font-size:8px;margin-top:8px;line-height:2}
-#dlg{position:absolute;bottom:10px;left:10px;right:230px;background:linear-gradient(180deg,#1f1840ee,#1a1535ee);border:2px solid #7c5cbf;border-radius:8px;padding:14px;z-index:25;display:none}
+#notepad h3{color:#5a3a1e;font-size:10px;margin-bottom:6px}
+#notepad .sep{color:#c4a878;margin:4px 0}
+.obj{padding:2px 0;color:#5a3a1e;font-size:9px}
+.obj.done{color:#2a8a5a;text-decoration:line-through}
+.tip{color:#4a6a90;font-size:8px;margin-top:8px;line-height:2}
+#dlg{position:absolute;bottom:10px;left:10px;right:230px;background:linear-gradient(180deg,#f5ead0ee,#e8d4b0ee);border:3px solid #7a5c3a;border-radius:8px;padding:14px;z-index:25;display:none}
 #dlg.on{display:block}
-#dlg .dn{color:#f7c948;font-size:11px;margin-bottom:6px}
-#dlg .dt{color:#f0e6d3;font-size:9px;line-height:2;margin-bottom:8px}
-#dlg .dc{padding:6px 10px;margin:4px 0;background:#0f0d1f;border:1px solid #3a3060;border-radius:4px;cursor:pointer;color:#b08fd8;font-size:9px;font-family:'Press Start 2P',monospace;line-height:1.8;transition:all .2s}
-#dlg .dc:hover{border-color:#f7c948;color:#f7c948}
+#dlg .dn{color:#5a3a1e;font-size:11px;margin-bottom:6px;font-weight:bold}
+#dlg .dt{color:#3a2210;font-size:9px;line-height:2;margin-bottom:8px}
+#dlg .dc{padding:6px 10px;margin:4px 0;background:#e8d4b0;border:2px solid #a07848;border-radius:4px;cursor:pointer;color:#5a3a1e;font-size:9px;font-family:'Press Start 2P',monospace;line-height:1.8;transition:all .2s}
+#dlg .dc:hover{border-color:#f7c948;color:#3a2210;background:#f5ead0}
 #dlg .metric-change{font-size:8px;margin:2px 4px;display:inline-block}
-.modal{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:580px;max-height:90%;overflow-y:auto;background:linear-gradient(180deg,#1f1840,#1a1535);border:3px solid #e05577;border-radius:8px;padding:24px;z-index:30;display:none}
+.modal{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:580px;max-height:90%;overflow-y:auto;background:linear-gradient(180deg,#f5ead0,#e8d4b0);border:3px solid #c45040;border-radius:8px;padding:24px;z-index:30;display:none}
 .modal.on{display:block}
-.modal h3{font-size:12px;color:#e05577;margin-bottom:10px}
-.modal p{font-size:9px;line-height:2;color:#ccc;margin-bottom:14px}
-.modal .ch{background:#0f0d1f;border:2px solid #3a3060;border-radius:6px;padding:12px;margin:6px 0;cursor:pointer;transition:all .2s;font-family:'Press Start 2P',monospace;font-size:8px;color:#b08fd8;line-height:1.8}
-.modal .ch:hover{border-color:#f7c948;color:#f7c948}
+.modal h3{font-size:12px;color:#c45040;margin-bottom:10px}
+.modal p{font-size:9px;line-height:2;color:#5a3a1e;margin-bottom:14px}
+.modal .ch{background:#e8d4b0;border:2px solid #a07848;border-radius:6px;padding:12px;margin:6px 0;cursor:pointer;transition:all .2s;font-family:'Press Start 2P',monospace;font-size:8px;color:#5a3a1e;line-height:1.8}
+.modal .ch:hover{border-color:#f7c948;color:#3a2210;background:#f5ead0}
 .modal.no-click .ch{pointer-events:none;opacity:0.5}
 .report{border-color:#f7c948}
-.report h3{color:#f7c948}
+.report h3{color:#5a3a1e}
 .report .mb{display:flex;align-items:center;gap:6px;margin:6px 0;font-size:8px}
-.report .bar{flex:1;height:10px;background:#0f0d1f;border:1px solid #2a2050;border-radius:4px;overflow:hidden}
+.report .bar{flex:1;height:10px;background:#d4be98;border:1px solid #a07848;border-radius:4px;overflow:hidden}
 .report .bf{height:100%;border-radius:3px;transition:width .8s}
-#hint{position:absolute;bottom:60px;left:50%;transform:translateX(-50%);font-size:8px;color:#f7c948;z-index:20;display:none;background:rgba(31,24,64,0.95);padding:6px 14px;border:2px solid #533a7b;border-radius:6px;animation:pulse 2s infinite}
+#hint{position:absolute;bottom:60px;left:50%;transform:translateX(-50%);font-size:8px;color:#f7c948;z-index:20;display:none;background:rgba(90,58,30,0.95);padding:6px 14px;border:2px solid #7a5c3a;border-radius:6px;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
-#charSel{background:linear-gradient(180deg,#0c0c1d,#1a1535)}
+#charSel{background:linear-gradient(180deg,#2a1a0c,#3a2a18)}
 #charSel .chars{display:flex;gap:16px;margin:20px 0}
-#charSel .chOpt{border:2px solid #3a3060;border-radius:8px;padding:12px;cursor:pointer;text-align:center;transition:all .2s}
+#charSel .chOpt{border:2px solid #5a3a1e;border-radius:8px;padding:12px;cursor:pointer;text-align:center;transition:all .2s;background:rgba(90,58,30,0.3)}
 #charSel .chOpt:hover,.chOpt.sel{border-color:#f7c948;box-shadow:0 0 15px rgba(247,201,72,0.3)}
 #charSel canvas{image-rendering:pixelated}
-#charSel input{font-family:'Press Start 2P',monospace;font-size:10px;padding:8px 12px;background:#1a1535;border:2px solid #533a7b;color:#f7c948;border-radius:4px;text-align:center;width:200px;margin:10px 0}
-#charSel input.err{border-color:#e05577;box-shadow:0 0 8px rgba(224,85,119,0.4)}
-#weekTrans{background:rgba(12,12,29,0.98);z-index:35}
+#charSel input{font-family:'Press Start 2P',monospace;font-size:10px;padding:8px 12px;background:#5a3a1e;border:2px solid #7a5c3a;color:#f7c948;border-radius:4px;text-align:center;width:200px;margin:10px 0}
+#charSel input.err{border-color:#c45040;box-shadow:0 0 8px rgba(196,80,64,0.4)}
+#weekTrans{background:rgba(58,42,24,0.98);z-index:35}
 #weekTrans h2{font-size:16px;color:#f7c948;margin-bottom:12px}
-#weekTrans p{font-size:9px;color:#b08fd8;line-height:2}
+#weekTrans p{font-size:9px;color:#c4a878;line-height:2}
 #helpModal{border-color:#5b8ef5}
-#helpModal h3{color:#5b8ef5}
-#docsOverlay{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(12,12,29,0.97);z-index:28;display:none;overflow-y:auto;padding:30px 40px}
+#helpModal h3{color:#4a6a90}
+#docsOverlay{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(245,234,208,0.97);z-index:28;display:none;overflow-y:auto;padding:30px 40px}
 #docsOverlay.on{display:block}
-#docsOverlay h2{color:#f7c948;font-size:14px;margin-bottom:16px}
+#docsOverlay h2{color:#5a3a1e;font-size:14px;margin-bottom:16px}
 #docsOverlay .gantt-row{display:flex;align-items:center;margin:4px 0;font-size:8px}
-#docsOverlay .gantt-label{width:120px;color:#b08fd8}
+#docsOverlay .gantt-label{width:120px;color:#5a3a1e}
 #docsOverlay .gantt-bar{height:14px;border-radius:3px;position:relative}
-#docsOverlay .gantt-marker{position:absolute;width:2px;height:100%;background:#f7c948;z-index:2}
-#docsOverlay .doc-item{display:flex;align-items:center;gap:8px;padding:6px 8px;margin:3px 0;background:#1a1535;border:1px solid #3a3060;border-radius:4px;font-size:9px;color:#b08fd8}
+#docsOverlay .gantt-marker{position:absolute;width:2px;height:100%;background:#c45040;z-index:2}
+#docsOverlay .doc-item{display:flex;align-items:center;gap:8px;padding:6px 8px;margin:3px 0;background:#e8d4b0;border:1px solid #a07848;border-radius:4px;font-size:9px;color:#5a3a1e}
 #docsOverlay .doc-item img{width:16px;height:16px;image-rendering:pixelated}
 #docsOverlay .doc-status{margin-left:auto;font-size:8px;padding:2px 6px;border-radius:3px}
-.skip-trans{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(12,12,29,0.96);z-index:36;display:none;flex-direction:column;align-items:center;justify-content:center}
+.skip-trans{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(58,42,24,0.96);z-index:36;display:none;flex-direction:column;align-items:center;justify-content:center}
 .skip-trans.on{display:flex}
-.skip-trans h2{font-size:14px;color:#8a7fad;margin-bottom:8px}
-.skip-trans p{font-size:9px;color:#b08fd8}
+.skip-trans h2{font-size:14px;color:#f7c948;margin-bottom:8px}
+.skip-trans p{font-size:9px;color:#c4a878}
 </style>
 </head>
 <body>
@@ -97,7 +97,7 @@ body{background:#0c0c1d;color:#f0e6d3;font-family:'Press Start 2P',monospace;ove
 <canvas id="cv" width="480" height="320"></canvas>
 <div id="loadScr" class="scr on">
   <h2 style="font-size:14px;color:#f7c948;margin-bottom:8px">PROJECT VALLEY</h2>
-  <p style="font-size:8px;color:#b08fd8" id="loadText">Loading assets...</p>
+  <p style="font-size:8px;color:#c4a878" id="loadText">Loading assets...</p>
   <div class="bar"><div class="bf" id="loadBar"></div></div>
 </div>
 <div id="title" class="scr">
@@ -110,7 +110,7 @@ body{background:#0c0c1d;color:#f0e6d3;font-family:'Press Start 2P',monospace;ove
 </div>
 <div id="charSel" class="scr">
   <h2 style="font-size:14px;color:#f7c948;margin-bottom:4px">Choose Your Character</h2>
-  <p style="font-size:8px;color:#8a7fad;margin-bottom:10px">You've been appointed Project Manager for a major railway upgrade!</p>
+  <p style="font-size:8px;color:#c4a878;margin-bottom:10px">You've been appointed Project Manager for a major railway upgrade!</p>
   <div class="chars" id="charGrid"></div>
   <input type="text" id="pName" placeholder="Enter your name" maxlength="12">
   <button class="btn gld" id="startBtn" onclick="startGame()">Start Project</button>
@@ -118,7 +118,7 @@ body{background:#0c0c1d;color:#f0e6d3;font-family:'Press Start 2P',monospace;ove
 <div id="introScr" class="scr">
   <div style="max-width:500px;text-align:center;padding:20px">
     <h2 style="font-size:14px;color:#f7c948;margin-bottom:16px" id="introTitle"></h2>
-    <p style="font-size:9px;color:#b08fd8;line-height:2.2;margin-bottom:20px" id="introText"></p>
+    <p style="font-size:9px;color:#c4a878;line-height:2.2;margin-bottom:20px" id="introText"></p>
     <button class="btn" onclick="advanceIntro()">Next</button>
   </div>
 </div>
@@ -142,11 +142,11 @@ body{background:#0c0c1d;color:#f0e6d3;font-family:'Press Start 2P',monospace;ove
     <div class="hi"><img src="img/icon/Cash.png" alt=""><span class="hl">BUD</span><div class="meter"><div class="mf gld" id="mBud" style="width:70%"></div></div><span class="hpct" id="pBud" style="color:#f7c948">70</span></div>
     <div class="hi"><img src="img/icon/Wrench.png" alt=""><span class="hl">SAF</span><div class="meter"><div class="mf red" id="mSaf" style="width:70%"></div></div><span class="hpct" id="pSaf" style="color:#e05577">70</span></div>
     <div class="hi"><img src="img/icon/Monitor.png" alt=""><span class="hl">QTY</span><div class="meter"><div class="mf blu" id="mQty" style="width:70%"></div></div><span class="hpct" id="pQty" style="color:#5b8ef5">70</span></div>
-    <div class="hi"><img src="img/icon/Team.png" alt=""><span class="hl">MOR</span><div class="meter"><div class="mf pur" id="mMor" style="width:70%"></div></div><span class="hpct" id="pMor" style="color:#b08fd8">70</span></div>
+    <div class="hi"><img src="img/icon/Team.png" alt=""><span class="hl">MOR</span><div class="meter"><div class="mf pur" id="mMor" style="width:70%"></div></div><span class="hpct" id="pMor" style="color:#c4a878">70</span></div>
   </div>
   <div class="hg">
     <span id="hStars" style="color:#f7c948;font-size:10px"></span>
-    <button style="background:none;border:none;color:#8a7fad;cursor:pointer;font-family:'Press Start 2P',monospace;font-size:8px" onclick="toggleMusic()" id="musBtn">&#9835;</button>
+    <button style="background:none;border:none;color:#c4a878;cursor:pointer;font-family:'Press Start 2P',monospace;font-size:8px" onclick="toggleMusic()" id="musBtn">&#9835;</button>
     <button style="background:none;border:none;color:#5b8ef5;cursor:pointer;font-family:'Press Start 2P',monospace;font-size:10px" onclick="showHelp()">?</button>
   </div>
 </div>
@@ -306,7 +306,9 @@ const C={
   // Misc objects
   paperWhite:'#f8f4e8',bookRed:'#c84038',bookBlue:'#4870a8',bookGreen:'#48884e',
   mugWhite:'#f0e8d8',mugBrown:'#9e6838',coffeeColor:'#6e4018',
-  metalSilver:'#c0bcc0',metalDk:'#888890'
+  metalSilver:'#c0bcc0',metalDk:'#888890',
+  // UI warm palette
+  uiFrame:'#7a5c3a',uiPanel:'#f5ead0',uiPanelDark:'#e8d4b0',uiTextDark:'#3a2210',uiTextMid:'#7a5a38'
 };
 
 // === CHARACTER DEFINITIONS ===
@@ -1789,7 +1791,7 @@ function updateNotepad(){
   if(!np)return;
   let html='<h3>WEEK '+weekLabel(S.week)+'</h3>';
   html+='<div class="sep">\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501</div>';
-  html+='<div style="color:#8a7fad;margin-bottom:6px;font-size:9px">Phase: '+getPhase(S.week)+'</div>';
+  html+='<div style="color:#7a5a38;margin-bottom:6px;font-size:9px">Phase: '+getPhase(S.week)+'</div>';
   
   S.objectives.forEach(o=>{
     const done=S.completedObj.includes(o.type+'_'+o.target+'_'+S.week);
@@ -1810,7 +1812,7 @@ function updateNotepad(){
   if(next){
     html+='<div class="sep" style="margin-top:8px">\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501</div>';
     html+='<div style="color:#f7c948;font-size:8px">NEXT MILESTONE</div>';
-    html+='<div style="color:#b08fd8;font-size:9px">'+weekLabel(next.w)+': '+next.t+'</div>';
+    html+='<div style="color:#7a5a38;font-size:9px">'+weekLabel(next.w)+': '+next.t+'</div>';
   }
   
   html+='<div class="tip">TIP: Walk to people and press SPACE to talk!</div>';
@@ -1936,12 +1938,12 @@ function showWeekTransition(){
   document.getElementById('wtTitle').textContent=weekLabel(prevWeek)+' Complete!';
   document.getElementById('wtText').textContent='Moving to '+weekLabel(S.week)+' \u2014 '+getPhase(S.week);
   
-  let changes='<div style="color:#8a7fad">';
+  let changes='<div style="color:#c4a878">';
   changes+='Schedule: '+S.metrics.schedule+'% | Budget: '+S.metrics.budget+'% | Safety: '+S.metrics.safety+'%<br>';
   changes+='Quality: '+S.metrics.quality+'% | Morale: '+S.metrics.morale+'%';
   changes+='</div>';
   if(S.week===0)changes+='<div style="color:#4aca8a;margin-top:6px">DELIVERY DAY! The railway is ready!</div>';
-  if(S.week<0)changes+='<div style="color:#b08fd8;margin-top:6px">Post-delivery phase: '+getPhase(S.week)+'</div>';
+  if(S.week<0)changes+='<div style="color:#c4a878;margin-top:6px">Post-delivery phase: '+getPhase(S.week)+'</div>';
   document.getElementById('wtChanges').innerHTML=changes;
   
   el.className='scr on';
@@ -1988,7 +1990,7 @@ function showEvent(ev){
   ev.choices.forEach((c,i)=>{
     html+='<div class="ch" onclick="chooseEvent('+ev.week+','+i+')">';
     html+='<div style="color:#f7c948;font-size:9px;margin-bottom:4px">'+c.t+'</div>';
-    html+='<div style="color:#8a7fad;font-size:8px">'+(c.desc||'')+'</div>';
+    html+='<div style="color:#7a5a38;font-size:8px">'+(c.desc||'')+'</div>';
     html+='</div>';
   });
   el.innerHTML=html;
@@ -2020,7 +2022,7 @@ function showReport(){
   const metrics=[
     {n:'Schedule',v:m.schedule,c:'#4aca8a'},{n:'Budget',v:m.budget,c:'#f7c948'},
     {n:'Safety',v:m.safety,c:'#e05577'},{n:'Quality',v:m.quality,c:'#5b8ef5'},
-    {n:'Morale',v:m.morale,c:'#b08fd8'}
+    {n:'Morale',v:m.morale,c:'#c4a878'}
   ];
   let html='<h3>MONTHLY REPORT \u2014 '+weekLabel(S.week)+'</h3>';
   html+='<p>Phase: '+getPhase(S.week)+'</p>';
@@ -2032,10 +2034,10 @@ function showReport(){
     html+='<span style="color:'+mt.c+'">'+mt.v+'% '+trend+'</span></div>';
   });
   
-  html+='<div style="text-align:center;margin:10px 0;font-size:12px;color:#f7c948">PM Rating: '+getStarText()+'</div>';
-  
+  html+='<div style="text-align:center;margin:10px 0;font-size:12px;color:#5a3a1e">PM Rating: '+getStarText()+'</div>';
+
   const spent=Math.floor((1-m.budget/100)*10*100)/100;
-  html+='<div style="font-size:8px;color:#8a7fad;margin:6px 0">Budget: \u00A3'+spent.toFixed(1)+'M spent of \u00A310M</div>';
+  html+='<div style="font-size:8px;color:#7a5a38;margin:6px 0">Budget: \u00A3'+spent.toFixed(1)+'M spent of \u00A310M</div>';
   
   html+='<div style="font-size:8px;color:#e05577;margin:6px 0">Risks to Watch:</div>';
   if(m.schedule<60)html+='<div style="font-size:7px;color:#e05577">\u2022 Schedule is slipping \u2014 review timeline</div>';
@@ -2064,8 +2066,8 @@ function showDocsOverlay(){
   let html='<h2><img src="img/icon/Document.png" style="width:16px;height:16px;vertical-align:middle"> Project Documents</h2>';
   
   // Gantt-style timeline
-  html+='<div style="margin:12px 0;padding:12px;background:#0f0d1f;border:1px solid #3a3060;border-radius:6px">';
-  html+='<div style="font-size:10px;color:#f7c948;margin-bottom:8px">Project Timeline</div>';
+  html+='<div style="margin:12px 0;padding:12px;background:#d4be98;border:1px solid #a07848;border-radius:6px">';
+  html+='<div style="font-size:10px;color:#5a3a1e;margin-bottom:8px">Project Timeline</div>';
   
   const phaseColors=['#4aca8a','#5b8ef5','#5b8ef5','#f7c948','#e88030','#e05577','#e05577','#b08fd8','#8a7fad','#533a7b'];
 
@@ -2073,7 +2075,7 @@ function showDocsOverlay(){
   const barWidth=380;
 
   // Header with week markers
-  html+='<div style="display:flex;margin-left:130px;margin-bottom:4px;font-size:7px;color:#8a7fad">';
+  html+='<div style="display:flex;margin-left:130px;margin-bottom:4px;font-size:7px;color:#7a5a38">';
   const markers=[32,24,16,8,0,-8];
   markers.forEach(w=>{
     const left=((32-w)/totalWeeks)*barWidth;
@@ -2089,8 +2091,8 @@ function showDocsOverlay(){
     
     const pc=phaseColors[pi]||'#8a7fad';
     html+='<div class="gantt-row">';
-    html+='<div class="gantt-label" style="color:'+(inPhase?'#f7c948':(past?'#4aca8a':'#8a7fad'))+'">'+(inPhase?'\u25B6 ':'')+p.name+'</div>';
-    html+='<div style="position:relative;width:'+barWidth+'px;height:16px;background:#1a1535;border-radius:3px">';
+    html+='<div class="gantt-label" style="color:'+(inPhase?'#c45040':(past?'#2a8a5a':'#7a5a38'))+'">'+(inPhase?'\u25B6 ':'')+p.name+'</div>';
+    html+='<div style="position:relative;width:'+barWidth+'px;height:16px;background:#c4a878;border-radius:3px">';
     html+='<div class="gantt-bar" style="position:absolute;left:'+startPx+'px;width:'+widthPx+'px;background:'+(past?'#4aca8a55':pc)+(inPhase?';box-shadow:0 0 6px '+pc:'')+'"></div>';
     
     // "You are here" marker
@@ -2098,7 +2100,7 @@ function showDocsOverlay(){
     html+='<div class="gantt-marker" style="left:'+youPx+'px;top:0;height:16px" title="You are here"></div>';
     html+='</div></div>';
   });
-  html+='<div style="font-size:8px;color:#f7c948;margin-top:6px;text-align:center">You are here: '+weekLabel(S.week)+' \u2014 '+getPhase(S.week)+'</div>';
+  html+='<div style="font-size:8px;color:#c45040;margin-top:6px;text-align:center">You are here: '+weekLabel(S.week)+' \u2014 '+getPhase(S.week)+'</div>';
   html+='</div>';
   
   // Key Documents — Card Grid Layout
@@ -2122,7 +2124,7 @@ function showDocsOverlay(){
     }else if(S.week<=d.readyWeek){
       status='In Progress';statusColor='#f7c948';statusBg='rgba(247,201,72,0.15)';
     }else{
-      status='Pending';statusColor='#8a7fad';statusBg='rgba(138,127,173,0.1)';
+      status='Pending';statusColor='#7a5a38';statusBg='rgba(122,90,56,0.1)';
     }
 
     html+='<div style="background:'+statusBg+';border:1px solid '+statusColor+';border-radius:6px;padding:8px;width:calc(50% - 4px);cursor:pointer" onclick="this.querySelector(\'.doc-detail\').style.display=this.querySelector(\'.doc-detail\').style.display===\'block\'?\'none\':\'block\'">';
@@ -2131,7 +2133,7 @@ function showDocsOverlay(){
     html+='<span style="font-size:9px;color:#f0e6d3">'+d.name+'</span>';
     html+='<span style="margin-left:auto;font-size:7px;color:'+statusColor+';padding:2px 4px;border:1px solid '+statusColor+';border-radius:3px">'+status+'</span>';
     html+='</div>';
-    html+='<div class="doc-detail" style="display:none;margin-top:6px;font-size:8px;color:#8a7fad;line-height:1.6">'+d.desc+'<br>Due: '+weekLabel(d.readyWeek)+'</div>';
+    html+='<div class="doc-detail" style="display:none;margin-top:6px;font-size:8px;color:#7a5a38;line-height:1.6">'+d.desc+'<br>Due: '+weekLabel(d.readyWeek)+'</div>';
     html+='</div>';
   });
   html+='</div>';
@@ -2157,11 +2159,11 @@ function showEndScreen(){
   const titles=['In Trouble','Struggling PM','Competent PM','Strong PM','Outstanding PM'];
   
   let html='<h2 style="font-size:20px;color:#f7c948">PROJECT COMPLETE!</h2>';
-  html+='<p style="font-size:10px;color:#b08fd8;margin:10px 0">The railway is open and running! The project is officially closed.</p>';
+  html+='<p style="font-size:10px;color:#c4a878;margin:10px 0">The railway is open and running! The project is officially closed.</p>';
   html+='<div style="font-size:16px;color:#f7c948;margin:10px 0">'+getStarText()+'</div>';
   html+='<p style="font-size:11px;color:#f0e6d3;margin:6px 0">'+titles[rating-1]+'</p>';
-  html+='<p style="font-size:8px;color:#8a7fad;margin:10px 0">Final Scores:<br>Schedule: '+S.metrics.schedule+'% | Budget: '+S.metrics.budget+'% | Safety: '+S.metrics.safety+'%<br>Quality: '+S.metrics.quality+'% | Morale: '+S.metrics.morale+'%<br>Average: '+avg+'%</p>';
-  html+='<p style="font-size:9px;color:#b08fd8;margin:6px 0">'+S.playerName+', you managed the railway project from feasibility through to close-out!</p>';
+  html+='<p style="font-size:8px;color:#c4a878;margin:10px 0">Final Scores:<br>Schedule: '+S.metrics.schedule+'% | Budget: '+S.metrics.budget+'% | Safety: '+S.metrics.safety+'%<br>Quality: '+S.metrics.quality+'% | Morale: '+S.metrics.morale+'%<br>Average: '+avg+'%</p>';
+  html+='<p style="font-size:9px;color:#c4a878;margin:6px 0">'+S.playerName+', you managed the railway project from feasibility through to close-out!</p>';
   html+='<button class="btn gld" onclick="location.reload()" style="margin-top:14px">Play Again</button>';
   
   document.getElementById('wtTitle').innerHTML=html;
@@ -2850,7 +2852,7 @@ function showCharSelect(){
     drawCharProcedural(cx,ch,0,0,0,0);
     div.appendChild(cv);
     const name=document.createElement('div');
-    name.style.cssText='font-size:8px;color:#b08fd8;margin-top:4px';
+    name.style.cssText='font-size:8px;color:#c4a878;margin-top:4px';
     name.textContent=ch.name;
     div.appendChild(name);
     grid.appendChild(div);
