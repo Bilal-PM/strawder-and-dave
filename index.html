@@ -413,7 +413,8 @@ const OFFICE_OBJECTS=[
   // documents
   {a:'bookshelf',tx:24,ty:9},{a:'bookshelf',tx:26,ty:9},{a:'bookshelf',tx:24,ty:13},{a:'bookshelf',tx:26,ty:13},
   // reception + accent plants
-  {a:'desk',tx:12,ty:14},{a:'plant',tx:18,ty:14},{a:'plant',tx:19,ty:2}
+  {a:'desk',tx:12,ty:14},{a:'plant',tx:18,ty:14},{a:'plant',tx:19,ty:2},
+  {a:'bookshelf',tx:17,ty:14} // lockers (PPE point)
 ];
 const OFFICE_SOLID_OBJ={desk:1,table:1,sofa:1,bookshelf:1,watercooler:1};
 // Solid cells for an object = its base row only (so you can walk *behind* tall furniture).
@@ -1189,8 +1190,9 @@ function updateCamera(){
   const ty=S.py+12-vph/2;
   S.camX+=(tx-S.camX)*0.08;
   S.camY+=(ty-S.camY)*0.08;
-  S.camX=Math.max(0,Math.min(mw-vpw,S.camX));
-  S.camY=Math.max(0,Math.min(mh-vph,S.camY));
+  // Center the map when it's smaller than the viewport; otherwise clamp to bounds.
+  S.camX=mw<=vpw?(mw-vpw)/2:Math.max(0,Math.min(mw-vpw,S.camX));
+  S.camY=mh<=vph?(mh-vph)/2:Math.max(0,Math.min(mh-vph,S.camY));
 }
 
 // === MOVEMENT (Bug 5 fix: clamp to map bounds) ===
@@ -1223,7 +1225,9 @@ function updatePlayer(dt){
     S.animTimer+=dt;
     if(S.animTimer>150){S.pframe=(S.pframe+1)%WALK_FRAMES;S.animTimer=0;}
     stepTimer+=dt;
-    if(stepTimer>250){playSFX('step');stepTimer=0;}
+    if(stepTimer>250){playSFX('step');stepTimer=0;
+      spawnParticle({x:S.px+8,y:S.py+22,vx:(Math.random()-0.5)*0.18,vy:-0.08,life:380,size:1.5,color:'#dccaa6',type:'dust'}); // footstep dust
+    }
   } else {
     S.pmoving=false;S.pframe=0;S.animTimer=0;
   }
@@ -3669,8 +3673,7 @@ function render(){
   CTX.fillRect(0,0,IW,IH);
   
   if(S.screen!=='game')return;
-  
-  const map=S.map==='office'?OMAP:SMAP;
+
   const mw=S.map==='office'?OFFICE_W:SITE_W;
   const mh=S.map==='office'?OFFICE_H:SITE_H;
   
@@ -3713,8 +3716,11 @@ function render(){
   if(S.map==='office'){
     for(const o of OFFICE_OBJECTS){
       const a=ATLAS[o.a]; if(!a)continue;
-      const ox=o.tx*TS, oy=o.ty*TS, key=o.a, baseY=o.ty*TS+a[3];
-      entities.push({y:baseY,draw:()=>{ drawSprite(CTX,key,ox,oy); }});
+      const ox=o.tx*TS, oy=o.ty*TS, key=o.a, w=a[2], baseY=o.ty*TS+a[3], solid=OFFICE_SOLID_OBJ[key];
+      entities.push({y:baseY,draw:()=>{
+        if(solid){ CTX.fillStyle='rgba(30,18,8,0.18)'; CTX.beginPath(); CTX.ellipse(ox+w/2,baseY-2,w*0.45,4,0,0,Math.PI*2); CTX.fill(); }
+        drawSprite(CTX,key,ox,oy);
+      }});
     }
   }
   
@@ -4019,7 +4025,7 @@ function loadGame(){
     if(typeof data.siteVisits==='number')_siteVisits=data.siteVisits;
     S.ppeEquipped=!!data.ppeEquipped;
     // Validate spawn against the current map; snap to a known-good spawn if loaded coords are solid/out-of-bounds.
-    const safe=(S.map==='site')?{x:4*TS,y:6*TS}:{x:7*TS,y:14*TS};
+    const safe=(S.map==='site')?{x:4*TS,y:6*TS}:{x:14*TS,y:15*TS};
     const px=data.px,py=data.py;
     const ok=(typeof px==='number'&&typeof py==='number'&&!isSolid(Math.floor((px+8)/TS),Math.floor((py+12)/TS)));
     S.px=ok?px:safe.x;S.py=ok?py:safe.y;

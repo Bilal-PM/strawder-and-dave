@@ -106,3 +106,15 @@ Work the loop should execute in order (tick in this file as done):
   verify_office) so the autonomous loop survives a container recycle.
 - WAITING on independent review of the office-integration commit (4e5ebd6) before the next index.html
   changes (apply review fixes → port site → fold enterWeek funnel).
+
+
+### 2026-06-14 — Iteration 5 (P1 office: independent review fixes + first juice)
+- Independent reviewer audit of the office integration came back **clean (no P0/P1)**. Applied its P2s:
+  * Camera now **centers** the map when smaller than the viewport (office was pinned to the top).
+  * loadGame office **fallback spawn** fixed to the new reception (14,15) (was stale old (7,14)).
+  * Removed dead `const map` in render().
+  * Added a **locker** (bookshelf) at the PPE zone so it has a visual cue (was blank floor).
+- Game-feel quick wins: **object drop-shadows** under solid furniture (depth) and **footstep dust** puffs
+  at the player's feet while walking.
+- **16/16 green.** node --check clean. Reviewer's remaining notes (notice/planning visuals) logged for P2.
+- Next: port the verified fenced-compound **site** (same ground/object/SOLID structure) → then enterWeek().
