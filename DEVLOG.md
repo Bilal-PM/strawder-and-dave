@@ -151,3 +151,13 @@ Work the loop should execute in order (tick in this file as done):
 - Remaining from review (P2, low risk): delete orphaned `SOLID` set + `drawTile()` (~300 dead lines) and
   gut disabled overlay bodies; add full fence enclosure of the compound; office phase visuals (P3).
 - Next: enterWeek() funnel (last P0), then P2 juice (score popups, HUD punch, event slam-in) + onboarding.
+
+
+### 2026-06-14 — Iteration 8 (P2 juice: decision feedback)
+- Added a screen-space **floating score-popup** system (POPUPS + spawn/update/draw, drawn after the camera
+  restore) and wired it into `applyEffects`: every metric change pops a colour-coded `+N SCH`/`-N MOR` that
+  rises and fades from the player, plus a **HUD "punch"** (the changed metric readout scales+brightens via a
+  CSS keyframe). Makes decisions feel responsive/addictive (Dave-the-Diver number-pop).
+- Harness +1 (decisions spawn the right number of popups, no throw). **21/21 green.** node --check clean.
+- Next: enterWeek() funnel (last P0); more P2 (event slam-in, week-transition stinger, onboarding cues);
+  P2 cleanup (delete orphaned SOLID/drawTile); fence-enclose the compound.

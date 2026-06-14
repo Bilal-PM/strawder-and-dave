@@ -74,7 +74,7 @@ const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
 const scripts=[...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)].map(m=>m[1]);
 let code=scripts.join('\n;\n');
 // epilogue: capture top-level consts/fns into global for assertions
-const names=['S','applyEffects','advanceWeek','getPhase','getPhaseIdx','getDlgPhaseIdx','chooseDlg','NPCS','OMAP','SMAP','ZONES','isSolid','render','updatePlayer','startGame','newGame','selectCharacter','beginGame','saveGame','loadGame','EVENTS','PHASES','DLG','transitionToMap','showEvent','triggerEvent','getObjectives','updateHUD','updateNotepad','WALK_FRAMES','updateNPCAI','CHARS','ATLAS','drawSprite','OFFICE_W','OFFICE_H','OFFICE_OBJECTS','OFFICE_SOLID_OBJ','objBaseCells','OFFICE_SOLID','SITE_W','SITE_H','SITE_OBJECTS','SITE_SOLID_OBJ','ZONES','NPC_WANDER_OFFICE','NPC_WANDER_SITE','siteTrackFrac'];
+const names=['S','applyEffects','advanceWeek','getPhase','getPhaseIdx','getDlgPhaseIdx','chooseDlg','NPCS','OMAP','SMAP','ZONES','isSolid','render','updatePlayer','startGame','newGame','selectCharacter','beginGame','saveGame','loadGame','EVENTS','PHASES','DLG','transitionToMap','showEvent','triggerEvent','getObjectives','updateHUD','updateNotepad','WALK_FRAMES','updateNPCAI','CHARS','ATLAS','drawSprite','OFFICE_W','OFFICE_H','OFFICE_OBJECTS','OFFICE_SOLID_OBJ','objBaseCells','OFFICE_SOLID','SITE_W','SITE_H','SITE_OBJECTS','SITE_SOLID_OBJ','ZONES','NPC_WANDER_OFFICE','NPC_WANDER_SITE','siteTrackFrac','POPUPS'];
 code+='\n;globalThis.__G=(function(){const o={};'+names.map(n=>`try{o['${n}']=${n};}catch(e){}`).join('')+'return o;})();';
 
 const results={pass:[],fail:[]};
@@ -165,6 +165,11 @@ check('construction progression: track-laid fraction is monotonic 0..1 across th
   weeks.forEach(w=>{ g.S.week=w; const f=g.siteTrackFrac(); if(f<0||f>1) throw new Error('frac out of range @week '+w+': '+f); if(f<prev) throw new Error('frac decreased @week '+w); prev=f; });
   g.S.week=32; if(g.siteTrackFrac()!==0) throw new Error('track should be unlaid at kick-off');
   g.S.week=-8; if(g.siteTrackFrac()!==1) throw new Error('track should be complete at close-out');
+});
+check('decisions spawn floating score popups (juice) without throwing',()=>{
+  g.POPUPS.length=0; g.S.week=32; g.S.px=100; g.S.py=100; g.S.camX=0; g.S.camY=0;
+  g.applyEffects({schedule:3,morale:-2,budget:0});
+  if(g.POPUPS.length!==2) throw new Error('expected 2 popups (nonzero effects), got '+g.POPUPS.length);
 });
 
 // ---------- report ----------

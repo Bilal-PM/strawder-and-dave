@@ -98,6 +98,8 @@ body{background:#3a2a18;color:#f0e6d3;font-family:'Press Start 2P',monospace;ove
 .ach-toast .ach-label{font-size:7px;color:#c4a878;letter-spacing:2px}
 .ach-toast .ach-name{font-size:10px;color:#5a3a1e;margin-top:2px}
 .ach-toast .ach-desc{font-size:7px;color:#7a5a38;margin-top:2px;line-height:1.5}
+@keyframes hudpunch{0%{transform:scale(1)}40%{transform:scale(1.35);filter:brightness(1.7)}100%{transform:scale(1)}}
+.punch{display:inline-block;animation:hudpunch .42s ease-out}
 </style>
 </head>
 <body>
@@ -2084,11 +2086,14 @@ function checkWeekComplete(){
 // === METRICS ===
 function applyEffects(e){
   if(!e)return;
-  let anyPos=false,anyNeg=false;
+  let anyPos=false,anyNeg=false,idx=0;
+  const bx=Math.floor(S.px-S.camX+8), by=Math.floor(S.py-S.camY-4);
   for(const[k,v] of Object.entries(e)){
-    if(S.metrics[k]!==undefined){
+    if(S.metrics[k]!==undefined&&v!==0){
       S.metrics[k]=Math.max(0,Math.min(100,S.metrics[k]+v));
-      if(v>0)anyPos=true;if(v<0)anyNeg=true;
+      if(v>0)anyPos=true;else anyNeg=true;
+      const m=METRIC_META[k];
+      if(m){ spawnPopup(bx,by-idx*11,(v>0?'+':'')+v+' '+m.lbl, v>0?'#86f08a':'#ff7a8a'); hudPunch(m.id); idx++; }
     }
   }
   if(anyPos)playSFX('positive');
@@ -2843,6 +2848,15 @@ function unlockPMKnowledge(phaseIdx){
 // === PARTICLE SYSTEM ===
 const PARTICLES=[];
 const MAX_PARTICLES=80;
+
+// === Floating score popups (screen-space decision feedback) ===
+const POPUPS=[];
+const METRIC_META={schedule:{lbl:'SCH',id:'Sch'},budget:{lbl:'BUD',id:'Bud'},safety:{lbl:'SAF',id:'Saf'},quality:{lbl:'QTY',id:'Qty'},morale:{lbl:'MOR',id:'Mor'}};
+function spawnPopup(sx,sy,text,color){POPUPS.push({x:sx,y:sy,text:text,color:color,life:1100,max:1100});if(POPUPS.length>30)POPUPS.shift();}
+function updatePopups(dt){for(let i=POPUPS.length-1;i>=0;i--){const p=POPUPS[i];p.life-=dt;if(p.life<=0){POPUPS.splice(i,1);continue;}p.y-=dt*0.03;}}
+function drawPopups(ctx){ctx.save();ctx.font='bold 9px monospace';ctx.textAlign='center';for(const p of POPUPS){const a=Math.max(0,Math.min(1,p.life/p.max));ctx.globalAlpha=a;ctx.fillStyle='rgba(20,12,6,0.7)';ctx.fillText(p.text,p.x+1,p.y+1);ctx.fillStyle=p.color;ctx.fillText(p.text,p.x,p.y);}ctx.globalAlpha=1;ctx.textAlign='left';ctx.restore();}
+// Briefly pulse a HUD metric readout when it changes.
+function hudPunch(id){const el=document.getElementById('p'+id);if(el){el.classList.remove('punch');void el.offsetWidth;el.classList.add('punch');}}
 
 function spawnParticle(opts){
   if(PARTICLES.length>=MAX_PARTICLES)PARTICLES.shift();
@@ -3815,6 +3829,7 @@ function render(){
   CTX.restore();
 
   // Draw screen-space effects
+  drawPopups(CTX);
   drawTransition(CTX);
   drawFlash(CTX);
 }
@@ -4072,6 +4087,7 @@ function gameLoop(ts){
   updateCamera();
   checkProximity();
   updateParticles(dt);
+  updatePopups(dt);
   updateTransition(dt);
   if(S.screen==='game')spawnAmbientParticles(dt);
   // Update shake/flash timers
