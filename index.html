@@ -3277,8 +3277,49 @@ function drawCharSprite(ctx,sheetKey,dir,frame,x,y,isMoving){
   }
 }
 
+// === PIXEL-ART FINISHING PASS (outline + shading), baked per sprite ===
+// Adds a crisp outline, top rim-light and cool ground-shadow to a drawn sprite.
+// Translucent ground-shadow (low alpha) is preserved, not outlined.
+function finishSprite(srcCanvas){
+  const w=srcCanvas.width,h=srcCanvas.height;
+  const src=srcCanvas.getContext('2d').getImageData(0,0,w,h).data;
+  const out=document.createElement('canvas');out.width=w;out.height=h;
+  const octx=out.getContext('2d');
+  const dst=octx.createImageData(w,h);
+  const TH=170;
+  const A=(x,y)=>(x<0||y<0||x>=w||y>=h)?0:src[(y*w+x)*4+3];
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+    const i=(y*w+x)*4,a=src[i+3];
+    if(a>TH){
+      let r=src[i],g=src[i+1],b=src[i+2];
+      if(A(x,y+1)<=TH){r=Math.max(0,r-26);g=Math.max(0,g-30);b=Math.max(0,b-16);}      // ground-side AO (cool)
+      else if(A(x,y-1)<=TH){r=Math.min(255,r+15);g=Math.min(255,g+15);b=Math.min(255,b+15);} // top rim-light
+      dst.data[i]=r;dst.data[i+1]=g;dst.data[i+2]=b;dst.data[i+3]=255;
+    }else if(A(x-1,y)>TH||A(x+1,y)>TH||A(x,y-1)>TH||A(x,y+1)>TH){
+      dst.data[i]=44;dst.data[i+1]=31;dst.data[i+2]=24;dst.data[i+3]=255;               // outline
+    }else if(a>16){                                                                      // keep soft shadow
+      dst.data[i]=src[i];dst.data[i+1]=src[i+1];dst.data[i+2]=src[i+2];dst.data[i+3]=a;
+    }
+  }
+  octx.putImageData(dst,0,0);
+  return out;
+}
+// Bake one finished character frame into a padded canvas (4px margin for the outline)
+const CHAR_PAD=4;
+function bakeFinishedChar(cfg,dir,frame,ppe){
+  const cv=document.createElement('canvas');cv.width=20;cv.height=30;
+  const cx=cv.getContext('2d');
+  const prev=cfg._ppe;cfg._ppe=ppe;
+  drawCharProcedural(cx,cfg,dir,frame,CHAR_PAD,CHAR_PAD);
+  cfg._ppe=prev;
+  return finishSprite(cv);
+}
 function drawChar(ctx,cfg,dir,frame,x,y,isMoving){
-  drawCharProcedural(ctx,cfg,dir,frame,x,y);
+  const f=Math.floor(frame)%4,ppe=cfg._ppe?1:0;
+  cfg._fcache=cfg._fcache||{};
+  const key=dir+'_'+f+'_'+ppe;
+  if(!cfg._fcache[key])cfg._fcache[key]=bakeFinishedChar(cfg,dir,f,!!ppe);
+  ctx.drawImage(cfg._fcache[key],Math.floor(x)-CHAR_PAD,Math.floor(y)-CHAR_PAD);
 }
 
 // === TILE RENDERER (sprite-based with procedural fallback) ===
