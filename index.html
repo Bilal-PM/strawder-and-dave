@@ -359,58 +359,10 @@ const NPC_WANDER_OFFICE=[
   {x:3,y:6},{x:6,y:12},{x:12,y:14},{x:17,y:14},{x:4,y:20},{x:14,y:20}
 ];
 
-// === SPRITE SHEET CONFIG ===
-// Asset files are named _16x16.png — frame width is 16px
-// Walk sheets: 384x224 = 24 cols x 7 rows of 16x32 frames (16 wide, 32 tall)
-// Idle sheets: 384x32 = 24 cols x 1 row of 16x32 frames
-const SPRITE_FW=16,SPRITE_FH=32;
-const SPRITE_COLS=24;
-// Walk sheet rows (16x32 effective frames, 7 rows at 32px each):
-// Rows 2,3,6 are consistently full across all 4 characters
-// Row 6=walk down(front), Row 2=walk right(side), Row 3=walk up(back)
-// Walk left = horizontally flip walk right (row 2)
-const WALK_DIR_ROW=[6,2,3,2]; // [down=row6, right=row2, up=row3, left=row2(flipped)]
-const WALK_FRAMES=6; // 6 walk frames per direction (cols 0-5)
-// Idle sheet: 24 cols, groups of 6 per direction
-const IDLE_DIR_COL=[0,6,12,18]; // [down, right, up, left] - first frame of each 6-frame group
-
-// === TILE SPRITE LOOKUPS ===
-// Maps tile IDs to {sheet:'tile_rooms', sx, sy} for ctx.drawImage source rect
-// sx,sy are pixel coordinates of top-left of the 16x16 tile in the sheet
-const TILE_SPRITES={
-  // Floors from rooms.png (272x368, 16px tiles, 17 cols x 23 rows)
-  // Wooden floor planks visible around rows 6-10 (y=96-160)
-  0:{sheet:'tile_rooms',sx:0,sy:112},   // floor A - warm wood plank
-  // Walls from rooms.png - colored wall panels in rows 2-4
-  1:{sheet:'tile_rooms',sx:0,sy:48},    // wall panel
-  // Grass from outdoor.png (1024x1024, 16px tiles)
-  // Green grass is in top-left quadrant
-  20:{sheet:'tile_outdoor',sx:16,sy:16}, // grass
-  // Trees from outdoor.png - tree canopies in top-right area
-  24:{sheet:'tile_outdoor',sx:864,sy:16}, // tree
-  // Path / dirt from outdoor.png
-  21:{sheet:'tile_outdoor',sx:48,sy:16},  // dirt path
-  // Gravel
-  22:{sheet:'tile_outdoor',sx:64,sy:16},
-  // Furniture from interior.png (256x1424, 16px, 16 cols x 89 rows)
-  // Brown desk tops around row 11 (y=176)
-  2:{sheet:'tile_interior',sx:64,sy:64},    // desk
-  14:{sheet:'tile_interior',sx:80,sy:64},   // computer desk
-  // Chairs
-  3:{sheet:'tile_interior',sx:0,sy:560},
-  // Bookshelves
-  5:{sheet:'tile_interior',sx:0,sy:336},
-  // Meeting table
-  11:{sheet:'tile_interior',sx:64,sy:80},
-  // Sofa
-  8:{sheet:'tile_interior',sx:0,sy:816},
-  // Plants
-  4:{sheet:'tile_interior',sx:0,sy:976},
-  // Filing cabinet
-  12:{sheet:'tile_interior',sx:48,sy:336},
-  // Coffee/counter
-  7:{sheet:'tile_interior',sx:64,sy:176},
-};
+// (Removed dead sprite-sheet config + TILE_SPRITES lookup from the abandoned
+//  external-sprite attempt. The game renders procedurally; atlas art is wired
+//  separately in the renderer.)
+const WALK_FRAMES=6; // walk-cycle length for the player/NPC animation counters
 
 // === MAP DATA ===
 const SOLID=new Set([1,2,4,5,6,7,8,11,12,13,17,18,24,23,26,27,28,30,31]);
@@ -1309,7 +1261,6 @@ const NPC_SPEED=0.5; // pixels per frame (~30px/sec at 60fps)
 
 function updateNPCAI(dt){
   if(S.screen!=='game')return;
-  const npcsOnMap=getNPCsOnMap();
   for(const npc of NPCS){
     // Only update if NPC is on current map
     const onMap=S.map==='office'?npc.officeX>0:npc.siteX>0;
@@ -3234,49 +3185,6 @@ function drawCharProcedural(ctx,cfg,dir,frame,x,y){
   }
 }
 
-// === SPRITE-BASED CHARACTER DRAWING ===
-function drawCharSprite(ctx,sheetKey,dir,frame,x,y,isMoving){
-  const sheet=ASSETS[sheetKey];
-  if(!sheet||!sheet.naturalWidth)return false;
-
-  try{
-    const isIdleSheet=sheet.naturalHeight<=SPRITE_FH; // 384x32 = single row
-    let sx,sy,flipH=false;
-
-    if(isIdleSheet){
-      // Idle sheet: 24 cols x 1 row of 16x32 frames
-      // Groups of 6: cols 0-5=down, 6-11=right, 12-17=up, 18-23=left
-      const col=IDLE_DIR_COL[dir]||0;
-      sx=col*SPRITE_FW;
-      sy=0;
-    }else{
-      // Walk sheet: 24 cols x 7 rows of 16x32 frames
-      const row=WALK_DIR_ROW[dir]||6;
-      const col=Math.floor(frame)%WALK_FRAMES;
-      sx=col*SPRITE_FW;
-      sy=row*SPRITE_FH;
-      flipH=(dir===3); // left = flip right-facing sprites
-    }
-
-    // Draw 16x32 source at 16x32 destination (native pixel size)
-    // x aligned to tile, y-16 so feet sit at tile position
-    const dx=Math.floor(x);
-    const dy=Math.floor(y)-16;
-
-    if(flipH){
-      ctx.save();
-      ctx.scale(-1,1);
-      ctx.drawImage(sheet,sx,sy,SPRITE_FW,SPRITE_FH,-(dx+SPRITE_FW),dy,SPRITE_FW,SPRITE_FH);
-      ctx.restore();
-    }else{
-      ctx.drawImage(sheet,sx,sy,SPRITE_FW,SPRITE_FH,dx,dy,SPRITE_FW,SPRITE_FH);
-    }
-    return true;
-  }catch(e){
-    return false;
-  }
-}
-
 // === PIXEL-ART FINISHING PASS (outline + shading), baked per sprite ===
 // Adds a crisp outline, top rim-light and cool ground-shadow to a drawn sprite.
 // Translucent ground-shadow (low alpha) is preserved, not outlined.
@@ -3320,22 +3228,6 @@ function drawChar(ctx,cfg,dir,frame,x,y,isMoving){
   const key=dir+'_'+f+'_'+ppe;
   if(!cfg._fcache[key])cfg._fcache[key]=bakeFinishedChar(cfg,dir,f,!!ppe);
   ctx.drawImage(cfg._fcache[key],Math.floor(x)-CHAR_PAD,Math.floor(y)-CHAR_PAD);
-}
-
-// === TILE RENDERER (sprite-based with procedural fallback) ===
-function drawTileSprite(ctx,type,x,y){
-  const px=x*TS,py=y*TS;
-  const lookup=TILE_SPRITES[type];
-  if(lookup){
-    const sheet=ASSETS[lookup.sheet];
-    if(sheet){
-      try{
-        ctx.drawImage(sheet,lookup.sx,lookup.sy,16,16,px,py,TS,TS);
-        return true;
-      }catch(e){}
-    }
-  }
-  return false;
 }
 
 function drawTile(ctx,type,x,y){

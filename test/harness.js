@@ -74,7 +74,7 @@ const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
 const scripts=[...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)].map(m=>m[1]);
 let code=scripts.join('\n;\n');
 // epilogue: capture top-level consts/fns into global for assertions
-const names=['S','applyEffects','advanceWeek','getPhase','getPhaseIdx','getDlgPhaseIdx','chooseDlg','NPCS','OMAP','SMAP','ZONES','isSolid','render','updatePlayer','startGame','newGame','selectCharacter','beginGame','saveGame','loadGame','EVENTS','PHASES','DLG','transitionToMap','showEvent','triggerEvent','getObjectives','updateHUD','updateNotepad'];
+const names=['S','applyEffects','advanceWeek','getPhase','getPhaseIdx','getDlgPhaseIdx','chooseDlg','NPCS','OMAP','SMAP','ZONES','isSolid','render','updatePlayer','startGame','newGame','selectCharacter','beginGame','saveGame','loadGame','EVENTS','PHASES','DLG','transitionToMap','showEvent','triggerEvent','getObjectives','updateHUD','updateNotepad','WALK_FRAMES','updateNPCAI','CHARS'];
 code+='\n;globalThis.__G=(function(){const o={};'+names.map(n=>`try{o['${n}']=${n};}catch(e){}`).join('')+'return o;})();';
 
 const results={pass:[],fail:[]};
@@ -108,6 +108,14 @@ check('loadGame recovers from a corrupt save (clamp metrics + validate char + sa
   const m=g.S.metrics; for(const k in m){ if(typeof m[k]!=='number'||m[k]<0||m[k]>100) throw new Error('metric not clamped: '+k+'='+m[k]); }
   if(g.S.playerChar<0||g.S.playerChar>3) throw new Error('playerChar not validated: '+g.S.playerChar);
   if(g.isSolid(Math.floor((g.S.px+8)/16),Math.floor((g.S.py+12)/16))) throw new Error('player loaded into a solid tile');
+});
+check('animation counters stay finite (WALK_FRAMES defined; update loop safe)',()=>{
+  if(typeof g.WALK_FRAMES!=='number') throw new Error('WALK_FRAMES missing/not a number');
+  g.S.screen='game'; g.S.map='office'; g.S.pmoving=true; g.S.animTimer=0;
+  for(let i=0;i<12;i++){ try{ if(g.updatePlayer)g.updatePlayer(200); }catch(e){ throw new Error('updatePlayer threw: '+e.message);} }
+  if(!Number.isFinite(g.S.pframe)) throw new Error('S.pframe not finite: '+g.S.pframe);
+  for(let i=0;i<12;i++){ try{ if(g.updateNPCAI)g.updateNPCAI(200); }catch(e){ throw new Error('updateNPCAI threw: '+e.message);} }
+  g.NPCS.forEach(n=>{ if(!Number.isFinite(n.aiFrame)) throw new Error('aiFrame not finite for '+n.id+': '+n.aiFrame); });
 });
 
 // ---------- report ----------
