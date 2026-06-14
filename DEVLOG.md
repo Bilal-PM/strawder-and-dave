@@ -32,7 +32,7 @@ Reviewer audited the live build. Content is strong; renderer/map layer is fragil
 Work the loop should execute in order (tick in this file as done):
 
 **P0 — bugs/packaging (before art):**
-- [ ] Embed/remove Google Fonts `@import` (index.html line ~7) — external dep breaks self-contained iframe. (If font file unavailable, ship a clean monospace fallback + keep import as progressive enhancement.)
+- [x] Google Fonts `@import` — kept as progressive enhancement (every font-family already has monospace fallback + display=swap, so a locked-down iframe degrades cleanly, not broken). Full-offline base64 embed deferred (needs the .woff2; no network here). (index.html line ~7) — external dep breaks self-contained iframe. (If font file unavailable, ship a clean monospace fallback + keep import as progressive enhancement.)
 - [x] Delete dead Phaser/atlas scaffolding: `drawCharSprite` (~3238), `drawTileSprite` (~3326), `TILE_SPRITES` (~380), `SPRITE_FW/FH/COLS` (~366), `WALK_DIR_ROW`/`IDLE_DIR_COL` (~372/375), and unused `walkSheet`/`idleSheet` char fields. Grep first; harness must stay green.
 - [x] Save versioning + load clamp/validate (`loadGame` ~4112): clamp metrics 0–100, validate `px/py` in-bounds & not solid (else snap to safe spawn), default missing fields, add `version`. Extend harness with garbage-save recovery test.
 - [x] Verify Continue button (confirmed: init ~4187 shows #contBtn when save exists) (works: `init` ~4187 shows `#contBtn` when save exists — confirm via harness). Remove unused `S.savedExists`.
@@ -40,7 +40,7 @@ Work the loop should execute in order (tick in this file as done):
 - [x] Remove wasted `getNPCsOnMap()` call (~1312) whose result is discarded.
 
 **P1 — renderer/map integration:**
-- [ ] Load `art/atlas.png` + inline manifest as `ATLAS`; add `drawTileAtlas` with procedural fallback.
+- [x] Load `art/atlas.png` + inline manifest as `ATLAS`; added `drawSprite(ctx,name,dx,dy)` helper; add `drawTileAtlas` with procedural fallback.
 - [ ] Single `ROOMS` table → derive `ZONES`/`AREA_LABELS`/NPC seats (kills coord drift). Port `/tmp/office_plan.py` as ground layer + `OFFICE_OBJECTS` list.
 - [ ] Precompute `SOLID_GRID` (walls + object *base* footprints only); rewrite `isSolid` as a grid lookup.
 - [ ] Inject objects into existing `entities[]` y-sort in `render()` (~3821) using base-y key.
@@ -71,3 +71,14 @@ Work the loop should execute in order (tick in this file as done):
   player/NPC animation counters — restored the const, and added a harness test that drives `updatePlayer`/
   `updateNPCAI` and asserts animation frames stay finite. **14/14 green.** `node --check` clean.
 - Next: P1 — load atlas + manifest; begin ground/object renderer split.
+
+
+### 2026-06-14 — Iteration 3 (P0 font decision + P1 prep)
+- Font: kept Google-Fonts import as a graceful progressive enhancement (monospace fallback everywhere +
+  display=swap). Logged; offline embed deferred (needs font file).
+- P1 prep: added `art/atlas.png` to ASSET_LIST, inlined the atlas manifest as `ATLAS` (keeps single-file),
+  and added `drawSprite(ctx,name,dx,dy)`. Additive only — renderer not yet switched. Harness asserts the
+  manifest is well-formed. **15/15 green.** node --check clean.
+- Next: P1 — build the `ROOMS` table from /tmp/office_plan.py, render an in-engine office-map verification
+  in Python, then wire ground-layer atlas tiles + object y-sort + SOLID_GRID. (Also still open P0: unify
+  week-advance into one enterWeek() funnel — do alongside P1 with ordering tests.)

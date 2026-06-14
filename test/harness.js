@@ -74,7 +74,7 @@ const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
 const scripts=[...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)].map(m=>m[1]);
 let code=scripts.join('\n;\n');
 // epilogue: capture top-level consts/fns into global for assertions
-const names=['S','applyEffects','advanceWeek','getPhase','getPhaseIdx','getDlgPhaseIdx','chooseDlg','NPCS','OMAP','SMAP','ZONES','isSolid','render','updatePlayer','startGame','newGame','selectCharacter','beginGame','saveGame','loadGame','EVENTS','PHASES','DLG','transitionToMap','showEvent','triggerEvent','getObjectives','updateHUD','updateNotepad','WALK_FRAMES','updateNPCAI','CHARS'];
+const names=['S','applyEffects','advanceWeek','getPhase','getPhaseIdx','getDlgPhaseIdx','chooseDlg','NPCS','OMAP','SMAP','ZONES','isSolid','render','updatePlayer','startGame','newGame','selectCharacter','beginGame','saveGame','loadGame','EVENTS','PHASES','DLG','transitionToMap','showEvent','triggerEvent','getObjectives','updateHUD','updateNotepad','WALK_FRAMES','updateNPCAI','CHARS','ATLAS','drawSprite'];
 code+='\n;globalThis.__G=(function(){const o={};'+names.map(n=>`try{o['${n}']=${n};}catch(e){}`).join('')+'return o;})();';
 
 const results={pass:[],fail:[]};
@@ -116,6 +116,12 @@ check('animation counters stay finite (WALK_FRAMES defined; update loop safe)',(
   if(!Number.isFinite(g.S.pframe)) throw new Error('S.pframe not finite: '+g.S.pframe);
   for(let i=0;i<12;i++){ try{ if(g.updateNPCAI)g.updateNPCAI(200); }catch(e){ throw new Error('updateNPCAI threw: '+e.message);} }
   g.NPCS.forEach(n=>{ if(!Number.isFinite(n.aiFrame)) throw new Error('aiFrame not finite for '+n.id+': '+n.aiFrame); });
+});
+check('ATLAS manifest is well-formed (every entry [x,y,w,h] of 4 finite numbers)',()=>{
+  if(!g.ATLAS||typeof g.ATLAS!=='object') throw new Error('ATLAS missing');
+  const need=['floor','wall','desk','chair','plant','sofa','table','cabin','excavator','fence','track','grass'];
+  need.forEach(k=>{ const a=g.ATLAS[k]; if(!Array.isArray(a)||a.length!==4||a.some(n=>!Number.isFinite(n))) throw new Error('bad atlas entry: '+k+'='+JSON.stringify(a)); });
+  if(typeof g.drawSprite!=='function') throw new Error('drawSprite missing');
 });
 
 // ---------- report ----------
