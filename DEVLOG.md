@@ -134,3 +134,20 @@ Work the loop should execute in order (tick in this file as done):
 - Verified via exact atlas+map Python render (matches design) and a new site invariant test (spawn/gate
   walkable, NPC seats clear, compound+materials+track reachable). **17/17 green.** node --check clean.
 - Next: independent review of the site diff; then fold enterWeek() funnel; then P2 juice/UX.
+
+
+### 2026-06-14 — Iteration 7 (site review fixes + construction progression restored)
+- Independent site review: **no P0**. Applied fixes:
+  * Stale site save-snap spawn (4,6)->(3,13) to match transitionToMap.
+  * (P1 regression the reviewer flagged) — **rebuilt the 'track visibly builds' feature for the new site**:
+    `siteTrackFrac()` lays the track left-to-right across construction phases (formation/gravel -> rails),
+    and site objects phase in via a `minPhase` (`m`) gate — materials delivered at procurement (phase 3),
+    excavator + cones mobilised pre-construction (phase 4). Verified with a 2-phase render (kick-off = bare
+    formation/empty; construction = rails laid + plant + materials).
+  * Made phased decor non-solid (SITE_SOLID_OBJ = cabins+fence only) to avoid invisible collision before
+    objects appear; collision is now phase-independent (stable).
+- Harness +3: NPC wander targets walkable (office+site), zone interactability, track-fraction monotonic 0..1.
+  **20/20 green.** node --check clean.
+- Remaining from review (P2, low risk): delete orphaned `SOLID` set + `drawTile()` (~300 dead lines) and
+  gut disabled overlay bodies; add full fence enclosure of the compound; office phase visuals (P3).
+- Next: enterWeek() funnel (last P0), then P2 juice (score popups, HUD punch, event slam-in) + onboarding.

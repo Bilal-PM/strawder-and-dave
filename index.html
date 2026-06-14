@@ -449,16 +449,17 @@ const SMAP=(()=>{
 const SITE_GROUND={'g':'grass','r':'gravel','t':'track','p':'platform','e':'platedge'};
 const SITE_OBJECTS=(()=>{
   const o=[
-    {a:'cabin',tx:18,ty:2},{a:'cabin',tx:24,ty:2},                 // site office + welfare cabins
-    {a:'railstack',tx:18,ty:14},{a:'sleeperstack',tx:23,ty:14},
-    {a:'ballastpile',tx:18,ty:16},{a:'ballastpile',tx:23,ty:16},   // materials yard
-    {a:'excavator',tx:9,ty:5},
-    {a:'cone',tx:3,ty:9},{a:'cone',tx:7,ty:9},{a:'cone',tx:13,ty:9},{a:'cone',tx:26,ty:12}
+    {a:'cabin',tx:18,ty:2},{a:'cabin',tx:24,ty:2},                 // site office + welfare cabins (always present)
+    {a:'railstack',tx:18,ty:14,m:3},{a:'sleeperstack',tx:23,ty:14,m:3},
+    {a:'ballastpile',tx:18,ty:16,m:3},{a:'ballastpile',tx:23,ty:16,m:3}, // materials delivered from procurement (phase 3)
+    {a:'excavator',tx:9,ty:5,m:4},                                 // plant mobilised pre-construction (phase 4)
+    {a:'cone',tx:3,ty:9,m:4},{a:'cone',tx:7,ty:9,m:4},{a:'cone',tx:13,ty:9,m:4},{a:'cone',tx:26,ty:12,m:4}
   ];
   for(let y=1;y<SITE_H-1;y++){ if(y>=9&&y<=11)continue; o.push({a:'fence',tx:16,ty:y}); } // compound fence, gate at the track
   return o;
 })();
-const SITE_SOLID_OBJ={cabin:1,fence:1,excavator:1,railstack:1,sleeperstack:1,ballastpile:1};
+// Only the always-present compound structures are solid; phased-in decor stays walkable (avoids invisible collision before it appears).
+const SITE_SOLID_OBJ={cabin:1,fence:1};
 const SITE_SOLID=(()=>{
   const grid=[]; for(let y=0;y<SITE_H;y++){grid.push(new Array(SITE_W).fill(false));}
   SITE_OBJECTS.forEach(o=>{ if(SITE_SOLID_OBJ[o.a]) objBaseCells(o).forEach(c=>{ if(c[0]>=0&&c[0]<SITE_W&&c[1]>=0&&c[1]<SITE_H)grid[c[1]][c[0]]=true; }); });
@@ -3213,9 +3214,13 @@ function drawOfficeGround(ctx,ch,x,y){
   }
 }
 
+// Construction progress: how much of the track is laid (left-to-right) by phase.
+function siteTrackFrac(){ const pi=getPhaseIdx(S.week); if(pi<5)return 0; if(pi===5)return 0.45; if(pi===6)return 0.8; return 1; }
 // Draw one railway-site ground cell from the atlas (grass/gravel/track/platform).
 function drawSiteGround(ctx,ch,x,y){
-  if(!drawSprite(ctx,SITE_GROUND[ch]||'grass',x*TS,y*TS)){ctx.fillStyle='#6fae4e';ctx.fillRect(x*TS,y*TS,TS,TS);}
+  let key=SITE_GROUND[ch]||'grass';
+  if(ch==='t'){ key=(x/SITE_W<=siteTrackFrac())?'track':'gravel'; } // unlaid track shows as formation/ballast, rails appear as the build progresses
+  if(!drawSprite(ctx,key,x*TS,y*TS)){ctx.fillStyle='#6fae4e';ctx.fillRect(x*TS,y*TS,TS,TS);}
 }
 
 function drawTile(ctx,type,x,y){
@@ -3714,7 +3719,9 @@ function render(){
   {
     const objs=S.map==='office'?OFFICE_OBJECTS:SITE_OBJECTS;
     const solidset=S.map==='office'?OFFICE_SOLID_OBJ:SITE_SOLID_OBJ;
+    const pi=getPhaseIdx(S.week);
     for(const o of objs){
+      if(o.m!==undefined&&pi<o.m)continue; // construction progression: not delivered / on-site yet
       const a=ATLAS[o.a]; if(!a)continue;
       const ox=o.tx*TS, oy=o.ty*TS, key=o.a, w=a[2], baseY=o.ty*TS+a[3], solid=solidset[key];
       entities.push({y:baseY,draw:()=>{
@@ -4025,7 +4032,7 @@ function loadGame(){
     if(typeof data.siteVisits==='number')_siteVisits=data.siteVisits;
     S.ppeEquipped=!!data.ppeEquipped;
     // Validate spawn against the current map; snap to a known-good spawn if loaded coords are solid/out-of-bounds.
-    const safe=(S.map==='site')?{x:4*TS,y:6*TS}:{x:14*TS,y:15*TS};
+    const safe=(S.map==='site')?{x:3*TS,y:13*TS}:{x:14*TS,y:15*TS};
     const px=data.px,py=data.py;
     const ok=(typeof px==='number'&&typeof py==='number'&&!isSolid(Math.floor((px+8)/TS),Math.floor((py+12)/TS)));
     S.px=ok?px:safe.x;S.py=ok?py:safe.y;

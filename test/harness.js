@@ -74,7 +74,7 @@ const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
 const scripts=[...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)].map(m=>m[1]);
 let code=scripts.join('\n;\n');
 // epilogue: capture top-level consts/fns into global for assertions
-const names=['S','applyEffects','advanceWeek','getPhase','getPhaseIdx','getDlgPhaseIdx','chooseDlg','NPCS','OMAP','SMAP','ZONES','isSolid','render','updatePlayer','startGame','newGame','selectCharacter','beginGame','saveGame','loadGame','EVENTS','PHASES','DLG','transitionToMap','showEvent','triggerEvent','getObjectives','updateHUD','updateNotepad','WALK_FRAMES','updateNPCAI','CHARS','ATLAS','drawSprite','OFFICE_W','OFFICE_H','OFFICE_OBJECTS','OFFICE_SOLID_OBJ','objBaseCells','OFFICE_SOLID','SITE_W','SITE_H','SITE_OBJECTS','SITE_SOLID_OBJ','ZONES'];
+const names=['S','applyEffects','advanceWeek','getPhase','getPhaseIdx','getDlgPhaseIdx','chooseDlg','NPCS','OMAP','SMAP','ZONES','isSolid','render','updatePlayer','startGame','newGame','selectCharacter','beginGame','saveGame','loadGame','EVENTS','PHASES','DLG','transitionToMap','showEvent','triggerEvent','getObjectives','updateHUD','updateNotepad','WALK_FRAMES','updateNPCAI','CHARS','ATLAS','drawSprite','OFFICE_W','OFFICE_H','OFFICE_OBJECTS','OFFICE_SOLID_OBJ','objBaseCells','OFFICE_SOLID','SITE_W','SITE_H','SITE_OBJECTS','SITE_SOLID_OBJ','ZONES','NPC_WANDER_OFFICE','NPC_WANDER_SITE','siteTrackFrac'];
 code+='\n;globalThis.__G=(function(){const o={};'+names.map(n=>`try{o['${n}']=${n};}catch(e){}`).join('')+'return o;})();';
 
 const results={pass:[],fail:[]};
@@ -155,6 +155,16 @@ check('every interaction zone has a walkable cell nearby (so it is reachable to 
       if(!ok) throw new Error('zone '+mapName+'/'+z.id+' has no walkable cell within 2 tiles of its centre');
     });
   });
+});
+check('NPC wander targets are in-bounds and walkable (office & site)',()=>{
+  g.S.map='office'; g.NPC_WANDER_OFFICE.forEach(t=>{ if(t.x<0||t.x>=g.OFFICE_W||t.y<0||t.y>=g.OFFICE_H||g.isSolid(t.x,t.y)) throw new Error('office wander bad @'+t.x+','+t.y); });
+  g.S.map='site'; g.NPC_WANDER_SITE.forEach(t=>{ if(t.x<0||t.x>=g.SITE_W||t.y<0||t.y>=g.SITE_H||g.isSolid(t.x,t.y)) throw new Error('site wander bad @'+t.x+','+t.y); });
+});
+check('construction progression: track-laid fraction is monotonic 0..1 across the project',()=>{
+  const weeks=[32,24,16,12,8,4,0,-8]; let prev=-1;
+  weeks.forEach(w=>{ g.S.week=w; const f=g.siteTrackFrac(); if(f<0||f>1) throw new Error('frac out of range @week '+w+': '+f); if(f<prev) throw new Error('frac decreased @week '+w); prev=f; });
+  g.S.week=32; if(g.siteTrackFrac()!==0) throw new Error('track should be unlaid at kick-off');
+  g.S.week=-8; if(g.siteTrackFrac()!==1) throw new Error('track should be complete at close-out');
 });
 
 // ---------- report ----------
