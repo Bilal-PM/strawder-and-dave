@@ -4096,6 +4096,7 @@ function beginGame(){
 // === SAVE/LOAD ===
 function saveGame(){
   const data={
+    version:2,
     week:S.week,metrics:{...S.metrics},playerName:S.playerName,
     playerChar:S.playerChar,eventsDone:[...S.eventsDone],
     map:S.map,px:S.px,py:S.py,siteUnlocked:S.siteUnlocked,
@@ -4114,18 +4115,24 @@ function loadGame(){
   if(!raw)return;
   try{
     const data=JSON.parse(raw);
-    S.week=data.week;S.metrics={...data.metrics};
-    S.playerName=data.playerName||'PM';S.playerChar=data.playerChar||0;
-    S.eventsDone=data.eventsDone||[];
-    S.map=data.map||'office';S.px=data.px;S.py=data.py;
-    S.siteUnlocked=data.siteUnlocked||false;
-    S.completedObj=data.completedObj||[];
-    S.dlgCooldowns=data.dlgCooldowns||{};
-    if(data.relationships)S.relationships=data.relationships;
-    if(data.achievements)S.achievements=data.achievements;
-    if(data.pmKnowledge)S.pmKnowledge=data.pmKnowledge;
-    if(data.siteVisits)_siteVisits=data.siteVisits;
-    if(data.ppeEquipped)S.ppeEquipped=data.ppeEquipped;
+    const clampM=(o)=>{const def={schedule:70,budget:70,safety:70,quality:70,morale:70},m={};for(const k in def){let v=(o&&typeof o[k]==='number')?o[k]:70;m[k]=Math.max(0,Math.min(100,v));}return m;};
+    S.week=(typeof data.week==='number')?data.week:32;S.metrics=clampM(data.metrics);
+    S.playerName=data.playerName||'PM';S.playerChar=(data.playerChar>=0&&data.playerChar<CHARS.length)?data.playerChar:0;
+    S.eventsDone=Array.isArray(data.eventsDone)?data.eventsDone:[];
+    S.map=(data.map==='site')?'site':'office';
+    S.siteUnlocked=!!data.siteUnlocked;
+    S.completedObj=Array.isArray(data.completedObj)?data.completedObj:[];
+    S.dlgCooldowns=(data.dlgCooldowns&&typeof data.dlgCooldowns==='object')?data.dlgCooldowns:{};
+    if(data.relationships&&typeof data.relationships==='object')S.relationships=data.relationships;
+    if(Array.isArray(data.achievements))S.achievements=data.achievements;
+    if(Array.isArray(data.pmKnowledge))S.pmKnowledge=data.pmKnowledge;
+    if(typeof data.siteVisits==='number')_siteVisits=data.siteVisits;
+    S.ppeEquipped=!!data.ppeEquipped;
+    // Validate spawn against the current map; snap to a known-good spawn if loaded coords are solid/out-of-bounds.
+    const safe=(S.map==='site')?{x:4*TS,y:6*TS}:{x:7*TS,y:14*TS};
+    const px=data.px,py=data.py;
+    const ok=(typeof px==='number'&&typeof py==='number'&&!isSolid(Math.floor((px+8)/TS),Math.floor((py+12)/TS)));
+    S.px=ok?px:safe.x;S.py=ok?py:safe.y;
   }catch(e){return;}
   
   // Bug 4: clear keys

@@ -34,8 +34,8 @@ Work the loop should execute in order (tick in this file as done):
 **P0 — bugs/packaging (before art):**
 - [ ] Embed/remove Google Fonts `@import` (index.html line ~7) — external dep breaks self-contained iframe. (If font file unavailable, ship a clean monospace fallback + keep import as progressive enhancement.)
 - [ ] Delete dead Phaser/atlas scaffolding: `drawCharSprite` (~3238), `drawTileSprite` (~3326), `TILE_SPRITES` (~380), `SPRITE_FW/FH/COLS` (~366), `WALK_DIR_ROW`/`IDLE_DIR_COL` (~372/375), and unused `walkSheet`/`idleSheet` char fields. Grep first; harness must stay green.
-- [ ] Save versioning + load clamp/validate (`loadGame` ~4112): clamp metrics 0–100, validate `px/py` in-bounds & not solid (else snap to safe spawn), default missing fields, add `version`. Extend harness with garbage-save recovery test.
-- [ ] Verify Continue button (works: `init` ~4187 shows `#contBtn` when save exists — confirm via harness). Remove unused `S.savedExists`.
+- [x] Save versioning + load clamp/validate (`loadGame` ~4112): clamp metrics 0–100, validate `px/py` in-bounds & not solid (else snap to safe spawn), default missing fields, add `version`. Extend harness with garbage-save recovery test.
+- [x] Verify Continue button (confirmed: init ~4187 shows #contBtn when save exists) (works: `init` ~4187 shows `#contBtn` when save exists — confirm via harness). Remove unused `S.savedExists`.
 - [ ] Unify week advance into one `enterWeek(w)` funnel (dedupe `advanceWeek` ~2325 / `skipPhase` ~2263 / `chooseEvent` ~2443 report+event ordering). Add harness ordering test.
 - [ ] Remove wasted `getNPCsOnMap()` call (~1312) whose result is discarded.
 
@@ -51,3 +51,13 @@ Work the loop should execute in order (tick in this file as done):
 **P2 — juice/UX:** footstep dust+bob; floating score popups on decisions; HUD meter punch; event slam-in; week-transition wipe + stinger; heart-up burst; onboarding breadcrumbs/"!" markers; metric tooltips + low-metric alarm; gate/explain Skip Phase.
 
 **P3 — story/polish:** phase-distinct objective verbs (real inspection/budget mini-interactions); state-dependent events + choice callbacks; choice-aware ending; state-driven NPC expressions; map-aware ambient particles; milestone camera punch.
+
+
+### 2026-06-14 — Iteration 1 (P0): save/load hardening
+- `loadGame` now clamps metrics to 0–100, validates `playerChar`, coerces map, and **validates the loaded
+  spawn against `isSolid`** — snapping to a known-good tile if the saved px/py is solid/out-of-bounds
+  (prevents soft-lock after the upcoming map swap). `saveGame` gains `version:2`.
+- Harness extended with a corrupt-save recovery test. **13/13 green.** `node --check` clean.
+- Verified Continue button surfacing is correct (no fix needed).
+- Next: remove dead Phaser scaffolding (`drawCharSprite`/`drawTileSprite`/sprite consts) + wasted
+  `getNPCsOnMap()` call; then the renderer/atlas integration (P1).

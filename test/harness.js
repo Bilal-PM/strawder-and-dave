@@ -102,6 +102,13 @@ check('every NPC dialogue choice applies without throwing & stays clamped',()=>{
 check('EVENTS choices apply without throwing',()=>{ (g.EVENTS||[]).forEach(ev=>(ev.choices||[]).forEach(c=>{ if(c.e)g.applyEffects(c.e); })); });
 check('save -> load round-trip',()=>{ if(g.saveGame)g.saveGame(); if(g.loadGame)g.loadGame(); });
 check('advanceWeek progresses through phases without throwing',()=>{ g.S.week=32; let guard=0; while(g.S.week>-8 && guard++<40){ const before=g.S.week; try{g.advanceWeek();}catch(e){throw new Error('advanceWeek @week '+before+': '+e.message);} if(g.S.week===before)break; } });
+check('loadGame recovers from a corrupt save (clamp metrics + validate char + safe spawn)',()=>{
+  G.localStorage.setItem('projectValley_save', JSON.stringify({week:32,map:'office',px:16,py:16,playerChar:99,metrics:{schedule:999,budget:-50,safety:'x'}}));
+  g.loadGame();
+  const m=g.S.metrics; for(const k in m){ if(typeof m[k]!=='number'||m[k]<0||m[k]>100) throw new Error('metric not clamped: '+k+'='+m[k]); }
+  if(g.S.playerChar<0||g.S.playerChar>3) throw new Error('playerChar not validated: '+g.S.playerChar);
+  if(g.isSolid(Math.floor((g.S.px+8)/16),Math.floor((g.S.py+12)/16))) throw new Error('player loaded into a solid tile');
+});
 
 // ---------- report ----------
 console.log('\n=== Project Valley — logic harness ===');
