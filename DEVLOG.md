@@ -95,3 +95,14 @@ Work the loop should execute in order (tick in this file as done):
   harness invariant test (doorways walkable, no furniture on doorways, seats clear, every room reachable
   from spawn via flood-fill). **16/16 green.** node --check clean.
 - Sent independent reviewer the diff. Next: P1 site map (same structure) + fold enterWeek() funnel.
+
+### 2026-06-14 — Site design verified (prep; non-conflicting while office under review)
+- Designed the new railway **site** (30x20) and rendered it from the real atlas: grass field + station
+  **platform** (concrete + tactile edge), a **track corridor** across, and a **fenced compound** (gate at
+  the track) containing the **site-office** + **welfare** cabins and a **materials yard** (rail/sleeper/
+  ballast stacks), excavator, cones, hi-vis crew. Verified visually — ready to port with the same
+  ground/object/SOLID_GRID structure as the office.
+- Persisted the art-pipeline tooling into `tools/` (artlib, charart, bake_atlas, office_plan, site_plan,
+  verify_office) so the autonomous loop survives a container recycle.
+- WAITING on independent review of the office-integration commit (4e5ebd6) before the next index.html
+  changes (apply review fixes → port site → fold enterWeek funnel).
