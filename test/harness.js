@@ -74,7 +74,7 @@ const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
 const scripts=[...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)].map(m=>m[1]);
 let code=scripts.join('\n;\n');
 // epilogue: capture top-level consts/fns into global for assertions
-const names=['S','applyEffects','advanceWeek','getPhase','getPhaseIdx','getDlgPhaseIdx','chooseDlg','NPCS','OMAP','SMAP','ZONES','isSolid','render','updatePlayer','startGame','newGame','selectCharacter','beginGame','saveGame','loadGame','EVENTS','PHASES','DLG','transitionToMap','showEvent','triggerEvent','getObjectives','updateHUD','updateNotepad','WALK_FRAMES','updateNPCAI','CHARS','ATLAS','drawSprite','OFFICE_W','OFFICE_H','OFFICE_OBJECTS','OFFICE_SOLID_OBJ','objBaseCells','OFFICE_SOLID','SITE_W','SITE_H','SITE_OBJECTS','SITE_SOLID_OBJ'];
+const names=['S','applyEffects','advanceWeek','getPhase','getPhaseIdx','getDlgPhaseIdx','chooseDlg','NPCS','OMAP','SMAP','ZONES','isSolid','render','updatePlayer','startGame','newGame','selectCharacter','beginGame','saveGame','loadGame','EVENTS','PHASES','DLG','transitionToMap','showEvent','triggerEvent','getObjectives','updateHUD','updateNotepad','WALK_FRAMES','updateNPCAI','CHARS','ATLAS','drawSprite','OFFICE_W','OFFICE_H','OFFICE_OBJECTS','OFFICE_SOLID_OBJ','objBaseCells','OFFICE_SOLID','SITE_W','SITE_H','SITE_OBJECTS','SITE_SOLID_OBJ','ZONES'];
 code+='\n;globalThis.__G=(function(){const o={};'+names.map(n=>`try{o['${n}']=${n};}catch(e){}`).join('')+'return o;})();';
 
 const results={pass:[],fail:[]};
@@ -145,6 +145,16 @@ check('site map: spawn & compound gate walkable, NPC site seats clear, key areas
   while(st.length){ const p=st.pop(); [[1,0],[-1,0],[0,1],[0,-1]].forEach(d=>{ const nx=p[0]+d[0],ny=p[1]+d[1]; if(nx>=0&&ny>=0&&nx<W&&ny<H&&!seen[ny][nx]&&!solid(nx,ny)){ seen[ny][nx]=true; st.push([nx,ny]); } }); }
   const pts={compound:[22,6],materials:[21,15],trackRight:[25,11]};
   for(const k in pts){ const r=pts[k]; if(!seen[r[1]][r[0]]) throw new Error('site area unreachable: '+k+' @'+r); }
+});
+check('every interaction zone has a walkable cell nearby (so it is reachable to trigger)',()=>{
+  ['office','site'].forEach(mapName=>{
+    g.S.map=mapName; const W=mapName==='office'?g.OFFICE_W:g.SITE_W, H=mapName==='office'?g.OFFICE_H:g.SITE_H;
+    (g.ZONES[mapName]||[]).forEach(z=>{
+      const cx=z.x+z.w/2, cy=z.y+z.h/2; let ok=false;
+      for(let dy=-2;dy<=2&&!ok;dy++)for(let dx=-2;dx<=2;dx++){ const x=Math.round(cx+dx),y=Math.round(cy+dy); if(x>=0&&y>=0&&x<W&&y<H&&!g.isSolid(x,y)){ok=true;break;} }
+      if(!ok) throw new Error('zone '+mapName+'/'+z.id+' has no walkable cell within 2 tiles of its centre');
+    });
+  });
 });
 
 // ---------- report ----------
