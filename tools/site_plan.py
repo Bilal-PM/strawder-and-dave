@@ -45,7 +45,7 @@ OBJ=[('cabin',18,2),('cabin',24,2),                         # site office + welf
      ('excavator',9,5),('cone',3,9),('cone',7,9),('cone',13,9),('cone',26,12)]
 # fence along compound left edge with a gate gap at track rows
 for y in range(1,H-1):
-    if y in (10,11): continue
+    if 9<=y<=11: continue
     OBJ.append(('fence',16,y))
 ents=[(ty*TS+MAN[n][3],('o',n,tx*TS,ty*TS)) for (n,tx,ty) in OBJ]
 # crew (hi-vis): use orange shirt chars

@@ -45,7 +45,7 @@ Work the loop should execute in order (tick in this file as done):
 - [x] Precompute `OFFICE_SOLID` (walls + object base footprints); isSolid rewritten (walls + object *base* footprints only); rewrite `isSolid` as a grid lookup.
 - [x] Inject objects into existing `entities[]` y-sort in `render()` (~3821) using base-y key.
 - [x] Re-point NPC seats + wander; added isSolid guard to updateNPCAI to walkable cells; add `isSolid` check to `updateNPCAI` (~1343); fix `officeX>0`→`present` flag (B2/B3/B5).
-- [ ] Build parallel walled **site** map (cabin/excavator/fence/cones/material stacks). Validate all spawns vs SOLID_GRID.
+- [x] Build parallel **site** map (fenced compound + cabins + materials + platform/track) (cabin/excavator/fence/cones/material stacks). Validate all spawns vs SOLID_GRID.
 - [x] Harness invariants (doorways/reachability/seats/no-furniture-on-door): every doorway walkable; every room flood-fill reachable from spawn; no object footprint over a doorway; every NPC seat/wander/zone non-solid & in-bounds.
 
 **P2 — juice/UX:** footstep dust+bob; floating score popups on decisions; HUD meter punch; event slam-in; week-transition wipe + stinger; heart-up burst; onboarding breadcrumbs/"!" markers; metric tooltips + low-metric alarm; gate/explain Skip Phase.
@@ -118,3 +118,19 @@ Work the loop should execute in order (tick in this file as done):
   at the player's feet while walking.
 - **16/16 green.** node --check clean. Reviewer's remaining notes (notice/planning visuals) logged for P2.
 - Next: port the verified fenced-compound **site** (same ground/object/SOLID structure) → then enterWeek().
+
+
+### 2026-06-14 — Iteration 6 (P1): railway site wired into the game
+- Replaced SMAP with the verified 30x20 fenced-compound site (grass field + station platform, track
+  corridor, gravel compound with site-office + welfare cabins + materials yard, gate at the track).
+  Added SITE_OBJECTS + SITE_SOLID (object base footprints) using the same objBaseCells helper; new
+  drawSiteGround blits atlas ground tiles; object layer unified for both maps; isSolid site branch uses
+  SITE_SOLID; ZONES/AREA_LABELS/site-NPC seats/site spawn re-derived; NPC wander is now map-aware
+  (NPC_WANDER_SITE).
+- Disabled the two phase-overlay functions (drawSitePhaseOverlay/drawOfficePhaseOverlay) — they drew
+  construction visuals at OLD 50x30 / 30x26 coords and would glitch on the new maps. **TODO(P3): rebuild
+  the construction-progression visuals for the new layouts** (this is the wanted 'track visibly builds'
+  feature — re-add properly).
+- Verified via exact atlas+map Python render (matches design) and a new site invariant test (spawn/gate
+  walkable, NPC seats clear, compound+materials+track reachable). **17/17 green.** node --check clean.
+- Next: independent review of the site diff; then fold enterWeek() funnel; then P2 juice/UX.

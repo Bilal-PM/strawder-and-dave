@@ -340,10 +340,10 @@ const NPCS=[
    officeX:12,officeY:4,siteX:-1,siteY:-1,walkSheet:'char_amelia_walk',idleSheet:'char_amelia_idle',
    aiState:'idle',aiTimer:0,aiTargetX:12,aiTargetY:4,aiFacing:0,aiFrame:0,aiExpr:'working',aiExprTimer:0,curX:12*16,curY:4*16},
   {id:'mike',name:'Mike',role:'Site Manager',hair:C.hairBrown,hairStyle:'short',skin:C.skinB,shirt:C.hiVisOrange,pants:C.pantsDk,eye:'#284828',
-   officeX:16,officeY:4,siteX:10,siteY:12,walkSheet:'char_bob_walk',idleSheet:'char_bob_idle',
+   officeX:16,officeY:4,siteX:12,siteY:13,walkSheet:'char_bob_walk',idleSheet:'char_bob_idle',
    aiState:'idle',aiTimer:0,aiTargetX:16,aiTargetY:4,aiFacing:0,aiFrame:0,aiExpr:'chat',aiExprTimer:0,curX:16*16,curY:4*16},
   {id:'emma',name:'Emma',role:'Safety Lead',hair:C.hairRed,hairStyle:'long',skin:C.skinA,shirt:C.hiVis,pants:C.pantsDk,eye:'#285828',hat:C.yellow,
-   officeX:12,officeY:8,siteX:20,siteY:12,walkSheet:'char_alex_walk',idleSheet:'char_alex_idle',
+   officeX:12,officeY:8,siteX:22,siteY:8,walkSheet:'char_alex_walk',idleSheet:'char_alex_idle',
    aiState:'idle',aiTimer:0,aiTargetX:12,aiTargetY:8,aiFacing:0,aiFrame:0,aiExpr:'stress',aiExprTimer:0,curX:12*16,curY:8*16},
   {id:'james',name:'James',role:'Commercial Mgr',hair:C.hairGray,hairStyle:'short',skin:C.skinB,shirt:C.suitGray,pants:C.pantsDk,eye:'#3a3020',
    officeX:16,officeY:8,siteX:-1,siteY:-1,walkSheet:'char_adam_walk',idleSheet:'char_adam_idle',
@@ -358,6 +358,10 @@ const NPCS=[
 const NPC_WANDER_OFFICE=[
   {x:11,y:4},{x:18,y:4},{x:15,y:5},{x:11,y:9},{x:18,y:9},
   {x:14,y:9},{x:15,y:13},{x:11,y:15},{x:18,y:15},{x:14,y:16}
+];
+// Walkable railway-site cells (near the works) for site NPCs.
+const NPC_WANDER_SITE=[
+  {x:5,y:13},{x:10,y:13},{x:13,y:13},{x:22,y:6},{x:25,y:13},{x:20,y:7}
 ];
 
 // (Removed dead sprite-sheet config + TILE_SPRITES lookup from the abandoned
@@ -432,45 +436,33 @@ const OFFICE_SOLID=(()=>{
 })();
 
 // Site map: 50x30
-const SITE_W=50,SITE_H=30;
+const SITE_W=30,SITE_H=20;
+// Railway site ground layer. Chars: 'g' grass · 'r' gravel compound · 't' track · 'p' platform · 'e' platform edge
 const SMAP=(()=>{
-  const m=[];
-  for(let y=0;y<SITE_H;y++){
-    const r=[];
-    for(let x=0;x<SITE_W;x++){
-      if(y===0||y===SITE_H-1||x===0||x===SITE_W-1){r.push(23);continue;}
-      if(x===4&&y===5){r.push(10);continue;}
-      if(x>=2&&x<=7&&y>=2&&y<=5){
-        if(y===2||y===5||x===2||x===7)r.push(25);
-        else r.push(0);
-        continue;
-      }
-      if(y>=13&&y<=15){r.push(22);continue;}
-      if(x>=4&&x<=6&&y>=6&&y<=12){r.push(21);continue;}
-      if(y>=25&&y<=28){r.push(21);continue;}
-      if(x>=22&&x<=24&&y>=16&&y<=24){r.push(21);continue;}
-      if(x>=16&&x<=30&&y>=10&&y<=12){
-        if(x===16||x===30)r.push(27);
-        else r.push(21);
-        continue;
-      }
-      if(x>=36&&x<=44&&y>=20&&y<=25){
-        if(x===36||x===44||y===20||y===25)r.push(23);
-        else r.push(26);
-        continue;
-      }
-      if((x===1&&y===8)||(x===48&&y===3)||(x===42&&y===7)||(x===12&&y===22)||
-         (x===35&&y===3)||(x===46&&y===18)||(x===3&&y===24)||(x===14&&y===3)||
-         (x===8&&y===20)||(x===30&&y===4)||(x===45&&y===10)||(x===2&&y===15)){
-        r.push(24);continue;
-      }
-      if(x===24&&y===11){r.push(28);continue;}
-      if(x===26&&y===11){r.push(28);continue;}
-      r.push(20);
-    }
-    m.push(r);
-  }
-  return m;
+  const W=SITE_W,H=SITE_H,g=[];
+  for(let y=0;y<H;y++){const r=[];for(let x=0;x<W;x++)r.push('g');g.push(r);}
+  for(let y=1;y<H-1;y++)for(let x=17;x<W;x++)g[y][x]='r';        // fenced compound (right)
+  for(let y=6;y<9;y++)for(let x=1;x<15;x++)g[y][x]=(y<8?'p':'e'); // station platform + edge
+  for(let y=10;y<12;y++)for(let x=0;x<W;x++)g[y][x]='t';         // track corridor across
+  return g;
+})();
+const SITE_GROUND={'g':'grass','r':'gravel','t':'track','p':'platform','e':'platedge'};
+const SITE_OBJECTS=(()=>{
+  const o=[
+    {a:'cabin',tx:18,ty:2},{a:'cabin',tx:24,ty:2},                 // site office + welfare cabins
+    {a:'railstack',tx:18,ty:14},{a:'sleeperstack',tx:23,ty:14},
+    {a:'ballastpile',tx:18,ty:16},{a:'ballastpile',tx:23,ty:16},   // materials yard
+    {a:'excavator',tx:9,ty:5},
+    {a:'cone',tx:3,ty:9},{a:'cone',tx:7,ty:9},{a:'cone',tx:13,ty:9},{a:'cone',tx:26,ty:12}
+  ];
+  for(let y=1;y<SITE_H-1;y++){ if(y>=9&&y<=11)continue; o.push({a:'fence',tx:16,ty:y}); } // compound fence, gate at the track
+  return o;
+})();
+const SITE_SOLID_OBJ={cabin:1,fence:1,excavator:1,railstack:1,sleeperstack:1,ballastpile:1};
+const SITE_SOLID=(()=>{
+  const grid=[]; for(let y=0;y<SITE_H;y++){grid.push(new Array(SITE_W).fill(false));}
+  SITE_OBJECTS.forEach(o=>{ if(SITE_SOLID_OBJ[o.a]) objBaseCells(o).forEach(c=>{ if(c[0]>=0&&c[0]<SITE_W&&c[1]>=0&&c[1]<SITE_H)grid[c[1]][c[0]]=true; }); });
+  return grid;
 })();
 
 // === ZONE LABELS (for drawing on map) ===
@@ -484,13 +476,12 @@ const AREA_LABELS={
     {x:13,y:16,text:'Reception',color:'#8a7fad'}
   ],
   site:[
-    {x:3,y:1,text:'Site Office',color:'#f7c948'},
-    {x:4,y:6,text:'Return',color:'#4aca8a'},
-    {x:7,y:13,text:'Track A',color:'#5b8ef5'},
-    {x:20,y:13,text:'Track B',color:'#5b8ef5'},
-    {x:35,y:13,text:'Track C',color:'#5b8ef5'},
-    {x:37,y:19,text:'Materials',color:'#e88030'},
-    {x:20,y:9,text:'Construction',color:'#e05577'}
+    {x:3,y:6,text:'Station',color:'#5b8ef5'},
+    {x:18,y:1,text:'Site Office',color:'#f7c948'},
+    {x:24,y:1,text:'Welfare',color:'#4aca8a'},
+    {x:18,y:13,text:'Materials',color:'#e88030'},
+    {x:9,y:4,text:'Construction',color:'#e05577'},
+    {x:2,y:13,text:'Return',color:'#4aca8a'}
   ]
 };
 
@@ -508,13 +499,13 @@ const ZONES={
     {id:'exit_site',name:'Exit to Site',x:14,y:16,w:2,h:2,hint:'Press SPACE \u2014 Go to Railway Site'}
   ],
   site:[
-    {id:'site_office',name:'Site Office',x:3,y:3,w:3,h:2,hint:'Press SPACE \u2014 Site Office'},
-    {id:'return_office',name:'Return to Office',x:4,y:5,w:1,h:1,hint:'Press SPACE \u2014 Return to Office'},
-    {id:'track_a',name:'Track Section A',x:5,y:13,w:5,h:3,hint:'Press SPACE \u2014 Inspect Track A'},
-    {id:'track_b',name:'Track Section B',x:18,y:13,w:5,h:3,hint:'Press SPACE \u2014 Inspect Track B'},
-    {id:'track_c',name:'Track Section C',x:33,y:13,w:5,h:3,hint:'Press SPACE \u2014 Inspect Track C'},
-    {id:'materials',name:'Materials Yard',x:37,y:21,w:6,h:3,hint:'Press SPACE \u2014 Materials Yard'},
-    {id:'construction',name:'Construction Zone',x:18,y:10,w:10,h:2,hint:'Press SPACE \u2014 Construction Zone'}
+    {id:'return_office',name:'Return to Office',x:2,y:13,w:2,h:2,hint:'Press SPACE \u2014 Return to Office'},
+    {id:'site_office',name:'Site Office',x:18,y:2,w:3,h:3,hint:'Press SPACE \u2014 Site Office'},
+    {id:'track_a',name:'Track Section A',x:3,y:10,w:5,h:2,hint:'Press SPACE \u2014 Inspect Track A'},
+    {id:'track_b',name:'Track Section B',x:10,y:10,w:5,h:2,hint:'Press SPACE \u2014 Inspect Track B'},
+    {id:'track_c',name:'Track Section C',x:22,y:10,w:6,h:2,hint:'Press SPACE \u2014 Inspect Track C'},
+    {id:'materials',name:'Materials Yard',x:18,y:14,w:6,h:3,hint:'Press SPACE \u2014 Materials Yard'},
+    {id:'construction',name:'Construction Zone',x:7,y:4,w:6,h:4,hint:'Press SPACE \u2014 Construction Zone'}
   ]
 };
 
@@ -1166,7 +1157,7 @@ function isSolid(mx,my){
     return OFFICE_SOLID[my][mx];
   }
   if(mx<0||my<0||mx>=SITE_W||my>=SITE_H)return true;
-  return SOLID.has(SMAP[my][mx]);
+  return SITE_SOLID[my][mx];
 }
 
 function canMove(nx,ny){
@@ -1262,7 +1253,7 @@ function updateNPCAI(dt){
     if(npc.aiState==='idle'){
       if(npc.aiTimer<=0){
         // Pick a new wander target
-        const targets=NPC_WANDER_OFFICE;
+        const targets=S.map==='office'?NPC_WANDER_OFFICE:NPC_WANDER_SITE;
         const tgt=targets[Math.floor(Math.random()*targets.length)];
         npc.aiTargetX=tgt.x*TS;
         npc.aiTargetY=tgt.y*TS;
@@ -2050,7 +2041,7 @@ function transitionToMap(target){
     S.map=target;
     PARTICLES.length=0; // Clear particles on map change
     if(target==='site'){
-      S.px=4*TS;S.py=6*TS;S.siteUnlocked=true;_siteVisits++;
+      S.px=3*TS;S.py=13*TS;S.siteUnlocked=true;_siteVisits++;
       NPCS.forEach(n=>{
         if(n.siteX>0){n.curX=n.siteX*TS;n.curY=n.siteY*TS;n.aiState='idle';n.aiTimer=2000;}
       });
@@ -3222,6 +3213,11 @@ function drawOfficeGround(ctx,ch,x,y){
   }
 }
 
+// Draw one railway-site ground cell from the atlas (grass/gravel/track/platform).
+function drawSiteGround(ctx,ch,x,y){
+  if(!drawSprite(ctx,SITE_GROUND[ch]||'grass',x*TS,y*TS)){ctx.fillStyle='#6fae4e';ctx.fillRect(x*TS,y*TS,TS,TS);}
+}
+
 function drawTile(ctx,type,x,y){
   const TS2=16;
   const px=x*TS2,py=y*TS2;
@@ -3528,6 +3524,7 @@ function drawTile(ctx,type,x,y){
 
 // === PHASE-BASED VISUAL PROGRESSION ===
 function drawSitePhaseOverlay(ctx,week){
+  return; // TODO(P3): rebuild construction-progression visuals for the new 30x20 site layout
   const pi=getPhaseIdx(week);
 
   // T-32 to T-20: Surveyor pegs and measuring tape
@@ -3606,6 +3603,7 @@ function drawSitePhaseOverlay(ctx,week){
 }
 
 function drawOfficePhaseOverlay(ctx,week){
+  return; // TODO(P3): rebuild phase visuals for the new walled-room office layout
   const pi=getPhaseIdx(week);
   // Notice board papers accumulate
   const boardX=14*TS,boardY=1*TS;
@@ -3690,7 +3688,7 @@ function render(){
   for(let y=sy;y<ey;y++){
     for(let x=sx;x<ex;x++){
       if(S.map==='office')drawOfficeGround(CTX,OMAP[y][x],x,y);
-      else drawTile(CTX,SMAP[y][x],x,y);
+      else drawSiteGround(CTX,SMAP[y][x],x,y);
     }
   }
   
@@ -3712,11 +3710,13 @@ function render(){
     pcfg._ppe=false;
   }});
 
-  // Office furniture (atlas sprites, y-sorted with characters so you walk behind tall items)
-  if(S.map==='office'){
-    for(const o of OFFICE_OBJECTS){
+  // Furniture / site objects (atlas sprites, y-sorted with characters so you walk behind tall items)
+  {
+    const objs=S.map==='office'?OFFICE_OBJECTS:SITE_OBJECTS;
+    const solidset=S.map==='office'?OFFICE_SOLID_OBJ:SITE_SOLID_OBJ;
+    for(const o of objs){
       const a=ATLAS[o.a]; if(!a)continue;
-      const ox=o.tx*TS, oy=o.ty*TS, key=o.a, w=a[2], baseY=o.ty*TS+a[3], solid=OFFICE_SOLID_OBJ[key];
+      const ox=o.tx*TS, oy=o.ty*TS, key=o.a, w=a[2], baseY=o.ty*TS+a[3], solid=solidset[key];
       entities.push({y:baseY,draw:()=>{
         if(solid){ CTX.fillStyle='rgba(30,18,8,0.18)'; CTX.beginPath(); CTX.ellipse(ox+w/2,baseY-2,w*0.45,4,0,0,Math.PI*2); CTX.fill(); }
         drawSprite(CTX,key,ox,oy);
