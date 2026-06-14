@@ -41,12 +41,12 @@ Work the loop should execute in order (tick in this file as done):
 
 **P1 — renderer/map integration:**
 - [x] Load `art/atlas.png` + inline manifest as `ATLAS`; added `drawSprite(ctx,name,dx,dy)` helper; add `drawTileAtlas` with procedural fallback.
-- [ ] Single `ROOMS` table → derive `ZONES`/`AREA_LABELS`/NPC seats (kills coord drift). Port `/tmp/office_plan.py` as ground layer + `OFFICE_OBJECTS` list.
-- [ ] Precompute `SOLID_GRID` (walls + object *base* footprints only); rewrite `isSolid` as a grid lookup.
-- [ ] Inject objects into existing `entities[]` y-sort in `render()` (~3821) using base-y key.
-- [ ] Re-point NPC seats + wander to walkable cells; add `isSolid` check to `updateNPCAI` (~1343); fix `officeX>0`→`present` flag (B2/B3/B5).
+- [x] Walled-room office map + objects + zones/labels/seats derived → derive `ZONES`/`AREA_LABELS`/NPC seats (kills coord drift). Port `/tmp/office_plan.py` as ground layer + `OFFICE_OBJECTS` list.
+- [x] Precompute `OFFICE_SOLID` (walls + object base footprints); isSolid rewritten (walls + object *base* footprints only); rewrite `isSolid` as a grid lookup.
+- [x] Inject objects into existing `entities[]` y-sort in `render()` (~3821) using base-y key.
+- [x] Re-point NPC seats + wander; added isSolid guard to updateNPCAI to walkable cells; add `isSolid` check to `updateNPCAI` (~1343); fix `officeX>0`→`present` flag (B2/B3/B5).
 - [ ] Build parallel walled **site** map (cabin/excavator/fence/cones/material stacks). Validate all spawns vs SOLID_GRID.
-- [ ] Harness invariants: every doorway walkable; every room flood-fill reachable from spawn; no object footprint over a doorway; every NPC seat/wander/zone non-solid & in-bounds.
+- [x] Harness invariants (doorways/reachability/seats/no-furniture-on-door): every doorway walkable; every room flood-fill reachable from spawn; no object footprint over a doorway; every NPC seat/wander/zone non-solid & in-bounds.
 
 **P2 — juice/UX:** footstep dust+bob; floating score popups on decisions; HUD meter punch; event slam-in; week-transition wipe + stinger; heart-up burst; onboarding breadcrumbs/"!" markers; metric tooltips + low-metric alarm; gate/explain Skip Phase.
 
@@ -82,3 +82,16 @@ Work the loop should execute in order (tick in this file as done):
 - Next: P1 — build the `ROOMS` table from /tmp/office_plan.py, render an in-engine office-map verification
   in Python, then wire ground-layer atlas tiles + object y-sort + SOLID_GRID. (Also still open P0: unify
   week-advance into one enterWeek() funnel — do alongside P1 with ordering tests.)
+
+
+### 2026-06-14 — Iteration 4 (P1): walled-room office wired into the game
+- Replaced OMAP with a 30x18 walled-room ground grid (meeting/open-plan/your-office/break/docs/
+  reception, 2-tile doorways) + OFFICE_OBJECTS furniture list + OFFICE_SOLID collision grid (walls +
+  object *base* footprints only, so you walk behind tall items).
+- New `drawOfficeGround` blits atlas tiles (baseboard on south-facing walls); furniture injected into the
+  existing y-sort; `isSolid` rewritten to the office grid; ZONES/AREA_LABELS/NPC seats/wander/spawns
+  re-derived for the new layout; added a wall-respecting guard to NPC wander.
+- Verified with a Python render of the EXACT atlas + map data (matches approved design) and 1 new
+  harness invariant test (doorways walkable, no furniture on doorways, seats clear, every room reachable
+  from spawn via flood-fill). **16/16 green.** node --check clean.
+- Sent independent reviewer the diff. Next: P1 site map (same structure) + fold enterWeek() funnel.

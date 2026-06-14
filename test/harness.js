@@ -74,7 +74,7 @@ const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
 const scripts=[...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)].map(m=>m[1]);
 let code=scripts.join('\n;\n');
 // epilogue: capture top-level consts/fns into global for assertions
-const names=['S','applyEffects','advanceWeek','getPhase','getPhaseIdx','getDlgPhaseIdx','chooseDlg','NPCS','OMAP','SMAP','ZONES','isSolid','render','updatePlayer','startGame','newGame','selectCharacter','beginGame','saveGame','loadGame','EVENTS','PHASES','DLG','transitionToMap','showEvent','triggerEvent','getObjectives','updateHUD','updateNotepad','WALK_FRAMES','updateNPCAI','CHARS','ATLAS','drawSprite'];
+const names=['S','applyEffects','advanceWeek','getPhase','getPhaseIdx','getDlgPhaseIdx','chooseDlg','NPCS','OMAP','SMAP','ZONES','isSolid','render','updatePlayer','startGame','newGame','selectCharacter','beginGame','saveGame','loadGame','EVENTS','PHASES','DLG','transitionToMap','showEvent','triggerEvent','getObjectives','updateHUD','updateNotepad','WALK_FRAMES','updateNPCAI','CHARS','ATLAS','drawSprite','OFFICE_W','OFFICE_H','OFFICE_OBJECTS','OFFICE_SOLID_OBJ','objBaseCells','OFFICE_SOLID'];
 code+='\n;globalThis.__G=(function(){const o={};'+names.map(n=>`try{o['${n}']=${n};}catch(e){}`).join('')+'return o;})();';
 
 const results={pass:[],fail:[]};
@@ -122,6 +122,19 @@ check('ATLAS manifest is well-formed (every entry [x,y,w,h] of 4 finite numbers)
   const need=['floor','wall','desk','chair','plant','sofa','table','cabin','excavator','fence','track','grass'];
   need.forEach(k=>{ const a=g.ATLAS[k]; if(!Array.isArray(a)||a.length!==4||a.some(n=>!Number.isFinite(n))) throw new Error('bad atlas entry: '+k+'='+JSON.stringify(a)); });
   if(typeof g.drawSprite!=='function') throw new Error('drawSprite missing');
+});
+check('office map: doorways/exit walkable, no furniture on doorways, seats clear, every room reachable',()=>{
+  const W=g.OFFICE_W,H=g.OFFICE_H,OMAP=g.OMAP; g.S.map='office';
+  const solid=(x,y)=>g.isSolid(x,y);
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){ const c=OMAP[y][x]; if((c==='+'||c==='X')&&solid(x,y)) throw new Error('doorway/exit solid @'+x+','+y); }
+  g.OFFICE_OBJECTS.forEach(o=>{ if(g.OFFICE_SOLID_OBJ[o.a]) g.objBaseCells(o).forEach(c=>{ const ch=OMAP[c[1]]&&OMAP[c[1]][c[0]]; if(ch==='+'||ch==='X') throw new Error('solid object '+o.a+' base on doorway @'+c); }); });
+  if(solid(14,15)) throw new Error('player spawn (14,15) is solid');
+  g.NPCS.forEach(n=>{ if(n.officeX<0)return; if(n.officeX>=W||n.officeY>=H) throw new Error('seat OOB '+n.id); if(solid(n.officeX,n.officeY)) throw new Error('seat solid '+n.id); });
+  // flood-fill reachability from spawn
+  const seen=Array.from({length:H},()=>new Array(W).fill(false)); const st=[[14,15]]; seen[15][14]=true;
+  while(st.length){ const p=st.pop(); [[1,0],[-1,0],[0,1],[0,-1]].forEach(d=>{ const nx=p[0]+d[0],ny=p[1]+d[1]; if(nx>=0&&ny>=0&&nx<W&&ny<H&&!seen[ny][nx]&&!solid(nx,ny)){ seen[ny][nx]=true; st.push([nx,ny]); } }); }
+  const rooms={meeting:[5,3],yourOffice:[25,3],breakRoom:[5,11],documents:[25,11],openPlan:[15,8]};
+  for(const k in rooms){ const r=rooms[k]; if(!seen[r[1]][r[0]]) throw new Error('room unreachable: '+k+' @'+r); }
 });
 
 // ---------- report ----------
