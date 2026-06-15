@@ -4742,10 +4742,12 @@ function beginGame(){
   // Bug 4: clear keys
   S.keys={};
 
-  // Init NPC positions
+  // Init NPC positions — seed from each NPC's cell on the STARTING map (town), so ambient
+  // townsfolk (officeX:-1) don't briefly appear at the off-map corner before they wander in.
   NPCS.forEach(n=>{
-    n.curX=n.officeX*TS;
-    n.curY=n.officeY*TS;
+    const c=npcCell(n,S.map);
+    n.curX=(c?c[0]:n.officeX)*TS;
+    n.curY=(c?c[1]:n.officeY)*TS;
     n.aiState='idle';
     n.aiTimer=2000+Math.random()*3000;
     n.aiExprTimer=3000+Math.random()*5000;
