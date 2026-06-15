@@ -314,18 +314,19 @@ def ext_studio():
     for gx in range(6,34,6):s.rect(gx,16,1,18,darken(glass,20))
     s.rect(40,28,8,14,h2('#5a3a1e'));s.rect(41,29,6,13,h2('#8a5a2e'))
     return finish(s)
-def pond():            # a little ornamental pond (rounded water + stone rim + ripples + a lily)
-    s=Spr(40,26);water=h2('#3f86c4');stone=h2('#9a948a');deep=h2('#2f6ea8')
-    rows=[6,10,12,12,12,10,6]  # half-widths per band → oval
-    for i,hw in enumerate(rows):
-        y=3+i*3; w=hw*2; x=20-hw
-        s.rect(x-2,y,w+4,3,stone)          # stone rim
-    for i,hw in enumerate(rows):
-        y=4+i*3; w=hw*2-2; x=20-hw+1
-        s.rect(x,y,w,3,water)
-    s.rect(8,11,24,6,deep)                 # deeper centre
-    s.rect(10,9,12,1,lighten(water,22));s.rect(22,14,8,1,lighten(water,18)) # ripples/glints
-    s.rect(24,9,5,4,h2('#5bb56a'));s.set(26,10,h2('#e86a8a'))               # lily pad + flower
+def pond():            # a bigger ornamental pond (rounded water + stone rim + ripples + lily pads)
+    W=64;cx=W//2
+    s=Spr(W,40);water=h2('#3f86c4');stone=h2('#9a948a');deep=h2('#2f6ea8')
+    rows=[9,15,19,21,21,21,19,15,9]   # half-widths per band → broad oval
+    for i,hw in enumerate(rows):       # stone rim (drawn first, slightly wider)
+        y=3+i*4; s.rect(cx-hw-2,y,hw*2+4,4,stone)
+    for i,hw in enumerate(rows):       # water surface
+        y=4+i*4; s.rect(cx-hw+1,y,hw*2-2,4,water)
+    s.rect(cx-18,15,36,10,deep)        # deeper centre
+    s.rect(cx-14,12,20,1,lighten(water,22));s.rect(cx+2,22,14,1,lighten(water,18)) # ripples/glints
+    s.rect(cx-12,28,10,1,lighten(water,14))
+    s.rect(cx+8,13,6,5,h2('#5bb56a'));s.set(cx+10,14,h2('#e86a8a'))         # lily pad + flower
+    s.rect(cx-16,24,5,4,h2('#5bb56a'));s.set(cx-14,25,h2('#f4d03f'))        # 2nd lily pad + flower
     return finish(s)
 def ext_site():
     s=Spr(56,46);hoard=h2('#3a6ea0');steel=h2('#9aa0a8');yel=h2('#f0b81e')

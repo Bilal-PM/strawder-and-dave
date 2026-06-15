@@ -75,7 +75,7 @@ const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
 const scripts=[...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)].map(m=>m[1]);
 let code=scripts.join('\n;\n');
 // epilogue: capture top-level consts/fns into global for assertions
-const names=['S','applyEffects','advanceWeek','getPhase','getPhaseIdx','getDlgPhaseIdx','chooseDlg','NPCS','OMAP','SMAP','ZONES','isSolid','render','updatePlayer','startGame','newGame','selectCharacter','beginGame','saveGame','loadGame','EVENTS','PHASES','DLG','transitionToMap','showEvent','triggerEvent','getObjectives','updateHUD','updateNotepad','WALK_FRAMES','updateNPCAI','CHARS','ATLAS','drawSprite','OFFICE_W','OFFICE_H','OFFICE_OBJECTS','OFFICE_SOLID_OBJ','objBaseCells','OFFICE_SOLID','SITE_W','SITE_H','SITE_OBJECTS','SITE_SOLID_OBJ','ZONES','NPC_WANDER_OFFICE','NPC_WANDER_SITE','siteTrackFrac','POPUPS','enterWeek','afterEvent','chooseEvent','closeReport','REPORT_WEEKS','getObjectives','showEndScreen','chooseDlg','openNPCDialogue','interactionSpent','spendInteraction','getDlgPhaseIdx','EVENTS','showInsight','rng','seedRng','DIFFICULTY','diff','getPMRating','getLeadershipArchetype','resolveRisk','eventCallback','PERSONA','reflectionNote','showEvent','showReport','applyEventChoice','skipPhase','hintsVisible','metricDeltaHTML','snapshotMetrics','showLockerRoom','togglePPE','closeEventResult','presentEvent','beginDecision','eventHesitate','eventTimerMs','startEventTimer','stopEventTimer','tickEventTimer','SCENES','THEMES','getTheme','setMasterVolume','playMumble','VOICE','playSFX','playLocationAmbient','startBGM','stopBGM','DELIVERABLES','deliverableAvailable','deliverablesAvailableCount','openDeliverable','recordMetricHistory','perfPanelHTML','perfBarsHTML','showDocsOverlay','startNewWeek','MAPS','MD','npcCell','mapW','mapH','SUPPLIER_W','SUPPLIER_H','SUPMAP','transitionToMap','updateTransition','tallyLeadership','dominantStyle','STYLE_KEY'];
+const names=['S','applyEffects','advanceWeek','getPhase','getPhaseIdx','getDlgPhaseIdx','chooseDlg','NPCS','OMAP','SMAP','ZONES','isSolid','render','updatePlayer','startGame','newGame','selectCharacter','beginGame','saveGame','loadGame','EVENTS','PHASES','DLG','transitionToMap','showEvent','triggerEvent','getObjectives','updateHUD','updateNotepad','WALK_FRAMES','updateNPCAI','CHARS','ATLAS','drawSprite','OFFICE_W','OFFICE_H','OFFICE_OBJECTS','OFFICE_SOLID_OBJ','objBaseCells','OFFICE_SOLID','SITE_W','SITE_H','SITE_OBJECTS','SITE_SOLID_OBJ','ZONES','NPC_WANDER_OFFICE','NPC_WANDER_SITE','siteTrackFrac','POPUPS','enterWeek','afterEvent','chooseEvent','closeReport','REPORT_WEEKS','getObjectives','showEndScreen','chooseDlg','openNPCDialogue','interactionSpent','spendInteraction','getDlgPhaseIdx','EVENTS','showInsight','rng','seedRng','DIFFICULTY','diff','getPMRating','getLeadershipArchetype','resolveRisk','eventCallback','PERSONA','reflectionNote','showEvent','showReport','applyEventChoice','skipPhase','hintsVisible','metricDeltaHTML','snapshotMetrics','showLockerRoom','togglePPE','closeEventResult','presentEvent','beginDecision','eventHesitate','eventTimerMs','startEventTimer','stopEventTimer','tickEventTimer','SCENES','THEMES','getTheme','setMasterVolume','playMumble','VOICE','playSFX','playLocationAmbient','startBGM','stopBGM','DELIVERABLES','deliverableAvailable','deliverablesAvailableCount','openDeliverable','recordMetricHistory','perfPanelHTML','perfBarsHTML','showDocsOverlay','startNewWeek','MAPS','MD','npcCell','mapW','mapH','SUPPLIER_W','SUPPLIER_H','SUPMAP','transitionToMap','updateTransition','tallyLeadership','dominantStyle','STYLE_KEY','activateZone','PPE_REQUIRED','completeObj','AREA_LABELS','TOWN_W','TOWN_H','TOWNMAP'];
 code+='\n;globalThis.__G=(function(){const o={};'+names.map(n=>`try{o['${n}']=${n};}catch(e){}`).join('')+'return o;})();';
 
 const results={pass:[],fail:[]};
@@ -135,8 +135,51 @@ check('office map: doorways/exit walkable, no furniture on doorways, seats clear
   const seen=Array.from({length:H},()=>new Array(W).fill(false)); const st=[[14,15]]; seen[15][14]=true;
   while(st.length){ const p=st.pop(); [[1,0],[-1,0],[0,1],[0,-1]].forEach(d=>{ const nx=p[0]+d[0],ny=p[1]+d[1]; if(nx>=0&&ny>=0&&nx<W&&ny<H&&!seen[ny][nx]&&!solid(nx,ny)){ seen[ny][nx]=true; st.push([nx,ny]); } }); }
   const rooms={meeting:[5,3],yourOffice:[25,3],breakRoom:[5,11],documents:[25,11],openPlan:[15,8],
-    to_supplier:[12,16],to_studio:[3,16],to_boardroom:[25,16]}; // the three new exit doors must be reachable
+    boardroomDoor:[12,1],changingRoom:[18,16],return_town:[14,16]}; // boardroom + changing room live in the office now
   for(const k in rooms){ const r=rooms[k]; if(!seen[r[1]][r[0]]) throw new Error('room/door unreachable: '+k+' @'+r); }
+});
+check('town hub: PM spawn walkable, the 3 building entrances + the road-end site access reachable, worksites PPE-gated',()=>{
+  g.S.map='town'; const M=g.MAPS.town, W=M.W, H=M.H; const solid=(x,y)=>g.isSolid(x,y);
+  const sp=M.spawn; if(solid(sp.x,sp.y)) throw new Error('town spawn solid @'+sp.x+','+sp.y);
+  const seen=Array.from({length:H},()=>new Array(W).fill(false)); const st=[[sp.x,sp.y]]; seen[sp.y][sp.x]=true;
+  while(st.length){ const p=st.pop(); [[1,0],[-1,0],[0,1],[0,-1]].forEach(d=>{ const nx=p[0]+d[0],ny=p[1]+d[1]; if(nx>=0&&ny>=0&&nx<W&&ny<H&&!seen[ny][nx]&&!solid(nx,ny)){ seen[ny][nx]=true; st.push([nx,ny]); } }); }
+  // every town zone (3 buildings + the construction-site access at the end of the road) must be reachable on foot
+  (g.ZONES.town||[]).forEach(z=>{ let ok=false; for(let dy=-2;dy<=2&&!ok;dy++)for(let dx=-2;dx<=2;dx++){const x=Math.round(z.x+z.w/2+dx),y=Math.round(z.y+z.h/2+dy); if(x>=0&&y>=0&&x<W&&y<H&&seen[y][x]){ok=true;break;}} if(!ok)throw new Error('town zone unreachable: '+z.id); });
+  const ids=(g.ZONES.town||[]).map(z=>z.id);
+  ['to_office','to_site','to_supplier','to_studio'].forEach(id=>{ if(!ids.includes(id)) throw new Error('town missing entrance: '+id); });
+  // boardroom + PPE changing room moved INTO the office — they must NOT be town zones
+  ['to_boardroom','locker_room'].forEach(id=>{ if(ids.includes(id)) throw new Error('town should not carry '+id+' (it lives in the office now)'); });
+  // the two active worksites must be PPE-gated
+  if(!g.PPE_REQUIRED.to_site||!g.PPE_REQUIRED.to_supplier) throw new Error('site/supplier entrances must require PPE');
+});
+check('town navigation: entering each town destination sets its map; each returns to town',()=>{
+  const pairs=[['to_office','office'],['to_supplier','supplier'],['to_studio','studio'],['to_site','site']];
+  g.S.ppeEquipped=true; // clear the PPE gate so worksites are enterable in the test
+  pairs.forEach(([zid,mapName])=>{
+    g.S.map='town';
+    g.activateZone({id:zid}); g.updateTransition(500);
+    if(g.S.map!==mapName) throw new Error(zid+' did not enter '+mapName);
+    g.activateZone({id:'return_town'}); g.updateTransition(500);
+    if(g.S.map!=='town') throw new Error(mapName+' return_town did not go back to town');
+  });
+});
+check('office contains the boardroom + changing room: in-office door enters boardroom and returns to the office',()=>{
+  const oids=(g.ZONES.office||[]).map(z=>z.id);
+  ['to_boardroom','locker_room'].forEach(id=>{ if(!oids.includes(id)) throw new Error('office missing '+id); });
+  g.S.map='office';
+  g.activateZone({id:'to_boardroom'}); g.updateTransition(500);
+  if(g.S.map!=='boardroom') throw new Error('to_boardroom did not enter the boardroom');
+  g.activateZone({id:'return_office'}); g.updateTransition(500);
+  if(g.S.map!=='office') throw new Error('boardroom return_office did not go back to the office');
+});
+check('PPE gate: worksites refuse entry without PPE, then admit once kitted out in the office changing room',()=>{
+  g.S.map='town'; g.S.ppeEquipped=false;
+  g.activateZone({id:'to_site'}); g.updateTransition(500);
+  if(g.S.map==='site') throw new Error('site entered without PPE (gate failed)');
+  g.S.ppeEquipped=true;
+  g.activateZone({id:'to_site'}); g.updateTransition(500);
+  if(g.S.map!=='site') throw new Error('site refused entry even with PPE on');
+  g.activateZone({id:'return_town'}); g.updateTransition(500);
 });
 check('site map: spawn & compound gate walkable, NPC site seats clear, key areas reachable',()=>{
   g.S.map='site'; const W=g.SITE_W,H=g.SITE_H; const solid=(x,y)=>g.isSolid(x,y);
@@ -149,7 +192,7 @@ check('site map: spawn & compound gate walkable, NPC site seats clear, key areas
   for(const k in pts){ const r=pts[k]; if(!seen[r[1]][r[0]]) throw new Error('site area unreachable: '+k+' @'+r); }
 });
 check('every interaction zone has a walkable cell nearby (so it is reachable to trigger)',()=>{
-  ['office','site','supplier','boardroom','studio'].forEach(mapName=>{
+  ['town','office','site','supplier','boardroom','studio'].forEach(mapName=>{
     g.S.map=mapName; const W=g.MAPS[mapName].W, H=g.MAPS[mapName].H;
     (g.ZONES[mapName]||[]).forEach(z=>{
       const cx=z.x+z.w/2, cy=z.y+z.h/2; let ok=false;
@@ -213,7 +256,7 @@ check('enterWeek funnel: event-then-report ordering at a collision week (28), no
 });
 check('every weekly objective target resolves to a real NPC or zone (breadcrumbs + completion work)',()=>{
   const npcIds=new Set(g.NPCS.map(n=>n.id));
-  const zoneIds=new Set([].concat(g.ZONES.office||[],g.ZONES.site||[]).map(z=>z.id));
+  const zoneIds=new Set([].concat(g.ZONES.town||[],g.ZONES.office||[],g.ZONES.site||[]).map(z=>z.id));
   [32,28,24,20,16,12,8,4,0,-4,-8].forEach(w=>{
     (g.getObjectives(w)||[]).forEach(o=>{
       if(o.type==='npc'&&!npcIds.has(o.target)) throw new Error('objective npc target missing: '+o.target+' @week '+w);

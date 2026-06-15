@@ -546,3 +546,27 @@ Authored the art that unblocks the outdoor town hub (atlas 42→54 entries):
   **`pond`** (stone rim + lily pad + flower — owner request 🙂).
 - **Road tiles** — `road`, `roadline` (dashed centre), `pavement`.
 - Re-baked atlas, re-synced inlined `ATLAS`, verified every new sprite via a Python render. **51/51 green.**
+
+
+### 2026-06-15 — Iteration 37 (Phase 4: outdoor TOWN hub navigation)
+Replaced the "doors inside the office" model with an outdoor town the PM walks around (structure refined live
+to owner feedback — see below):
+- **New `town` map** (34×22) — grass with room to breathe, a road across the middle (pavement both sides,
+  dashed centre line), **three buildings as separate landmarks** each **labelled on top** — **Design Studio**,
+  **Project Office**, **Supplier** — a **bigger pond**, and a **dense tree line behind the buildings**.
+- **Railway Site = an outdoor worksite at the END OF THE ROAD** (far right): you walk to the road's end and step
+  onto a hoarding/gate access point (cones + fence) — no building of its own — to head out to the live site.
+- **Boardroom + PPE changing room live INSIDE the Project Office:** an internal office door enters the Boardroom
+  (gate reviews with Dr. Okoye, returns to the office); the PPE lockers are a dedicated **Changing Room** in the
+  office. So the flow is: kit out in the office → come back out → access the site/supplier (both PPE-gated).
+- **Navigation wiring:** `activateZone` handlers for `to_office`/`to_site`/`to_supplier`/`to_studio` (town) +
+  `to_boardroom` (office) + `return_town`/`return_office` (exits). `transitionToMap` remembers `S._townPos`
+  (persisted in save/load) so leaving a building drops you back where you entered. `beginGame` starts in town.
+- **PPE gating:** `PPE_REQUIRED={to_site,to_supplier}` — both worksites refuse entry without hi-vis+hard hat;
+  the gate message + breadcrumb now direct you to the office Changing Room. Site objectives retargeted `to_site`.
+- **Labels:** `drawAreaLabels` gained a `type:'building'` variant (centred name plate + thin colour underline)
+  so landmarks read as signage, not clashing pills.
+- **Art:** the pond sprite enlarged 40×26 → 64×40 (broad oval, two lily pads). Atlas re-baked + `ATLAS` re-synced.
+- New harness coverage: town spawn + 3 entrances + road-end site access reachable; boardroom/changing-room
+  confirmed in the office (not the town); PPE gate proven to block then admit; enter→return round-trips for all
+  destinations. **55/55 green**, node --check clean, town verified via Python render.
