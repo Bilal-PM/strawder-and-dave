@@ -36,7 +36,7 @@ Work the loop should execute in order (tick in this file as done):
 - [x] Delete dead Phaser/atlas scaffolding: `drawCharSprite` (~3238), `drawTileSprite` (~3326), `TILE_SPRITES` (~380), `SPRITE_FW/FH/COLS` (~366), `WALK_DIR_ROW`/`IDLE_DIR_COL` (~372/375), and unused `walkSheet`/`idleSheet` char fields. Grep first; harness must stay green.
 - [x] Save versioning + load clamp/validate (`loadGame` ~4112): clamp metrics 0–100, validate `px/py` in-bounds & not solid (else snap to safe spawn), default missing fields, add `version`. Extend harness with garbage-save recovery test.
 - [x] Verify Continue button (confirmed: init ~4187 shows #contBtn when save exists) (works: `init` ~4187 shows `#contBtn` when save exists — confirm via harness). Remove unused `S.savedExists`.
-- [ ] Unify week advance into one `enterWeek(w)` funnel (dedupe `advanceWeek` ~2325 / `skipPhase` ~2263 / `chooseEvent` ~2443 report+event ordering). Add harness ordering test.
+- [x] Unify week advance into one enterWeek() funnel (event->report->new), all 3 paths converge (dedupe `advanceWeek` ~2325 / `skipPhase` ~2263 / `chooseEvent` ~2443 report+event ordering). Add harness ordering test.
 - [x] Remove wasted `getNPCsOnMap()` call (~1312) whose result is discarded.
 
 **P1 — renderer/map integration:**
@@ -170,3 +170,15 @@ Work the loop should execute in order (tick in this file as done):
 - ~370 lines removed (4099->3727). Verified by brace-matched removal + node --check + harness boot.
   **21/21 green.** Much clearer surface for the remaining work.
 - Next: enterWeek() funnel (last P0), event slam-in / week-transition juice, onboarding cues.
+
+
+### 2026-06-15 — Iteration 10 (P0 done: enterWeek funnel)
+- Added a single `enterWeek()` (-> end / curveball event / monthly report / new week) + `afterEvent()`.
+  `closeWeekTrans`, `chooseEvent`, and `skipPhase` all converge here, removing 3 duplicated end/event/
+  report orderings (report-weeks and event-weeks collide at 28/24/20/16/12/8/4/0, so this was genuinely
+  fragile). skipPhase now also auto-resolves the landing-week event (>=nextWeek) so 'skip' stays
+  'let the team handle it'.
+- Harness +1: at collision week 28, enterWeek shows the event, chooseEvent resolves it exactly once, the
+  report then shows, closeReport runs startNewWeek. **22/22 green.** node --check clean.
+- **All P0 + P1 complete.** Next: P2 juice (event slam-in, week-transition stinger), onboarding cues,
+  fence-enclose the compound, then P3 (office phase visuals, choice-aware ending).

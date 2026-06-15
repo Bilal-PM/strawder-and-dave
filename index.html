@@ -2210,7 +2210,7 @@ function skipPhase(){
 
   // Auto-resolve any curveball events in skipped range
   EVENTS.forEach(ev=>{
-    if(ev.week<=S.week&&ev.week>nextWeek&&!S.eventsDone.includes(ev.week)){
+    if(ev.week<=S.week&&ev.week>=nextWeek&&!S.eventsDone.includes(ev.week)){
       const rci=Math.floor(Math.random()*ev.choices.length);
       applyEffects(ev.choices[rci].e);
       S.eventsDone.push(ev.week);
@@ -2239,13 +2239,8 @@ function skipPhase(){
   playSFX('weekup');
   setTimeout(()=>{
     el.className='skip-trans';
-    // Check for game end
-    if(S.week<=-8){showEndScreen();return;}
-    // Check for report
-    if(REPORT_WEEKS.includes(S.week)){showReport();return;}
-    startNewWeek();
-    updateHUD();
     saveGame();
+    enterWeek();
   },2500);
 }
 
@@ -2319,24 +2314,7 @@ function showWeekTransition(){
 function closeWeekTrans(){
   document.getElementById('weekTrans').className='scr';
   S.weekTransOpen=false;
-  
-  // Check if game is over (after T+8)
-  if(S.week<=-8){
-    showEndScreen();return;
-  }
-  
-  // Check for curveball event
-  const ev=EVENTS.find(e=>e.week===S.week&&!S.eventsDone.includes(e.week));
-  if(ev){
-    showEvent(ev);return;
-  }
-  
-  // Check for monthly report
-  if(REPORT_WEEKS.includes(S.week)){
-    showReport();return;
-  }
-  
-  startNewWeek();
+  enterWeek();
 }
 
 function startNewWeek(){
@@ -2347,6 +2325,19 @@ function startNewWeek(){
   checkAchievements();
   updateNotepad();
   updateHUD();
+}
+
+// Single funnel for entering a freshly-set week: end -> curveball event -> monthly report -> new week.
+// All week-advance paths converge here so the ordering can't drift between them.
+function enterWeek(){
+  if(S.week<=-8){ showEndScreen(); return; }
+  const ev=EVENTS.find(e=>e.week===S.week&&!S.eventsDone.includes(e.week));
+  if(ev){ showEvent(ev); return; }   // chooseEvent() resumes the chain via afterEvent()
+  afterEvent();
+}
+function afterEvent(){
+  if(REPORT_WEEKS.includes(S.week)){ showReport(); return; } // closeReport() then calls startNewWeek()
+  startNewWeek();
 }
 
 // === CURVEBALL EVENTS (Bug 8 fix: defensive desc check, Bug 9 fix: delay pointer events) ===
@@ -2376,11 +2367,7 @@ function chooseEvent(week,ci){
   S.eventsDone.push(week);
   document.getElementById('eventModal').className='modal';
   S.eventOpen=false;
-  
-  if(REPORT_WEEKS.includes(S.week)){
-    showReport();return;
-  }
-  startNewWeek();
+  afterEvent();
 }
 
 // === MONTHLY REPORT ===

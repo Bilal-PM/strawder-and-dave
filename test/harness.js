@@ -74,7 +74,7 @@ const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
 const scripts=[...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)].map(m=>m[1]);
 let code=scripts.join('\n;\n');
 // epilogue: capture top-level consts/fns into global for assertions
-const names=['S','applyEffects','advanceWeek','getPhase','getPhaseIdx','getDlgPhaseIdx','chooseDlg','NPCS','OMAP','SMAP','ZONES','isSolid','render','updatePlayer','startGame','newGame','selectCharacter','beginGame','saveGame','loadGame','EVENTS','PHASES','DLG','transitionToMap','showEvent','triggerEvent','getObjectives','updateHUD','updateNotepad','WALK_FRAMES','updateNPCAI','CHARS','ATLAS','drawSprite','OFFICE_W','OFFICE_H','OFFICE_OBJECTS','OFFICE_SOLID_OBJ','objBaseCells','OFFICE_SOLID','SITE_W','SITE_H','SITE_OBJECTS','SITE_SOLID_OBJ','ZONES','NPC_WANDER_OFFICE','NPC_WANDER_SITE','siteTrackFrac','POPUPS'];
+const names=['S','applyEffects','advanceWeek','getPhase','getPhaseIdx','getDlgPhaseIdx','chooseDlg','NPCS','OMAP','SMAP','ZONES','isSolid','render','updatePlayer','startGame','newGame','selectCharacter','beginGame','saveGame','loadGame','EVENTS','PHASES','DLG','transitionToMap','showEvent','triggerEvent','getObjectives','updateHUD','updateNotepad','WALK_FRAMES','updateNPCAI','CHARS','ATLAS','drawSprite','OFFICE_W','OFFICE_H','OFFICE_OBJECTS','OFFICE_SOLID_OBJ','objBaseCells','OFFICE_SOLID','SITE_W','SITE_H','SITE_OBJECTS','SITE_SOLID_OBJ','ZONES','NPC_WANDER_OFFICE','NPC_WANDER_SITE','siteTrackFrac','POPUPS','enterWeek','afterEvent','chooseEvent','closeReport','REPORT_WEEKS'];
 code+='\n;globalThis.__G=(function(){const o={};'+names.map(n=>`try{o['${n}']=${n};}catch(e){}`).join('')+'return o;})();';
 
 const results={pass:[],fail:[]};
@@ -170,6 +170,19 @@ check('decisions spawn floating score popups (juice) without throwing',()=>{
   g.POPUPS.length=0; g.S.week=32; g.S.px=100; g.S.py=100; g.S.camX=0; g.S.camY=0;
   g.applyEffects({schedule:3,morale:-2,budget:0});
   if(g.POPUPS.length!==2) throw new Error('expected 2 popups (nonzero effects), got '+g.POPUPS.length);
+});
+check('enterWeek funnel: event-then-report ordering at a collision week (28), no double-resolve',()=>{
+  g.S.eventsDone.length=0; g.S.eventOpen=false; g.S.week=28;
+  g.S.metrics={schedule:70,budget:70,safety:70,quality:70,morale:70};
+  g.enterWeek();
+  if(!g.S.eventOpen) throw new Error('expected an event modal to show at week 28');
+  g.chooseEvent(28,0);
+  if(!g.S.eventsDone.includes(28)) throw new Error('event 28 not marked resolved');
+  if(g.S.eventsDone.filter(w=>w===28).length!==1) throw new Error('event 28 double-resolved');
+  if(!g.S.eventOpen) throw new Error('expected the monthly report to show after the event (28 is a report week)');
+  if(g.closeReport) g.closeReport();
+  if(g.S.eventOpen) throw new Error('report did not close');
+  if(!Array.isArray(g.S.objectives)) throw new Error('startNewWeek did not run after report');
 });
 
 // ---------- report ----------
