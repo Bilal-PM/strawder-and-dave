@@ -2907,7 +2907,7 @@ const DELIVERABLES=[
 ];
 // The performance journey — an inline-SVG trend of all 5 metrics from the start line to now.
 function perfPanelHTML(){
-  const hist=S.metricHistory||[];
+  const hist=(S.metricHistory||[]).filter(h=>h&&h.m&&typeof h.m.schedule==='number'); // ignore malformed entries
   if(!hist.length) return '';
   const W=420,H=96,pad=5;
   const w0=hist[0].week, w1=hist[hist.length-1].week, span=(w0-w1)||1;
@@ -2947,7 +2947,7 @@ function openDeliverable(id){
   html+='<div style="font-size:8px;color:#a07848;letter-spacing:1px;border-bottom:1px solid #d8c8a8;padding-bottom:6px;margin-bottom:10px">PROJECT DELIVERABLE • '+getPhase(S.week)+' • '+weekLabel(S.week)+'</div>';
   d.body.split('\n\n').forEach(p=>{ html+='<p style="font-size:9px;line-height:2;color:#4a3420;margin:0 0 10px">'+p+'</p>'; });
   html+='</div>';
-  html+='<div style="text-align:center;margin-top:14px"><button class="btn sm" onclick="showDocsOverlay()">← Back to Documents</button></div>';
+  html+='<div style="text-align:center;margin-top:14px;display:flex;gap:8px;justify-content:center"><button class="btn sm" onclick="showDocsOverlay()">← Back to Documents</button><button class="btn sm" onclick="closeDocsOverlay()">Close</button></div>';
   el.innerHTML=html; el.className='on'; el.style.display='block'; el.scrollTop=0;
 }
 
