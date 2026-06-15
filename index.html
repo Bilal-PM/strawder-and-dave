@@ -831,6 +831,7 @@ const DLG={
 // === CURVEBALL EVENTS ===
 const EVENTS=[
   {week:28,title:'Survey Shock',
+   insight:'Early ground investigation prevents costly surprises later.',
    text:'Ground surveys found unexpected utilities under the track. The design needs updating.',
    choices:[
      {t:'Redesign immediately.',desc:'Costs money but gets it right.',e:{budget:-4,quality:4,schedule:-2}},
@@ -838,6 +839,7 @@ const EVENTS=[
      {t:'Proceed with caution.',desc:'Risky \u2014 could cause problems later.',e:{schedule:2,quality:-3,safety:-2}}
    ]},
   {week:24,title:'Scope Surprise',
+   insight:'Scope changes carry downstream cost — negotiate trade-offs, don\'t just say yes.',
    text:'Your client wants to add a pedestrian crossing to the project. "It\'ll only take a few weeks extra," they say.',
    choices:[
      {t:'Accept it \u2014 keep the client happy.',desc:'More scope means more work and cost.',e:{schedule:-5,budget:-4,morale:2}},
@@ -845,6 +847,7 @@ const EVENTS=[
      {t:'Negotiate a trade-off.',desc:'Swap some scope to fit it in. Smart PM move.',e:{schedule:-1,budget:-1,quality:2,morale:1}}
    ]},
   {week:20,title:'Team Trouble',
+   insight:'Mediating conflict builds a stronger team than picking sides.',
    text:'Sarah and Mike disagree about the design approach. The tension is affecting the team.',
    choices:[
      {t:'Back Sarah\'s approach.',desc:'Better design quality, Mike may feel sidelined.',e:{quality:4,morale:-2,schedule:-1}},
@@ -852,6 +855,7 @@ const EVENTS=[
      {t:'Mediate and find middle ground.',desc:'Takes time but brings the team together.',e:{morale:4,schedule:-2,quality:1}}
    ]},
   {week:16,title:'Budget Alert',
+   insight:'Protect contingency and find efficiencies before asking for more money.',
    text:'Finance says you\'re trending 10% over budget. Management wants a plan.',
    choices:[
      {t:'Cut scope to save money.',desc:'Reduces what you deliver but gets costs down.',e:{quality:-4,budget:5}},
@@ -859,6 +863,7 @@ const EVENTS=[
      {t:'Find efficiencies.',desc:'Smarter working, small savings add up.',e:{budget:3,quality:1}}
    ]},
   {week:12,title:'Supplier Problem',
+   insight:'Single-source dependencies are a risk — always keep a plan B.',
    text:'Your key materials supplier has gone into administration. Materials delivery is at risk.',
    choices:[
      {t:'Find alternative supplier urgently.',desc:'Costs more but keeps things moving.',e:{budget:-5,schedule:2,quality:1}},
@@ -866,6 +871,7 @@ const EVENTS=[
      {t:'Redesign for different materials.',desc:'Expensive and slow but improves long-term quality.',e:{schedule:-4,budget:-3,quality:4}}
    ]},
   {week:8,title:'Safety Scare',
+   insight:'A near-miss is a warning — stopping to review is never wasted time.',
    text:'A near-miss incident on site \u2014 worker nearly hit by equipment. No one hurt, but it\'s serious.',
    choices:[
      {t:'Stop all work for safety review.',desc:'The right thing to do. Costs time.',e:{schedule:-4,safety:6,morale:3}},
@@ -873,6 +879,7 @@ const EVENTS=[
      {t:'Brief the team and move on.',desc:'Risky. The next near-miss might not be a miss.',e:{safety:-4,schedule:2,morale:-2}}
    ]},
   {week:4,title:'Weather Warning',
+   insight:'Plan for foreseeable risks; protecting people beats chasing the schedule.',
    text:'Major storms forecast during your planned construction window.',
    choices:[
      {t:'Delay work by 2 weeks.',desc:'Safe but costly in time.',e:{schedule:-5,safety:4}},
@@ -880,6 +887,7 @@ const EVENTS=[
      {t:'Reschedule to night shifts.',desc:'Costs more, tires the team, but protects schedule.',e:{budget:-3,morale:-3,schedule:2}}
    ]},
   {week:0,title:'Quality Question',
+   insight:'Doing it right beats doing it twice — quality shortcuts resurface.',
    text:'Inspections found some work doesn\'t meet specification. Not safety-critical, but below standard.',
    choices:[
      {t:'Rip it out and redo properly.',desc:'Expensive and slow, but right.',e:{schedule:-4,budget:-4,quality:6}},
@@ -887,6 +895,7 @@ const EVENTS=[
      {t:'Patch and monitor.',desc:'Quick fix, but may not last.',e:{budget:-1,quality:1}}
    ]},
   {week:-4,title:'Snag List Growing',
+   insight:'A committed close-out protects the client relationship and your reputation.',
    text:'47 snags found since handover. The maintenance team is reporting new issues daily. Some are minor cosmetic items, others affect operations.',
    choices:[
      {t:'Mobilize a dedicated snag team.',desc:'Costs money but shows commitment to quality.',e:{budget:-4,quality:5,morale:2}},
@@ -894,6 +903,7 @@ const EVENTS=[
      {t:'Dispute non-genuine snags.',desc:'Push back on items that aren\'t defects.',e:{budget:2,quality:-1,morale:-2}}
    ]},
   {week:-8,title:'Lessons Learned',
+   insight:'Honest retrospectives turn one project\'s pain into the next one\'s gain.',
    text:'Final project review meeting. The whole team gathers to reflect on what went well and what could improve for next time.',
    choices:[
      {t:'Open and honest review.',desc:'Some uncomfortable truths but valuable learning.',e:{quality:5,morale:3}},
@@ -2395,6 +2405,7 @@ function chooseEvent(week,ci){
   S.eventsDone.push(week);
   S.eventChoices=S.eventChoices||[];
   S.eventChoices.push({title:ev.title,choice:choice.t}); // for the choice-aware ending
+  if(ev.insight)showInsight(ev.insight);                 // attach the PM lesson to the decision
   document.getElementById('eventModal').className='modal';
   S.eventOpen=false;
   afterEvent();
@@ -2816,6 +2827,7 @@ function _showNextAchToast(){
   _achToastActive=true;
   const ach=_achToastQueue.shift();
   const el=document.getElementById('achToast');
+  el.querySelector('.ach-label').textContent=ach.label||'ACHIEVEMENT UNLOCKED';
   el.querySelector('.ach-icon').textContent=ach.icon;
   el.querySelector('.ach-name').textContent=ach.name;
   el.querySelector('.ach-desc').textContent=ach.desc;
@@ -2824,6 +2836,12 @@ function _showNextAchToast(){
     el.classList.remove('show');
     setTimeout(()=>_showNextAchToast(),500);
   },5000);
+}
+// A short "PM Insight" toast tied to a decision the player just made (reuses the toast queue).
+function showInsight(text){
+  if(!text)return;
+  _achToastQueue.push({icon:'💡',name:text,desc:'',label:'PM INSIGHT'});
+  if(!_achToastActive)_showNextAchToast();
 }
 
 function checkAchievements(){

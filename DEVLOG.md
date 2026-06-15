@@ -291,3 +291,11 @@ post-delivery; idle/turn animations.
   lock-step), and **NPCs turn to face the player** when you start talking to them (and hold still). Small
   touches, big Stardew-ish 'alive' payoff. **26/26 green**, node --check clean.
 - Remaining P3 (optional): tie PM-knowledge unlocks to decisions; compress post-delivery.
+
+
+### 2026-06-15 — Iteration 21 (P3: PM lessons attached to decisions)
+- Each of the 10 curveball events now carries a one-line PM `insight`; resolving an event fires a 'PM
+  INSIGHT' toast (reuses the achievement-toast queue with a custom label) so the lesson attaches to the
+  decision the player just made — instead of the knowledge being a passive phase dump. Reinforces the
+  educational goal at the moment of judgement. Harness +1 (every event has an insight). **27/27 green.**
+- Core game is feature-complete; only optional 'compress post-delivery' remains.
