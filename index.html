@@ -485,20 +485,20 @@ const CHARS=[
 // NPC walk sprite assignments
 const NPCS=[
   {id:'sarah',name:'Sarah',role:'Design Lead',hair:C.hairBlonde,hairStyle:'long',skin:C.skinA,shirt:C.shirtBlue,pants:C.pantsBlue,eye:'#2848a0',
-   officeX:12,officeY:4,siteX:-1,siteY:-1,pos:{studio:[4,6]},walkSheet:'char_amelia_walk',idleSheet:'char_amelia_idle',
-   aiState:'idle',aiTimer:0,aiTargetX:12,aiTargetY:4,aiFacing:0,aiFrame:0,aiExpr:'working',aiExprTimer:0,curX:12*16,curY:4*16},
+   officeX:13,officeY:5,siteX:-1,siteY:-1,pos:{studio:[4,6]},walkSheet:'char_amelia_walk',idleSheet:'char_amelia_idle',
+   aiState:'idle',aiTimer:0,aiTargetX:13,aiTargetY:5,aiFacing:0,aiFrame:0,aiExpr:'working',aiExprTimer:0,curX:13*16,curY:5*16},
   {id:'mike',name:'Mike',role:'Site Manager',hair:C.hairBrown,hairStyle:'short',skin:C.skinB,shirt:C.hiVisOrange,pants:C.pantsDk,eye:'#284828',
-   officeX:16,officeY:4,siteX:12,siteY:13,walkSheet:'char_bob_walk',idleSheet:'char_bob_idle',
-   aiState:'idle',aiTimer:0,aiTargetX:16,aiTargetY:4,aiFacing:0,aiFrame:0,aiExpr:'chat',aiExprTimer:0,curX:16*16,curY:4*16},
+   officeX:18,officeY:5,siteX:12,siteY:13,walkSheet:'char_bob_walk',idleSheet:'char_bob_idle',
+   aiState:'idle',aiTimer:0,aiTargetX:18,aiTargetY:5,aiFacing:0,aiFrame:0,aiExpr:'chat',aiExprTimer:0,curX:18*16,curY:5*16},
   {id:'emma',name:'Emma',role:'Safety Lead',hair:C.hairRed,hairStyle:'long',skin:C.skinA,shirt:C.hiVis,pants:C.pantsDk,eye:'#285828',hat:C.yellow,
-   officeX:12,officeY:8,siteX:22,siteY:8,walkSheet:'char_alex_walk',idleSheet:'char_alex_idle',
-   aiState:'idle',aiTimer:0,aiTargetX:12,aiTargetY:8,aiFacing:0,aiFrame:0,aiExpr:'stress',aiExprTimer:0,curX:12*16,curY:8*16},
+   officeX:13,officeY:9,siteX:22,siteY:8,walkSheet:'char_alex_walk',idleSheet:'char_alex_idle',
+   aiState:'idle',aiTimer:0,aiTargetX:13,aiTargetY:9,aiFacing:0,aiFrame:0,aiExpr:'stress',aiExprTimer:0,curX:13*16,curY:9*16},
   {id:'james',name:'James',role:'Commercial Mgr',hair:C.hairGray,hairStyle:'short',skin:C.skinB,shirt:C.suitGray,pants:C.pantsDk,eye:'#3a3020',
-   officeX:16,officeY:8,siteX:-1,siteY:-1,walkSheet:'char_adam_walk',idleSheet:'char_adam_idle',
-   aiState:'idle',aiTimer:0,aiTargetX:16,aiTargetY:8,aiFacing:0,aiFrame:0,aiExpr:'working',aiExprTimer:0,curX:16*16,curY:8*16},
+   officeX:18,officeY:9,siteX:-1,siteY:-1,walkSheet:'char_adam_walk',idleSheet:'char_adam_idle',
+   aiState:'idle',aiTimer:0,aiTargetX:18,aiTargetY:9,aiFacing:0,aiFrame:0,aiExpr:'working',aiExprTimer:0,curX:18*16,curY:9*16},
   {id:'priya',name:'Priya',role:'Comms Lead',hair:C.hairBlack,hairStyle:'long',skin:C.skinC,shirt:C.shirtPurple,pants:C.pantsBlue,eye:'#1a2848',
-   officeX:13,officeY:12,siteX:-1,siteY:-1,walkSheet:'char_amelia_walk',idleSheet:'char_amelia_idle',
-   aiState:'idle',aiTimer:0,aiTargetX:13,aiTargetY:12,aiFacing:0,aiFrame:0,aiExpr:'chat',aiExprTimer:0,curX:13*16,curY:12*16},
+   officeX:16,officeY:13,siteX:-1,siteY:-1,walkSheet:'char_amelia_walk',idleSheet:'char_amelia_idle',
+   aiState:'idle',aiTimer:0,aiTargetX:16,aiTargetY:13,aiFacing:0,aiFrame:0,aiExpr:'chat',aiExprTimer:0,curX:16*16,curY:13*16},
   {id:'raj',name:'Raj',role:'Supplier Account Mgr',hair:C.hairBlack,hairStyle:'short',skin:C.skinC,shirt:C.suitGray,pants:C.pantsDk,eye:'#2a2018',
    officeX:-1,officeY:-1,siteX:-1,siteY:-1,pos:{supplier:[4,5]},walkSheet:'char_adam_walk',idleSheet:'char_adam_idle',
    aiState:'idle',aiTimer:0,aiTargetX:4,aiTargetY:5,aiFacing:0,aiFrame:0,aiExpr:'chat',aiExprTimer:0},
@@ -510,8 +510,8 @@ const NPCS=[
 // NPC wander targets in office
 // Open-plan walkable cells only (x11-20), clear of desk footprints — NPCs wander here.
 const NPC_WANDER_OFFICE=[
-  {x:11,y:4},{x:18,y:4},{x:15,y:5},{x:11,y:9},{x:18,y:9},
-  {x:14,y:9},{x:15,y:13},{x:11,y:15},{x:15,y:15},{x:14,y:16}
+  {x:11,y:5},{x:20,y:5},{x:16,y:6},{x:11,y:10},{x:20,y:10},
+  {x:15,y:10},{x:16,y:14},{x:11,y:17},{x:15,y:17},{x:18,y:13}
 ];
 // Walkable railway-site cells (near the works) for site NPCs.
 const NPC_WANDER_SITE=[
@@ -537,47 +537,47 @@ function drawSprite(ctx,name,dx,dy){
 
 // === MAP DATA ===
 
-// Office: 30x26 — Expanded for camera clearance and locker room
-const OFFICE_W=30,OFFICE_H=18;
+// Office: 34x20 — roomier, spread-out floor plan (rooms breathe, clear walkways)
+const OFFICE_W=34,OFFICE_H=20;
 // Walled-room office floor plan (ground layer). Chars:
 //  '#' wall · '.' open-plan wood · 'M' meeting carpet · 'O' your-office carpet
-//  'B' break tile · 'D' documents tile · '+' doorway (walkable) · 'X' exit-to-site
+//  'B' break/utility tile · 'D' documents tile · '+' doorway (walkable) · 'X' way out to the town
 const OMAP=(()=>{
   const W=OFFICE_W,H=OFFICE_H,g=[];
   for(let y=0;y<H;y++){const r=[];for(let x=0;x<W;x++)r.push('.');g.push(r);}
   for(let x=0;x<W;x++){g[0][x]='#';g[H-1][x]='#';}
   for(let y=0;y<H;y++){g[y][0]='#';g[y][W-1]='#';}
-  for(let y=1;y<H-1;y++){g[y][10]='#';g[y][21]='#';}            // side-room partitions
+  for(let y=1;y<H-1;y++){g[y][10]='#';g[y][25]='#';}            // side-room partitions (wider open plan between)
   for(let x=1;x<10;x++)g[8][x]='#';                             // left band: meeting/break divider
-  for(let x=22;x<29;x++)g[8][x]='#';                            // right band: office/docs divider
-  for(let y=1;y<8;y++){for(let x=1;x<10;x++)g[y][x]='M';for(let x=22;x<29;x++)g[y][x]='O';}
-  for(let y=9;y<H-1;y++){for(let x=1;x<10;x++)g[y][x]='B';for(let x=22;x<29;x++)g[y][x]='D';}
-  [[3,10],[4,10],[11,10],[12,10],[3,21],[4,21],[11,21],[12,21]].forEach(d=>{g[d[0]][d[1]]='+';}); // 2-tile doorways
-  // Dedicated Changing Room (PPE) walled off in the bottom-right of the open plan (x17–20, rows13–16)
-  for(let x=17;x<=20;x++)g[12][x]='#';                          // top wall
-  for(let y=13;y<=15;y++)g[y][16]='#'; g[16][16]='+';           // left wall + doorway in
-  for(let y=13;y<=16;y++)for(let x=17;x<=20;x++)g[y][x]='B';    // utility/tile floor inside
-  g[H-1][15]='X';                                              // exit to railway site
+  for(let x=26;x<33;x++)g[8][x]='#';                            // right band: office/docs divider
+  for(let y=1;y<8;y++){for(let x=1;x<10;x++)g[y][x]='M';for(let x=26;x<33;x++)g[y][x]='O';}
+  for(let y=9;y<H-1;y++){for(let x=1;x<10;x++)g[y][x]='B';for(let x=26;x<33;x++)g[y][x]='D';}
+  [[3,10],[4,10],[12,10],[13,10],[3,25],[4,25],[12,25],[13,25]].forEach(d=>{g[d[0]][d[1]]='+';}); // 2-tile doorways
+  // Dedicated Changing Room (PPE) walled off in the bottom-right of the open plan (x21–24, rows15–18)
+  for(let x=21;x<=24;x++)g[14][x]='#';                          // top wall
+  for(let y=15;y<=17;y++)g[y][20]='#'; g[18][20]='+';          // left wall + doorway in
+  for(let y=15;y<=18;y++)for(let x=21;x<=24;x++)g[y][x]='B';    // utility/tile floor inside
+  g[H-1][16]='X';                                              // way out to the town
   return g;
 })();
 const OFFICE_GROUND={'.':'floor','+':'floor','X':'floor','M':'carpetM','O':'carpetO','B':'tilefloor','D':'tilefloor','#':'wall'};
 // Furniture objects (atlas key + tile anchor). Placement keeps every doorway clear.
 const OFFICE_OBJECTS=[
-  // open-plan workstations (teammates sit at these)
-  {a:'desk',tx:12,ty:2},{a:'desk',tx:16,ty:2},{a:'desk',tx:12,ty:6},{a:'desk',tx:16,ty:6},{a:'desk',tx:13,ty:10},
+  // open-plan workstations (teammates sit at these), spread across a roomier floor
+  {a:'desk',tx:13,ty:3},{a:'desk',tx:18,ty:3},{a:'desk',tx:13,ty:7},{a:'desk',tx:18,ty:7},{a:'desk',tx:16,ty:11},
   // meeting room: table + chairs
   {a:'table',tx:2,ty:3},{a:'chair',tx:2,ty:1},{a:'chair',tx:6,ty:1},{a:'chair',tx:2,ty:6},{a:'chair',tx:6,ty:6},
   // your office
-  {a:'desk',tx:24,ty:3},{a:'plant',tx:27,ty:5},
+  {a:'desk',tx:28,ty:3},{a:'plant',tx:31,ty:5},
   // break room
-  {a:'sofa',tx:2,ty:10},{a:'watercooler',tx:7,ty:10},{a:'plant',tx:2,ty:14},
+  {a:'sofa',tx:2,ty:11},{a:'watercooler',tx:7,ty:11},{a:'plant',tx:2,ty:16},
   // documents
-  {a:'bookshelf',tx:24,ty:9},{a:'bookshelf',tx:26,ty:9},{a:'bookshelf',tx:24,ty:13},{a:'bookshelf',tx:26,ty:13},
+  {a:'bookshelf',tx:27,ty:10},{a:'bookshelf',tx:30,ty:10},{a:'bookshelf',tx:27,ty:15},{a:'bookshelf',tx:30,ty:15},
   // reception + accent plants
-  {a:'desk',tx:12,ty:14},{a:'plant',tx:11,ty:14},{a:'plant',tx:19,ty:2},
-  {a:'lockers',tx:18,ty:13}, // PPE lockers inside the dedicated Changing Room — zone at (18,15)
-  {a:'door',tx:12,ty:1},     // internal door to the Boardroom (gate reviews with Dr. Okoye)
-  {a:'door',tx:14,ty:16}     // the way out to the town (non-solid)
+  {a:'desk',tx:13,ty:16},{a:'plant',tx:12,ty:16},{a:'plant',tx:20,ty:2},
+  {a:'lockers',tx:22,ty:15}, // PPE lockers inside the dedicated Changing Room — zone at (22,17)
+  {a:'door',tx:13,ty:1},     // internal door to the Boardroom (gate reviews with Dr. Okoye)
+  {a:'door',tx:16,ty:18}     // the way out to the town (non-solid)
 ];
 const OFFICE_SOLID_OBJ={desk:1,table:1,sofa:1,bookshelf:1,watercooler:1,lockers:1};
 // Solid cells for an object = its base row only (so you can walk *behind* tall furniture).
@@ -732,7 +732,7 @@ const TOWN_SOLID=buildInteriorSolid(TOWNMAP,TOWN_W,TOWN_H,TOWN_OBJECTS,TOWN_SOLI
 // ===== MAP REGISTRY — all map-aware code reads MD()/MAPS[id] (so new areas drop in as data) =====
 const MAPS={
   town:{W:TOWN_W,H:TOWN_H,grid:TOWNMAP,ground:TOWN_GROUND,objects:TOWN_OBJECTS,solidObj:TOWN_SOLID_OBJ,solid:TOWN_SOLID,wander:[],spawn:{x:9,y:13},interior:false},
-  office:{W:OFFICE_W,H:OFFICE_H,grid:OMAP,ground:OFFICE_GROUND,objects:OFFICE_OBJECTS,solidObj:OFFICE_SOLID_OBJ,solid:OFFICE_SOLID,wander:[],spawn:{x:14,y:15},interior:true},
+  office:{W:OFFICE_W,H:OFFICE_H,grid:OMAP,ground:OFFICE_GROUND,objects:OFFICE_OBJECTS,solidObj:OFFICE_SOLID_OBJ,solid:OFFICE_SOLID,wander:[],spawn:{x:16,y:17},interior:true},
   site:{W:SITE_W,H:SITE_H,grid:SMAP,ground:SITE_GROUND,objects:SITE_OBJECTS,solidObj:SITE_SOLID_OBJ,solid:SITE_SOLID,wander:NPC_WANDER_SITE,spawn:{x:3,y:13},interior:false},
   supplier:{W:SUPPLIER_W,H:SUPPLIER_H,grid:SUPMAP,ground:SUPPLIER_GROUND,objects:SUPPLIER_OBJECTS,solidObj:SUPPLIER_SOLID_OBJ,solid:SUPPLIER_SOLID,wander:[],spawn:{x:12,y:15},interior:true},
   boardroom:{W:BOARD_W,H:BOARD_H,grid:BOARDMAP,ground:BOARD_GROUND,objects:BOARD_OBJECTS,solidObj:BOARD_SOLID_OBJ,solid:BOARD_SOLID,wander:[],spawn:{x:11,y:13},interior:true},
@@ -759,14 +759,13 @@ const AREA_LABELS={
   ],
   office:[
     {x:3,y:1,text:'Meeting Room',color:'#5b8ef5'},
-    {x:11,y:3,text:'↑ Boardroom',color:'#caa6e8'},
-    {x:15,y:8,text:'Open Plan',color:'#8a7fad'},
-    {x:23,y:1,text:'Your Office',color:'#f7c948'},
-    {x:3,y:9,text:'Break Room',color:'#4aca8a'},
-    {x:23,y:9,text:'Documents',color:'#b08fd8'},
-    {x:11,y:13,text:'Reception',color:'#8a7fad'},
-    {x:17,y:16,text:'Changing Room',color:'#e88030'},
-    {x:14,y:15,text:'↓ Out to Town',color:'#7fe0a0'}
+    {x:13,y:3,text:'↑ Boardroom',color:'#caa6e8'},
+    {x:27,y:1,text:'Your Office',color:'#f7c948'},
+    {x:3,y:10,text:'Break Room',color:'#4aca8a'},
+    {x:27,y:10,text:'Documents',color:'#b08fd8'},
+    {x:13,y:14,text:'Reception',color:'#8a7fad'},
+    {x:21,y:19,text:'Changing Room',color:'#e88030'},
+    {x:16,y:17,text:'↓ Out to Town',color:'#7fe0a0'}
   ],
   site:[
     {x:3,y:6,text:'Station',color:'#5b8ef5'},
@@ -803,16 +802,16 @@ const ZONES={
     {id:'to_site',name:'Construction Site Access',x:31,y:13,w:3,h:3,hint:'Press SPACE \u2014 Access the Construction Site (PPE)'}
   ],
   office:[
-    {id:'desk',name:'Your Office',x:23,y:3,w:4,h:3,hint:'Press SPACE \u2014 Your Desk'},
+    {id:'desk',name:'Your Office',x:27,y:3,w:4,h:3,hint:'Press SPACE \u2014 Your Desk'},
     {id:'meeting',name:'Meeting Room',x:3,y:3,w:5,h:3,hint:'Press SPACE \u2014 Meeting Room'},
     {id:'planning',name:'Planning Board',x:2,y:1,w:3,h:1,hint:'Press SPACE \u2014 Planning Board'},
-    {id:'breakroom',name:'Break Room',x:3,y:11,w:5,h:3,hint:'Press SPACE \u2014 Break Room'},
-    {id:'documents',name:'Documents',x:24,y:10,w:4,h:3,hint:'Press SPACE \u2014 Documents'},
-    {id:'noticeboard',name:'Notice Board',x:18,y:1,w:2,h:1,hint:'Press SPACE \u2014 Notice Board'},
-    {id:'to_boardroom',name:'Boardroom',x:12,y:1,w:2,h:1,hint:'Press SPACE \u2014 Enter the Boardroom'},
-    {id:'reception',name:'Reception',x:12,y:14,w:3,h:1,hint:'Press SPACE \u2014 Reception'},
-    {id:'locker_room',name:'Changing Room',x:18,y:15,w:2,h:1,hint:'Press SPACE \u2014 Changing Room (PPE)'},
-    {id:'return_town',name:'Out to Town',x:14,y:16,w:2,h:2,hint:'Press SPACE \u2014 Out to the Town'}
+    {id:'breakroom',name:'Break Room',x:3,y:12,w:5,h:3,hint:'Press SPACE \u2014 Break Room'},
+    {id:'documents',name:'Documents',x:27,y:12,w:4,h:3,hint:'Press SPACE \u2014 Documents'},
+    {id:'noticeboard',name:'Notice Board',x:20,y:1,w:2,h:1,hint:'Press SPACE \u2014 Notice Board'},
+    {id:'to_boardroom',name:'Boardroom',x:13,y:1,w:2,h:1,hint:'Press SPACE \u2014 Enter the Boardroom'},
+    {id:'reception',name:'Reception',x:13,y:15,w:3,h:1,hint:'Press SPACE \u2014 Reception'},
+    {id:'locker_room',name:'Changing Room',x:22,y:17,w:2,h:1,hint:'Press SPACE \u2014 Changing Room (PPE)'},
+    {id:'return_town',name:'Out to Town',x:16,y:18,w:2,h:2,hint:'Press SPACE \u2014 Out to the Town'}
   ],
   supplier:[
     {id:'return_town',name:'Out to Town',x:11,y:15,w:2,h:1,hint:'Press SPACE \u2014 Out to the Town'},
@@ -3893,7 +3892,7 @@ function drawTransition(ctx){
 // Skippable; ends with the player stood by the office, told to go meet the team.
 const ARRIVAL_CARY=14*TS-6;            // car sits on the road (rows 14–15)
 const ARRIVAL_CARX0=-60;               // starts off-screen to the left
-const ARRIVAL_PARKX=120;               // parks just in front of the Project Office
+const ARRIVAL_PARKX=88;                // parks just LEFT of the spawn so the PM steps out beside (not on) the car
 function startArrival(){
   // Frame the office/road; the camera is held still while the car drives in.
   const vpw=IW-110, vph=IH, mw=mapW()*TS, mh=mapH()*TS;
@@ -4291,6 +4290,29 @@ function idleBob(seed){ return Math.round(Math.sin(Date.now()/520+(seed||0)*0.7)
 // Is this NPC the target of an incomplete objective this week? (used to declutter status over their head)
 function npcHasObjective(id){ return (S.objectives||[]).some(o=>o.type==='npc'&&o.target===id&&!S.completedObj.includes(o.type+'_'+o.target+'_'+S.week)); }
 
+// Hub routing: on the outdoor town, work out which building entrance each pending objective lives behind,
+// so we can breadcrumb the player to the right building (their objectives are all *inside* the buildings).
+const TOWN_DEST_ENTRANCE={office:'to_office',boardroom:'to_office',site:'to_site',supplier:'to_supplier',studio:'to_studio'};
+function townRouteEntrances(){
+  const ents=new Set();
+  for(const o of (S.objectives||[])){
+    if(S.completedObj.includes(o.type+'_'+o.target+'_'+S.week))continue;
+    let dest=null;
+    if(o.type==='zone'){
+      // The target may already BE a town entrance (e.g. the site access) — breadcrumb it directly.
+      if((ZONES.town||[]).some(z=>z.id===o.target)){ ents.add(o.target); continue; }
+      for(const mn of ['office','site','supplier','studio','boardroom']){ if((ZONES[mn]||[]).some(z=>z.id===o.target)){ dest=mn; break; } }
+    }else if(o.type==='npc'){
+      const n=NPCS.find(x=>x.id===o.target);
+      if(n){ for(const mn of ['office','supplier','boardroom','studio','site']){ if(npcCell(n,mn)){ dest=mn; break; } } }
+    }
+    if(dest&&TOWN_DEST_ENTRANCE[dest])ents.add(TOWN_DEST_ENTRANCE[dest]);
+  }
+  // Heading to a worksite but not kitted out? Route to the office first (the Changing Room is inside it).
+  if(!S.ppeEquipped&&(ents.has('to_site')||ents.has('to_supplier')))ents.add('to_office');
+  return ents;
+}
+
 // Stardew-style "!" markers bobbing over each incomplete objective's target (NPC or zone),
 // so newcomers/children always know where to go next.
 function drawObjectiveMarkers(ctx){
@@ -4316,19 +4338,21 @@ function drawObjectiveMarkers(ctx){
     ctx.fillText('!',wx,wy+bob+1);ctx.textAlign='left';ctx.textBaseline='alphabetic';
     ctx.restore();
   }
-  // PPE breadcrumb: if a site visit is pending but you're not kitted out, point at the Project Office
-  // (the Changing Room with the PPE lockers now lives inside the office).
-  const inc=t=>(S.objectives||[]).some(o=>o.target===t&&!S.completedObj.includes(o.type+'_'+o.target+'_'+S.week));
-  if(S.map==='town'&&!S.ppeEquipped&&inc('to_site')){
-    const z=(ZONES.town||[]).find(x=>x.id==='to_office');
-    if(z){ const wx=z.x*TS+z.w*8, wy=z.y*TS-8;
+  // Hub routing breadcrumb: on the town, mark the building entrance(s) that lead to this week's objectives,
+  // so a newcomer always knows which building to walk into (all objectives live *inside* the buildings).
+  if(S.map==='town'){
+    const ents=townRouteEntrances();
+    ents.forEach(id=>{
+      const z=(ZONES.town||[]).find(x=>x.id===id); if(!z)return;
+      const wx=z.x*TS+z.w*8, wy=z.y*TS-10;
       ctx.save();
-      ctx.fillStyle='#e88030';ctx.strokeStyle='#3a2210';ctx.lineWidth=1;
+      ctx.fillStyle='rgba(20,12,6,0.35)';ctx.beginPath();ctx.ellipse(wx,wy+8,4,1.5,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='#f7c948';ctx.strokeStyle='#3a2210';ctx.lineWidth=1;
       ctx.beginPath();ctx.arc(wx,wy+bob,5,0,Math.PI*2);ctx.fill();ctx.stroke();
       ctx.fillStyle='#3a2210';ctx.font='bold 8px monospace';ctx.textAlign='center';ctx.textBaseline='middle';
       ctx.fillText('!',wx,wy+bob+1);ctx.textAlign='left';ctx.textBaseline='alphabetic';
       ctx.restore();
-    }
+    });
   }
 }
 
@@ -4367,11 +4391,12 @@ function render(){
   // Area labels (after tiles, before entities)
   drawAreaLabels(CTX);
 
-  // Arrival cut-scene: the car drives in (behind the characters)
-  if(S.arrival)drawArrivalCar(CTX);
-
   // Collect all entities for Y-sorting
   const entities=[];
+
+  // Arrival cut-scene: the car is y-sorted with the characters so the PM reads as stepping out
+  // beside/behind it (never drawn on top of it).
+  if(S.arrival){ const cy=S.arrival.carY+26; entities.push({y:cy,draw:()=>drawArrivalCar(CTX)}); }
 
   // Player — hidden while still in the car during the arrival drive/park beats
   const pmHidden=S.arrival&&(S.arrival.phase==='drive'||S.arrival.phase==='park');

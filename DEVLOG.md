@@ -617,3 +617,18 @@ them and spread the furniture so each room breathes, keeping every spawn / door 
 - Harness hardened: the new-interiors test now also asserts no solid furniture lands on a door/spawn cell and
   nothing is drawn into/over the walls (the office already had this; the 3 areas now do too). **58/58 green**,
   node --check clean, all three rendered via Python to eyeball spacing. Independent review: no P0/P1.
+
+
+### 2026-06-15 — Iteration 41 (office spread-out + arrival fix + hub routing)
+Three changes, all harness-gated (59/59) + Python-rendered:
+- **Office spread-out treatment:** enlarged 30×18 → **34×20** with rooms that breathe — wider open plan with
+  the five workstations spaced out, roomier meeting / break / your-office / documents rooms, clear walkways.
+  The walled Changing Room and the internal Boardroom door are preserved. OMAP, furniture, MAPS spawn, ZONES,
+  AREA_LABELS, all 5 NPC office seats and the wander targets updated in lockstep; harness office cells refreshed.
+- **Arrival fix:** the PM previously drew *on top of* the car. The car is now y-sorted with the characters and
+  parks just LEFT of the spawn, so the PM steps out clearly **beside** it (not overlapping). Re-rendered to confirm.
+- **Hub routing breadcrumb:** new `townRouteEntrances()` maps each pending objective to the building entrance
+  that holds it; on the town a `!` now points the player at the right building (so after the arrival they're
+  guided into the Office to meet the team). Worksite objectives without PPE also route via the office. New
+  harness test covers the routing (office on wk32, site access, the no-PPE office detour, completed drop-out).
+node --check clean; **59/59 green**; office + arrival rendered via Python. (Independent review in flight.)

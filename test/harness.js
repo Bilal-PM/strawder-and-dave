@@ -76,7 +76,7 @@ const scripts=[...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script
 let code=scripts.join('\n;\n');
 // epilogue: capture top-level consts/fns into global for assertions
 const names=['S','applyEffects','advanceWeek','getPhase','getPhaseIdx','getDlgPhaseIdx','chooseDlg','NPCS','OMAP','SMAP','ZONES','isSolid','render','updatePlayer','startGame','newGame','selectCharacter','beginGame','saveGame','loadGame','EVENTS','PHASES','DLG','transitionToMap','showEvent','triggerEvent','getObjectives','updateHUD','updateNotepad','WALK_FRAMES','updateNPCAI','CHARS','ATLAS','drawSprite','OFFICE_W','OFFICE_H','OFFICE_OBJECTS','OFFICE_SOLID_OBJ','objBaseCells','OFFICE_SOLID','SITE_W','SITE_H','SITE_OBJECTS','SITE_SOLID_OBJ','ZONES','NPC_WANDER_OFFICE','NPC_WANDER_SITE','siteTrackFrac','POPUPS','enterWeek','afterEvent','chooseEvent','closeReport','REPORT_WEEKS','getObjectives','showEndScreen','chooseDlg','openNPCDialogue','interactionSpent','spendInteraction','getDlgPhaseIdx','EVENTS','showInsight','rng','seedRng','DIFFICULTY','diff','getPMRating','getLeadershipArchetype','resolveRisk','eventCallback','PERSONA','reflectionNote','showEvent','showReport','applyEventChoice','skipPhase','hintsVisible','metricDeltaHTML','snapshotMetrics','showLockerRoom','togglePPE','closeEventResult','presentEvent','beginDecision','eventHesitate','eventTimerMs','startEventTimer','stopEventTimer','tickEventTimer','SCENES','THEMES','getTheme','setMasterVolume','playMumble','VOICE','playSFX','playLocationAmbient','startBGM','stopBGM','DELIVERABLES','deliverableAvailable','deliverablesAvailableCount','openDeliverable','recordMetricHistory','perfPanelHTML','perfBarsHTML','showDocsOverlay','startNewWeek','MAPS','MD','npcCell','mapW','mapH','SUPPLIER_W','SUPPLIER_H','SUPMAP','transitionToMap','updateTransition','tallyLeadership','dominantStyle','STYLE_KEY','activateZone','PPE_REQUIRED','completeObj','AREA_LABELS','TOWN_W','TOWN_H','TOWNMAP',
-'startArrival','updateArrival','skipArrival','endArrival','updateCamera','CS_MOODS','csEnterClass'];
+'startArrival','updateArrival','skipArrival','endArrival','updateCamera','CS_MOODS','csEnterClass','townRouteEntrances'];
 code+='\n;globalThis.__G=(function(){const o={};'+names.map(n=>`try{o['${n}']=${n};}catch(e){}`).join('')+'return o;})();';
 
 const results={pass:[],fail:[]};
@@ -130,13 +130,13 @@ check('office map: doorways/exit walkable, no furniture on doorways, seats clear
   const solid=(x,y)=>g.isSolid(x,y);
   for(let y=0;y<H;y++)for(let x=0;x<W;x++){ const c=OMAP[y][x]; if((c==='+'||c==='X')&&solid(x,y)) throw new Error('doorway/exit solid @'+x+','+y); }
   g.OFFICE_OBJECTS.forEach(o=>{ if(g.OFFICE_SOLID_OBJ[o.a]) g.objBaseCells(o).forEach(c=>{ const ch=OMAP[c[1]]&&OMAP[c[1]][c[0]]; if(ch==='+'||ch==='X') throw new Error('solid object '+o.a+' base on doorway @'+c); }); });
-  if(solid(14,15)) throw new Error('player spawn (14,15) is solid');
+  if(solid(16,17)) throw new Error('player spawn (16,17) is solid');
   g.NPCS.forEach(n=>{ if(n.officeX<0)return; if(n.officeX>=W||n.officeY>=H) throw new Error('seat OOB '+n.id); if(solid(n.officeX,n.officeY)) throw new Error('seat solid '+n.id); });
   // flood-fill reachability from spawn
-  const seen=Array.from({length:H},()=>new Array(W).fill(false)); const st=[[14,15]]; seen[15][14]=true;
+  const sp=g.MAPS.office.spawn; const seen=Array.from({length:H},()=>new Array(W).fill(false)); const st=[[sp.x,sp.y]]; seen[sp.y][sp.x]=true;
   while(st.length){ const p=st.pop(); [[1,0],[-1,0],[0,1],[0,-1]].forEach(d=>{ const nx=p[0]+d[0],ny=p[1]+d[1]; if(nx>=0&&ny>=0&&nx<W&&ny<H&&!seen[ny][nx]&&!solid(nx,ny)){ seen[ny][nx]=true; st.push([nx,ny]); } }); }
-  const rooms={meeting:[5,3],yourOffice:[25,3],breakRoom:[5,11],documents:[25,11],openPlan:[15,8],
-    boardroomDoor:[12,1],changingRoom:[18,16],return_town:[14,16]}; // boardroom + changing room live in the office now
+  const rooms={meeting:[5,3],yourOffice:[29,3],breakRoom:[5,12],documents:[29,12],openPlan:[16,8],
+    boardroomDoor:[13,1],changingRoom:[22,17],return_town:[16,18]}; // boardroom + changing room live in the office now
   for(const k in rooms){ const r=rooms[k]; if(!seen[r[1]][r[0]]) throw new Error('room/door unreachable: '+k+' @'+r); }
 });
 check('town hub: PM spawn walkable, the 3 building entrances + the road-end site access reachable, worksites PPE-gated',()=>{
@@ -202,6 +202,23 @@ check('arrival cut-scene: drives in, parks the PM at the town spawn, waits at th
   // dismiss → control handed back
   g.skipArrival();
   if(g.S.arrival!==null) throw new Error('arrival did not end on dismiss');
+});
+check('town hub routing: pending objectives breadcrumb to the building entrance that holds them',()=>{
+  g.S.map='town'; g.S.completedObj=[];
+  // Week 32 objectives all live inside the Project Office → the player must be routed to its entrance.
+  g.S.week=32; g.S.objectives=g.getObjectives(32);
+  let ents=g.townRouteEntrances();
+  if(!ents.has('to_office')) throw new Error('week 32 should breadcrumb to the office');
+  // A pending site-visit objective routes to the site access (and, without PPE, also back via the office).
+  g.S.objectives=[{id:'x',type:'zone',target:'to_site'}]; g.S.ppeEquipped=false;
+  ents=g.townRouteEntrances();
+  if(!ents.has('to_site')) throw new Error('site objective should breadcrumb to the site access');
+  if(!ents.has('to_office')) throw new Error('no PPE → should also route via the office (changing room)');
+  g.S.ppeEquipped=true; ents=g.townRouteEntrances();
+  if(ents.has('to_office')) throw new Error('with PPE on, no need to detour via the office');
+  // completed objectives drop out of the breadcrumbs
+  g.S.objectives=[{id:'x',type:'zone',target:'to_site'}]; g.S.completedObj=['zone_to_site_'+g.S.week];
+  if(g.townRouteEntrances().size!==0) throw new Error('completed objective should not breadcrumb');
 });
 check('arrival skip: SPACE fast-forwards the drive straight to the briefing, then ends it',()=>{
   g.S.screen='game'; g.S.map='town'; g.S.playerName='Test'; g.S.arrival=null;
