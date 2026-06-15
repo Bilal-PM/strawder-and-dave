@@ -507,3 +507,15 @@ Owner playtest of the finish screen:
 - **Sarah fully tagged** as the rewrite template (all ~50 choices stance-tagged, text/effects unchanged), giving
   a balanced D/C/S/V spread per line. Mike/Emma/James/Priya tagging follows next.
 - Harness +1 (valid tags tally, dominant style reads, badge reflects it; Sarah fully tagged). **51/51 green.**
+
+
+### 2026-06-15 — Iteration 34 (Phase E complete: all dialogue stance-tagged)
+- **All 5 core NPCs + Raj + Dr. Okoye hand-tagged** — every one of the ~366 dialogue choices now carries a
+  leadership stance (Directive/Collaborative/Supportive/Visionary), text & effects unchanged. Each line offers a
+  spread of ≥2 distinct stances, so you can deliberately pick how you lead (incl. a clear "dictate" option).
+  Balanced overall spread: D 107 / C 101 / V 100 / S 58.
+- The leadership badge now reads from your real conversational stance across the whole game (via the engine
+  shipped last iteration: stance chips, `tallyLeadership`, `dominantStyle`, style-flavoured archetypes,
+  persisted in save/load).
+- Harness hardened: every core NPC fully tagged + per-line stance variety asserted. **51/51 green**, node --check
+  clean. Phase E (the last big approved piece) is done — leadership styles run end-to-end across the game.

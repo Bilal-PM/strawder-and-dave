@@ -424,8 +424,14 @@ check('docs overlay renders (timeline + journey + deliverables) without throwing
 check('leadership-style engine: valid stance tags tally, dominant style reads, archetype reflects it',()=>{
   // every tagged dialogue choice uses a valid stance (D/C/S/V)
   for(const id in g.DLG){ g.DLG[id].forEach(ph=>ph.forEach(l=>(l.choices||[]).forEach(c=>{ if(c.s&&!g.STYLE_KEY[c.s]) throw new Error('invalid style tag '+c.s+' on '+id); }))); }
-  // Sarah is fully stance-tagged (the rewrite template) — every choice has a stance
-  g.DLG.sarah.forEach(ph=>ph.forEach(l=>l.choices.forEach(c=>{ if(!c.s) throw new Error('Sarah choice missing stance tag: '+c.t); })));
+  // every core NPC + supplier/sponsor is fully stance-tagged, and each line offers a spread (≥2 distinct stances)
+  ['sarah','mike','emma','james','priya','raj','okoye'].forEach(id=>{
+    g.DLG[id].forEach(ph=>ph.forEach(l=>{
+      l.choices.forEach(c=>{ if(!c.s) throw new Error(id+' choice missing stance tag: '+c.t); });
+      const distinct=new Set(l.choices.map(c=>c.s));
+      if(distinct.size<2) throw new Error(id+' line has no stance variety: '+l.text.slice(0,30));
+    }));
+  });
   g.S.leadershipChoices={directive:0,collaborative:0,supportive:0,visionary:0};
   g.tallyLeadership('D'); g.tallyLeadership('D'); g.tallyLeadership('D'); g.tallyLeadership('C');
   if(g.S.leadershipChoices.directive!==3) throw new Error('directive tag not tallied');
