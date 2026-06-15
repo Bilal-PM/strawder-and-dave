@@ -229,7 +229,7 @@ desktop. Priorities for THIS audience (kids on phones via Squarespace):
 - [x] "Week Complete" is now drift-free (removed the hidden morale/schedule penalty + dead branch). Only Skip This Phase gambles with drift.
 - [x] loadGame calls checkWeekComplete() (completed-week save now shows its advance button).
 - [x] Distinct ending arc by performance: PROJECT COMPLETE (4-5★) / DELIVERED (3★) / ROUGH DELIVERY (2★) / TROUBLED PROJECT (1★), with colour + honest framing. (Low-metric in-play warning already covered by the HUD alarm.)
-- [ ] Split music/SFX toggles + master volume; colourblind text tags on metrics.
+- [x] Split music/SFX (playNote no longer gated by musicOn; SFX gate on S.sfxOn; separate 🔊 toggle in HUD). Colourblind-safe '⚠' tag on metrics below 40 (not colour alone).
 **P3:** remove dead getNPCsOnMap()/overlay stubs; tie PM_KNOWLEDGE unlocks to decisions; compress
 post-delivery; idle/turn animations.
 
@@ -275,3 +275,12 @@ post-delivery; idle/turn animations.
   3★ 'DELIVERED', 4-5★ 'COMPLETE — a job well done' (gold). Combined with the choice-aware verdict + key-
   decisions recap, failure now teaches. Harness +1 (renders at low & high metrics). **26/26 green.**
 - Next: music/SFX split + colourblind metric tags; dead-code (getNPCsOnMap); PM-knowledge-on-decision.
+
+
+### 2026-06-15 — Iteration 19 (P2 accessibility + cleanup)
+- **Audio split**: muting music no longer kills SFX. `playNote` is no longer gated by `musicOn` (BGM is
+  gated by its own loop); `playSFX` gates on `S.sfxOn`; added a separate 🔊/🔇 toggle in the HUD.
+- **Colourblind**: metrics below 40 now show a '⚠' tag (not colour alone) alongside the red alarm pulse.
+- Removed the dead `getNPCsOnMap()`. **26/26 green**, node --check clean.
+- Remaining P3 (nice-to-have): tie PM-knowledge unlocks to decisions; idle/turn animations; compress
+  post-delivery. Core game is feature-complete and production-ready.

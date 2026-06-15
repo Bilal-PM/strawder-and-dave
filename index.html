@@ -169,6 +169,7 @@ body{background:#3a2a18;color:#f0e6d3;font-family:'Press Start 2P',monospace;ove
   <div class="hg">
     <span id="hStars" style="color:#f7c948;font-size:10px"></span>
     <button style="background:none;border:none;color:#c4a878;cursor:pointer;font-family:'Press Start 2P',monospace;font-size:8px" onclick="toggleMusic()" id="musBtn">&#9835;</button>
+    <button style="background:none;border:none;cursor:pointer;font-size:12px" onclick="toggleSFX()" id="sfxBtn" title="Sound effects">&#128266;</button>
     <button style="background:none;border:none;color:#5b8ef5;cursor:pointer;font-family:'Press Start 2P',monospace;font-size:10px" onclick="showHelp()">?</button>
   </div>
 </div>
@@ -259,7 +260,7 @@ const S={
   eventsDone:[],dlgCooldowns:{},
   coffeeUsed:false,siteUnlocked:false,
   introStep:0,weekTransOpen:false,
-  musicOn:true,gameRunning:false,
+  musicOn:true,sfxOn:true,gameRunning:false,
   nearZone:null,nearNPC:null,dlgOpen:false,eventOpen:false,
   keys:{},lastTime:0,animTimer:0,
   weekObjMet:false,
@@ -1022,7 +1023,7 @@ function initAudio(){
 }
 
 function playNote(freq,dur,type,vol,delay){
-  if(!audioCtx||!S.musicOn)return;
+  if(!audioCtx)return; // BGM is gated by its own loop's musicOn check; SFX gate via sfxOn in playSFX
   try{
     const t=audioCtx.currentTime+(delay||0);
     const o=audioCtx.createOscillator(),g=audioCtx.createGain();
@@ -1037,6 +1038,7 @@ function playNote(freq,dur,type,vol,delay){
 }
 
 function playSFX(type){
+  if(S.sfxOn===false)return;
   if(!audioCtx)initAudio();
   switch(type){
     case'step':playNote(100+Math.random()*50,0.05,'triangle',0.03);break;
@@ -1152,6 +1154,11 @@ function toggleMusic(){
   S.musicOn=!S.musicOn;
   document.getElementById('musBtn').textContent=S.musicOn?'\u266B ON':'\u266B OFF';
   if(S.musicOn&&S.screen==='game')startBGM();else stopBGM();
+}
+function toggleSFX(){
+  S.sfxOn=!S.sfxOn;
+  const b=document.getElementById('sfxBtn'); if(b)b.textContent=S.sfxOn?'\uD83D\uDD0A':'\uD83D\uDD07';
+  if(S.sfxOn)playSFX('interact');
 }
 
 // === INPUT (Bug 4 fix: stopPropagation on name input) ===
@@ -1365,17 +1372,6 @@ function checkProximity(){
   } else {
     hint.style.display='none';
   }
-}
-
-function getNPCsOnMap(){
-  return NPCS.filter(n=>{
-    if(S.map==='office')return n.officeX>0;
-    return n.siteX>0;
-  }).map(n=>({
-    ...n,
-    x:n.curX!==undefined?n.curX/TS:(S.map==='office'?n.officeX:n.siteX),
-    y:n.curY!==undefined?n.curY/TS:(S.map==='office'?n.officeY:n.siteY)
-  }));
 }
 
 // === INTERACTION ===
@@ -2158,11 +2154,12 @@ function updateHUD(){
   [['mSch','schedule'],['mBud','budget'],['mSaf','safety'],['mQty','quality'],['mMor','morale']].forEach(p=>{
     const b=document.getElementById(p[0]); if(b){ b.style.width=S.metrics[p[1]]+'%'; b.classList.toggle('danger',S.metrics[p[1]]<40); } // low-metric alarm
   });
-  document.getElementById('pSch').textContent=S.metrics.schedule;
-  document.getElementById('pBud').textContent=S.metrics.budget;
-  document.getElementById('pSaf').textContent=S.metrics.safety;
-  document.getElementById('pQty').textContent=S.metrics.quality;
-  document.getElementById('pMor').textContent=S.metrics.morale;
+  const mk=v=>v<40?(v+'⚠'):(''+v); // colour-blind-safe low-metric tag (not colour alone)
+  document.getElementById('pSch').textContent=mk(S.metrics.schedule);
+  document.getElementById('pBud').textContent=mk(S.metrics.budget);
+  document.getElementById('pSaf').textContent=mk(S.metrics.safety);
+  document.getElementById('pQty').textContent=mk(S.metrics.quality);
+  document.getElementById('pMor').textContent=mk(S.metrics.morale);
   document.getElementById('hStars').textContent=getStarText();
 }
 
