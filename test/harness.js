@@ -148,7 +148,7 @@ check('site map: spawn & compound gate walkable, NPC site seats clear, key areas
   for(const k in pts){ const r=pts[k]; if(!seen[r[1]][r[0]]) throw new Error('site area unreachable: '+k+' @'+r); }
 });
 check('every interaction zone has a walkable cell nearby (so it is reachable to trigger)',()=>{
-  ['office','site','supplier'].forEach(mapName=>{
+  ['office','site','supplier','boardroom','studio'].forEach(mapName=>{
     g.S.map=mapName; const W=g.MAPS[mapName].W, H=g.MAPS[mapName].H;
     (g.ZONES[mapName]||[]).forEach(z=>{
       const cx=z.x+z.w/2, cy=z.y+z.h/2; let ok=false;
@@ -157,27 +157,29 @@ check('every interaction zone has a walkable cell nearby (so it is reachable to 
     });
   });
 });
-check('Supplier map: spawn/return reachable, Raj seat clear, no door blocked, every area reachable',()=>{
-  g.S.map='supplier'; const W=g.MAPS.supplier.W,H=g.MAPS.supplier.H; const solid=(x,y)=>g.isSolid(x,y);
-  const sp=g.MAPS.supplier.spawn;
-  if(solid(sp.x,sp.y)) throw new Error('supplier spawn solid @'+sp.x+','+sp.y);
-  const raj=g.NPCS.find(n=>n.id==='raj'); const cell=g.npcCell(raj,'supplier');
-  if(!cell) throw new Error('raj not placed on supplier map'); if(solid(cell[0],cell[1])) throw new Error('raj seat solid');
-  // flood-fill from spawn; every zone centre must be reachable
-  const seen=Array.from({length:H},()=>new Array(W).fill(false)); const st=[[sp.x,sp.y]]; seen[sp.y][sp.x]=true;
-  while(st.length){ const p=st.pop(); [[1,0],[-1,0],[0,1],[0,-1]].forEach(d=>{ const nx=p[0]+d[0],ny=p[1]+d[1]; if(nx>=0&&ny>=0&&nx<W&&ny<H&&!seen[ny][nx]&&!solid(nx,ny)){ seen[ny][nx]=true; st.push([nx,ny]); } }); }
-  if(!seen[cell[1]][cell[0]]) throw new Error('raj seat unreachable from spawn');
-  (g.ZONES.supplier||[]).forEach(z=>{ let ok=false; for(let dy=-2;dy<=2&&!ok;dy++)for(let dx=-2;dx<=2;dx++){const x=Math.round(z.x+z.w/2+dx),y=Math.round(z.y+z.h/2+dy); if(x>=0&&y>=0&&x<W&&y<H&&seen[y][x]){ok=true;break;}} if(!ok)throw new Error('supplier zone unreachable: '+z.id); });
+check('new interiors (supplier/boardroom/studio): spawn+area NPC reachable, zones reachable, NPC has dialogue',()=>{
+  [['supplier','raj'],['boardroom','okoye'],['studio','sarah']].forEach(([mapName,npcId])=>{
+    g.S.map=mapName; const M=g.MAPS[mapName],W=M.W,H=M.H; const solid=(x,y)=>g.isSolid(x,y);
+    const sp=M.spawn; if(solid(sp.x,sp.y)) throw new Error(mapName+' spawn solid @'+sp.x+','+sp.y);
+    const npc=g.NPCS.find(n=>n.id===npcId); const cell=g.npcCell(npc,mapName);
+    if(!cell) throw new Error(npcId+' not placed on '+mapName); if(solid(cell[0],cell[1])) throw new Error(npcId+' seat solid on '+mapName);
+    if(!g.DLG[npcId]) throw new Error(npcId+' has no dialogue');
+    const seen=Array.from({length:H},()=>new Array(W).fill(false)); const st=[[sp.x,sp.y]]; seen[sp.y][sp.x]=true;
+    while(st.length){ const p=st.pop(); [[1,0],[-1,0],[0,1],[0,-1]].forEach(d=>{ const nx=p[0]+d[0],ny=p[1]+d[1]; if(nx>=0&&ny>=0&&nx<W&&ny<H&&!seen[ny][nx]&&!solid(nx,ny)){ seen[ny][nx]=true; st.push([nx,ny]); } }); }
+    if(!seen[cell[1]][cell[0]]) throw new Error(npcId+' seat unreachable from spawn on '+mapName);
+    (g.ZONES[mapName]||[]).forEach(z=>{ let ok=false; for(let dy=-2;dy<=2&&!ok;dy++)for(let dx=-2;dx<=2;dx++){const x=Math.round(z.x+z.w/2+dx),y=Math.round(z.y+z.h/2+dy); if(x>=0&&y>=0&&x<W&&y<H&&seen[y][x]){ok=true;break;}} if(!ok)throw new Error(mapName+' zone unreachable: '+z.id); });
+  });
 });
-check('map registry: transition office↔supplier sets map+spawn and places/derives NPCs',()=>{
-  g.S.map='office';
-  g.transitionToMap('supplier'); g.updateTransition(500); // drive the fade so the swap callback fires
-  if(g.S.map!=='supplier') throw new Error('did not switch to supplier');
-  if(g.S.px!==g.MAPS.supplier.spawn.x*16) throw new Error('supplier spawn not applied');
-  const raj=g.NPCS.find(n=>n.id==='raj'); if(!g.npcCell(raj,'supplier')) throw new Error('raj has no supplier cell');
-  if(g.npcCell(raj,'office')) throw new Error('raj should NOT be on the office map');
-  g.transitionToMap('office'); g.updateTransition(500);
-  if(g.S.map!=='office') throw new Error('did not return to office');
+check('map registry: transitions office↔(supplier/boardroom/studio) set map+spawn and derive NPCs',()=>{
+  [['supplier','raj'],['boardroom','okoye'],['studio','sarah']].forEach(([mapName,npcId])=>{
+    g.S.map='office';
+    g.transitionToMap(mapName); g.updateTransition(500);
+    if(g.S.map!==mapName) throw new Error('did not switch to '+mapName);
+    if(g.S.px!==g.MAPS[mapName].spawn.x*16) throw new Error(mapName+' spawn not applied');
+    if(!g.npcCell(g.NPCS.find(n=>n.id===npcId),mapName)) throw new Error(npcId+' has no '+mapName+' cell');
+    g.transitionToMap('office'); g.updateTransition(500);
+    if(g.S.map!=='office') throw new Error('did not return to office from '+mapName);
+  });
 });
 check('NPC wander targets are in-bounds and walkable (office & site)',()=>{
   g.S.map='office'; g.NPC_WANDER_OFFICE.forEach(t=>{ if(t.x<0||t.x>=g.OFFICE_W||t.y<0||t.y>=g.OFFICE_H||g.isSolid(t.x,t.y)) throw new Error('office wander bad @'+t.x+','+t.y); });

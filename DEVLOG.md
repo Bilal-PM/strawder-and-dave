@@ -436,3 +436,18 @@ First new playable area, on a clean foundation:
 - Harness +2 (supplier reachability/seats/zones; office↔supplier transition) and the zone-reachability check
   now includes supplier. **49/49 green**, node --check clean. Verified the layout with a Python render.
 - Next: Client & Sponsor boardroom, then the Design studio (each drops in as registry data).
+
+
+### 2026-06-15 — Iteration 29 (Phase D, part 2: Client Boardroom + Design Studio)
+The registry paid off — both areas dropped in as data:
+- **Client & Sponsor Boardroom** (20×12, carpet): boardroom table + chairs, governance binders, a new NPC
+  **Dr. Okoye (Client Sponsor)** with gate-review/funding dialogue + voice. Reached via a **"To Boardroom"**
+  door in the Documents area; a **Gate Review** info zone. Boardroom soundtrack/ambience plays.
+- **Design Consultancy Studio** (20×13, wood): three **drawing-board desks**, a plans table, a spec library.
+  **Sarah relocates here** (via `npc.pos.studio`) — reuses her existing dialogue, no new content. Reached via
+  a **"To Design Studio"** door in the Break Room; a **Drawing Boards** info zone. Studio theme plays.
+- Added `makeWalledGrid`/`buildInteriorSolid` helpers (interiors are now ~6 lines of data each). Office has
+  three labelled exit doors (Studio / Supplier / Boardroom) spread across its rooms.
+- Harness now loops all three new interiors (spawn + area-NPC reachable, NPC has dialogue, every zone
+  reachable) and office↔interior transitions. **49/49 green**, node --check clean. Verified both layouts via
+  Python renders. Phase D complete — five playable areas; next is Phase E (leadership-style dialogue rewrite).
