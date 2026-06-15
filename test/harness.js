@@ -242,6 +242,14 @@ check('new interiors (supplier/boardroom/studio): spawn+area NPC reachable, zone
     while(st.length){ const p=st.pop(); [[1,0],[-1,0],[0,1],[0,-1]].forEach(d=>{ const nx=p[0]+d[0],ny=p[1]+d[1]; if(nx>=0&&ny>=0&&nx<W&&ny<H&&!seen[ny][nx]&&!solid(nx,ny)){ seen[ny][nx]=true; st.push([nx,ny]); } }); }
     if(!seen[cell[1]][cell[0]]) throw new Error(npcId+' seat unreachable from spawn on '+mapName);
     (g.ZONES[mapName]||[]).forEach(z=>{ let ok=false; for(let dy=-2;dy<=2&&!ok;dy++)for(let dx=-2;dx<=2;dx++){const x=Math.round(z.x+z.w/2+dx),y=Math.round(z.y+z.h/2+dy); if(x>=0&&y>=0&&x<W&&y<H&&seen[y][x]){ok=true;break;}} if(!ok)throw new Error(mapName+' zone unreachable: '+z.id); });
+    // furniture sanity (roomier interiors): no solid object base on the door/spawn, and nothing drawn into/over the walls
+    const grid=M.grid;
+    M.objects.forEach(o=>{ if(!M.solidObj[o.a])return; g.objBaseCells(o).forEach(c=>{
+      const x=c[0],y=c[1];
+      if(x<1||y<1||x>W-2||y>H-2) throw new Error(mapName+' solid object '+o.a+' base out of room @'+x+','+y);
+      if(grid[y][x]==='X') throw new Error(mapName+' solid object '+o.a+' blocks the door @'+x+','+y);
+      if(x===sp.x&&y===sp.y) throw new Error(mapName+' solid object '+o.a+' on the spawn @'+x+','+y);
+    }); });
   });
 });
 check('map registry: transitions office↔(supplier/boardroom/studio) set map+spawn and derive NPCs',()=>{

@@ -485,7 +485,7 @@ const CHARS=[
 // NPC walk sprite assignments
 const NPCS=[
   {id:'sarah',name:'Sarah',role:'Design Lead',hair:C.hairBlonde,hairStyle:'long',skin:C.skinA,shirt:C.shirtBlue,pants:C.pantsBlue,eye:'#2848a0',
-   officeX:12,officeY:4,siteX:-1,siteY:-1,pos:{studio:[6,4]},walkSheet:'char_amelia_walk',idleSheet:'char_amelia_idle',
+   officeX:12,officeY:4,siteX:-1,siteY:-1,pos:{studio:[4,6]},walkSheet:'char_amelia_walk',idleSheet:'char_amelia_idle',
    aiState:'idle',aiTimer:0,aiTargetX:12,aiTargetY:4,aiFacing:0,aiFrame:0,aiExpr:'working',aiExprTimer:0,curX:12*16,curY:4*16},
   {id:'mike',name:'Mike',role:'Site Manager',hair:C.hairBrown,hairStyle:'short',skin:C.skinB,shirt:C.hiVisOrange,pants:C.pantsDk,eye:'#284828',
    officeX:16,officeY:4,siteX:12,siteY:13,walkSheet:'char_bob_walk',idleSheet:'char_bob_idle',
@@ -500,11 +500,11 @@ const NPCS=[
    officeX:13,officeY:12,siteX:-1,siteY:-1,walkSheet:'char_amelia_walk',idleSheet:'char_amelia_idle',
    aiState:'idle',aiTimer:0,aiTargetX:13,aiTargetY:12,aiFacing:0,aiFrame:0,aiExpr:'chat',aiExprTimer:0,curX:13*16,curY:12*16},
   {id:'raj',name:'Raj',role:'Supplier Account Mgr',hair:C.hairBlack,hairStyle:'short',skin:C.skinC,shirt:C.suitGray,pants:C.pantsDk,eye:'#2a2018',
-   officeX:-1,officeY:-1,siteX:-1,siteY:-1,pos:{supplier:[7,5]},walkSheet:'char_adam_walk',idleSheet:'char_adam_idle',
-   aiState:'idle',aiTimer:0,aiTargetX:7,aiTargetY:5,aiFacing:0,aiFrame:0,aiExpr:'chat',aiExprTimer:0},
+   officeX:-1,officeY:-1,siteX:-1,siteY:-1,pos:{supplier:[4,5]},walkSheet:'char_adam_walk',idleSheet:'char_adam_idle',
+   aiState:'idle',aiTimer:0,aiTargetX:4,aiTargetY:5,aiFacing:0,aiFrame:0,aiExpr:'chat',aiExprTimer:0},
   {id:'okoye',name:'Dr. Okoye',role:'Client Sponsor',hair:C.hairGray,hairStyle:'short',skin:C.skinC,shirt:C.shirtPurple,pants:C.pantsDk,eye:'#1a2848',
-   officeX:-1,officeY:-1,siteX:-1,siteY:-1,pos:{boardroom:[15,5]},walkSheet:'char_alex_walk',idleSheet:'char_alex_idle',
-   aiState:'idle',aiTimer:0,aiTargetX:15,aiTargetY:5,aiFacing:0,aiFrame:0,aiExpr:'working',aiExprTimer:0}
+   officeX:-1,officeY:-1,siteX:-1,siteY:-1,pos:{boardroom:[13,6]},walkSheet:'char_alex_walk',idleSheet:'char_alex_idle',
+   aiState:'idle',aiTimer:0,aiTargetX:13,aiTargetY:6,aiFacing:0,aiFrame:0,aiExpr:'working',aiExprTimer:0}
 ];
 
 // NPC wander targets in office
@@ -629,24 +629,24 @@ const SITE_SOLID=(()=>{
 })();
 
 // ===== NEW INTERIOR: SUPPLIER'S OFFICE (procurement) =====
-const SUPPLIER_W=22,SUPPLIER_H=14;
+const SUPPLIER_W=24,SUPPLIER_H=17;
 const SUPMAP=(()=>{
   const W=SUPPLIER_W,H=SUPPLIER_H,g=[];
   for(let y=0;y<H;y++){const r=[];for(let x=0;x<W;x++)r.push('B');g.push(r);} // warehouse tile floor
   for(let x=0;x<W;x++){g[0][x]='#';g[H-1][x]='#';}
   for(let y=0;y<H;y++){g[y][0]='#';g[y][W-1]='#';}
-  g[H-1][10]='X';                       // door back to the office
+  g[H-1][12]='X';                       // door back out to the town
   return g;
 })();
 const SUPPLIER_GROUND={'B':'concrete','#':'wall','X':'concrete'};
 const SUPPLIER_OBJECTS=[
-  {a:'table',tx:3,ty:5},                                                  // trade counter
-  {a:'palletrack',tx:3,ty:1},{a:'palletrack',tx:9,ty:1},{a:'palletrack',tx:18,ty:1}, // racking along the back wall
-  {a:'cratestack',tx:14,ty:4},{a:'cratestack',tx:7,ty:9},                 // pallet crates
-  {a:'forklift',tx:14,ty:9},                                             // forklift on the floor
-  {a:'desk',tx:18,ty:9},                                                 // back-office desk
-  {a:'railstack',tx:10,ty:8},{a:'sleeperstack',tx:12,ty:6},              // railway stock (decor)
-  {a:'plant',tx:2,ty:11},{a:'plant',tx:20,ty:11}
+  {a:'table',tx:4,ty:7},                                                  // trade counter
+  {a:'palletrack',tx:3,ty:1},{a:'palletrack',tx:8,ty:1},{a:'palletrack',tx:13,ty:1},{a:'palletrack',tx:18,ty:1},{a:'palletrack',tx:21,ty:1}, // racking along the back wall
+  {a:'cratestack',tx:15,ty:5},{a:'cratestack',tx:8,ty:12},                // pallet crates spread out
+  {a:'forklift',tx:17,ty:12},                                            // forklift on the floor
+  {a:'desk',tx:21,ty:12},                                                // back-office desk
+  {a:'railstack',tx:11,ty:8},{a:'sleeperstack',tx:14,ty:6},              // railway stock (decor)
+  {a:'plant',tx:2,ty:14},{a:'plant',tx:22,ty:14}
 ];
 const SUPPLIER_SOLID_OBJ={table:1,desk:1,palletrack:1,cratestack:1,forklift:1};
 const SUPPLIER_SOLID=(()=>{
@@ -672,30 +672,30 @@ function makeWalledGrid(W,H,floor,exitX){
 }
 
 // ===== NEW INTERIOR: CLIENT & SPONSOR BOARDROOM (governance / gate reviews) =====
-const BOARD_W=20,BOARD_H=12;
-const BOARDMAP=makeWalledGrid(BOARD_W,BOARD_H,'M',10);   // carpeted boardroom
+const BOARD_W=23,BOARD_H=15;
+const BOARDMAP=makeWalledGrid(BOARD_W,BOARD_H,'M',11);   // carpeted boardroom
 const BOARD_GROUND={'M':'boardcarpet','#':'wall','X':'boardcarpet'};
 const BOARD_OBJECTS=[
-  {a:'conftable',tx:5,ty:4},                               // long boardroom table
-  {a:'chair',tx:5,ty:2},{a:'chair',tx:9,ty:2},{a:'chair',tx:13,ty:2},
-  {a:'chair',tx:5,ty:8},{a:'chair',tx:9,ty:8},{a:'chair',tx:13,ty:8},
-  {a:'projscreen',tx:8,ty:1},{a:'wallchart',tx:2,ty:1},{a:'wallchart',tx:16,ty:1}, // wall-mounted (decor)
-  {a:'plant',tx:2,ty:9},{a:'plant',tx:17,ty:9}
+  {a:'conftable',tx:8,ty:5},                               // long boardroom table (centre of a roomier suite)
+  {a:'chair',tx:8,ty:3},{a:'chair',tx:12,ty:3},{a:'chair',tx:16,ty:3},
+  {a:'chair',tx:8,ty:9},{a:'chair',tx:12,ty:9},{a:'chair',tx:16,ty:9},
+  {a:'projscreen',tx:11,ty:1},{a:'wallchart',tx:3,ty:1},{a:'wallchart',tx:19,ty:1}, // wall-mounted (decor)
+  {a:'plant',tx:2,ty:12},{a:'plant',tx:20,ty:12}
 ];
 const BOARD_SOLID_OBJ={conftable:1};
 const BOARD_SOLID=buildInteriorSolid(BOARDMAP,BOARD_W,BOARD_H,BOARD_OBJECTS,BOARD_SOLID_OBJ);
 
 // ===== NEW INTERIOR: DESIGN CONSULTANCY STUDIO (drawings / surveys) =====
-const STUDIO_W=20,STUDIO_H=13;
-const STUDIOMAP=makeWalledGrid(STUDIO_W,STUDIO_H,'.',10);  // parquet studio floor
+const STUDIO_W=23,STUDIO_H=16;
+const STUDIOMAP=makeWalledGrid(STUDIO_W,STUDIO_H,'.',11);  // parquet studio floor
 const STUDIO_GROUND={'.':'parquet','#':'wall','X':'parquet'};
 const STUDIO_OBJECTS=[
-  {a:'draftboard',tx:3,ty:3},{a:'draftboard',tx:7,ty:3},{a:'draftboard',tx:11,ty:3}, // drawing boards
-  {a:'modeltable',tx:5,ty:8},                                       // 3D site model
-  {a:'plotter',tx:15,ty:8},                                         // large-format printer
-  {a:'pinboard',tx:8,ty:1},{a:'pinboard',tx:14,ty:1},               // pinned blueprints (wall decor)
-  {a:'bookshelf',tx:16,ty:3},                                       // spec library
-  {a:'plant',tx:2,ty:10},{a:'plant',tx:17,ty:10}
+  {a:'draftboard',tx:3,ty:3},{a:'draftboard',tx:8,ty:3},{a:'draftboard',tx:13,ty:3},{a:'draftboard',tx:18,ty:3}, // drawing boards along the studio
+  {a:'modeltable',tx:6,ty:9},                                       // 3D site model
+  {a:'plotter',tx:17,ty:9},                                         // large-format printer
+  {a:'pinboard',tx:9,ty:1},{a:'pinboard',tx:15,ty:1},               // pinned blueprints (wall decor)
+  {a:'bookshelf',tx:20,ty:4},                                       // spec library
+  {a:'plant',tx:2,ty:13},{a:'plant',tx:20,ty:13}
 ];
 const STUDIO_SOLID_OBJ={draftboard:1,modeltable:1,plotter:1,bookshelf:1};
 const STUDIO_SOLID=buildInteriorSolid(STUDIOMAP,STUDIO_W,STUDIO_H,STUDIO_OBJECTS,STUDIO_SOLID_OBJ);
@@ -734,9 +734,9 @@ const MAPS={
   town:{W:TOWN_W,H:TOWN_H,grid:TOWNMAP,ground:TOWN_GROUND,objects:TOWN_OBJECTS,solidObj:TOWN_SOLID_OBJ,solid:TOWN_SOLID,wander:[],spawn:{x:9,y:13},interior:false},
   office:{W:OFFICE_W,H:OFFICE_H,grid:OMAP,ground:OFFICE_GROUND,objects:OFFICE_OBJECTS,solidObj:OFFICE_SOLID_OBJ,solid:OFFICE_SOLID,wander:[],spawn:{x:14,y:15},interior:true},
   site:{W:SITE_W,H:SITE_H,grid:SMAP,ground:SITE_GROUND,objects:SITE_OBJECTS,solidObj:SITE_SOLID_OBJ,solid:SITE_SOLID,wander:NPC_WANDER_SITE,spawn:{x:3,y:13},interior:false},
-  supplier:{W:SUPPLIER_W,H:SUPPLIER_H,grid:SUPMAP,ground:SUPPLIER_GROUND,objects:SUPPLIER_OBJECTS,solidObj:SUPPLIER_SOLID_OBJ,solid:SUPPLIER_SOLID,wander:[],spawn:{x:10,y:11},interior:true},
-  boardroom:{W:BOARD_W,H:BOARD_H,grid:BOARDMAP,ground:BOARD_GROUND,objects:BOARD_OBJECTS,solidObj:BOARD_SOLID_OBJ,solid:BOARD_SOLID,wander:[],spawn:{x:10,y:9},interior:true},
-  studio:{W:STUDIO_W,H:STUDIO_H,grid:STUDIOMAP,ground:STUDIO_GROUND,objects:STUDIO_OBJECTS,solidObj:STUDIO_SOLID_OBJ,solid:STUDIO_SOLID,wander:[],spawn:{x:10,y:10},interior:true}
+  supplier:{W:SUPPLIER_W,H:SUPPLIER_H,grid:SUPMAP,ground:SUPPLIER_GROUND,objects:SUPPLIER_OBJECTS,solidObj:SUPPLIER_SOLID_OBJ,solid:SUPPLIER_SOLID,wander:[],spawn:{x:12,y:15},interior:true},
+  boardroom:{W:BOARD_W,H:BOARD_H,grid:BOARDMAP,ground:BOARD_GROUND,objects:BOARD_OBJECTS,solidObj:BOARD_SOLID_OBJ,solid:BOARD_SOLID,wander:[],spawn:{x:11,y:13},interior:true},
+  studio:{W:STUDIO_W,H:STUDIO_H,grid:STUDIOMAP,ground:STUDIO_GROUND,objects:STUDIO_OBJECTS,solidObj:STUDIO_SOLID_OBJ,solid:STUDIO_SOLID,wander:[],spawn:{x:11,y:14},interior:true}
 };
 function MD(){ return MAPS[S.map]||MAPS.office; }
 function mapW(){ return MD().W; }
@@ -777,20 +777,20 @@ const AREA_LABELS={
     {x:2,y:13,text:'Return',color:'#4aca8a'}
   ],
   supplier:[
-    {x:3,y:4,text:'Counter',color:'#f7c948'},
-    {x:11,y:1,text:'Stock',color:'#b08fd8'},
-    {x:16,y:8,text:'Back Office',color:'#5b8ef5'},
-    {x:9,y:12,text:'Return',color:'#4aca8a'}
+    {x:4,y:6,text:'Counter',color:'#f7c948'},
+    {x:12,y:3,text:'Stock',color:'#b08fd8'},
+    {x:20,y:11,text:'Back Office',color:'#5b8ef5'},
+    {x:10,y:15,text:'Return',color:'#4aca8a'}
   ],
   boardroom:[
-    {x:7,y:1,text:'Boardroom',color:'#b08fd8'},
-    {x:14,y:4,text:'Sponsor',color:'#f7c948'},
-    {x:9,y:10,text:'Return',color:'#4aca8a'}
+    {x:9,y:2,text:'Boardroom',color:'#b08fd8'},
+    {x:18,y:5,text:'Sponsor',color:'#f7c948'},
+    {x:10,y:13,text:'Return',color:'#4aca8a'}
   ],
   studio:[
-    {x:3,y:1,text:'Drawing Boards',color:'#5b8ef5'},
-    {x:5,y:7,text:'Plans Table',color:'#f7c948'},
-    {x:9,y:11,text:'Return',color:'#4aca8a'}
+    {x:4,y:6,text:'Drawing Boards',color:'#5b8ef5'},
+    {x:6,y:12,text:'Plans Table',color:'#f7c948'},
+    {x:10,y:14,text:'Return',color:'#4aca8a'}
   ]
 };
 
@@ -815,15 +815,15 @@ const ZONES={
     {id:'return_town',name:'Out to Town',x:14,y:16,w:2,h:2,hint:'Press SPACE \u2014 Out to the Town'}
   ],
   supplier:[
-    {id:'return_town',name:'Out to Town',x:9,y:12,w:2,h:1,hint:'Press SPACE \u2014 Out to the Town'},
-    {id:'supplier_counter',name:'Service Counter',x:3,y:7,w:3,h:1,hint:'Press SPACE \u2014 Service Counter'}
+    {id:'return_town',name:'Out to Town',x:11,y:15,w:2,h:1,hint:'Press SPACE \u2014 Out to the Town'},
+    {id:'supplier_counter',name:'Service Counter',x:4,y:9,w:3,h:1,hint:'Press SPACE \u2014 Service Counter'}
   ],
   boardroom:[
-    {id:'return_office',name:'Back to the Office',x:9,y:10,w:2,h:1,hint:'Press SPACE \u2014 Back to the Office'},
-    {id:'board_table',name:'Gate Review',x:8,y:6,w:3,h:1,hint:'Press SPACE \u2014 Gate Review Table'}
+    {id:'return_office',name:'Back to the Office',x:10,y:13,w:2,h:1,hint:'Press SPACE \u2014 Back to the Office'},
+    {id:'board_table',name:'Gate Review',x:9,y:7,w:3,h:1,hint:'Press SPACE \u2014 Gate Review Table'}
   ],
   studio:[
-    {id:'return_town',name:'Out to Town',x:9,y:11,w:2,h:1,hint:'Press SPACE \u2014 Out to the Town'},
+    {id:'return_town',name:'Out to Town',x:10,y:14,w:2,h:1,hint:'Press SPACE \u2014 Out to the Town'},
     {id:'design_desk',name:'Drawing Boards',x:3,y:5,w:3,h:1,hint:'Press SPACE \u2014 Review the Drawings'}
   ],
   site:[

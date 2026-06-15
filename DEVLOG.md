@@ -602,3 +602,18 @@ they never feel identical:
 - Backdrop is reset on close so moods can't leak between scenes (independently reviewed).
 - Harness: new test asserts every scene has a valid distinct mood (>=6 unique) and all 10 weeks present
   cleanly (chapter header + entrance paths). **58/58 green**, node --check clean. Review: no P0/P1.
+
+
+### 2026-06-15 — Iteration 40 (roomier interiors)
+The three interior areas were boxy/cramped (smaller than the viewport, so they sat small + centred). Enlarged
+them and spread the furniture so each room breathes, keeping every spawn / door / NPC seat / zone reachable:
+- **Supplier warehouse** 22×14 → **24×17** — five pallet racks across the back, counter + Raj on the left, crates
+  and forklift spread, back-office desk, railway stock decor, door back out to the town.
+- **Boardroom** 20×12 → **23×15** — long table centred, six chairs around it, projector + wall charts, Dr. Okoye
+  seated at the head, door back into the office.
+- **Design studio** 20×13 → **23×16** — four drawing boards across the room, model table, plotter, spec shelf,
+  pinned blueprints, door back out to the town.
+- Updated dims, grids (door position), MAPS spawns, ZONES, AREA_LABELS and the NPC `pos` for each in lockstep.
+- Harness hardened: the new-interiors test now also asserts no solid furniture lands on a door/spawn cell and
+  nothing is drawn into/over the walls (the office already had this; the 3 areas now do too). **58/58 green**,
+  node --check clean, all three rendered via Python to eyeball spacing. Independent review: no P0/P1.
