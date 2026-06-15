@@ -75,7 +75,7 @@ const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
 const scripts=[...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)].map(m=>m[1]);
 let code=scripts.join('\n;\n');
 // epilogue: capture top-level consts/fns into global for assertions
-const names=['S','applyEffects','advanceWeek','getPhase','getPhaseIdx','getDlgPhaseIdx','chooseDlg','NPCS','OMAP','SMAP','ZONES','isSolid','render','updatePlayer','startGame','newGame','selectCharacter','beginGame','saveGame','loadGame','EVENTS','PHASES','DLG','transitionToMap','showEvent','triggerEvent','getObjectives','updateHUD','updateNotepad','WALK_FRAMES','updateNPCAI','CHARS','ATLAS','drawSprite','OFFICE_W','OFFICE_H','OFFICE_OBJECTS','OFFICE_SOLID_OBJ','objBaseCells','OFFICE_SOLID','SITE_W','SITE_H','SITE_OBJECTS','SITE_SOLID_OBJ','ZONES','NPC_WANDER_OFFICE','NPC_WANDER_SITE','siteTrackFrac','POPUPS','enterWeek','afterEvent','chooseEvent','closeReport','REPORT_WEEKS','getObjectives','showEndScreen','chooseDlg','openNPCDialogue','interactionSpent','spendInteraction','getDlgPhaseIdx','EVENTS','showInsight','rng','seedRng','DIFFICULTY','diff','getPMRating','getLeadershipArchetype','resolveRisk','eventCallback','PERSONA','reflectionNote','showEvent','showReport','applyEventChoice','skipPhase'];
+const names=['S','applyEffects','advanceWeek','getPhase','getPhaseIdx','getDlgPhaseIdx','chooseDlg','NPCS','OMAP','SMAP','ZONES','isSolid','render','updatePlayer','startGame','newGame','selectCharacter','beginGame','saveGame','loadGame','EVENTS','PHASES','DLG','transitionToMap','showEvent','triggerEvent','getObjectives','updateHUD','updateNotepad','WALK_FRAMES','updateNPCAI','CHARS','ATLAS','drawSprite','OFFICE_W','OFFICE_H','OFFICE_OBJECTS','OFFICE_SOLID_OBJ','objBaseCells','OFFICE_SOLID','SITE_W','SITE_H','SITE_OBJECTS','SITE_SOLID_OBJ','ZONES','NPC_WANDER_OFFICE','NPC_WANDER_SITE','siteTrackFrac','POPUPS','enterWeek','afterEvent','chooseEvent','closeReport','REPORT_WEEKS','getObjectives','showEndScreen','chooseDlg','openNPCDialogue','interactionSpent','spendInteraction','getDlgPhaseIdx','EVENTS','showInsight','rng','seedRng','DIFFICULTY','diff','getPMRating','getLeadershipArchetype','resolveRisk','eventCallback','PERSONA','reflectionNote','showEvent','showReport','applyEventChoice','skipPhase','hintsVisible','metricDeltaHTML','snapshotMetrics','showLockerRoom','togglePPE','closeEventResult'];
 code+='\n;globalThis.__G=(function(){const o={};'+names.map(n=>`try{o['${n}']=${n};}catch(e){}`).join('')+'return o;})();';
 
 const results={pass:[],fail:[]};
@@ -180,6 +180,7 @@ check('enterWeek funnel: event-then-report ordering at a collision week (28), no
   g.chooseEvent(28,0);
   if(!g.S.eventsDone.includes(28)) throw new Error('event 28 not marked resolved');
   if(g.S.eventsDone.filter(w=>w===28).length!==1) throw new Error('event 28 double-resolved');
+  g.closeEventResult(); // dismiss the post-choice score-reveal panel → funnels to the report
   if(!g.S.eventOpen) throw new Error('expected the monthly report to show after the event (28 is a report week)');
   if(g.closeReport) g.closeReport();
   if(g.S.eventOpen) throw new Error('report did not close');
@@ -302,6 +303,21 @@ check('shared resolver makes Skip Phase honest: setbacks still land, gambles sti
   g.S.flags={}; g.S.eventsDone=[]; g.S.metrics={schedule:70,budget:70,safety:70,quality:70,morale:70};
   g.seedRng(seed); g.applyEventChoice(ev16,risky);
   if(g.S.metrics.budget>70) throw new Error('forced-fail gamble should NOT have paid off on the skip path');
+});
+check('hints show only on Apprentice; post-choice delta reveal reflects real metric change',()=>{
+  g.S.difficulty='manager'; if(g.hintsVisible()) throw new Error('hints must be hidden on Manager');
+  g.S.difficulty='director'; if(g.hintsVisible()) throw new Error('hints must be hidden on Director');
+  g.S.difficulty='apprentice'; if(!g.hintsVisible()) throw new Error('hints must show on Apprentice');
+  g.S.difficulty='manager';
+  g.S.metrics={schedule:70,budget:70,safety:70,quality:70,morale:70};
+  const before=g.snapshotMetrics(); g.applyEffects({safety:5,morale:-3});
+  const html=g.metricDeltaHTML(before);
+  if(!/Safety \+5/.test(html)||!/Morale -3/.test(html)) throw new Error('delta reveal wrong: '+html);
+});
+check('PPE locker room shows a working on/off control (no crash, toggles state)',()=>{
+  g.S.dlgOpen=false; g.S.ppeEquipped=false; g.showLockerRoom();
+  g.togglePPE(true); if(!g.S.ppeEquipped) throw new Error('Put-on PPE did not set equipped');
+  g.showLockerRoom(); g.togglePPE(false); if(g.S.ppeEquipped) throw new Error('Take-off PPE did not clear equipped');
 });
 check('NPCs carry memory of the last interaction (drives their next opener)',()=>{
   g.S.npcMemory={}; g.S.spentInteractions=[]; g.S.week=20;

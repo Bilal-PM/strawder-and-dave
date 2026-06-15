@@ -50,12 +50,14 @@ body{background:#3a2a18;color:#f0e6d3;font-family:'Press Start 2P',monospace;ove
 #dlg .dt{color:#3a2210;font-size:9px;line-height:2;margin-bottom:8px}
 #dlg .dc{padding:6px 10px;margin:4px 0;background:#e8d4b0;border:2px solid #a07848;border-radius:4px;cursor:pointer;color:#5a3a1e;font-size:9px;font-family:'Press Start 2P',monospace;line-height:1.8;transition:all .2s}
 #dlg .dc:hover{border-color:#f7c948;color:#3a2210;background:#f5ead0}
+#dlg .do{padding:10px 12px;margin:6px 0;background:linear-gradient(180deg,#f7c948,#e0a830);border:2px solid #b8852a;border-radius:6px;cursor:pointer;color:#3a2210;font-size:10px;font-weight:bold;font-family:'Press Start 2P',monospace;line-height:1.7;text-align:center;transition:all .2s}
+#dlg .do:hover{background:linear-gradient(180deg,#ffe070,#f0b840);border-color:#3a2210}
 #dlg .metric-change{font-size:8px;margin:2px 4px;display:inline-block}
-.modal{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:580px;max-height:90%;overflow-y:auto;background:linear-gradient(180deg,#f5ead0,#e8d4b0);border:3px solid #c45040;border-radius:8px;padding:24px;z-index:30;display:none}
+.modal{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:min(560px,92%);max-height:88%;overflow-y:auto;box-sizing:border-box;background:linear-gradient(180deg,#f5ead0,#e8d4b0);border:3px solid #c45040;border-radius:8px;padding:clamp(12px,3vw,24px);z-index:30;display:none}
 .modal.on{display:block}
 .modal h3{font-size:12px;color:#c45040;margin-bottom:10px}
-.modal p{font-size:9px;line-height:2;color:#5a3a1e;margin-bottom:14px}
-.modal .ch{background:#e8d4b0;border:2px solid #a07848;border-radius:6px;padding:12px;margin:6px 0;cursor:pointer;transition:all .2s;font-family:'Press Start 2P',monospace;font-size:8px;color:#5a3a1e;line-height:1.8}
+.modal p{font-size:9px;line-height:1.9;color:#5a3a1e;margin-bottom:12px}
+.modal .ch{background:#e8d4b0;border:2px solid #a07848;border-radius:6px;padding:11px 12px;margin:7px 0;cursor:pointer;transition:all .2s;font-family:'Press Start 2P',monospace;font-size:9px;color:#5a3a1e;line-height:1.7;word-break:break-word}
 .modal .ch:hover{border-color:#f7c948;color:#3a2210;background:#f5ead0}
 .modal.no-click .ch{pointer-events:none;opacity:0.5}
 .report{border-color:#f7c948}
@@ -297,6 +299,20 @@ const DIFFICULTY={
   director:  {label:'Director',   blurb:'Punishing but fair. For experienced PMs.',               negMult:1.35,posMult:0.9,riskBonus:-0.12,setbackMult:1.4}
 };
 function diff(){ return DIFFICULTY[S.difficulty]||DIFFICULTY.manager; }
+// Trade-off hints are shown ONLY on Apprentice (kids learn cause→effect); hidden otherwise so peers
+// must judge under uncertainty. The impact is always revealed AFTER the choice (metricDeltaHTML).
+function hintsVisible(){ return S.difficulty==='apprentice'; }
+// Reusable post-choice score reveal: ▲▼ coloured deltas vs a snapshot taken before the choice resolved.
+function snapshotMetrics(){ return {schedule:S.metrics.schedule,budget:S.metrics.budget,safety:S.metrics.safety,quality:S.metrics.quality,morale:S.metrics.morale}; }
+function metricDeltaHTML(before){
+  const names={schedule:'Schedule',budget:'Budget',safety:'Safety',quality:'Quality',morale:'Morale'};
+  let parts='';
+  for(const k in names){ const d=S.metrics[k]-(before[k]||0); if(d!==0){
+    const col=d>0?'#2a8a5a':'#c45040', ar=d>0?'▲':'▼';
+    parts+='<span style="display:inline-block;margin:3px 7px;color:'+col+';font-size:9px">'+ar+' '+names[k]+' '+(d>0?'+':'')+d+'</span>';
+  }}
+  return parts||'<span style="color:#7a5a38;font-size:9px">No metric change.</span>';
+}
 
 // === TIMELINE — Key Weeks ===
 const KEY_WEEKS=[32,28,24,20,16,12,8,4,0,-4,-8];
@@ -1736,6 +1752,7 @@ function chooseDlg(npcId,pi,di,ci){
   const dlg=DLG[npcId][pi][di];
   const choice=dlg.choices[ci];
   const effects=choice.e||{};
+  const _before=snapshotMetrics();      // for the unified post-choice score reveal
   applyEffects(effects);
   spendInteraction('npc_'+npcId); // weekly catch-up used up
 
@@ -1799,18 +1816,8 @@ function chooseDlg(npcId,pi,di,ci){
 
   html+='<div class="dt">'+reaction+'</div>';
 
-  // Show metric changes with coloured arrows
-  html+='<div style="margin:6px 0">';
-  const metricNames={schedule:'Schedule',budget:'Budget',safety:'Safety',quality:'Quality',morale:'Morale'};
-  for(const[k,v] of Object.entries(effects)){
-    if(metricNames[k]){
-      const color=v>0?'#4aca8a':'#e05577';
-      const arrow=v>0?'\u2191':'\u2193';
-      const sign=v>0?'+':'';
-      html+='<span class="metric-change" style="color:'+color+'">'+sign+v+' '+metricNames[k]+' '+arrow+'</span> ';
-    }
-  }
-  html+='</div>';
+  // Unified post-choice score reveal \u2014 true difficulty-scaled deltas (\u25b2\u25bc), same component as events.
+  html+='<div style="margin:6px 0">'+metricDeltaHTML(_before)+'</div>';
   html+='<div class="dc" onclick="closeDlg()">Continue</div>';
   el.innerHTML=html;
 
@@ -1825,19 +1832,19 @@ function closeDlg(){
 
 function showLockerRoom(){
   const el=document.getElementById('dlg');
-  el.className='dlg-box';el.style.display='flex';
   S.dlgOpen=true;
-  if(S.ppeEquipped){
-    el.innerHTML='<div class="dn">Locker Room</div>'+
-      '<div class="dt">You are currently wearing your PPE (orange hi-vis vest and white hard hat).</div>'+
-      '<div class="do" onclick="togglePPE(false)">Remove PPE</div>'+
-      '<div class="dc" onclick="closeDlg()">Keep PPE On</div>';
-  }else{
-    el.innerHTML='<div class="dn">Locker Room</div>'+
-      '<div class="dt">Your locker contains an orange hi-vis vest and a white hard hat. PPE is required before going to site.</div>'+
-      '<div class="do" onclick="togglePPE(true)">Put on PPE</div>'+
-      '<div class="dc" onclick="closeDlg()">Not yet</div>';
-  }
+  const on=S.ppeEquipped;
+  let html='<div class="dn">🦺 Locker Room — PPE</div>';
+  html+='<div class="dt">Status: '+(on
+      ? '<b style="color:#2a8a5a">PPE ON</b> — orange hi-vis vest + white hard hat. You\'re cleared for site.'
+      : '<b style="color:#c45040">PPE OFF</b> — office clothes. You must put PPE on before going to site.')+'</div>';
+  // Prominent primary action that flips with state, plus a clear close.
+  html+= on
+    ? '<div class="do" onclick="togglePPE(false)">👕 Take OFF PPE</div>'
+    : '<div class="do" onclick="togglePPE(true)">🦺 Put ON PPE</div>';
+  html+='<div class="dc" onclick="closeDlg()">Close locker</div>';
+  el.innerHTML=html;
+  el.className='on'; el.style.display='block';
 }
 
 function togglePPE(equip){
@@ -2566,7 +2573,8 @@ function showEvent(ev){
   ev.choices.forEach((c,i)=>{
     html+='<div class="ch" onclick="chooseEvent('+ev.week+','+i+')">';
     html+='<div style="color:#f7c948;font-size:9px;margin-bottom:4px">'+c.t+(c.risk?' \u2014 \u2684':'')+'</div>';
-    html+='<div style="color:#7a5a38;font-size:8px">'+(c.desc||'')+'</div>';
+    // Trade-off hint shown only on Apprentice; otherwise you judge blind (impact revealed AFTER choosing).
+    if(hintsVisible()&&c.desc)html+='<div style="color:#7a5a38;font-size:8px">'+c.desc+'</div>';
     html+='</div>';
   });
   el.innerHTML=html;
@@ -2597,13 +2605,23 @@ function applyEventChoice(ev,ci){
 function chooseEvent(week,ci){
   const ev=EVENTS.find(e=>e.week===week);
   if(!ev)return;
+  const before=snapshotMetrics();
   const res=applyEventChoice(ev,ci);
-  // Gamble outcome beat \u2014 judge the decision, not the dice.
+  // Reveal panel: now that the trade-off was hidden, show EXACTLY what the choice did (score impact).
+  let html='<h3>'+ev.title+'</h3>';
+  html+='<p style="font-size:8px;color:#7a5a38;margin-bottom:8px">You chose: <b style="color:#3a2210">'+ev.choices[ci].t+'</b></p>';
   if(res.risky){
-    if(res.ok)showToastMsg('\uD83C\uDFAF',res.note||'The gamble paid off.','IT PAID OFF');
-    else showToastMsg('\uD83D\uDCA5',res.note||'It backfired \u2014 but a sound bet that loses is still a sound bet.','IT BACKFIRED');
+    html+='<p style="color:'+(res.ok?'#2a8a5a':'#c45040')+';font-weight:bold;font-size:10px">'+(res.ok?'\uD83C\uDFAF It paid off':'\uD83D\uDCA5 It backfired')+'</p>';
+    if(res.note)html+='<p style="font-size:8px;color:#5a3a1e">'+res.note+'</p>';
   }
-  if(ev.insight)showInsight(ev.insight);                 // attach the PM lesson to the decision
+  html+='<div style="margin:8px 0 6px;text-align:center">'+metricDeltaHTML(before)+'</div>';
+  if(ev.insight)html+='<p style="color:#d98a3a;font-size:8px;font-style:italic;line-height:1.8">\uD83D\uDCA1 '+ev.insight+'</p>';
+  html+='<div class="ch" style="text-align:center;border-color:#f7c948;color:#3a2210" onclick="closeEventResult()">Continue \u25B6</div>';
+  const el=document.getElementById('eventModal');
+  el.innerHTML=html;
+  el.className='modal on';
+}
+function closeEventResult(){
   document.getElementById('eventModal').className='modal';
   S.eventOpen=false;
   afterEvent();

@@ -353,3 +353,19 @@ plus the owner's two new asks. All gated by the harness (now **35/35 green**, +8
   `applyEventChoice(ev,ci)` resolver used by BOTH the modal and the skip path, so setbacks still land and
   gambles can still backfire when skipping. Also switched skip's drift + choice rolls to the seedable `rng()`
   and round-tripped `_deferred` in save/load. Harness +1 (skip-path honesty). **36/36 green.**
+
+
+### 2026-06-15 — Iteration 24 (Immersion epic Phase A+B: decision UX + hidden trade-offs)
+Owner playtest feedback → approved a 5-phase immersion epic. A+B shipped together (decision UX):
+- **Readable pop-ups:** event `.modal` is now responsive `width:min(560px,92%)` + fluid padding + `box-sizing`
+  (no more 580px overflow/cut-off on mobile); choices bumped to 9px with `word-break` so options never clip.
+- **PPE on/off fixed:** the locker buttons used a `.do` class that had NO CSS (rendered unstyled). Added a
+  prominent gold `.do` button style and rewrote `showLockerRoom` to show a clear STATUS line + a single
+  state-flipping primary ("Put ON PPE" / "Take OFF PPE") + a clear close.
+- **Hidden trade-offs (except Apprentice):** `hintsVisible()` gates the pre-choice `c.desc` hint — Manager/
+  Director now judge blind; Apprentice keeps the hint for kids.
+- **Post-choice score reveal:** new reusable `metricDeltaHTML(snapshot)` (▲▼ true difficulty-scaled deltas).
+  Events now show a result panel (your choice + gamble outcome + deltas + PM insight → Continue) instead of
+  closing instantly; NPC dialogue uses the same component (and now shows the real applied deltas, not raw).
+- Harness +2 (hints gating + delta reveal; PPE toggle) and updated the event-funnel test for the new
+  Continue step. **38/38 green**, node --check clean.
