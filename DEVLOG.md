@@ -570,3 +570,18 @@ to owner feedback — see below):
 - New harness coverage: town spawn + 3 entrances + road-end site access reachable; boardroom/changing-room
   confirmed in the office (not the town); PPE gate proven to block then admit; enter→return round-trips for all
   destinations. **55/55 green**, node --check clean, town verified via Python render.
+
+
+### 2026-06-15 — Iteration 38 (Phase 5: arrival cut-scene)
+The game now opens with a short, skippable arrival cut-scene on new game (per owner's vision):
+- **In-canvas scripted sequence** (no DOM overlay) on the town map: a **car drives in from the LEFT** along the
+  road, **parks in front of the Project Office**, the **PM steps out** at the town spawn, then a **briefing
+  caption holds** — "Head into the Project Office to meet your team" — until the player presses **SPACE / taps**.
+- State machine `drive→park→exit→brief` (`startArrival`/`updateArrival`/`skipArrival`/`endArrival`), dt-driven so
+  it can't auto-skip the input beat. `updatePlayer`/`updateCamera`/`handleInteract`/`checkProximity` all gate on
+  `S.arrival`, so input is frozen during the scene and cleanly restored after — no softlock (independently reviewed).
+- The PM is the **player's chosen avatar** (reuses `drawChar`/`CHARS[S.playerChar]`), and now **faces the camera**
+  during the briefing so the avatar reads clearly. Car hidden-PM only during the drive/park beats.
+- New harness coverage: the timeline reaches the briefing, parks the PM at spawn, the briefing HOLDS without input,
+  movement is blocked during the scene, and SPACE both fast-forwards the drive and dismisses the briefing.
+  **57/57 green**, node --check clean, arrival frame verified via Python render. Independent review: no P0/P1.

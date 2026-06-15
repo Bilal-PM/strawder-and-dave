@@ -75,7 +75,8 @@ const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
 const scripts=[...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)].map(m=>m[1]);
 let code=scripts.join('\n;\n');
 // epilogue: capture top-level consts/fns into global for assertions
-const names=['S','applyEffects','advanceWeek','getPhase','getPhaseIdx','getDlgPhaseIdx','chooseDlg','NPCS','OMAP','SMAP','ZONES','isSolid','render','updatePlayer','startGame','newGame','selectCharacter','beginGame','saveGame','loadGame','EVENTS','PHASES','DLG','transitionToMap','showEvent','triggerEvent','getObjectives','updateHUD','updateNotepad','WALK_FRAMES','updateNPCAI','CHARS','ATLAS','drawSprite','OFFICE_W','OFFICE_H','OFFICE_OBJECTS','OFFICE_SOLID_OBJ','objBaseCells','OFFICE_SOLID','SITE_W','SITE_H','SITE_OBJECTS','SITE_SOLID_OBJ','ZONES','NPC_WANDER_OFFICE','NPC_WANDER_SITE','siteTrackFrac','POPUPS','enterWeek','afterEvent','chooseEvent','closeReport','REPORT_WEEKS','getObjectives','showEndScreen','chooseDlg','openNPCDialogue','interactionSpent','spendInteraction','getDlgPhaseIdx','EVENTS','showInsight','rng','seedRng','DIFFICULTY','diff','getPMRating','getLeadershipArchetype','resolveRisk','eventCallback','PERSONA','reflectionNote','showEvent','showReport','applyEventChoice','skipPhase','hintsVisible','metricDeltaHTML','snapshotMetrics','showLockerRoom','togglePPE','closeEventResult','presentEvent','beginDecision','eventHesitate','eventTimerMs','startEventTimer','stopEventTimer','tickEventTimer','SCENES','THEMES','getTheme','setMasterVolume','playMumble','VOICE','playSFX','playLocationAmbient','startBGM','stopBGM','DELIVERABLES','deliverableAvailable','deliverablesAvailableCount','openDeliverable','recordMetricHistory','perfPanelHTML','perfBarsHTML','showDocsOverlay','startNewWeek','MAPS','MD','npcCell','mapW','mapH','SUPPLIER_W','SUPPLIER_H','SUPMAP','transitionToMap','updateTransition','tallyLeadership','dominantStyle','STYLE_KEY','activateZone','PPE_REQUIRED','completeObj','AREA_LABELS','TOWN_W','TOWN_H','TOWNMAP'];
+const names=['S','applyEffects','advanceWeek','getPhase','getPhaseIdx','getDlgPhaseIdx','chooseDlg','NPCS','OMAP','SMAP','ZONES','isSolid','render','updatePlayer','startGame','newGame','selectCharacter','beginGame','saveGame','loadGame','EVENTS','PHASES','DLG','transitionToMap','showEvent','triggerEvent','getObjectives','updateHUD','updateNotepad','WALK_FRAMES','updateNPCAI','CHARS','ATLAS','drawSprite','OFFICE_W','OFFICE_H','OFFICE_OBJECTS','OFFICE_SOLID_OBJ','objBaseCells','OFFICE_SOLID','SITE_W','SITE_H','SITE_OBJECTS','SITE_SOLID_OBJ','ZONES','NPC_WANDER_OFFICE','NPC_WANDER_SITE','siteTrackFrac','POPUPS','enterWeek','afterEvent','chooseEvent','closeReport','REPORT_WEEKS','getObjectives','showEndScreen','chooseDlg','openNPCDialogue','interactionSpent','spendInteraction','getDlgPhaseIdx','EVENTS','showInsight','rng','seedRng','DIFFICULTY','diff','getPMRating','getLeadershipArchetype','resolveRisk','eventCallback','PERSONA','reflectionNote','showEvent','showReport','applyEventChoice','skipPhase','hintsVisible','metricDeltaHTML','snapshotMetrics','showLockerRoom','togglePPE','closeEventResult','presentEvent','beginDecision','eventHesitate','eventTimerMs','startEventTimer','stopEventTimer','tickEventTimer','SCENES','THEMES','getTheme','setMasterVolume','playMumble','VOICE','playSFX','playLocationAmbient','startBGM','stopBGM','DELIVERABLES','deliverableAvailable','deliverablesAvailableCount','openDeliverable','recordMetricHistory','perfPanelHTML','perfBarsHTML','showDocsOverlay','startNewWeek','MAPS','MD','npcCell','mapW','mapH','SUPPLIER_W','SUPPLIER_H','SUPMAP','transitionToMap','updateTransition','tallyLeadership','dominantStyle','STYLE_KEY','activateZone','PPE_REQUIRED','completeObj','AREA_LABELS','TOWN_W','TOWN_H','TOWNMAP',
+'startArrival','updateArrival','skipArrival','endArrival','updateCamera'];
 code+='\n;globalThis.__G=(function(){const o={};'+names.map(n=>`try{o['${n}']=${n};}catch(e){}`).join('')+'return o;})();';
 
 const results={pass:[],fail:[]};
@@ -180,6 +181,35 @@ check('PPE gate: worksites refuse entry without PPE, then admit once kitted out 
   g.activateZone({id:'to_site'}); g.updateTransition(500);
   if(g.S.map!=='site') throw new Error('site refused entry even with PPE on');
   g.activateZone({id:'return_town'}); g.updateTransition(500);
+});
+check('arrival cut-scene: drives in, parks the PM at the town spawn, waits at the briefing, then hands to play',()=>{
+  g.S.screen='game'; g.S.map='town'; g.S.playerName='Test'; g.S.arrival=null;
+  g.startArrival();
+  if(!g.S.arrival||g.S.arrival.phase!=='drive') throw new Error('arrival did not start in drive');
+  const carX0=g.S.arrival.carX;
+  // run the scripted timeline (dt-driven so a headless tick can never auto-skip input beats)
+  let guard=0; while(g.S.arrival&&g.S.arrival.phase!=='brief'&&guard++<400){ g.updateArrival(100); }
+  if(!g.S.arrival||g.S.arrival.phase!=='brief') throw new Error('arrival never reached the briefing beat');
+  if(g.S.arrival.carX<=carX0) throw new Error('car did not drive to the right');
+  const sp=g.MAPS.town.spawn;
+  if(g.S.px!==sp.x*16||g.S.py!==sp.y*16) throw new Error('PM not stood at the town spawn after stepping out');
+  // the briefing must HOLD (no auto-advance) until the player dismisses it
+  for(let i=0;i<20;i++) g.updateArrival(100);
+  if(!g.S.arrival) throw new Error('briefing auto-ended without player input');
+  // movement is blocked during the cut-scene
+  const bx=g.S.px; g.S.keys={ArrowRight:true}; g.updatePlayer(200); g.S.keys={};
+  if(g.S.px!==bx) throw new Error('player could move during the arrival cut-scene');
+  // dismiss → control handed back
+  g.skipArrival();
+  if(g.S.arrival!==null) throw new Error('arrival did not end on dismiss');
+});
+check('arrival skip: SPACE fast-forwards the drive straight to the briefing, then ends it',()=>{
+  g.S.screen='game'; g.S.map='town'; g.S.playerName='Test'; g.S.arrival=null;
+  g.startArrival();
+  g.skipArrival(); // from drive → briefing
+  if(!g.S.arrival||g.S.arrival.phase!=='brief') throw new Error('skip did not jump to the briefing');
+  g.skipArrival(); // from briefing → done
+  if(g.S.arrival!==null) throw new Error('second skip did not end the cut-scene');
 });
 check('site map: spawn & compound gate walkable, NPC site seats clear, key areas reachable',()=>{
   g.S.map='site'; const W=g.SITE_W,H=g.SITE_H; const solid=(x,y)=>g.isSolid(x,y);

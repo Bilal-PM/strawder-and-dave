@@ -1596,6 +1596,7 @@ function canMove(nx,ny){
 
 // === CAMERA (Bug 6 fix: subtract notepad from viewport) ===
 function updateCamera(){
+  if(S.arrival)return; // the arrival cut-scene drives the camera itself
   const mw=mapW()*TS;
   const mh=mapH()*TS;
   // 220px CSS notepad at 2x scale = 110px internal
@@ -1615,7 +1616,7 @@ const SPEED=1.2;
 let stepTimer=0;
 
 function updatePlayer(dt){
-  if(S.screen!=='game'||S.dlgOpen||S.eventOpen||S.weekTransOpen||S.docsOpen||S.statsOpen)return;
+  if(S.screen!=='game'||S.dlgOpen||S.eventOpen||S.weekTransOpen||S.docsOpen||S.statsOpen||S.arrival)return;
   let dx=0,dy=0;
   if(S.keys['ArrowLeft']||S.keys['a']||S.keys['A'])dx=-1;
   if(S.keys['ArrowRight']||S.keys['d']||S.keys['D'])dx=1;
@@ -1781,6 +1782,7 @@ function checkProximity(){
 // === INTERACTION ===
 function handleInteract(){
   if(S.screen!=='game')return;
+  if(S.arrival){skipArrival();return;} // SPACE/tap skips or dismisses the arrival cut-scene
   if(S.statsOpen){closeStatsModal();return;}
   if(S.docsOpen){closeDocsOverlay();return;}
   if(S.dlgOpen){return;} // Don't close dialogue on space — must click buttons
@@ -3842,6 +3844,89 @@ function drawTransition(ctx){
   ctx.fillRect(0,0,IW,IH);
 }
 
+// === ARRIVAL CUT-SCENE (new game): PM drives in from the LEFT along the road into town ===
+// A light, fully in-canvas scripted sequence (no DOM overlay) reusing the town map + car sprite.
+// Skippable; ends with the player stood by the office, told to go meet the team.
+const ARRIVAL_CARY=14*TS-6;            // car sits on the road (rows 14–15)
+const ARRIVAL_CARX0=-60;               // starts off-screen to the left
+const ARRIVAL_PARKX=120;               // parks just in front of the Project Office
+function startArrival(){
+  // Frame the office/road; the camera is held still while the car drives in.
+  const vpw=IW-110, vph=IH, mw=mapW()*TS, mh=mapH()*TS;
+  const camX=mw<=vpw?(mw-vpw)/2:Math.max(0,Math.min(mw-vpw,10*TS-vpw/2));
+  const camY=mh<=vph?(mh-vph)/2:Math.max(0,Math.min(mh-vph,14*TS-vph/2));
+  S.camX=camX; S.camY=camY;
+  S.arrival={phase:'drive',t:0,carX:ARRIVAL_CARX0,carY:ARRIVAL_CARY,camX:camX,camY:camY};
+}
+function updateArrival(dt){
+  const a=S.arrival; if(!a)return;
+  S.camX=a.camX; S.camY=a.camY;       // hold the framing steady
+  a.t+=dt;
+  if(a.phase==='drive'){
+    a.carX+=0.14*dt;                   // drive right along the road
+    if(a.carX>=ARRIVAL_PARKX){ a.carX=ARRIVAL_PARKX; a.phase='park'; a.t=0; playSFX('doorClose'); }
+  }else if(a.phase==='park'){
+    if(a.t>500){                       // brakes, settle
+      a.phase='exit'; a.t=0;
+      // PM steps out onto the pavement in front of the office (the town spawn).
+      const sp=MAPS.town.spawn; S.px=sp.x*TS; S.py=sp.y*TS; S.pdir='down'; S.pmoving=false; // face the camera so the chosen avatar is clearly visible
+      playSFX('doorOpen');
+    }
+  }else if(a.phase==='exit'){
+    if(a.t>700){ a.phase='brief'; a.t=0; }
+  }
+  // 'brief' waits for the player to dismiss it (handleInteract / skipArrival).
+}
+function skipArrival(){
+  const a=S.arrival; if(!a)return;
+  if(a.phase==='brief'){ endArrival(); return; }
+  // Fast-forward straight to the briefing beat.
+  a.carX=ARRIVAL_PARKX;
+  const sp=MAPS.town.spawn; S.px=sp.x*TS; S.py=sp.y*TS; S.pdir='down'; S.pmoving=false; // face the camera so the chosen avatar is clearly visible
+  a.phase='brief'; a.t=0;
+}
+function endArrival(){
+  S.arrival=null; S.keys={};
+  playSFX('positive');
+}
+// Draw the car (world space) — called from render while arrival is active.
+function drawArrivalCar(ctx){
+  const a=S.arrival; if(!a)return;
+  ctx.fillStyle='rgba(20,12,6,0.22)';
+  ctx.beginPath(); ctx.ellipse(a.carX+24,a.carY+24,22,4,0,0,Math.PI*2); ctx.fill(); // shadow
+  drawSprite(ctx,'car',Math.floor(a.carX),Math.floor(a.carY));
+}
+// Caption + prompt (screen space) — called after the world is drawn.
+function drawArrivalOverlay(ctx){
+  const a=S.arrival; if(!a)return;
+  // top caption
+  const cap=(a.phase==='brief')
+    ? 'Welcome to Project Valley, '+(S.playerName||'PM')+'.'
+    : 'T-32 — you arrive in Project Valley…';
+  ctx.font='bold 8px monospace'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  const cw=ctx.measureText(cap).width;
+  ctx.fillStyle='rgba(14,9,4,0.78)';
+  ctx.fillRect(IW/2-cw/2-8,8,cw+16,16);
+  ctx.fillStyle='#f7c948'; ctx.fillText(cap,IW/2,16);
+  if(a.phase==='brief'){
+    const msg='Head into the Project Office to meet your team.';
+    ctx.font='bold 8px monospace';
+    const mw2=ctx.measureText(msg).width;
+    ctx.fillStyle='rgba(14,9,4,0.82)';
+    ctx.fillRect(IW/2-mw2/2-10,IH-46,mw2+20,18);
+    ctx.fillStyle='#f0e6d3'; ctx.fillText(msg,IW/2,IH-37);
+    // pulsing prompt
+    const pulse=0.55+0.35*Math.sin(Date.now()/300);
+    ctx.fillStyle='rgba(247,201,72,'+pulse+')';
+    ctx.fillText('▶ Press SPACE / tap to begin',IW/2,IH-18);
+  }else{
+    ctx.font='7px monospace'; ctx.textAlign='right';
+    ctx.fillStyle='rgba(240,230,211,0.7)';
+    ctx.fillText('SPACE to skip',IW-6,IH-8);
+  }
+  ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+}
+
 // === SCREEN SHAKE ===
 let shakeIntensity=0,shakeDuration=0,shakeTimer=0;
 function triggerShake(intensity,duration){
@@ -4165,7 +4250,7 @@ function npcHasObjective(id){ return (S.objectives||[]).some(o=>o.type==='npc'&&
 // Stardew-style "!" markers bobbing over each incomplete objective's target (NPC or zone),
 // so newcomers/children always know where to go next.
 function drawObjectiveMarkers(ctx){
-  if(S.dlgOpen||S.eventOpen||S.weekTransOpen||S.docsOpen||S.statsOpen)return;
+  if(S.dlgOpen||S.eventOpen||S.weekTransOpen||S.docsOpen||S.statsOpen||S.arrival)return;
   const bob=Math.sin(Date.now()/250)*2;
   for(const o of (S.objectives||[])){
     if(S.completedObj.includes(o.type+'_'+o.target+'_'+S.week))continue;
@@ -4237,12 +4322,16 @@ function render(){
 
   // Area labels (after tiles, before entities)
   drawAreaLabels(CTX);
-  
+
+  // Arrival cut-scene: the car drives in (behind the characters)
+  if(S.arrival)drawArrivalCar(CTX);
+
   // Collect all entities for Y-sorting
   const entities=[];
-  
-  // Player
-  entities.push({y:S.py+24,draw:()=>{
+
+  // Player — hidden while still in the car during the arrival drive/park beats
+  const pmHidden=S.arrival&&(S.arrival.phase==='drive'||S.arrival.phase==='park');
+  if(!pmHidden)entities.push({y:S.py+24,draw:()=>{
     const pcfg=CHARS[S.playerChar];
     pcfg._ppe=S.ppeEquipped;
     drawChar(CTX,pcfg,S.pdir,S.pmoving?S.pframe:0,Math.floor(S.px),Math.floor(S.py)+(S.pmoving?0:idleBob(1)),S.pmoving);
@@ -4316,7 +4405,7 @@ function render(){
   entities.forEach(e=>e.draw());
   
   // Zone glow indicators — pulsing border
-  if(!S.dlgOpen&&!S.eventOpen&&!S.docsOpen){
+  if(!S.dlgOpen&&!S.eventOpen&&!S.docsOpen&&!S.arrival){
     const zones=ZONES[S.map]||[];
     const now=Date.now();
     zones.forEach(z=>{
@@ -4354,6 +4443,7 @@ function render(){
   drawPopups(CTX);
   drawTransition(CTX);
   drawFlash(CTX);
+  drawArrivalOverlay(CTX); // arrival cut-scene caption + prompt (above everything)
 }
 
 
@@ -4552,6 +4642,9 @@ function beginGame(){
   updateHUD();
   updateNotepad();
   if(S.musicOn)startBGM();
+
+  // Roll the arrival cut-scene: the PM drives in from the left along the road into town.
+  startArrival();
 }
 
 // === SAVE/LOAD ===
@@ -4652,6 +4745,7 @@ function gameLoop(ts){
 
   updatePlayer(dt);
   updateNPCAI(dt);
+  if(S.arrival)updateArrival(dt);
   updateCamera();
   checkProximity();
   updateParticles(dt);
