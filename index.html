@@ -238,7 +238,7 @@ const S={
   playerName:'PM',playerChar:0,
   map:'office',px:14*16,py:15*16,pdir:0,pframe:0,pmoving:false,
   camX:0,camY:0,
-  objectives:[],completedObj:[],
+  objectives:[],completedObj:[],spentInteractions:[],
   eventsDone:[],dlgCooldowns:{},
   coffeeUsed:false,siteUnlocked:false,
   introStep:0,weekTransOpen:false,
@@ -1379,12 +1379,22 @@ function handleInteract(){
 }
 
 // === NPC DIALOGUE (Bug 11 fix: show reaction + metric changes) ===
+// Per-week interaction cap — each metric-affecting activity counts once per week (closes the re-talk farm).
+function interactionSpent(key){ return (S.spentInteractions||[]).includes(key+'_'+S.week); }
+function spendInteraction(key){ S.spentInteractions=S.spentInteractions||[]; const k=key+'_'+S.week; if(!S.spentInteractions.includes(k))S.spentInteractions.push(k); }
+
 function openNPCDialogue(npc){
   playSFX('interact');
   const phaseIdx=getDlgPhaseIdx(S.week);
   const npcDlgs=DLG[npc.id];
   if(!npcDlgs||!npcDlgs[phaseIdx])return;
-  
+  // Already had this week's catch-up — flavour only, no further effects.
+  if(interactionSpent('npc_'+npc.id)){
+    completeObj('npc',npc.id);
+    showZoneText(npc.name+' ('+npc.role+')','You’ve already had your weekly catch-up. '+npc.name+' is heads-down now — come back next week.');
+    return;
+  }
+
   const coolKey=npc.id+'_'+S.week;
   const lastIdx=S.dlgCooldowns[coolKey]||0;
   const pool=npcDlgs[phaseIdx];
@@ -1613,6 +1623,7 @@ function chooseDlg(npcId,pi,di,ci){
   const choice=dlg.choices[ci];
   const effects=choice.e||{};
   applyEffects(effects);
+  spendInteraction('npc_'+npcId); // weekly catch-up used up
 
   const npc=NPCS.find(n=>n.id===npcId);
   const el=document.getElementById('dlg');
@@ -1845,6 +1856,7 @@ const DESK_EMAILS=[
 let _currentDeskEmail=null;
 
 function showDeskEmails(){
+  if(interactionSpent('desk')){ showZoneText('✉️ Inbox','You’ve cleared your inbox for this week. New messages arrive next week.'); return; }
   const pi=getPhaseIdx(S.week);
   const emailPoolIdx=Math.min(Math.floor(pi/2),DESK_EMAILS.length-1);
   const pool=DESK_EMAILS[emailPoolIdx];
@@ -1877,6 +1889,7 @@ function chooseDeskEmail(ci){
   const c=email.choices[ci];
   if(!c){closeDlg();return;}
   applyEffects(c.e||{});
+  spendInteraction('desk');
   playSFX('paper');
   updateHUD();
   closeDlg();
@@ -1902,6 +1915,7 @@ const MEETING_AGENDAS=[
 ];
 
 function showMeetingRoom(){
+  if(interactionSpent('meeting')){ showZoneText('📋 Meeting Room','You’ve already held this week’s meeting. The room is free again next week.'); return; }
   const pi=getPhaseIdx(S.week);
   const agendaIdx=Math.min(Math.floor(pi/2),MEETING_AGENDAS.length-1);
   const agendas=MEETING_AGENDAS[agendaIdx];
@@ -1926,6 +1940,7 @@ function chooseMeetingAgenda(poolIdx,ai){
   const agenda=MEETING_AGENDAS[poolIdx][ai];
   applyEffects(agenda.e||{});
   S.metrics.morale=Math.min(100,S.metrics.morale+1); // meetings always give +1 morale
+  spendInteraction('meeting');
   playSFX('positive');
   updateHUD();
   closeDlg();
@@ -1996,6 +2011,8 @@ const TRACK_ISSUES=[
 ];
 
 function showTrackInspection(trackId){
+  if(interactionSpent('track_'+trackId)){ showZoneText('🔍 Track Inspection','You’ve already inspected this section this week.'); return; }
+  spendInteraction('track_'+trackId);
   // Pick 2-3 random issues
   const shuffled=[...TRACK_ISSUES].sort(()=>Math.random()-0.5);
   const issues=shuffled.slice(0,2+Math.floor(Math.random()*2)); // 2-3 issues
@@ -2321,6 +2338,7 @@ function closeWeekTrans(){
 }
 
 function startNewWeek(){
+  S.spentInteractions=[]; // fresh week — interactions available again
   S.objectives=getObjectives(S.week);
   S.completedObj=S.completedObj.filter(c=>!c.endsWith('_'+S.week));
   S.weekObjMet=false;
@@ -3658,7 +3676,8 @@ function saveGame(){
     pmKnowledge:[...S.pmKnowledge],
     siteVisits:_siteVisits,
     ppeEquipped:S.ppeEquipped,
-    eventChoices:S.eventChoices||[]
+    eventChoices:S.eventChoices||[],
+    spentInteractions:S.spentInteractions||[]
   };
   try{localStorage.setItem('projectValley_save',JSON.stringify(data));}catch(e){}
 }
@@ -3682,6 +3701,7 @@ function loadGame(){
     if(typeof data.siteVisits==='number')_siteVisits=data.siteVisits;
     S.ppeEquipped=!!data.ppeEquipped;
     S.eventChoices=Array.isArray(data.eventChoices)?data.eventChoices:[];
+    S.spentInteractions=Array.isArray(data.spentInteractions)?data.spentInteractions:[];
     // Validate spawn against the current map; snap to a known-good spawn if loaded coords are solid/out-of-bounds.
     const safe=(S.map==='site')?{x:3*TS,y:13*TS}:{x:14*TS,y:15*TS};
     const px=data.px,py=data.py;
@@ -3695,7 +3715,8 @@ function loadGame(){
   document.getElementById('title').className='scr';
   S.screen='game';
   S.objectives=getObjectives(S.week);
-  
+  checkWeekComplete(); // a continued save mid-week should show its advance button if already done
+
   // Init NPC positions
   NPCS.forEach(n=>{
     if(S.map==='office'&&n.officeX>0){n.curX=n.officeX*TS;n.curY=n.officeY*TS;}

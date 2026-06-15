@@ -74,7 +74,7 @@ const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
 const scripts=[...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)].map(m=>m[1]);
 let code=scripts.join('\n;\n');
 // epilogue: capture top-level consts/fns into global for assertions
-const names=['S','applyEffects','advanceWeek','getPhase','getPhaseIdx','getDlgPhaseIdx','chooseDlg','NPCS','OMAP','SMAP','ZONES','isSolid','render','updatePlayer','startGame','newGame','selectCharacter','beginGame','saveGame','loadGame','EVENTS','PHASES','DLG','transitionToMap','showEvent','triggerEvent','getObjectives','updateHUD','updateNotepad','WALK_FRAMES','updateNPCAI','CHARS','ATLAS','drawSprite','OFFICE_W','OFFICE_H','OFFICE_OBJECTS','OFFICE_SOLID_OBJ','objBaseCells','OFFICE_SOLID','SITE_W','SITE_H','SITE_OBJECTS','SITE_SOLID_OBJ','ZONES','NPC_WANDER_OFFICE','NPC_WANDER_SITE','siteTrackFrac','POPUPS','enterWeek','afterEvent','chooseEvent','closeReport','REPORT_WEEKS','getObjectives','showEndScreen'];
+const names=['S','applyEffects','advanceWeek','getPhase','getPhaseIdx','getDlgPhaseIdx','chooseDlg','NPCS','OMAP','SMAP','ZONES','isSolid','render','updatePlayer','startGame','newGame','selectCharacter','beginGame','saveGame','loadGame','EVENTS','PHASES','DLG','transitionToMap','showEvent','triggerEvent','getObjectives','updateHUD','updateNotepad','WALK_FRAMES','updateNPCAI','CHARS','ATLAS','drawSprite','OFFICE_W','OFFICE_H','OFFICE_OBJECTS','OFFICE_SOLID_OBJ','objBaseCells','OFFICE_SOLID','SITE_W','SITE_H','SITE_OBJECTS','SITE_SOLID_OBJ','ZONES','NPC_WANDER_OFFICE','NPC_WANDER_SITE','siteTrackFrac','POPUPS','enterWeek','afterEvent','chooseEvent','closeReport','REPORT_WEEKS','getObjectives','showEndScreen','chooseDlg','openNPCDialogue','interactionSpent','spendInteraction','getDlgPhaseIdx'];
 code+='\n;globalThis.__G=(function(){const o={};'+names.map(n=>`try{o['${n}']=${n};}catch(e){}`).join('')+'return o;})();';
 
 const results={pass:[],fail:[]};
@@ -202,6 +202,16 @@ check('choice-aware ending: curveball choices are logged and the end screen rend
   if(!g.S.eventChoices[0].title||!g.S.eventChoices[0].choice) throw new Error('logged choice missing title/choice');
   g.S.week=-8; g.showEndScreen();
   if(g.S.screen!=='end') throw new Error('end screen did not render');
+});
+check('weekly interaction cap: re-talking an NPC after a choice applies no further effects',()=>{
+  g.S.spentInteractions=[]; g.S.week=20; g.S.dlgOpen=false;
+  g.S.metrics={schedule:70,budget:70,safety:70,quality:70,morale:70};
+  const pi=g.getDlgPhaseIdx(20);
+  g.chooseDlg('sarah',pi,0,0); // a real choice: applies effects + spends the weekly slot
+  if(!g.interactionSpent('npc_sarah')) throw new Error('choice did not consume the weekly slot');
+  const after=JSON.stringify(g.S.metrics);
+  g.openNPCDialogue(g.NPCS.find(n=>n.id==='sarah')); // spent -> flavour only
+  if(JSON.stringify(g.S.metrics)!==after) throw new Error('re-talking after the cap still changed metrics (exploit not closed)');
 });
 
 // ---------- report ----------

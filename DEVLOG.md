@@ -214,3 +214,29 @@ Work the loop should execute in order (tick in this file as done):
 - Harness +1 (choices logged; end screen renders). **24/24 green.** node --check clean.
 - Next: state-dependent events / choice callbacks (P3 depth), compound fence enclosure + week-transition
   stinger (P2-feel), office phase visuals (P3).
+
+
+### 2026-06-15 — Holistic production review → new checklist
+Full-build review (24/24 at the time). No crash/soft-lock blockers; content + engine production-ready on
+desktop. Priorities for THIS audience (kids on phones via Squarespace):
+**P1:**
+- [ ] Touch controls + responsive canvas (keyboard-only = unplayable on mobile).
+- [x] Per-week interaction cap — re-talking NPCs / re-opening emails/meetings/inspections re-applied
+      effects (metric-farm exploit, flattened difficulty + teaching). Now once-per-week each; repeats are
+      flavour-only. + anti-exploit harness test.
+- [ ] PPE onboarding: no objective points to the locker; site door rejection has no breadcrumb.
+**P2:**
+- [ ] "Week Complete" applies a hidden morale drift (advanceWeek always takes the skipped>1 branch); make
+      the honest path drift-free, kill the dead else branch.
+- [x] loadGame calls checkWeekComplete() (completed-week save now shows its advance button).
+- [ ] Low-metric warning + a distinct 'troubled project' ending below ~40 avg.
+- [ ] Split music/SFX toggles + master volume; colourblind text tags on metrics.
+**P3:** remove dead getNPCsOnMap()/overlay stubs; tie PM_KNOWLEDGE unlocks to decisions; compress
+post-delivery; idle/turn animations.
+
+### 2026-06-15 — Iteration 14 (P1: close the metric-farm exploit)
+- Added a per-week interaction cap (`spentInteractions` + `interactionSpent`/`spendInteraction`, cleared in
+  startNewWeek, persisted in save/load). NPC catch-ups, desk inbox, meetings, and each track inspection now
+  give effects once per week; repeats show a flavour message. Restores scarcity/stakes and protects the
+  teaching goal. loadGame now also calls checkWeekComplete(). **25/25 green** (incl. anti-exploit test).
+- Next P1: PPE onboarding breadcrumb, then touch controls + responsive canvas.
