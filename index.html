@@ -1127,12 +1127,13 @@ function playNote(freq,dur,type,vol,delay){
     const t=audioCtx.currentTime+(delay||0);
     const o=audioCtx.createOscillator(),g=audioCtx.createGain();
     o.type=type||'square';o.frequency.value=freq;
-    const peak=(vol||0.1)*(masterGain?masterGain.gain.value:0.3); // dial scales everything
+    const peak=(vol||0.1);
     g.gain.value=0;
     g.gain.setValueAtTime(0,t);
     g.gain.linearRampToValueAtTime(peak,t+0.02);
     g.gain.linearRampToValueAtTime(0,t+dur);
-    o.connect(g);g.connect(audioCtx.destination);
+    // Route through masterGain so the dial is a TRUE real-time master (affects audio already playing).
+    o.connect(g);g.connect(masterGain||audioCtx.destination);
     o.start(t);o.stop(t+dur);
   }catch(e){}
 }
