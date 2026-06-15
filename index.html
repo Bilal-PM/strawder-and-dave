@@ -3108,6 +3108,28 @@ function perfPanelHTML(){
   html+='</div>';
   return html;
 }
+// A simpler, larger start→finish read for the end screen (clearer than the line chart at small size).
+function perfBarsHTML(){
+  const hist=(S.metricHistory||[]).filter(h=>h&&h.m&&typeof h.m.schedule==='number');
+  if(!hist.length) return '';
+  const start=hist[0].m, end=hist[hist.length-1].m;
+  const metrics=[['schedule','Schedule','#3a9a6a'],['budget','Budget','#c79a1e'],['safety','Safety','#c2415e'],['quality','Quality','#3f6fc4'],['morale','Morale','#b07a3a']];
+  let html='<div style="font-size:11px;color:#5a3a1e;font-weight:bold;margin-bottom:8px">📊 Where you started → where you finished</div>';
+  metrics.forEach(mt=>{
+    const s=start[mt[0]], e=end[mt[0]], d=e-s;
+    const dc=d>0?'#2a8a5a':(d<0?'#c45040':'#7a5a38'), arrow=d>0?'▲':(d<0?'▼':'—');
+    html+='<div style="display:flex;align-items:center;gap:8px;margin:7px 0">';
+    html+='<span style="width:62px;font-size:10px;color:'+mt[2]+';text-align:right;font-weight:bold">'+mt[1]+'</span>';
+    html+='<div style="flex:1;position:relative;height:18px;background:#e6d8ba;border:1px solid #b8a684;border-radius:5px;overflow:hidden">';
+    html+='<div style="position:absolute;left:0;top:0;height:100%;width:'+e+'%;background:'+mt[2]+';opacity:0.9"></div>';
+    html+='<div style="position:absolute;left:calc('+s+'% - 1px);top:0;height:100%;width:3px;background:#2a1c10" title="start"></div>';
+    html+='</div>';
+    html+='<span style="width:96px;font-size:10px;color:#5a3a1e">'+s+' → <b>'+e+'</b> <span style="color:'+dc+'">'+arrow+(d>0?'+':'')+d+'</span></span>';
+    html+='</div>';
+  });
+  html+='<div style="font-size:8px;color:#9a7a4a;margin-top:6px">The dark line marks your starting score; the coloured bar is where you finished.</div>';
+  return html;
+}
 function deliverableAvailable(d){ return S.week<=d.readyWeek; }
 function deliverablesAvailableCount(){ return DELIVERABLES.filter(deliverableAvailable).length; }
 // Open one deliverable into a focused reading view (inside the documents overlay).
@@ -3318,8 +3340,12 @@ function showEndScreen(){
   html+='<div style="text-align:center;font-size:9px;color:#f7c948;margin-top:4px">Average: '+avg+'%</div>';
   html+='</div>';
 
-  // Performance journey — where you started vs where you ended up (light card for readability on the dark end screen)
-  html+='<div style="background:#f5ead0;border-radius:6px;padding:8px 12px;margin:10px 0;text-align:left">'+perfPanelHTML()+'</div>';
+  // Performance journey — a clear, large start→finish read (light card for readability on the dark end screen)
+  html+='<div style="background:#f5ead0;border-radius:6px;padding:10px 14px;margin:10px 0;text-align:left">'+perfBarsHTML()+'</div>';
+
+  // Primary action right here, immediately after the results (so it is never missed).
+  html+='<div style="text-align:center;margin:8px 0 14px"><button class="btn gld" onclick="location.reload()" style="font-size:11px">▶ Play Again</button>'
+      +'<div style="font-size:7px;color:#c4a878;margin-top:4px">Scroll down for your full story, decisions, team & achievements</div></div>';
 
   // Story narrative
   html+='<div style="text-align:left;margin:10px 0;padding:8px 12px;background:rgba(0,0,0,0.15);border-radius:6px;border-left:3px solid #f7c948">';
@@ -3376,7 +3402,8 @@ function showEndScreen(){
   document.getElementById('wtTitle').innerHTML=html;
   document.getElementById('wtText').textContent='';
   document.getElementById('wtChanges').textContent='';
-  document.querySelector('#weekTrans .btn').style.display='none';
+  // Hide ONLY the week-transition Continue button (direct child) — NOT the Play Again button nested in wtTitle.
+  const _cont=document.querySelector('#weekTrans > button.btn'); if(_cont)_cont.style.display='none';
   el.className='scr on';
 }
 

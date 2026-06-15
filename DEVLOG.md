@@ -479,3 +479,17 @@ Two issues from the owner's playtest:
   **visible `door` sprite at each office exit** (Studio / Supplier / Site / Boardroom) plus **directional arrow
   labels** ("↓ Supplier", "↓ Design Studio", "↓ Railway Site", "↓ Boardroom") so every destination is signposted.
 - **49/49 green**, node --check clean. Office render verified the doorways read clearly.
+
+
+### 2026-06-15 — Iteration 32 (end-screen fixes: action button + readable graph)
+Owner playtest of the finish screen:
+- **"No option after the results"** — root cause: `document.querySelector('#weekTrans .btn')` was meant to hide
+  the week-transition Continue button but matched the FIRST `.btn` in document order, which is the **Play Again**
+  button nested in `#wtTitle` — so it hid the only action. Fixed to target the direct-child Continue button
+  (`#weekTrans > button.btn`), and added a **prominent "▶ Play Again"** right after the results so it's never
+  missed (plus the existing one at the bottom).
+- **Hard-to-read end graph** — replaced the small 5-line SVG on the end screen with a **simpler, larger
+  start→finish bar read** (`perfBarsHTML`): one bar per metric showing the finishing score with a dark marker
+  at the starting score + a `70 → 84 ▲+14` label. Much clearer at a glance. (The line chart stays in the docs
+  overlay.)
+- Harness +1 (end screen renders the Play Again action + the start→finish bars). **50/50 green**, node --check clean.
