@@ -220,7 +220,7 @@ Work the loop should execute in order (tick in this file as done):
 Full-build review (24/24 at the time). No crash/soft-lock blockers; content + engine production-ready on
 desktop. Priorities for THIS audience (kids on phones via Squarespace):
 **P1:**
-- [ ] Touch controls + responsive canvas (keyboard-only = unplayable on mobile).
+- [x] Touch controls (on-screen D-pad + action button -> S.keys/handleInteract, shown on touch devices in-game) + responsive canvas (aspect-ratio scaling to fit any viewport).
 - [x] Per-week interaction cap — re-talking NPCs / re-opening emails/meetings/inspections re-applied
       effects (metric-farm exploit, flattened difficulty + teaching). Now once-per-week each; repeats are
       flavour-only. + anti-exploit harness test.
@@ -248,3 +248,13 @@ post-delivery; idle/turn animations.
   site visit is pending and PPE isn't equipped. Newcomers/kids are now guided to PPE instead of getting
   stuck at the site door. **25/25 green.** node --check clean.
 - Next P1: touch controls + responsive canvas (mobile). Then P2: Week-Complete drift fix, troubled ending.
+
+
+### 2026-06-15 — Iteration 16 (P1: mobile — touch controls + responsive canvas)
+- Made #gc responsive: `width:min(100vw,100vh*1.5); aspect-ratio:3/2` so the 3:2 game scales to fit phones/
+  tablets/desktops (the canvas + all overlays scale with it). Added an on-screen D-pad + SPACE/action
+  button (`#touch`) that drive `S.keys` and `handleInteract()`; shown only on touch devices while in-game.
+- node --check clean, **25/25 green**. (Touch is DOM/visual — final verification is the owner's phone test
+  on Pages.)
+- This was the last P1. Remaining P2/P3: Week-Complete drift fix, troubled-project ending, music/SFX split,
+  colourblind tags; dead-code, PM-knowledge-on-decision, animations.

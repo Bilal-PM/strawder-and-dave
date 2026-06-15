@@ -7,7 +7,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#3a2a18;color:#f0e6d3;font-family:'Press Start 2P',monospace;overflow:hidden;height:100vh;width:100vw;display:flex;align-items:center;justify-content:center}
-#gc{position:relative;width:960px;height:640px;background:#5a3a1e;border:4px solid #7a5c3a;border-radius:2px;overflow:hidden;image-rendering:pixelated}
+#gc{box-sizing:border-box;position:relative;width:min(100vw,calc(100vh*1.5));aspect-ratio:3/2;max-width:1100px;background:#5a3a1e;border:4px solid #7a5c3a;border-radius:2px;overflow:hidden;image-rendering:pixelated}
 #cv{position:absolute;top:0;left:0;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}
 .scr{position:absolute;top:0;left:0;width:100%;height:100%;display:none;z-index:10}
 .scr.on{display:flex;flex-direction:column;align-items:center;justify-content:center}
@@ -104,6 +104,14 @@ body{background:#3a2a18;color:#f0e6d3;font-family:'Press Start 2P',monospace;ove
 .modal.on{animation:modalslam .26s ease-out}
 @keyframes alarm{0%,100%{filter:none}50%{filter:brightness(1.5) saturate(1.4)}}
 .mf.danger{background:#e05577!important;animation:alarm .7s ease-in-out infinite}
+/* on-screen touch controls (mobile) */
+#touch{display:none;position:absolute;inset:0;z-index:40;pointer-events:none}
+#dpad{position:absolute;left:3%;bottom:5%;width:32%;max-width:165px;aspect-ratio:1/1}
+.tb{position:absolute;width:33%;height:33%;display:flex;align-items:center;justify-content:center;background:rgba(40,28,18,0.5);border:2px solid rgba(247,201,72,0.55);border-radius:12%;color:#f7c948;font-size:min(5vw,22px);pointer-events:auto;user-select:none;-webkit-user-select:none;touch-action:none;cursor:pointer}
+.tb:active{background:rgba(247,201,72,0.4)}
+.tu{left:33.5%;top:0}.td{left:33.5%;bottom:0}.tl{left:0;top:33.5%}.tr{right:0;top:33.5%}
+#actbtn{position:absolute;right:5%;bottom:8%;width:17%;max-width:88px;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;background:rgba(247,201,72,0.85);border:3px solid #b07d1c;border-radius:50%;color:#3a2210;font-size:min(3vw,12px);font-weight:bold;pointer-events:auto;user-select:none;-webkit-user-select:none;touch-action:none;cursor:pointer}
+#actbtn:active{background:rgba(247,201,72,1)}
 </style>
 </head>
 <body>
@@ -177,6 +185,15 @@ body{background:#3a2a18;color:#f0e6d3;font-family:'Press Start 2P',monospace;ove
 <div id="statsModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:100;background:rgba(0,0,0,0.6);overflow-y:auto"></div>
 <div id="hint"></div>
 <div class="ach-toast" id="achToast"><div class="ach-icon"></div><div class="ach-info"><div class="ach-label">ACHIEVEMENT UNLOCKED</div><div class="ach-name"></div><div class="ach-desc"></div></div></div>
+<div id="touch">
+  <div id="dpad">
+    <div class="tb tu" data-k="ArrowUp">▲</div>
+    <div class="tb td" data-k="ArrowDown">▼</div>
+    <div class="tb tl" data-k="ArrowLeft">◀</div>
+    <div class="tb tr" data-k="ArrowRight">▶</div>
+  </div>
+  <div id="actbtn">SPACE</div>
+</div>
 </div>
 <script>
 // === PROJECT VALLEY — Complete Rebuilt Game Engine ===
@@ -3753,6 +3770,7 @@ function loadGame(){
 function gameLoop(ts){
   const dt=S.lastTime?Math.min(ts-S.lastTime,50):16; // cap delta to avoid jumps
   S.lastTime=ts;
+  if(IS_TOUCH){const _t=document.getElementById('touch'); if(_t)_t.style.display=(S.screen==='game')?'block':'none';}
 
   updatePlayer(dt);
   updateNPCAI(dt);
@@ -3771,8 +3789,23 @@ function gameLoop(ts){
   requestAnimationFrame(gameLoop);
 }
 
+// === TOUCH CONTROLS (mobile) ===
+const IS_TOUCH=('ontouchstart' in window)||(navigator.maxTouchPoints>0);
+function bindTouch(){
+  document.querySelectorAll('#dpad .tb').forEach(b=>{
+    const k=b.dataset.k;
+    const on=e=>{e.preventDefault();S.keys[k]=true;};
+    const off=e=>{e.preventDefault();S.keys[k]=false;};
+    b.addEventListener('touchstart',on,{passive:false});b.addEventListener('touchend',off);b.addEventListener('touchcancel',off);
+    b.addEventListener('mousedown',on);b.addEventListener('mouseup',off);b.addEventListener('mouseleave',off);
+  });
+  const act=document.getElementById('actbtn');
+  if(act){ const fire=e=>{e.preventDefault();handleInteract();}; act.addEventListener('touchstart',fire,{passive:false}); act.addEventListener('mousedown',fire); }
+}
+
 // === INIT ===
 async function init(){
+  bindTouch();
   // Load all assets
   await loadAllAssets();
   
