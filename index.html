@@ -504,7 +504,38 @@ const NPCS=[
    aiState:'idle',aiTimer:0,aiTargetX:4,aiTargetY:5,aiFacing:0,aiFrame:0,aiExpr:'chat',aiExprTimer:0},
   {id:'okoye',name:'Dr. Okoye',role:'Client Sponsor',hair:C.hairGray,hairStyle:'short',skin:C.skinC,shirt:C.shirtPurple,pants:C.pantsDk,eye:'#1a2848',
    officeX:-1,officeY:-1,siteX:-1,siteY:-1,pos:{boardroom:[13,6]},walkSheet:'char_alex_walk',idleSheet:'char_alex_idle',
-   aiState:'idle',aiTimer:0,aiTargetX:13,aiTargetY:6,aiFacing:0,aiFrame:0,aiExpr:'working',aiExprTimer:0}
+   aiState:'idle',aiTimer:0,aiTargetX:13,aiTargetY:6,aiFacing:0,aiFrame:0,aiExpr:'working',aiExprTimer:0},
+  // === AMBIENT / "town life" NPCs — flavour only (no metrics, no leadership). Wander + a friendly natter. ===
+  {id:'amb_resident',name:'Marcus',role:'Local Resident',ambient:true,hair:C.hairBrown,hairStyle:'short',skin:C.skinB,shirt:C.shirtBlue,pants:C.pantsDk,eye:'#3a3020',
+   officeX:-1,officeY:-1,siteX:-1,siteY:-1,pos:{town:[6,16]},aiState:'idle',aiTimer:0,aiTargetX:6,aiTargetY:16,aiFacing:0,aiFrame:0,aiExpr:'chat',aiExprTimer:0,
+   chat:['Morning! You must be the new project manager. The whole town\'s been waiting on this railway.',
+         'My nan remembers the old line closing. Be a proper boost to get trains running again.',
+         'Folks round here are rooting for you. Just keep it safe and on time, eh?',
+         'Lovely day for it. Mind how you go on that site — it\'s a busy old place.']},
+  {id:'amb_commuter',name:'Nadia',role:'Daily Commuter',ambient:true,hair:C.hairBlack,hairStyle:'long',skin:C.skinC,shirt:C.shirtPurple,pants:C.pantsBlue,eye:'#1a2848',
+   officeX:-1,officeY:-1,siteX:-1,siteY:-1,pos:{town:[20,16]},aiState:'idle',aiTimer:0,aiTargetX:20,aiTargetY:16,aiFacing:0,aiFrame:0,aiExpr:'working',aiExprTimer:0,
+   chat:['Two buses just to get to work today! Honestly, this new line can\'t come soon enough.',
+         'Any idea on the opening date? My whole commute hinges on it.',
+         'Just keep the budget sensible — we all end up paying for overruns in the end!',
+         'Good luck in there. We\'re all counting on you to land it.']},
+  {id:'amb_apprentice',name:'Leo',role:'Engineering Apprentice',ambient:true,hair:C.hairBlonde,hairStyle:'short',skin:C.skinA,shirt:C.hiVis,pants:C.pantsDk,eye:'#285828',hat:C.yellow,
+   officeX:-1,officeY:-1,siteX:-1,siteY:-1,pos:{town:[12,13]},aiState:'idle',aiTimer:0,aiTargetX:12,aiTargetY:13,aiFacing:0,aiFrame:0,aiExpr:'confused',aiExprTimer:0,
+   chat:['Hi! I\'m on the apprenticeship. Any advice on being a good PM?',
+         'I read that it\'s all about trade-offs — schedule, cost, quality, safety, the team. Is that right?',
+         'They say a good manager listens before deciding. I\'m trying to learn that one.',
+         'One day I want your job! Mind if I shadow you sometime?']},
+  {id:'amb_reception',name:'Grace',role:'Receptionist',ambient:true,hair:C.hairRed,hairStyle:'long',skin:C.skinA,shirt:C.shirtBlue,pants:C.pantsDk,eye:'#2848a0',
+   officeX:15,officeY:16,siteX:-1,siteY:-1,aiState:'idle',aiTimer:0,aiTargetX:15,aiTargetY:16,aiFacing:0,aiFrame:0,aiExpr:'chat',aiExprTimer:0,curX:15*16,curY:16*16,
+   chat:['Welcome to the project office! The team\'s in the open plan — go say hello.',
+         'Boardroom\'s through the door up top if the client\'s in. Changing room\'s the far corner.',
+         'Tea\'s in the break room. You\'ll need it some weeks, trust me!',
+         'Anyone asks for you, I\'ll send them through. Have a good one.']},
+  {id:'amb_warehouse',name:'Tom',role:'Warehouse Hand',ambient:true,hair:C.hairGray,hairStyle:'short',skin:C.skinB,shirt:C.hiVisOrange,pants:C.pantsDk,eye:'#3a3020',
+   officeX:-1,officeY:-1,siteX:-1,siteY:-1,pos:{supplier:[18,8]},aiState:'idle',aiTimer:0,aiTargetX:18,aiTargetY:8,aiFacing:0,aiFrame:0,aiExpr:'working',aiExprTimer:0,
+   chat:['Alright? Mind the forklift — it doesn\'t stop for anyone.',
+         'Rail, sleepers, ballast — if it\'s on the order, it ships from here.',
+         'Raj does the deals; I just shift the pallets. Talk to him at the counter.',
+         'Order early, that\'s my tip. Lead times have a habit of biting.']}
 ];
 
 // NPC wander targets in office
@@ -516,6 +547,10 @@ const NPC_WANDER_OFFICE=[
 // Walkable railway-site cells (near the works) for site NPCs.
 const NPC_WANDER_SITE=[
   {x:5,y:13},{x:10,y:13},{x:13,y:13},{x:22,y:6},{x:25,y:13},{x:20,y:7}
+];
+// Pavement strolling points for the outdoor town's ambient townsfolk.
+const NPC_WANDER_TOWN=[
+  {x:5,y:13},{x:12,y:13},{x:19,y:13},{x:7,y:16},{x:14,y:16},{x:22,y:16},{x:9,y:13}
 ];
 
 // (Removed dead sprite-sheet config + TILE_SPRITES lookup from the abandoned
@@ -731,7 +766,7 @@ const TOWN_SOLID=buildInteriorSolid(TOWNMAP,TOWN_W,TOWN_H,TOWN_OBJECTS,TOWN_SOLI
 
 // ===== MAP REGISTRY — all map-aware code reads MD()/MAPS[id] (so new areas drop in as data) =====
 const MAPS={
-  town:{W:TOWN_W,H:TOWN_H,grid:TOWNMAP,ground:TOWN_GROUND,objects:TOWN_OBJECTS,solidObj:TOWN_SOLID_OBJ,solid:TOWN_SOLID,wander:[],spawn:{x:9,y:13},interior:false},
+  town:{W:TOWN_W,H:TOWN_H,grid:TOWNMAP,ground:TOWN_GROUND,objects:TOWN_OBJECTS,solidObj:TOWN_SOLID_OBJ,solid:TOWN_SOLID,wander:NPC_WANDER_TOWN,spawn:{x:9,y:13},interior:false},
   office:{W:OFFICE_W,H:OFFICE_H,grid:OMAP,ground:OFFICE_GROUND,objects:OFFICE_OBJECTS,solidObj:OFFICE_SOLID_OBJ,solid:OFFICE_SOLID,wander:[],spawn:{x:16,y:17},interior:true},
   site:{W:SITE_W,H:SITE_H,grid:SMAP,ground:SITE_GROUND,objects:SITE_OBJECTS,solidObj:SITE_SOLID_OBJ,solid:SITE_SOLID,wander:NPC_WANDER_SITE,spawn:{x:3,y:13},interior:false},
   supplier:{W:SUPPLIER_W,H:SUPPLIER_H,grid:SUPMAP,ground:SUPPLIER_GROUND,objects:SUPPLIER_OBJECTS,solidObj:SUPPLIER_SOLID_OBJ,solid:SUPPLIER_SOLID,wander:[],spawn:{x:12,y:15},interior:true},
@@ -1411,7 +1446,8 @@ function playSFX(type){
   }
 }
 // === NPC "voice" — soft mumbling blips as dialogue appears (Animal-Crossing style) ===
-const VOICE={sarah:560,mike:300,emma:620,james:360,priya:680,raj:400,okoye:340}; // per-NPC base pitch
+const VOICE={sarah:560,mike:300,emma:620,james:360,priya:680,raj:400,okoye:340,
+  amb_resident:440,amb_commuter:600,amb_apprentice:660,amb_reception:580,amb_warehouse:320}; // per-NPC base pitch
 let _mumbleTimer=null;
 function playMumble(npcId,len){
   if(S.sfxOn===false)return; if(!audioCtx)initAudio();
@@ -1859,6 +1895,17 @@ function openNPCDialogue(npc){
     const ddx=S.px-npc.curX, ddy=S.py-npc.curY;
     npc.aiState='idle'; npc.aiTimer=4000;
     npc.aiFacing=Math.abs(ddx)>Math.abs(ddy)?(ddx>0?1:3):(ddy>0?0:2);
+  }
+  // Ambient "town life" NPCs: a friendly natter only — no metrics, no leadership, no weekly slot.
+  // Lines rotate on each chat so they feel alive.
+  if(npc.ambient){
+    S._chatIdx=S._chatIdx||{};
+    const lines=npc.chat&&npc.chat.length?npc.chat:['Hello there!'];
+    const i=(S._chatIdx[npc.id]||0)%lines.length;
+    S._chatIdx[npc.id]=i+1;
+    showZoneText(npc.name+(npc.role?' ('+npc.role+')':''),lines[i]);
+    playMumble(npc.id,lines[i].length);
+    return;
   }
   const phaseIdx=getDlgPhaseIdx(S.week);
   const npcDlgs=DLG[npc.id];
@@ -3687,8 +3734,8 @@ function checkAchievements(){
       unlockAchievement('first_contact');break;
     }
   }
-  // Full House — talked to all 5 NPCs (talked counter > 0 for all)
-  if(NPCS.every(n=>S.relationships[n.id]&&S.relationships[n.id].talked>0)){
+  // Full House — talked to all 5 core leads (ambient townsfolk don't count)
+  if(NPCS.every(n=>n.ambient||(S.relationships[n.id]&&S.relationships[n.id].talked>0))){
     unlockAchievement('full_house');
   }
   // Safety First — safety > 80% and past Construction Early (pi >= 6)

@@ -632,3 +632,19 @@ Three changes, all harness-gated (59/59) + Python-rendered:
   guided into the Office to meet the team). Worksite objectives without PPE also route via the office. New
   harness test covers the routing (office on wk32, site access, the no-PPE office detour, completed drop-out).
 node --check clean; **59/59 green**; office + arrival rendered via Python. (Independent review in flight.)
+
+
+### 2026-06-15 — Iteration 41 (town life + ambient NPCs)
+The world felt empty between the leads. Added ambient "town life" NPCs — flavour only (no metrics, no
+leadership, no weekly slot) with a friendly, rotating natter:
+- **Town (outdoor):** Marcus (Local Resident), Nadia (Daily Commuter) and Leo (Engineering Apprentice) stroll
+  the pavements (NPC_WANDER_TOWN) and greet you — town atmosphere, project chatter, and light PM-learning
+  prompts (the apprentice asks how to be a good PM, the commuter frets about budget/schedule).
+- **Buildings:** Grace (Receptionist) in the office points you to the team/boardroom/changing room; Tom
+  (Warehouse Hand) in the supplier riffs on lead times and points you to Raj.
+- New `ambient:true` + `chat:[...]` schema; `openNPCDialogue` short-circuits ambient NPCs to a rotating flavour
+  box (cycles `S._chatIdx`) — no DLG, no metric/objective side-effects. Each got a distinct VOICE pitch.
+- Hardened: the "Full House — talked to all leads" achievement now ignores ambient NPCs (so it stays
+  reachable); harness updated so ambient NPCs are exempt from the per-NPC DLG requirement and town wander
+  points are validated. New test covers placement/walkability, no-metrics chat, line rotation, and that
+  ambient NPCs don't block the achievement. **60/60 green**, node --check clean, town placement rendered.

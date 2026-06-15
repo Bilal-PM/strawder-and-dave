@@ -94,7 +94,7 @@ check('PHASES/getPhase cover the timeline',()=>{ [32,28,20,12,4,0,-4,-8].forEach
 check('OMAP is a non-empty 2D grid',()=>{ if(!Array.isArray(g.OMAP)||!Array.isArray(g.OMAP[0]))throw new Error('OMAP not 2D'); });
 check('SMAP is a non-empty 2D grid',()=>{ if(!Array.isArray(g.SMAP)||!Array.isArray(g.SMAP[0]))throw new Error('SMAP not 2D'); });
 check('isSolid handles out-of-bounds',()=>{ g.isSolid(-1,-1); g.isSolid(99999,99999); });
-check('NPCS present (5) with dialogue',()=>{ if(!Array.isArray(g.NPCS)||g.NPCS.length<5)throw new Error('NPCS count '+(g.NPCS&&g.NPCS.length)); g.NPCS.forEach(n=>{ if(!g.DLG[n.id])throw new Error('no DLG for '+n.id); }); });
+check('NPCS present (5) with dialogue',()=>{ if(!Array.isArray(g.NPCS)||g.NPCS.length<5)throw new Error('NPCS count '+(g.NPCS&&g.NPCS.length)); g.NPCS.forEach(n=>{ if(!n.ambient&&!g.DLG[n.id])throw new Error('no DLG for '+n.id); }); });
 check('every NPC dialogue choice applies without throwing & stays clamped',()=>{
   for(const id in g.DLG){ const phases=g.DLG[id];
     phases.forEach(ph=>ph.forEach(line=>(line.choices||[]).forEach(c=>{ if(c.e)g.applyEffects(c.e); })));
@@ -280,9 +280,37 @@ check('map registry: transitions office↔(supplier/boardroom/studio) set map+sp
     if(g.S.map!=='office') throw new Error('did not return to office from '+mapName);
   });
 });
-check('NPC wander targets are in-bounds and walkable (office & site)',()=>{
+check('ambient town-life NPCs: placed on walkable cells, chat without metrics, and do not break "talk to all"',()=>{
+  const amb=g.NPCS.filter(n=>n.ambient);
+  if(amb.length<3) throw new Error('expected several ambient NPCs, got '+amb.length);
+  amb.forEach(n=>{
+    // each ambient NPC is on some map, on a walkable cell, with rotating chat + a voice
+    let placed=false;
+    for(const mn of ['town','office','supplier','boardroom','studio','site']){
+      const c=g.npcCell(n,mn); if(!c)continue; placed=true; g.S.map=mn;
+      if(g.isSolid(c[0],c[1])) throw new Error(n.id+' stands on a solid cell on '+mn);
+    }
+    if(!placed) throw new Error(n.id+' is not placed on any map');
+    if(!Array.isArray(n.chat)||!n.chat.length) throw new Error(n.id+' has no chat lines');
+    if(typeof g.VOICE[n.id]!=='number') throw new Error(n.id+' has no voice');
+    if(g.DLG[n.id]) throw new Error(n.id+' should NOT have leadership dialogue (it is ambient)');
+  });
+  // chatting an ambient NPC opens a flavour box and changes no metrics / spends no weekly slot
+  const before=JSON.stringify(g.S.metrics); g.S.dlgOpen=false;
+  const r=g.NPCS.find(n=>n.id==='amb_resident'); g.S.map='town'; r.curX=100;r.curY=100;
+  g.openNPCDialogue(r);
+  if(JSON.stringify(g.S.metrics)!==before) throw new Error('ambient chat changed metrics');
+  // rotating lines: index advances
+  const i1=g.S._chatIdx['amb_resident']; g.openNPCDialogue(r);
+  if(g.S._chatIdx['amb_resident']!==i1+1) throw new Error('ambient chat did not rotate');
+  // the Full House achievement must still be reachable with ambient NPCs present
+  g.S.relationships={}; g.NPCS.filter(n=>!n.ambient).forEach(n=>{ g.S.relationships[n.id]={hearts:1,talked:1}; });
+  if(!g.NPCS.every(n=>n.ambient||(g.S.relationships[n.id]&&g.S.relationships[n.id].talked>0))) throw new Error('ambient NPCs block the "talk to all leads" check');
+});
+check('NPC wander targets are in-bounds and walkable (office, site & town)',()=>{
   g.S.map='office'; g.NPC_WANDER_OFFICE.forEach(t=>{ if(t.x<0||t.x>=g.OFFICE_W||t.y<0||t.y>=g.OFFICE_H||g.isSolid(t.x,t.y)) throw new Error('office wander bad @'+t.x+','+t.y); });
   g.S.map='site'; g.NPC_WANDER_SITE.forEach(t=>{ if(t.x<0||t.x>=g.SITE_W||t.y<0||t.y>=g.SITE_H||g.isSolid(t.x,t.y)) throw new Error('site wander bad @'+t.x+','+t.y); });
+  g.S.map='town'; g.MAPS.town.wander.forEach(t=>{ if(t.x<0||t.x>=g.TOWN_W||t.y<0||t.y>=g.TOWN_H||g.isSolid(t.x,t.y)) throw new Error('town wander bad @'+t.x+','+t.y); });
 });
 check('construction progression: track-laid fraction is monotonic 0..1 across the project',()=>{
   const weeks=[32,24,16,12,8,4,0,-8]; let prev=-1;
