@@ -2387,21 +2387,20 @@ function skipPhase(){
     if(nextWeek===undefined)return;
   }
 
-  // Random metric drift: -8 to +3 per metric (biased negative)
+  // Random metric drift: -8 to +3 per metric (biased negative). Uses seedable rng for reproducibility.
   const drifts={};
   const metricKeys=['schedule','budget','safety','quality','morale'];
   metricKeys.forEach(k=>{
-    const d=Math.floor(Math.random()*12)-8; // -8 to +3
+    const d=Math.floor(rng()*12)-8; // -8 to +3
     drifts[k]=d;
     S.metrics[k]=Math.max(0,Math.min(100,S.metrics[k]+d));
   });
 
-  // Auto-resolve any curveball events in skipped range
+  // Auto-resolve any curveball events in the skipped range — through the SAME resolver as the modal,
+  // so setbacks still land and gambles can still backfire (no free best-case from skipping).
   EVENTS.forEach(ev=>{
     if(ev.week<=S.week&&ev.week>=nextWeek&&!S.eventsDone.includes(ev.week)){
-      const rci=Math.floor(Math.random()*ev.choices.length);
-      applyEffects(ev.choices[rci].e);
-      S.eventsDone.push(ev.week);
+      applyEventChoice(ev,Math.floor(rng()*ev.choices.length));
     }
   });
 
@@ -2576,26 +2575,29 @@ function showEvent(ev){
   setTimeout(()=>{el.className='modal on';},500);
 }
 
-function chooseEvent(week,ci){
-  const ev=EVENTS.find(e=>e.week===week);
-  if(!ev)return;
+// Full state mutation for resolving one event choice — shared by the modal (chooseEvent) and the
+// auto-resolver (skipPhase), so risk/setback/callback/flags apply identically on BOTH paths.
+function applyEventChoice(ev,ci){
+  if(ev.setback&&!S.flags['sb_'+ev.week]){ S.flags['sb_'+ev.week]=1; applyEffects(ev.setback.e,diff().setbackMult); } // setback (guarded; skip path has no showEvent)
+  const cb=eventCallback(ev); if(cb&&cb.e)applyEffects(cb.e);   // earlier decision's delayed consequence
   const choice=ev.choices[ci];
-  // Apply an earlier decision's delayed consequence to THIS event, if any (named in showEvent).
-  const cb=eventCallback(ev);
-  if(cb&&cb.e)applyEffects(cb.e);
-  // Resolve the (possibly risky) choice.
-  const res=resolveRisk(choice);
+  const res=resolveRisk(choice);                                // gamble may BACKFIRE
   applyEffects(res.e);
-  // Record a sticky flag so this decision can echo into later events.
   if(choice.id){ S.flags=S.flags||{}; S.flags[choice.id]=res.ok?'ok':'fail'; }
-  // Taking a side with one specialist costs you with the other — and they remember being overruled.
   if(choice.relHit){ for(const id in choice.relHit){
     if(S.relationships[id])S.relationships[id].hearts=Math.max(0,Math.min(5,S.relationships[id].hearts+choice.relHit[id]));
     S.npcMemory[id]=S.npcMemory[id]||{}; S.npcMemory[id].overruled=true;
   }}
-  S.eventsDone.push(week);
+  if(!S.eventsDone.includes(ev.week))S.eventsDone.push(ev.week);
   S.eventChoices=S.eventChoices||[];
-  S.eventChoices.push({title:ev.title,choice:choice.t,ok:res.ok}); // for the choice-aware ending
+  S.eventChoices.push({title:ev.title,choice:choice.t,ok:res.ok});
+  return res;
+}
+
+function chooseEvent(week,ci){
+  const ev=EVENTS.find(e=>e.week===week);
+  if(!ev)return;
+  const res=applyEventChoice(ev,ci);
   // Gamble outcome beat \u2014 judge the decision, not the dice.
   if(res.risky){
     if(res.ok)showToastMsg('\uD83C\uDFAF',res.note||'The gamble paid off.','IT PAID OFF');
@@ -3966,7 +3968,8 @@ function saveGame(){
     spentInteractions:S.spentInteractions||[],
     difficulty:S.difficulty,
     flags:S.flags||{},
-    npcMemory:S.npcMemory||{}
+    npcMemory:S.npcMemory||{},
+    deferred:S._deferred||{}
   };
   try{localStorage.setItem('projectValley_save',JSON.stringify(data));}catch(e){}
 }
@@ -3994,6 +3997,7 @@ function loadGame(){
     if(DIFFICULTY[data.difficulty])S.difficulty=data.difficulty;
     S.flags=(data.flags&&typeof data.flags==='object')?data.flags:{};
     S.npcMemory=(data.npcMemory&&typeof data.npcMemory==='object')?data.npcMemory:{};
+    S._deferred=(data.deferred&&typeof data.deferred==='object')?data.deferred:{};
     // Validate spawn against the current map; snap to a known-good spawn if loaded coords are solid/out-of-bounds.
     const safe=(S.map==='site')?{x:3*TS,y:13*TS}:{x:14*TS,y:15*TS};
     const px=data.px,py=data.py;

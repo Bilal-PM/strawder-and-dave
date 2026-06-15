@@ -75,7 +75,7 @@ const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
 const scripts=[...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)].map(m=>m[1]);
 let code=scripts.join('\n;\n');
 // epilogue: capture top-level consts/fns into global for assertions
-const names=['S','applyEffects','advanceWeek','getPhase','getPhaseIdx','getDlgPhaseIdx','chooseDlg','NPCS','OMAP','SMAP','ZONES','isSolid','render','updatePlayer','startGame','newGame','selectCharacter','beginGame','saveGame','loadGame','EVENTS','PHASES','DLG','transitionToMap','showEvent','triggerEvent','getObjectives','updateHUD','updateNotepad','WALK_FRAMES','updateNPCAI','CHARS','ATLAS','drawSprite','OFFICE_W','OFFICE_H','OFFICE_OBJECTS','OFFICE_SOLID_OBJ','objBaseCells','OFFICE_SOLID','SITE_W','SITE_H','SITE_OBJECTS','SITE_SOLID_OBJ','ZONES','NPC_WANDER_OFFICE','NPC_WANDER_SITE','siteTrackFrac','POPUPS','enterWeek','afterEvent','chooseEvent','closeReport','REPORT_WEEKS','getObjectives','showEndScreen','chooseDlg','openNPCDialogue','interactionSpent','spendInteraction','getDlgPhaseIdx','EVENTS','showInsight','rng','seedRng','DIFFICULTY','diff','getPMRating','getLeadershipArchetype','resolveRisk','eventCallback','PERSONA','reflectionNote','showEvent','showReport'];
+const names=['S','applyEffects','advanceWeek','getPhase','getPhaseIdx','getDlgPhaseIdx','chooseDlg','NPCS','OMAP','SMAP','ZONES','isSolid','render','updatePlayer','startGame','newGame','selectCharacter','beginGame','saveGame','loadGame','EVENTS','PHASES','DLG','transitionToMap','showEvent','triggerEvent','getObjectives','updateHUD','updateNotepad','WALK_FRAMES','updateNPCAI','CHARS','ATLAS','drawSprite','OFFICE_W','OFFICE_H','OFFICE_OBJECTS','OFFICE_SOLID_OBJ','objBaseCells','OFFICE_SOLID','SITE_W','SITE_H','SITE_OBJECTS','SITE_SOLID_OBJ','ZONES','NPC_WANDER_OFFICE','NPC_WANDER_SITE','siteTrackFrac','POPUPS','enterWeek','afterEvent','chooseEvent','closeReport','REPORT_WEEKS','getObjectives','showEndScreen','chooseDlg','openNPCDialogue','interactionSpent','spendInteraction','getDlgPhaseIdx','EVENTS','showInsight','rng','seedRng','DIFFICULTY','diff','getPMRating','getLeadershipArchetype','resolveRisk','eventCallback','PERSONA','reflectionNote','showEvent','showReport','applyEventChoice','skipPhase'];
 code+='\n;globalThis.__G=(function(){const o={};'+names.map(n=>`try{o['${n}']=${n};}catch(e){}`).join('')+'return o;})();';
 
 const results={pass:[],fail:[]};
@@ -282,6 +282,26 @@ check('leadership archetype classifies the run (hero → villain) and always ret
   g.S.metrics={schedule:80,budget:80,safety:80,quality:80,morale:80};
   g.S.relationships={sarah:{hearts:4,talked:3},mike:{hearts:4,talked:3},emma:{hearts:4,talked:3},james:{hearts:3,talked:3},priya:{hearts:4,talked:3}};
   a=g.getLeadershipArchetype(); if(a.name!=='The Mentor') throw new Error('high people+safety+hearts → Mentor, got '+a.name);
+});
+check('shared resolver makes Skip Phase honest: setbacks still land, gambles still resolve via RNG',()=>{
+  g.S.difficulty='manager';
+  // setback week 12 auto-resolved (as skip does) still applies its pre-hit and records the event
+  g.S.flags={}; g.S.eventsDone=[]; g.S.eventChoices=[];
+  g.S.metrics={schedule:70,budget:70,safety:70,quality:70,morale:70};
+  g.S.relationships={sarah:{hearts:2,talked:1},mike:{hearts:2,talked:1},emma:{hearts:2,talked:1},james:{hearts:2,talked:1},priya:{hearts:2,talked:1}};
+  const ev12=g.EVENTS.find(e=>e.week===12);
+  g.applyEventChoice(ev12,0); // setback {schedule:-2,budget:-1} + choice0 {budget:-4,schedule:+2,quality:+1}
+  if(!g.S.flags['sb_12']) throw new Error('skip-path setback flag not set (pre-hit branch did not run)');
+  if(g.S.metrics.budget!==65) throw new Error('skip-path setback+choice budget should be 70-1-4=65, got '+g.S.metrics.budget);
+  if(!g.S.eventsDone.includes(12)) throw new Error('skip-path did not record the event');
+  // a risky choice auto-resolved can BACKFIRE (not free best-case): force a failing roll
+  const ev16=g.EVENTS.find(e=>e.week===16); const risky=ev16.choices.findIndex(c=>c.risk);
+  const rc=ev16.choices[risky]; const p=rc.risk.p;
+  // find a seed whose first roll fails (>=p)
+  let seed=1; for(;seed<9999;seed++){ g.seedRng(seed); if(g.rng()>=p) break; }
+  g.S.flags={}; g.S.eventsDone=[]; g.S.metrics={schedule:70,budget:70,safety:70,quality:70,morale:70};
+  g.seedRng(seed); g.applyEventChoice(ev16,risky);
+  if(g.S.metrics.budget>70) throw new Error('forced-fail gamble should NOT have paid off on the skip path');
 });
 check('NPCs carry memory of the last interaction (drives their next opener)',()=>{
   g.S.npcMemory={}; g.S.spentInteractions=[]; g.S.week=20;

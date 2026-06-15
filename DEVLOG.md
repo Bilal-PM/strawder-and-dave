@@ -347,3 +347,9 @@ plus the owner's two new asks. All gated by the harness (now **35/35 green**, +8
   the run hero→villain — Mentor, Peacemaker, Safe Pair of Hands, Taskmaster, Cowboy, Dictator, Empire-Builder,
   Firefighter, Operator — so players see the path they're carving and can steer.
 - **NEW — humour** (owner ask): a bank of funny-but-true PM proverbs shown on each week transition.
+
+- **Independent correctness review (P1 fix):** the reviewer caught that "Skip This Phase" auto-resolved
+  events through old code that best-cased risky choices and dropped involuntary setbacks. Factored a shared
+  `applyEventChoice(ev,ci)` resolver used by BOTH the modal and the skip path, so setbacks still land and
+  gambles can still backfire when skipping. Also switched skip's drift + choice rolls to the seedable `rng()`
+  and round-tripped `_deferred` in save/load. Harness +1 (skip-path honesty). **36/36 green.**
