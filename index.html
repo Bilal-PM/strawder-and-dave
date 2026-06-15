@@ -75,6 +75,21 @@ body{background:#3a2a18;color:#f0e6d3;font-family:'Press Start 2P',monospace;ove
 #cutscene .cs-text{font-size:9px;color:#f0e6d3;text-align:center;margin:0 14px 12px;line-height:1.9;max-width:520px;min-height:34px}
 #cutscene .cs-go{background:linear-gradient(180deg,#f7c948,#e0a830);border:2px solid #b8852a;border-radius:6px;color:#3a2210;font-size:10px;font-weight:bold;font-family:'Press Start 2P',monospace;padding:10px 18px;cursor:pointer}
 #cutscene .cs-go:hover{background:linear-gradient(180deg,#ffe070,#f0b840)}
+/* Segment "chapter" header so each 4-week curveball announces its phase */
+#cutscene .cs-chapter{font-size:8px;letter-spacing:2px;color:#cbb38a;text-transform:uppercase;margin-bottom:3px;opacity:.9;animation:csFade .5s ease both}
+#cutscene .cs-chapter b{color:#f0e6d3}
+@keyframes csFade{0%{opacity:0;transform:translateY(-4px)}100%{opacity:.9;transform:translateY(0)}}
+/* Varied actor entrances (each plays once, then settles into the idle bob) so scenes don't feel identical */
+#cutscene .cs-actor.entL{animation:csInL .45s cubic-bezier(.2,.8,.3,1) both,csBob 1.1s ease-in-out .45s infinite}
+#cutscene .cs-actor.entR{animation:csInR .45s cubic-bezier(.2,.8,.3,1) both,csBob 1.1s ease-in-out .55s .45s infinite}
+#cutscene .cs-actor.entDrop{animation:csDrop .5s cubic-bezier(.3,1.5,.5,1) both,csBob 1.1s ease-in-out .5s infinite}
+#cutscene .cs-actor.entRise{animation:csRise .5s ease-out both,csBob 1.2s ease-in-out .5s infinite}
+@keyframes csInL{0%{transform:translateX(-70px);opacity:0}100%{transform:translateX(0);opacity:1}}
+@keyframes csInR{0%{transform:translateX(70px);opacity:0}100%{transform:translateX(0);opacity:1}}
+@keyframes csDrop{0%{transform:translateY(-54px);opacity:0}100%{transform:translateY(0);opacity:1}}
+@keyframes csRise{0%{transform:translateY(46px);opacity:0}60%{opacity:1}100%{transform:translateY(0);opacity:1}}
+#cutscene .cs-prop.propPop{animation:csProp .6s cubic-bezier(.3,1.5,.5,1) both,csBob 1.4s ease-in-out .6s infinite}
+@keyframes csProp{0%{transform:scale(0) rotate(-20deg);opacity:0}100%{transform:scale(1) rotate(0);opacity:1}}
 /* Decision countdown bar */
 #evTimerWrap{height:8px;background:#d4be98;border:1px solid #a07848;border-radius:4px;overflow:hidden;margin:2px 0 12px}
 #evTimerBar{height:100%;width:100%;background:linear-gradient(90deg,#4aca8a,#f7c948);transition:width .12s linear}
@@ -2917,18 +2932,38 @@ function afterEvent(){
 }
 
 // === EVENT CUT-SCENES (the situation is acted out before you decide) ===
-const SCENES={
-  '28':{actors:['sarah'],prop:'🗺️',cap:'Sarah unrolls the ground survey across your desk, frowning.'},
-  '24':{actors:['priya'],prop:'✋',cap:'The client leans in with a smile: “just one small addition…”'},
-  '20':{actors:['sarah','mike'],clash:true,prop:'⚡',cap:'Sarah and Mike square off across the table — the room goes quiet.'},
-  '16':{actors:['james'],prop:'📉',cap:'James slides the cost report over, jaw tight.'},
-  '12':{actors:['james','mike'],prop:'📦',cap:'Word lands on site: your key supplier has gone under.',flash:'#e0a830'},
-  '8':{actors:['emma'],prop:'⚠️',cap:'A shout on site — an excavator swings past a worker. Everyone freezes.',flash:'#e05577',shake:4},
-  '4':{actors:['mike'],prop:'🌧️',cap:'Storm clouds stack over the cutting. Mike checks the forecast, uneasy.'},
-  '0':{actors:['emma','sarah'],prop:'🔍',cap:'Inspection flags a run of work below specification.'},
-  '-4':{actors:['mike'],prop:'📋',cap:'The maintenance team’s snag list keeps growing by the day.'},
-  '-8':{actors:['sarah','mike','emma'],prop:'🎉',cap:'The whole team gathers for the final project review.'}
+// Each 4-week segment opens with its own curveball. A `mood` gives the scene a distinct
+// backdrop tint / accent / sound, and `enter` varies how the actors arrive — so no two feel the same.
+const CS_MOODS={
+  survey:   {bg:'rgba(28,40,66,0.94)', accent:'#7fa8e8', sfx:'alert'},
+  client:   {bg:'rgba(48,34,64,0.94)', accent:'#caa6e8', sfx:'alert'},
+  clash:    {bg:'rgba(70,34,28,0.95)', accent:'#f07a50', sfx:'alert', shake:3},
+  money:    {bg:'rgba(54,44,22,0.94)', accent:'#f0c83e', sfx:'negative'},
+  supply:   {bg:'rgba(54,38,20,0.95)', accent:'#e0a830', sfx:'negative', flash:'#e0a830'},
+  safety:   {bg:'rgba(72,22,34,0.96)', accent:'#f07a90', sfx:'alert', flash:'#e05577', shake:4},
+  weather:  {bg:'rgba(34,42,52,0.95)', accent:'#9cc0dc', sfx:'alert'},
+  quality:  {bg:'rgba(28,52,48,0.94)', accent:'#5fd0a0', sfx:'alert'},
+  snag:     {bg:'rgba(52,40,24,0.94)', accent:'#f0a050', sfx:'alert'},
+  celebrate:{bg:'rgba(26,56,38,0.94)', accent:'#6fe0a0', sfx:'positive'}
 };
+const SCENES={
+  '28':{actors:['sarah'],prop:'🗺️',cap:'Sarah unrolls the ground survey across your desk, frowning.',mood:'survey',enter:'drop'},
+  '24':{actors:['priya'],prop:'✋',cap:'The client leans in with a smile: “just one small addition…”',mood:'client',enter:'R'},
+  '20':{actors:['sarah','mike'],clash:true,prop:'⚡',cap:'Sarah and Mike square off across the table — the room goes quiet.',mood:'clash'},
+  '16':{actors:['james'],prop:'📉',cap:'James slides the cost report over, jaw tight.',mood:'money',enter:'L'},
+  '12':{actors:['james','mike'],prop:'📦',cap:'Word lands on site: your key supplier has gone under.',mood:'supply'},
+  '8':{actors:['emma'],prop:'⚠️',cap:'A shout on site — an excavator swings past a worker. Everyone freezes.',mood:'safety',enter:'rise'},
+  '4':{actors:['mike'],prop:'🌧️',cap:'Storm clouds stack over the cutting. Mike checks the forecast, uneasy.',mood:'weather',enter:'drop'},
+  '0':{actors:['emma','sarah'],prop:'🔍',cap:'Inspection flags a run of work below specification.',mood:'quality'},
+  '-4':{actors:['mike'],prop:'📋',cap:'The maintenance team’s snag list keeps growing by the day.',mood:'snag',enter:'L'},
+  '-8':{actors:['sarah','mike','emma'],prop:'🎉',cap:'The whole team gathers for the final project review.',mood:'celebrate',enter:'rise'}
+};
+const CS_ENTERS=['entL','entR','entDrop','entRise'];
+function csEnterClass(enter,idx){
+  if(enter==='L')return 'entL'; if(enter==='R')return 'entR';
+  if(enter==='drop')return 'entDrop'; if(enter==='rise')return 'entRise';
+  return idx%2?'entR':'entL'; // default: actors arrive from alternating sides
+}
 function _actorCanvas(npc){
   const cv=document.createElement('canvas'); cv.width=48; cv.height=72; cv.style.width='48px'; cv.style.height='72px';
   const cx=cv.getContext('2d'); if(cx){ cx.imageSmoothingEnabled=false; cx.scale(3,3); try{ drawCharProcedural(cx,npc,0,0,0,0); }catch(e){} }
@@ -2937,30 +2972,39 @@ function _actorCanvas(npc){
 function presentEvent(ev){
   S.eventOpen=true;
   const sc=SCENES[String(ev.week)]||{actors:[],prop:'⚠️',cap:''};
+  const mood=CS_MOODS[sc.mood]||{bg:'rgba(30,20,12,0.92)',accent:'#f7c948',sfx:'alert'};
   const el=document.getElementById('cutscene'); if(!el){ showEvent(ev); startEventTimer(ev.week); return; }
   el.innerHTML='';
-  const title=document.createElement('div'); title.className='cs-title'; title.textContent='⚠️ '+ev.title; el.appendChild(title);
+  // Per-mood backdrop tint so the procurement/safety/weather/celebration beats each feel distinct.
+  el.style.background='radial-gradient(circle at 50% 38%,'+mood.bg+',rgba(8,5,3,0.97))';
+  // Chapter header: announces the segment/phase that's opening, so weeks read as story beats.
+  const chap=document.createElement('div'); chap.className='cs-chapter';
+  chap.innerHTML=weekLabel(ev.week)+' &nbsp;·&nbsp; <b>'+getPhase(ev.week)+'</b>'; el.appendChild(chap);
+  const title=document.createElement('div'); title.className='cs-title'; title.style.color=mood.accent; title.textContent='⚠️ '+ev.title; el.appendChild(title);
   const stage=document.createElement('div'); stage.className='cs-stage';
   const actors=sc.actors||[];
   actors.forEach((id,idx)=>{
     const npc=NPCS.find(n=>n.id===id); if(!npc)return;
-    const a=document.createElement('div'); a.className='cs-actor '+(sc.clash?(idx===0?'clashL':'clashR'):(idx%2?'bobR':'bobL'));
+    const a=document.createElement('div');
+    a.className='cs-actor '+(sc.clash?(idx===0?'clashL':'clashR'):csEnterClass(sc.enter,idx));
     a.appendChild(_actorCanvas(npc));
-    const nm=document.createElement('div'); nm.className='cs-nm'; nm.textContent=npc.name; a.appendChild(nm);
+    const nm=document.createElement('div'); nm.className='cs-nm'; nm.style.color=mood.accent; nm.textContent=npc.name; a.appendChild(nm);
     stage.appendChild(a);
   });
-  if(sc.prop){ const p=document.createElement('div'); p.className='cs-prop'; p.textContent=sc.prop; stage.appendChild(p); }
+  if(sc.prop){ const p=document.createElement('div'); p.className='cs-prop propPop'; p.textContent=sc.prop; stage.appendChild(p); }
   el.appendChild(stage);
   if(sc.cap){ const cap=document.createElement('div'); cap.className='cs-cap'; cap.textContent=sc.cap; el.appendChild(cap); }
   const tx=document.createElement('div'); tx.className='cs-text'; tx.textContent=ev.text; el.appendChild(tx);
   const go=document.createElement('div'); go.className='cs-go'; go.textContent='Decide ▶'; go.onclick=()=>beginDecision(ev.week); el.appendChild(go);
   el.className='on';
-  playSFX('alert');
-  triggerShake(sc.shake||2, sc.shake?400:250);
-  if(sc.flash)triggerFlash(sc.flash,220);
+  playSFX(mood.sfx||'alert');
+  const shake=sc.shake||mood.shake||2;
+  triggerShake(shake, shake>2?400:250);
+  const flash=sc.flash||mood.flash;
+  if(flash)triggerFlash(flash,220);
 }
 function beginDecision(week){
-  const el=document.getElementById('cutscene'); if(el){ el.className=''; el.innerHTML=''; }
+  const el=document.getElementById('cutscene'); if(el){ el.className=''; el.innerHTML=''; el.style.background=''; }
   const ev=EVENTS.find(e=>e.week===week); if(!ev)return;
   showEvent(ev);
   startEventTimer(week);

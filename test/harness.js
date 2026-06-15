@@ -76,7 +76,7 @@ const scripts=[...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script
 let code=scripts.join('\n;\n');
 // epilogue: capture top-level consts/fns into global for assertions
 const names=['S','applyEffects','advanceWeek','getPhase','getPhaseIdx','getDlgPhaseIdx','chooseDlg','NPCS','OMAP','SMAP','ZONES','isSolid','render','updatePlayer','startGame','newGame','selectCharacter','beginGame','saveGame','loadGame','EVENTS','PHASES','DLG','transitionToMap','showEvent','triggerEvent','getObjectives','updateHUD','updateNotepad','WALK_FRAMES','updateNPCAI','CHARS','ATLAS','drawSprite','OFFICE_W','OFFICE_H','OFFICE_OBJECTS','OFFICE_SOLID_OBJ','objBaseCells','OFFICE_SOLID','SITE_W','SITE_H','SITE_OBJECTS','SITE_SOLID_OBJ','ZONES','NPC_WANDER_OFFICE','NPC_WANDER_SITE','siteTrackFrac','POPUPS','enterWeek','afterEvent','chooseEvent','closeReport','REPORT_WEEKS','getObjectives','showEndScreen','chooseDlg','openNPCDialogue','interactionSpent','spendInteraction','getDlgPhaseIdx','EVENTS','showInsight','rng','seedRng','DIFFICULTY','diff','getPMRating','getLeadershipArchetype','resolveRisk','eventCallback','PERSONA','reflectionNote','showEvent','showReport','applyEventChoice','skipPhase','hintsVisible','metricDeltaHTML','snapshotMetrics','showLockerRoom','togglePPE','closeEventResult','presentEvent','beginDecision','eventHesitate','eventTimerMs','startEventTimer','stopEventTimer','tickEventTimer','SCENES','THEMES','getTheme','setMasterVolume','playMumble','VOICE','playSFX','playLocationAmbient','startBGM','stopBGM','DELIVERABLES','deliverableAvailable','deliverablesAvailableCount','openDeliverable','recordMetricHistory','perfPanelHTML','perfBarsHTML','showDocsOverlay','startNewWeek','MAPS','MD','npcCell','mapW','mapH','SUPPLIER_W','SUPPLIER_H','SUPMAP','transitionToMap','updateTransition','tallyLeadership','dominantStyle','STYLE_KEY','activateZone','PPE_REQUIRED','completeObj','AREA_LABELS','TOWN_W','TOWN_H','TOWNMAP',
-'startArrival','updateArrival','skipArrival','endArrival','updateCamera'];
+'startArrival','updateArrival','skipArrival','endArrival','updateCamera','CS_MOODS','csEnterClass'];
 code+='\n;globalThis.__G=(function(){const o={};'+names.map(n=>`try{o['${n}']=${n};}catch(e){}`).join('')+'return o;})();';
 
 const results={pass:[],fail:[]};
@@ -449,6 +449,15 @@ check('cut-scene present() opens without throwing and has a scene for every even
   g.EVENTS.forEach(ev=>{ if(!g.SCENES[String(ev.week)]) throw new Error('no cut-scene for event week '+ev.week); });
   g.S.eventOpen=false; g.S.week=8; g.presentEvent(g.EVENTS.find(e=>e.week===8));
   if(!g.S.eventOpen) throw new Error('presentEvent should mark the event open');
+});
+check('every segment curveball has a distinct mood + presents over all 10 weeks without throwing',()=>{
+  // each scene must reference a real mood (drives the backdrop tint / accent / sound)
+  Object.keys(g.SCENES).forEach(w=>{ const m=g.SCENES[w].mood; if(!m||!g.CS_MOODS[m]) throw new Error('week '+w+' has no valid mood: '+m); });
+  // variety: the 10 segments should not all share one mood
+  const moods=new Set(Object.values(g.SCENES).map(s=>s.mood));
+  if(moods.size<6) throw new Error('curveball moods lack variety (only '+moods.size+' distinct)');
+  // every event week presents cleanly (covers the chapter header + entrance paths)
+  g.EVENTS.forEach(ev=>{ g.S.eventOpen=false; g.S.week=ev.week; g.presentEvent(ev); if(!g.S.eventOpen) throw new Error('presentEvent failed for week '+ev.week); });
 });
 check('every location has its own soundtrack theme (incl. the 3 Phase-D areas) + safe default',()=>{
   ['office','site','supplier','boardroom','studio'].forEach(m=>{

@@ -585,3 +585,20 @@ The game now opens with a short, skippable arrival cut-scene on new game (per ow
 - New harness coverage: the timeline reaches the briefing, parks the PM at spawn, the briefing HOLDS without input,
   movement is blocked during the scene, and SPACE both fast-forwards the drive and dismisses the briefing.
   **57/57 green**, node --check clean, arrival frame verified via Python render. Independent review: no P0/P1.
+
+
+### 2026-06-15 — Iteration 39 (Phase 6: per-segment curveball cut-scene variety)
+Each 4-week segment already opened with its curveball cut-scene; this gives them more life so
+they never feel identical:
+- **Per-mood staging:** a `CS_MOODS` table gives each curveball a distinct backdrop tint, accent
+  colour and sound (survey/client/clash/money/supply/safety/weather/quality/snag/celebrate). The
+  #cutscene backdrop, title and name colours now shift with the beat.
+- **Chapter header:** every cut-scene now announces its segment — `weekLabel` + phase name — so the
+  weeks read as story beats opening a new chapter.
+- **Varied entrances:** actors arrive with different animations (slide L/R, drop, rise) that play once
+  then settle into the idle bob; the prop pops in. Clash scenes keep their face-off shake.
+- **Mood-driven feel:** sfx/shake/flash derive from the mood (per-scene overrides win) — e.g. the
+  safety near-miss flashes red and shakes hard, the supplier collapse flashes amber, celebration lifts.
+- Backdrop is reset on close so moods can't leak between scenes (independently reviewed).
+- Harness: new test asserts every scene has a valid distinct mood (>=6 unique) and all 10 weeks present
+  cleanly (chapter header + entrance paths). **58/58 green**, node --check clean. Review: no P0/P1.
