@@ -75,7 +75,7 @@ const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
 const scripts=[...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)].map(m=>m[1]);
 let code=scripts.join('\n;\n');
 // epilogue: capture top-level consts/fns into global for assertions
-const names=['S','applyEffects','advanceWeek','getPhase','getPhaseIdx','getDlgPhaseIdx','chooseDlg','NPCS','OMAP','SMAP','ZONES','isSolid','render','updatePlayer','startGame','newGame','selectCharacter','beginGame','saveGame','loadGame','EVENTS','PHASES','DLG','transitionToMap','showEvent','triggerEvent','getObjectives','updateHUD','updateNotepad','WALK_FRAMES','updateNPCAI','CHARS','ATLAS','drawSprite','OFFICE_W','OFFICE_H','OFFICE_OBJECTS','OFFICE_SOLID_OBJ','objBaseCells','OFFICE_SOLID','SITE_W','SITE_H','SITE_OBJECTS','SITE_SOLID_OBJ','ZONES','NPC_WANDER_OFFICE','NPC_WANDER_SITE','siteTrackFrac','POPUPS','enterWeek','afterEvent','chooseEvent','closeReport','REPORT_WEEKS','getObjectives','showEndScreen','chooseDlg','openNPCDialogue','interactionSpent','spendInteraction','getDlgPhaseIdx','EVENTS','showInsight','rng','seedRng','DIFFICULTY','diff','getPMRating','getLeadershipArchetype','resolveRisk','eventCallback','PERSONA','reflectionNote','showEvent','showReport','applyEventChoice','skipPhase','hintsVisible','metricDeltaHTML','snapshotMetrics','showLockerRoom','togglePPE','closeEventResult','presentEvent','beginDecision','eventHesitate','eventTimerMs','startEventTimer','stopEventTimer','tickEventTimer','SCENES','THEMES','getTheme','setMasterVolume','playMumble','VOICE','playSFX','playLocationAmbient','startBGM','stopBGM'];
+const names=['S','applyEffects','advanceWeek','getPhase','getPhaseIdx','getDlgPhaseIdx','chooseDlg','NPCS','OMAP','SMAP','ZONES','isSolid','render','updatePlayer','startGame','newGame','selectCharacter','beginGame','saveGame','loadGame','EVENTS','PHASES','DLG','transitionToMap','showEvent','triggerEvent','getObjectives','updateHUD','updateNotepad','WALK_FRAMES','updateNPCAI','CHARS','ATLAS','drawSprite','OFFICE_W','OFFICE_H','OFFICE_OBJECTS','OFFICE_SOLID_OBJ','objBaseCells','OFFICE_SOLID','SITE_W','SITE_H','SITE_OBJECTS','SITE_SOLID_OBJ','ZONES','NPC_WANDER_OFFICE','NPC_WANDER_SITE','siteTrackFrac','POPUPS','enterWeek','afterEvent','chooseEvent','closeReport','REPORT_WEEKS','getObjectives','showEndScreen','chooseDlg','openNPCDialogue','interactionSpent','spendInteraction','getDlgPhaseIdx','EVENTS','showInsight','rng','seedRng','DIFFICULTY','diff','getPMRating','getLeadershipArchetype','resolveRisk','eventCallback','PERSONA','reflectionNote','showEvent','showReport','applyEventChoice','skipPhase','hintsVisible','metricDeltaHTML','snapshotMetrics','showLockerRoom','togglePPE','closeEventResult','presentEvent','beginDecision','eventHesitate','eventTimerMs','startEventTimer','stopEventTimer','tickEventTimer','SCENES','THEMES','getTheme','setMasterVolume','playMumble','VOICE','playSFX','playLocationAmbient','startBGM','stopBGM','DELIVERABLES','deliverableAvailable','deliverablesAvailableCount','openDeliverable','recordMetricHistory','perfPanelHTML','showDocsOverlay','startNewWeek'];
 code+='\n;globalThis.__G=(function(){const o={};'+names.map(n=>`try{o['${n}']=${n};}catch(e){}`).join('')+'return o;})();';
 
 const results={pass:[],fail:[]};
@@ -359,6 +359,31 @@ check('new SFX + ambience + NPC mumble voices fire without throwing (and every N
   g.S.map='site'; g.S.week=8; g.playLocationAmbient();      // construction-phase machinery branch
   g.S.map='office'; g.playLocationAmbient();
   g.NPCS.forEach(n=>{ if(typeof g.VOICE[n.id]!=='number') throw new Error('no voice pitch for '+n.id); g.playMumble(n.id,40); });
+});
+check('deliverables: each has readable body + readyWeek; more unlock as the project progresses',()=>{
+  if(!Array.isArray(g.DELIVERABLES)||g.DELIVERABLES.length<6) throw new Error('too few deliverables');
+  g.DELIVERABLES.forEach(d=>{ if(!d.id||!d.name||typeof d.readyWeek!=='number'||!d.body||d.body.length<40) throw new Error('deliverable malformed: '+(d&&d.name)); });
+  g.S.week=32; const early=g.deliverablesAvailableCount();
+  g.S.week=-8; const late=g.deliverablesAvailableCount();
+  if(!(late>early)) throw new Error('more deliverables should be readable later ('+early+'→'+late+')');
+  if(late!==g.DELIVERABLES.length) throw new Error('all deliverables should be readable by close-out');
+  // a locked deliverable cannot be opened early; an available one renders
+  g.S.week=32; const locked=g.DELIVERABLES.find(d=>!g.deliverableAvailable(d));
+  if(locked){ g.S.docsOpen=false; g.openDeliverable(locked.id); /* no-throw, stays gated */ }
+  g.openDeliverable('brief'); // available from the start
+});
+check('performance journey records per week (start→now) and renders an SVG trend',()=>{
+  g.S.metricHistory=[]; g.S.week=32; g.S.metrics={schedule:70,budget:70,safety:70,quality:70,morale:70}; g.recordMetricHistory();
+  g.S.week=28; g.S.metrics={schedule:64,budget:72,safety:80,quality:66,morale:60}; g.recordMetricHistory();
+  if(g.S.metricHistory.length!==2) throw new Error('history not recorded per week');
+  g.recordMetricHistory(); // same week → updates, not appends
+  if(g.S.metricHistory.length!==2) throw new Error('same-week record should update, not append');
+  const html=g.perfPanelHTML();
+  if(!/<svg/.test(html)||!/Schedule: 70/.test(html)) throw new Error('perf panel missing svg or start→now line');
+});
+check('docs overlay renders (timeline + journey + deliverables) without throwing',()=>{
+  g.S.docsOpen=false; g.S.week=8; g.showDocsOverlay();
+  if(!g.S.docsOpen) throw new Error('docs overlay did not open');
 });
 check('NPCs carry memory of the last interaction (drives their next opener)',()=>{
   g.S.npcMemory={}; g.S.spentInteractions=[]; g.S.week=20;

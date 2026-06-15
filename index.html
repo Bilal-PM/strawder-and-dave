@@ -308,8 +308,17 @@ const S={
   difficulty:'manager',   // apprentice | manager | director (tunes penalty/reward + gamble odds)
   flags:{},               // sticky decision flags for consequence callbacks (e.g. safety_skip)
   npcMemory:{},           // per-NPC memory: last tier + whether you overruled their domain
-  _deferred:{}            // per-week busy brush-offs already used (so a 2nd approach always works)
+  _deferred:{},           // per-week busy brush-offs already used (so a 2nd approach always works)
+  metricHistory:[]        // {week, m:{...}} snapshot per week — the performance journey
 };
+// Record the current metrics against the current week (one entry per week; latest wins).
+function recordMetricHistory(){
+  S.metricHistory=S.metricHistory||[];
+  const snap={week:S.week,m:{schedule:S.metrics.schedule,budget:S.metrics.budget,safety:S.metrics.safety,quality:S.metrics.quality,morale:S.metrics.morale}};
+  const last=S.metricHistory[S.metricHistory.length-1];
+  if(last&&last.week===S.week)S.metricHistory[S.metricHistory.length-1]=snap;
+  else S.metricHistory.push(snap);
+}
 
 // === SEEDABLE RNG (deterministic so the harness can force gamble outcomes) ===
 let _rngState=(Date.now()>>>0)||1;
@@ -2625,6 +2634,7 @@ function startNewWeek(){
   S.completedObj=S.completedObj.filter(c=>!c.endsWith('_'+S.week));
   S.weekObjMet=false;
   unlockPMKnowledge(getPhaseIdx(S.week));
+  recordMetricHistory(); // log this week's standing for the performance journey
   checkAchievements();
   updateNotepad();
   updateHUD();
@@ -2869,6 +2879,78 @@ function closeReport(){
 }
 
 // === DOCUMENTS OVERLAY ===
+// === PROJECT DELIVERABLES — readable documents that unlock as the project progresses ===
+// readyWeek: the deliverable becomes readable once the project reaches it (weeks count DOWN, so week<=readyWeek).
+const DELIVERABLES=[
+  {id:'brief',name:'Project Brief',icon:'📋',readyWeek:32,
+   body:'This project will renew 1.2 km of life-expired track and upgrade the station platform to deliver a safer, more reliable railway.\n\nObjectives: deliver in time for the December timetable, within the £10m budget, with zero harm. Success is measured across schedule, cost, safety, quality and stakeholder confidence.\n\nThe brief is the contract between you and the sponsor — every later decision is judged against it. Guard the scope: uncontrolled change is the most common way good projects quietly fail.'},
+  {id:'stakeholders',name:'Stakeholder Map',icon:'👥',readyWeek:32,
+   body:'Key stakeholders: the sponsor (funds and governs), the train operator, Network Rail asset teams, the local council, lineside residents and businesses, and the travelling public.\n\nMap each by power and interest. High-power/high-interest parties (sponsor, operator) you manage closely; residents you keep informed and genuinely listen to.\n\nTrust is built before you need it. Engage early — the relationship you bank in week one is the one that saves you in week thirty.'},
+  {id:'risk',name:'Risk Register',icon:'⚠️',readyWeek:28,
+   body:'A living log of what could go wrong: each risk has an owner, a likelihood, an impact, and a mitigation plan.\n\nTop risks right now: unknown ground conditions beneath the track, single-source materials, and possession availability.\n\nReview it every week. A risk you have named and planned for is a problem half-solved — the dangerous ones are the risks nobody wrote down.'},
+  {id:'design',name:'Detailed Design Pack',icon:'✏️',readyWeek:20,
+   body:'Engineering drawings, calculations and specifications, checked and signed off through formal design review. Covers track alignment, drainage and the platform works.\n\nDesign is where quality is designed in — or designed out. Build reviewability and safety into every drawing.\n\nFreeze the design at the right moment: too early and you build the wrong thing; too late and you never break ground.'},
+  {id:'procurement',name:'Procurement Strategy',icon:'💷',readyWeek:20,
+   body:'How we buy: the contract packages, the tendering approach, and supplier selection on value — not price alone. Retention is held back until work is verified complete.\n\nSingle-source dependencies are flagged on the risk register; always keep a credible plan B.\n\nThe cheapest bid is rarely the cheapest outcome. Buy the result you need, not the lowest number on the page.'},
+  {id:'construction',name:'Construction Phase Plan',icon:'🔨',readyWeek:12,
+   body:'The build sequence, methodology and possession plan — the carefully booked windows of track access in which the physical work is done safely.\n\nPossessions are gold dust. Overrun one and you hand the railway back late, with penalties and a very awkward phone call.\n\nPlan the work, then work the plan — and keep a recovery option for the night the weather turns.'},
+  {id:'safety',name:'Safety & PPE Plan',icon:'🦺',readyWeek:12,
+   body:'Everyone goes home safe, every day. Covers site induction, PPE (hi-vis vest and hard hat as a minimum), method statements and the permit-to-work system.\n\nSafety is never traded for schedule or cost. A near-miss is a free lesson the railway is giving you — stop, learn, and act on it.\n\nThe PM sets the safety culture by what they accept on a bad day, not what they say on a good one.'},
+  {id:'quality',name:'Quality Log — ITPs & NCRs',icon:'🔍',readyWeek:8,
+   body:'Inspection & Test Plans (ITPs) define what "good" looks like and who signs each stage off. Non-Conformance Reports (NCRs) record work below specification.\n\nEvery NCR must be closed before handover — an open non-conformance is a promise of future pain.\n\nDoing it right beats doing it twice. Quality shortcuts always resurface, usually at the worst possible moment.'},
+  {id:'testing',name:'Test & Commissioning Plan',icon:'🔑',readyWeek:4,
+   body:'Before the railway opens, every system is tested against acceptance criteria — functional, integration and safety validation. Nothing is handed over until it is proven.\n\nThis is where the project finally meets reality.\n\nA disciplined commissioning phase is the difference between a confident opening day and a scramble in front of the regulator.'},
+  {id:'handover',name:'Handover & Close-Out Pack',icon:'📂',readyWeek:0,
+   body:'Completion certificates, as-built records, the asset information the maintainer needs, and the snag list with a committed close-out plan.\n\nThe job is not done when the trains run — it is done when the paperwork, the snags and the relationships are all closed cleanly.\n\nA committed close-out protects the client relationship, the next project, and your reputation.'},
+  {id:'lessons',name:'Lessons Learned Report',icon:'📖',readyWeek:-4,
+   body:'An honest retrospective: what went well, what hurt, and the concrete actions to do better next time — shared across the organisation.\n\nFocus on the system, not the scapegoat. People are rarely the root cause; processes usually are.\n\nThe best project managers are forged here, by telling the truth about their own project so the next one starts wiser.'}
+];
+// The performance journey — an inline-SVG trend of all 5 metrics from the start line to now.
+function perfPanelHTML(){
+  const hist=S.metricHistory||[];
+  if(!hist.length) return '';
+  const W=420,H=96,pad=5;
+  const w0=hist[0].week, w1=hist[hist.length-1].week, span=(w0-w1)||1;
+  const X=wk=> pad+((w0-wk)/span)*(W-2*pad);
+  const Y=v=> pad+(1-(v/100))*(H-2*pad);
+  const metrics=[['schedule','Schedule','#4aca8a'],['budget','Budget','#f7c948'],['safety','Safety','#e05577'],['quality','Quality','#5b8ef5'],['morale','Morale','#c08a50']];
+  let svg='<svg width="'+W+'" height="'+H+'" style="display:block;max-width:100%;background:#efe3c8;border:1px solid #c4a878;border-radius:6px">';
+  [40,70].forEach(g=>{ svg+='<line x1="'+pad+'" y1="'+Y(g)+'" x2="'+(W-pad)+'" y2="'+Y(g)+'" stroke="#d8c8a8" stroke-width="1" stroke-dasharray="3,3"/>'; });
+  metrics.forEach(mt=>{
+    const pts=hist.map(h=>X(h.week).toFixed(1)+','+Y(h.m[mt[0]]).toFixed(1)).join(' ');
+    svg+='<polyline points="'+pts+'" fill="none" stroke="'+mt[2]+'" stroke-width="1.5" opacity="0.9"/>';
+    const last=hist[hist.length-1];
+    svg+='<circle cx="'+X(last.week).toFixed(1)+'" cy="'+Y(last.m[mt[0]]).toFixed(1)+'" r="2.3" fill="'+mt[2]+'"/>';
+  });
+  svg+='</svg>';
+  let html='<div style="margin-top:16px;font-size:10px;color:#5a3a1e;font-weight:bold;margin-bottom:4px">📈 Your Performance Journey</div>';
+  html+='<div style="font-size:7px;color:#7a5a38;margin-bottom:6px">From the starting line ('+weekLabel(w0)+') to now ('+weekLabel(w1)+') — the result of your real choices.</div>';
+  html+=svg;
+  html+='<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">';
+  metrics.forEach(mt=>{
+    const start=hist[0].m[mt[0]], now=hist[hist.length-1].m[mt[0]], d=now-start;
+    const dc=d>0?'#2a8a5a':(d<0?'#c45040':'#7a5a38');
+    html+='<div style="font-size:7px;color:#5a3a1e;width:calc(33% - 4px)"><span style="color:'+mt[2]+'">■</span> '+mt[1]+': '+start+'→'+now+' <span style="color:'+dc+'">('+(d>0?'+':'')+d+')</span></div>';
+  });
+  html+='</div>';
+  return html;
+}
+function deliverableAvailable(d){ return S.week<=d.readyWeek; }
+function deliverablesAvailableCount(){ return DELIVERABLES.filter(deliverableAvailable).length; }
+// Open one deliverable into a focused reading view (inside the documents overlay).
+function openDeliverable(id){
+  const d=DELIVERABLES.find(x=>x.id===id); if(!d||!deliverableAvailable(d))return;
+  playSFX('paper');
+  const el=document.getElementById('docsOverlay');
+  let html='<h2>'+d.icon+' '+d.name+'</h2>';
+  html+='<div style="max-width:560px;margin:0 auto;background:#fbf3df;border:1px solid #c4a878;border-radius:8px;padding:18px 20px;box-shadow:0 2px 8px rgba(0,0,0,0.12)">';
+  html+='<div style="font-size:8px;color:#a07848;letter-spacing:1px;border-bottom:1px solid #d8c8a8;padding-bottom:6px;margin-bottom:10px">PROJECT DELIVERABLE • '+getPhase(S.week)+' • '+weekLabel(S.week)+'</div>';
+  d.body.split('\n\n').forEach(p=>{ html+='<p style="font-size:9px;line-height:2;color:#4a3420;margin:0 0 10px">'+p+'</p>'; });
+  html+='</div>';
+  html+='<div style="text-align:center;margin-top:14px"><button class="btn sm" onclick="showDocsOverlay()">← Back to Documents</button></div>';
+  el.innerHTML=html; el.className='on'; el.style.display='block'; el.scrollTop=0;
+}
+
 function showDocsOverlay(){
   S.docsOpen=true;
   const el=document.getElementById('docsOverlay');
@@ -2912,38 +2994,30 @@ function showDocsOverlay(){
   html+='<div style="font-size:8px;color:#c45040;margin-top:6px;text-align:center">You are here: '+weekLabel(S.week)+' \u2014 '+getPhase(S.week)+'</div>';
   html+='</div>';
   
-  // Key Documents — Card Grid Layout
-  html+='<div style="margin-top:12px;font-size:10px;color:#5a3a1e;font-weight:bold;margin-bottom:8px"><img src="img/icon/Briefcase.png" style="width:14px;height:14px;vertical-align:middle"> Key Documents</div>';
+  // Performance journey — where you started vs where you are now (real choices, real numbers)
+  html+=perfPanelHTML();
 
-  const docs=[
-    {name:'Project Brief',icon:'Briefcase',readyWeek:32,desc:'Scope, objectives, success criteria'},
-    {name:'Risk Register',icon:'Info',readyWeek:28,desc:'Identified risks and mitigations'},
-    {name:'Design Pack',icon:'Pencil',readyWeek:20,desc:'Engineering drawings and specs'},
-    {name:'Budget Report',icon:'Cash',readyWeek:28,desc:'Cost tracking and forecasts'},
-    {name:'Construction Plan',icon:'Hammer',readyWeek:12,desc:'Build sequence and methodology'},
-    {name:'Quality Log',icon:'Monitor',readyWeek:8,desc:'Inspection results and NCRs'},
-    {name:'Handover Pack',icon:'Key',readyWeek:4,desc:'Completion docs and certificates'}
-  ];
-
+  // === Project Deliverables — readable documents that unlock as the project progresses ===
+  const availN=deliverablesAvailableCount();
+  html+='<div style="margin-top:16px;font-size:10px;color:#5a3a1e;font-weight:bold;margin-bottom:4px">📑 Project Deliverables ('+availN+'/'+DELIVERABLES.length+' available)</div>';
+  html+='<div style="font-size:7px;color:#7a5a38;margin-bottom:8px">More unlock as the project progresses — click an available document to open and read it.</div>';
   html+='<div style="display:flex;flex-wrap:wrap;gap:8px">';
-  docs.forEach(d=>{
-    let status,statusColor,statusBg;
-    if(S.week<=d.readyWeek-8){
-      status='Complete';statusColor='#4aca8a';statusBg='rgba(74,202,138,0.15)';
-    }else if(S.week<=d.readyWeek){
-      status='In Progress';statusColor='#f7c948';statusBg='rgba(247,201,72,0.15)';
+  DELIVERABLES.forEach(d=>{
+    if(deliverableAvailable(d)){
+      html+='<div style="background:rgba(74,202,138,0.12);border:1px solid #4aca8a;border-radius:6px;padding:8px;width:calc(50% - 4px);cursor:pointer" onclick="openDeliverable(\''+d.id+'\')">';
+      html+='<div style="display:flex;align-items:center;gap:6px">';
+      html+='<span style="font-size:13px">'+d.icon+'</span>';
+      html+='<span style="font-size:9px;color:#5a3a1e">'+d.name+'</span>';
+      html+='<span style="margin-left:auto;font-size:7px;color:#2a8a5a;padding:2px 5px;border:1px solid #4aca8a;border-radius:3px">📖 Read</span>';
+      html+='</div></div>';
     }else{
-      status='Pending';statusColor='#7a5a38';statusBg='rgba(122,90,56,0.1)';
+      html+='<div style="background:rgba(122,90,56,0.05);border:1px solid #c4a878;border-radius:6px;padding:8px;width:calc(50% - 4px);opacity:0.55">';
+      html+='<div style="display:flex;align-items:center;gap:6px">';
+      html+='<span style="font-size:13px;filter:grayscale(1)">'+d.icon+'</span>';
+      html+='<span style="font-size:9px;color:#7a5a38">'+d.name+'</span>';
+      html+='<span style="margin-left:auto;font-size:7px;color:#a07848">🔒 from '+weekLabel(d.readyWeek)+'</span>';
+      html+='</div></div>';
     }
-
-    html+='<div style="background:'+statusBg+';border:1px solid '+statusColor+';border-radius:6px;padding:8px;width:calc(50% - 4px);cursor:pointer" onclick="this.querySelector(\'.doc-detail\').style.display=this.querySelector(\'.doc-detail\').style.display===\'block\'?\'none\':\'block\'">';
-    html+='<div style="display:flex;align-items:center;gap:6px">';
-    html+='<img src="img/icon/'+d.icon+'.png" style="width:14px;height:14px;image-rendering:pixelated">';
-    html+='<span style="font-size:9px;color:#5a3a1e">'+d.name+'</span>';
-    html+='<span style="margin-left:auto;font-size:7px;color:'+statusColor+';padding:2px 4px;border:1px solid '+statusColor+';border-radius:3px">'+status+'</span>';
-    html+='</div>';
-    html+='<div class="doc-detail" style="display:none;margin-top:6px;font-size:8px;color:#7a5a38;line-height:1.6">'+d.desc+'<br>Due: '+weekLabel(d.readyWeek)+'</div>';
-    html+='</div>';
   });
   html+='</div>';
   
@@ -2994,6 +3068,7 @@ function closeDocsOverlay(){
 // === END SCREEN ===
 function showEndScreen(){
   S.screen='end';
+  recordMetricHistory(); // capture the final standing so the journey is complete
   unlockAchievement('grip_master');
   checkAchievements();
 
@@ -3069,6 +3144,9 @@ function showEndScreen(){
   });
   html+='<div style="text-align:center;font-size:9px;color:#f7c948;margin-top:4px">Average: '+avg+'%</div>';
   html+='</div>';
+
+  // Performance journey — where you started vs where you ended up (light card for readability on the dark end screen)
+  html+='<div style="background:#f5ead0;border-radius:6px;padding:8px 12px;margin:10px 0;text-align:left">'+perfPanelHTML()+'</div>';
 
   // Story narrative
   html+='<div style="text-align:left;margin:10px 0;padding:8px 12px;background:rgba(0,0,0,0.15);border-radius:6px;border-left:3px solid #f7c948">';
@@ -4145,9 +4223,10 @@ function beginGame(){
   S.eventsDone=[];
   S.dlgCooldowns={};
   S.metrics={schedule:70,budget:70,safety:70,quality:70,morale:70};
+  S.metricHistory=[]; recordMetricHistory(); // seed the journey at the starting line (T-32, all 70)
   // Bug 4: clear keys
   S.keys={};
-  
+
   // Init NPC positions
   NPCS.forEach(n=>{
     n.curX=n.officeX*TS;
@@ -4185,7 +4264,8 @@ function saveGame(){
     flags:S.flags||{},
     npcMemory:S.npcMemory||{},
     deferred:S._deferred||{},
-    masterVol:S.masterVol
+    masterVol:S.masterVol,
+    metricHistory:S.metricHistory||[]
   };
   try{localStorage.setItem('projectValley_save',JSON.stringify(data));}catch(e){}
 }
@@ -4216,6 +4296,8 @@ function loadGame(){
     S._deferred=(data.deferred&&typeof data.deferred==='object')?data.deferred:{};
     if(typeof data.masterVol==='number')setMasterVolume(data.masterVol);
     const vd=document.getElementById('volDial'); if(vd)vd.value=Math.round((S.masterVol/0.6)*100);
+    S.metricHistory=Array.isArray(data.metricHistory)?data.metricHistory:[];
+    if(!S.metricHistory.length)recordMetricHistory(); // older saves: seed from current standing
     // Validate spawn against the current map; snap to a known-good spawn if loaded coords are solid/out-of-bounds.
     const safe=(S.map==='site')?{x:3*TS,y:13*TS}:{x:14*TS,y:15*TS};
     const px=data.px,py=data.py;

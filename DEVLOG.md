@@ -402,3 +402,18 @@ and Animal-Crossing-style mumble voices in dialogue.
   and reply appears — five distinct voices, scaled to line length, self-cleaning timer.
 - Harness +3 (themes incl. D areas + default; volume clamp/mute/persist; new SFX/ambience/voices fire safely).
   **44/44 green**, node --check clean.
+
+
+### 2026-06-15 — Iteration 27 (interactive dashboard: readable deliverables + performance journey)
+Two owner asks for the project dashboard (the 📊 docs overlay):
+- **Readable, unlocking deliverables:** replaced the one-line doc cards with a `DELIVERABLES` library (11 real
+  GRIP documents — Brief, Stakeholder Map, Risk Register, Design Pack, Procurement, Construction Plan, Safety,
+  Quality/ITP+NCR, Test & Commissioning, Handover, Lessons). Each has authentic readable `body` content and a
+  `readyWeek`; they **unlock as the project progresses** (count shown), and clicking an available one opens a
+  focused paper-style **reading view** (`openDeliverable`) with a Back button. Locked ones show "🔒 from <wk>".
+- **Performance journey:** `recordMetricHistory()` snapshots all 5 metrics each week (seeded at T-32 all-70,
+  captured at end). New `perfPanelHTML()` renders an inline-SVG trend of every metric from the **starting line
+  to now** + a start→now delta per metric. Shown in the docs overlay AND on the end screen (light card) so
+  players see where they began and where they ended up. Persisted in save/load.
+- Harness +3 (deliverables unlock/readable/openable; journey records per-week & renders SVG; docs overlay
+  opens cleanly). **47/47 green**, node --check clean.
