@@ -460,7 +460,8 @@ const SITE_OBJECTS=(()=>{
     {a:'excavator',tx:9,ty:5,m:4},                                 // plant mobilised pre-construction (phase 4)
     {a:'cone',tx:3,ty:9,m:4},{a:'cone',tx:7,ty:9,m:4},{a:'cone',tx:13,ty:9,m:4},{a:'cone',tx:26,ty:12,m:4}
   ];
-  for(let y=1;y<SITE_H-1;y++){ if(y>=9&&y<=11)continue; o.push({a:'fence',tx:16,ty:y}); } // compound fence, gate at the track
+  for(let y=1;y<SITE_H-1;y++){ if(y>=9&&y<=11)continue; o.push({a:'fence',tx:16,ty:y}); } // compound fence (left), gate at the track
+  for(let x=17;x<SITE_W-1;x++) o.push({a:'fence',tx:x,ty:SITE_H-2});                       // compound fence (bottom edge) — encloses the yard
   return o;
 })();
 // Only the always-present compound structures are solid; phased-in decor stays walkable (avoids invisible collision before it appears).

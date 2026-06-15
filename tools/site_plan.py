@@ -47,6 +47,7 @@ OBJ=[('cabin',18,2),('cabin',24,2),                         # site office + welf
 for y in range(1,H-1):
     if 9<=y<=11: continue
     OBJ.append(('fence',16,y))
+for x in range(17,W-1): OBJ.append(('fence',x,H-2))
 ents=[(ty*TS+MAN[n][3],('o',n,tx*TS,ty*TS)) for (n,tx,ty) in OBJ]
 # crew (hi-vis): use orange shirt chars
 crew=[('amelia',5,13),('bob',12,13),('alex',22,8)]
