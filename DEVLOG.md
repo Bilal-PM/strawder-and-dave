@@ -284,3 +284,10 @@ post-delivery; idle/turn animations.
 - Removed the dead `getNPCsOnMap()`. **26/26 green**, node --check clean.
 - Remaining P3 (nice-to-have): tie PM-knowledge unlocks to decisions; idle/turn animations; compress
   post-delivery. Core game is feature-complete and production-ready.
+
+
+### 2026-06-15 — Iteration 20 (P3 polish: character life)
+- Standing characters now have a gentle 1px idle 'breathing' bob (phase-offset per NPC so they're not in
+  lock-step), and **NPCs turn to face the player** when you start talking to them (and hold still). Small
+  touches, big Stardew-ish 'alive' payoff. **26/26 green**, node --check clean.
+- Remaining P3 (optional): tie PM-knowledge unlocks to decisions; compress post-delivery.

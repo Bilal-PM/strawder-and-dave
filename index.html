@@ -1399,6 +1399,12 @@ function spendInteraction(key){ S.spentInteractions=S.spentInteractions||[]; con
 
 function openNPCDialogue(npc){
   playSFX('interact');
+  // Turn the NPC to face the player (and hold still while talking).
+  if(npc.curX!==undefined){
+    const ddx=S.px-npc.curX, ddy=S.py-npc.curY;
+    npc.aiState='idle'; npc.aiTimer=4000;
+    npc.aiFacing=Math.abs(ddx)>Math.abs(ddy)?(ddx>0?1:3):(ddy>0?0:2);
+  }
   const phaseIdx=getDlgPhaseIdx(S.week);
   const npcDlgs=DLG[npc.id];
   if(!npcDlgs||!npcDlgs[phaseIdx])return;
@@ -3314,6 +3320,9 @@ function drawExpressionBubble(ctx,npc,nx,ny){
 }
 
 // === MAIN RENDERING ===
+// Gentle idle "breathing" bob (1px) so standing characters feel alive; seed offsets NPC phases.
+function idleBob(seed){ return Math.round(Math.sin(Date.now()/520+(seed||0)*0.7)); }
+
 // Stardew-style "!" markers bobbing over each incomplete objective's target (NPC or zone),
 // so newcomers/children always know where to go next.
 function drawObjectiveMarkers(ctx){
@@ -3395,7 +3404,7 @@ function render(){
   entities.push({y:S.py+24,draw:()=>{
     const pcfg=CHARS[S.playerChar];
     pcfg._ppe=S.ppeEquipped;
-    drawChar(CTX,pcfg,S.pdir,S.pmoving?S.pframe:0,Math.floor(S.px),Math.floor(S.py),S.pmoving);
+    drawChar(CTX,pcfg,S.pdir,S.pmoving?S.pframe:0,Math.floor(S.px),Math.floor(S.py)+(S.pmoving?0:idleBob(1)),S.pmoving);
     pcfg._ppe=false;
   }});
 
@@ -3424,7 +3433,7 @@ function render(){
     const npcRef=n;
     entities.push({y:ny+24,draw:()=>{
       const isWalking=npcRef.aiState==='walking';
-      drawChar(CTX,npcRef,npcRef.aiFacing,isWalking?npcRef.aiFrame:0,nx,ny,isWalking);
+      drawChar(CTX,npcRef,npcRef.aiFacing,isWalking?npcRef.aiFrame:0,nx,ny+(isWalking?0:idleBob(nx)),isWalking);
       // Name tag above procedural character head
       CTX.font='bold 9px monospace';
       CTX.textBaseline='middle';
