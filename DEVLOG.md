@@ -493,3 +493,17 @@ Owner playtest of the finish screen:
   at the starting score + a `70 → 84 ▲+14` label. Much clearer at a glance. (The line chart stays in the docs
   overlay.)
 - Harness +1 (end screen renders the Play Again action + the start→finish bars). **50/50 green**, node --check clean.
+
+
+### 2026-06-15 — Iteration 33 (Phase E begins: leadership-style dialogue engine + Sarah)
+- **Engine:** dialogue choices can carry a stance tag `s:` (D/C/S/V = Directive/Collaborative/Supportive/
+  Visionary). `chooseDlg` tallies the chosen stance into `S.leadershipChoices`; `dominantStyle()` reads the
+  lean after a few decisions; `getLeadershipArchetype` now resolves a **style-flavoured badge** when no strong
+  metric pattern dominates — The Commander (directive), The Facilitator (collaborative), The Coach (supportive),
+  The Visionary. Persisted in save/load.
+- **Visible stances:** each dialogue option now shows a small **stance chip** (⚡ Directive / 🤝 Collaborative /
+  💚 Supportive / 🎯 Visionary) so the player can see — and deliberately choose — how they lead (incl. a clear
+  "dictate" option). The metric impact stays hidden until after the choice.
+- **Sarah fully tagged** as the rewrite template (all ~50 choices stance-tagged, text/effects unchanged), giving
+  a balanced D/C/S/V spread per line. Mike/Emma/James/Priya tagging follows next.
+- Harness +1 (valid tags tally, dominant style reads, badge reflects it; Sarah fully tagged). **51/51 green.**

@@ -309,8 +309,25 @@ const S={
   flags:{},               // sticky decision flags for consequence callbacks (e.g. safety_skip)
   npcMemory:{},           // per-NPC memory: last tier + whether you overruled their domain
   _deferred:{},           // per-week busy brush-offs already used (so a 2nd approach always works)
-  metricHistory:[]        // {week, m:{...}} snapshot per week — the performance journey
+  metricHistory:[],       // {week, m:{...}} snapshot per week — the performance journey
+  leadershipChoices:{directive:0,collaborative:0,supportive:0,visionary:0} // running tally of your dialogue stance
 };
+// Map a choice's style tag (D/C/S/V on dialogue choices) to the leadership tally bucket.
+const STYLE_KEY={D:'directive',C:'collaborative',S:'supportive',V:'visionary'};
+// Visible stance chip per style so the player can SEE the leadership approach they're choosing.
+const STYLE_CHIP={D:['⚡','#d98a4a','Directive'],C:['🤝','#6b9ef5','Collaborative'],S:['💚','#5cd29a','Supportive'],V:['🎯','#b08fd8','Visionary']};
+function styleChip(s){ const c=STYLE_CHIP[s]; return c?'<span style="color:'+c[1]+';font-size:7px;margin-right:5px" title="'+c[2]+' leadership">'+c[0]+'</span>':''; }
+function tallyLeadership(styleTag){
+  const k=STYLE_KEY[styleTag]; if(!k)return;
+  S.leadershipChoices=S.leadershipChoices||{directive:0,collaborative:0,supportive:0,visionary:0};
+  S.leadershipChoices[k]=(S.leadershipChoices[k]||0)+1;
+}
+// The stance you lean on most (or null if you haven't shown a clear style yet).
+function dominantStyle(){
+  const l=S.leadershipChoices||{}; let best=null,bv=0,total=0;
+  for(const k in l){ total+=l[k]; if(l[k]>bv){bv=l[k];best=k;} }
+  return total>=3?best:null; // needs a few decisions before a style reads
+}
 // Record the current metrics against the current week (one entry per week; latest wins).
 function recordMetricHistory(){
   S.metricHistory=S.metricHistory||[];
@@ -793,57 +810,57 @@ const DLG={
   sarah:[
     // Phase 0: Kick-Off
     [{text:"Hi! I'm Sarah, your Design Lead. I handle all the engineering drawings and design reviews. Excited to get started!",
-      choices:[{t:"Great to meet you, Sarah!",e:{morale:3}},{t:"What's our biggest design challenge?",e:{quality:2}},{t:"Let's get straight to work.",e:{schedule:2,morale:-1}}]},
+      choices:[{t:"Great to meet you, Sarah!",e:{morale:3},s:'S'},{t:"What's our biggest design challenge?",e:{quality:2},s:'V'},{t:"Let's get straight to work.",e:{schedule:2,morale:-1},s:'D'}]},
      {text:"I've been looking at the existing track layout. There's some old infrastructure we'll need to work around.",
-      choices:[{t:"Can you map out all the constraints?",e:{quality:3,schedule:-1}},{t:"We'll deal with it as we go.",e:{schedule:1,quality:-2}},{t:"Good catch. Flag it as a risk.",e:{quality:2}}]},
+      choices:[{t:"Can you map out all the constraints?",e:{quality:3,schedule:-1},s:'V'},{t:"We'll deal with it as we go.",e:{schedule:1,quality:-2},s:'D'},{t:"Good catch. Flag it as a risk.",e:{quality:2},s:'S'}]},
      {text:"The initial survey data is coming in. Some of it's surprising — the ground conditions aren't what we expected.",
-      choices:[{t:"Let's get more detailed surveys.",e:{budget:-3,quality:5}},{t:"Work with what we have for now.",e:{quality:-2,schedule:2}},{t:"What's the worst case scenario?",e:{quality:2}}]}],
+      choices:[{t:"Let's get more detailed surveys.",e:{budget:-3,quality:5},s:'V'},{t:"Work with what we have for now.",e:{quality:-2,schedule:2},s:'D'},{t:"What's the worst case scenario?",e:{quality:2},s:'C'}]}],
     // Phase 1: Design
     [{text:"The design review is taking longer than expected. We might need another week.",
-      choices:[{t:"Take the time — quality matters.",e:{quality:5,morale:3,schedule:-3}},{t:"Can we fast-track it?",e:{schedule:3,quality:-5,morale:-2}},{t:"Split the review into two parts?",e:{schedule:2,quality:2}}]},
+      choices:[{t:"Take the time — quality matters.",e:{quality:5,morale:3,schedule:-3},s:'V'},{t:"Can we fast-track it?",e:{schedule:3,quality:-5,morale:-2},s:'D'},{t:"Split the review into two parts?",e:{schedule:2,quality:2},s:'C'}]},
      {text:"I've found a clever design solution that could save money, but it's untested.",
-      choices:[{t:"Let's try it — innovation is good!",e:{budget:5,quality:-3}},{t:"Stick with proven methods.",e:{quality:3,budget:-2}},{t:"Can we test it on a small section first?",e:{quality:3,budget:2,schedule:-2}}]},
+      choices:[{t:"Let's try it — innovation is good!",e:{budget:5,quality:-3},s:'V'},{t:"Stick with proven methods.",e:{quality:3,budget:-2},s:'D'},{t:"Can we test it on a small section first?",e:{quality:3,budget:2,schedule:-2},s:'C'}]},
      {text:"The stakeholders want changes to the platform design. Again.",
-      choices:[{t:"Push back — we've agreed the design.",e:{schedule:3,quality:2,morale:-1}},{t:"Accommodate the changes.",e:{schedule:-4,budget:-3,quality:2}},{t:"Find a compromise that works.",e:{schedule:-1,quality:2}}]},
+      choices:[{t:"Push back — we've agreed the design.",e:{schedule:3,quality:2,morale:-1},s:'D'},{t:"Accommodate the changes.",e:{schedule:-4,budget:-3,quality:2},s:'S'},{t:"Find a compromise that works.",e:{schedule:-1,quality:2},s:'C'}]},
      {text:"I've been running stress analysis on the bridge section. The loads are higher than first thought.",
-      choices:[{t:"Redesign to the correct loads.",e:{quality:5,schedule:-3,safety:2}},{t:"Add a safety factor and proceed.",e:{quality:2,safety:1,schedule:1}},{t:"Get an independent check.",e:{quality:4,budget:-1}}]}],
+      choices:[{t:"Redesign to the correct loads.",e:{quality:5,schedule:-3,safety:2},s:'V'},{t:"Add a safety factor and proceed.",e:{quality:2,safety:1,schedule:1},s:'D'},{t:"Get an independent check.",e:{quality:4,budget:-1},s:'C'}]}],
     // Phase 2: Procurement
     [{text:"We need to finalize the technical specifications for procurement. Some details are still fuzzy.",
-      choices:[{t:"Get them perfect before we proceed.",e:{quality:4,schedule:-3}},{t:"Good enough is good enough. Send them.",e:{schedule:3,quality:-3}},{t:"Mark uncertainties clearly for bidders.",e:{quality:2,schedule:1}}]},
+      choices:[{t:"Get them perfect before we proceed.",e:{quality:4,schedule:-3},s:'V'},{t:"Good enough is good enough. Send them.",e:{schedule:3,quality:-3},s:'D'},{t:"Mark uncertainties clearly for bidders.",e:{quality:2,schedule:1},s:'C'}]},
      {text:"One of the design packages needs rework after the review feedback.",
-      choices:[{t:"Prioritize quality — fix it properly.",e:{quality:4,schedule:-2,morale:2}},{t:"Can we patch it later?",e:{schedule:2,quality:-3}},{t:"Who can help speed up the rework?",e:{schedule:1,quality:2,morale:1}}]},
+      choices:[{t:"Prioritize quality — fix it properly.",e:{quality:4,schedule:-2,morale:2},s:'V'},{t:"Can we patch it later?",e:{schedule:2,quality:-3},s:'D'},{t:"Who can help speed up the rework?",e:{schedule:1,quality:2,morale:1},s:'C'}]},
      {text:"I'm worried we're designing in isolation. We should coordinate more with Mike's construction team.",
-      choices:[{t:"Set up weekly design-construction meetings.",e:{quality:3,morale:2,schedule:-1}},{t:"Share the drawings — they'll figure it out.",e:{quality:-2,morale:-2}},{t:"Good idea. Arrange a workshop.",e:{quality:3,morale:3,schedule:-2}}]}],
+      choices:[{t:"Set up weekly design-construction meetings.",e:{quality:3,morale:2,schedule:-1},s:'C'},{t:"Share the drawings — they'll figure it out.",e:{quality:-2,morale:-2},s:'D'},{t:"Good idea. Arrange a workshop.",e:{quality:3,morale:3,schedule:-2},s:'S'}]}],
     // Phase 3: Pre-Construction
     [{text:"The construction drawings are nearly complete. A few details left on signaling.",
-      choices:[{t:"Take the time to get signaling right.",e:{quality:4,safety:3,schedule:-2}},{t:"Can the signal engineers fill in gaps on site?",e:{schedule:2,quality:-2,safety:-2}},{t:"What's the risk if signaling is incomplete?",e:{quality:2,safety:2}}]},
+      choices:[{t:"Take the time to get signaling right.",e:{quality:4,safety:3,schedule:-2},s:'V'},{t:"Can the signal engineers fill in gaps on site?",e:{schedule:2,quality:-2,safety:-2},s:'D'},{t:"What's the risk if signaling is incomplete?",e:{quality:2,safety:2},s:'C'}]},
      {text:"I've been double-checking the track alignment calculations. Found a small error.",
-      choices:[{t:"Great catch! Fix it immediately.",e:{quality:5,safety:3,schedule:-1}},{t:"How small is small?",e:{quality:2,safety:2}},{t:"Good attention to detail, Sarah.",e:{quality:3,morale:2}}]},
+      choices:[{t:"Great catch! Fix it immediately.",e:{quality:5,safety:3,schedule:-1},s:'D'},{t:"How small is small?",e:{quality:2,safety:2},s:'V'},{t:"Good attention to detail, Sarah.",e:{quality:3,morale:2},s:'S'}]},
      {text:"The design team is feeling stretched thin. We're supporting too many queries from site.",
-      choices:[{t:"I'll talk to Mike about reducing queries.",e:{morale:3,quality:-1}},{t:"Can we hire temporary support?",e:{budget:-3,morale:3,quality:2}},{t:"Prioritize — only answer critical queries.",e:{quality:1,morale:1}}]}],
+      choices:[{t:"I'll talk to Mike about reducing queries.",e:{morale:3,quality:-1},s:'D'},{t:"Can we hire temporary support?",e:{budget:-3,morale:3,quality:2},s:'C'},{t:"Prioritize — only answer critical queries.",e:{quality:1,morale:1},s:'V'}]}],
     // Phase 4: Construction
     [{text:"Site is finding discrepancies between the drawings and what's actually on the ground.",
-      choices:[{t:"Issue revised drawings ASAP.",e:{quality:4,schedule:-2,budget:-1}},{t:"Can they work around the differences?",e:{schedule:2,quality:-4,safety:-2}},{t:"Send a designer to site to resolve on the spot.",e:{quality:3,schedule:-1,budget:-1}}]},
+      choices:[{t:"Issue revised drawings ASAP.",e:{quality:4,schedule:-2,budget:-1},s:'D'},{t:"Can they work around the differences?",e:{schedule:2,quality:-4,safety:-2},s:'C'},{t:"Send a designer to site to resolve on the spot.",e:{quality:3,schedule:-1,budget:-1},s:'V'}]},
      {text:"The as-built records need updating. We're falling behind on documentation.",
-      choices:[{t:"Dedicate someone to documentation.",e:{quality:4,budget:-2}},{t:"We'll catch up after construction.",e:{quality:-3,schedule:2}},{t:"Can we simplify the documentation process?",e:{quality:2,schedule:1}}]},
+      choices:[{t:"Dedicate someone to documentation.",e:{quality:4,budget:-2},s:'V'},{t:"We'll catch up after construction.",e:{quality:-3,schedule:2},s:'D'},{t:"Can we simplify the documentation process?",e:{quality:2,schedule:1},s:'C'}]},
      {text:"I'm proud of the design work we've done. The team has really delivered.",
-      choices:[{t:"You've done amazing work, Sarah!",e:{morale:5,quality:2}},{t:"Let's not celebrate until it's built.",e:{morale:-2,quality:1}},{t:"The design is only as good as the build.",e:{morale:-1,quality:2}}]},
+      choices:[{t:"You've done amazing work, Sarah!",e:{morale:5,quality:2},s:'S'},{t:"Let's not celebrate until it's built.",e:{morale:-2,quality:1},s:'D'},{t:"The design is only as good as the build.",e:{morale:-1,quality:2},s:'V'}]},
      {text:"A technical query from site needs urgent attention. The drainage levels don't match the drawings.",
-      choices:[{t:"Get a surveyor to verify on site.",e:{quality:4,safety:2,schedule:-1}},{t:"Trust the drawings — build to plan.",e:{quality:-3,safety:-2,schedule:2}},{t:"Can you visit site and resolve it?",e:{quality:3,schedule:-1,morale:1}}]}],
+      choices:[{t:"Get a surveyor to verify on site.",e:{quality:4,safety:2,schedule:-1},s:'V'},{t:"Trust the drawings — build to plan.",e:{quality:-3,safety:-2,schedule:2},s:'D'},{t:"Can you visit site and resolve it?",e:{quality:3,schedule:-1,morale:1},s:'C'}]}],
     // Phase 5: Handover
     [{text:"The final design verification is complete. Everything checks out!",
-      choices:[{t:"Fantastic work!",e:{morale:4,quality:3}},{t:"Any lingering concerns?",e:{quality:2}},{t:"Let's document lessons learned.",e:{quality:3,morale:2}}]},
+      choices:[{t:"Fantastic work!",e:{morale:4,quality:3},s:'S'},{t:"Any lingering concerns?",e:{quality:2},s:'V'},{t:"Let's document lessons learned.",e:{quality:3,morale:2},s:'C'}]},
      {text:"We should compile a handover pack with all design records and as-built drawings.",
-      choices:[{t:"Absolutely — get it done properly.",e:{quality:5,schedule:-1}},{t:"Keep it brief — key documents only.",e:{schedule:2,quality:-1}},{t:"Good thinking. Include maintenance notes too.",e:{quality:4,schedule:-1}}]},
+      choices:[{t:"Absolutely — get it done properly.",e:{quality:5,schedule:-1},s:'V'},{t:"Keep it brief — key documents only.",e:{schedule:2,quality:-1},s:'D'},{t:"Good thinking. Include maintenance notes too.",e:{quality:4,schedule:-1},s:'S'}]},
      {text:"I've really enjoyed this project. One of the best teams I've worked with.",
-      choices:[{t:"The feeling is mutual!",e:{morale:5}},{t:"There's still work to do!",e:{schedule:1,morale:-2}},{t:"Let's make sure we finish strong.",e:{morale:2,quality:2}}]}],
+      choices:[{t:"The feeling is mutual!",e:{morale:5},s:'S'},{t:"There's still work to do!",e:{schedule:1,morale:-2},s:'D'},{t:"Let's make sure we finish strong.",e:{morale:2,quality:2},s:'V'}]}],
     // Phase 6: Post-Delivery
     [{text:"The maintenance team has questions about some of the design details. They need our support.",
-      choices:[{t:"Set up a design clinic for them.",e:{quality:4,morale:2,schedule:-1}},{t:"The handover pack should cover it.",e:{quality:-1,morale:-1}},{t:"I'll ask you to brief them personally.",e:{quality:3,morale:2}}]},
+      choices:[{t:"Set up a design clinic for them.",e:{quality:4,morale:2,schedule:-1},s:'C'},{t:"The handover pack should cover it.",e:{quality:-1,morale:-1},s:'D'},{t:"I'll ask you to brief them personally.",e:{quality:3,morale:2},s:'S'}]},
      {text:"I've been reviewing the design against actual performance. Some things worked better than expected!",
-      choices:[{t:"Capture those wins for future projects.",e:{quality:4,morale:3}},{t:"What about things that didn't work?",e:{quality:3}},{t:"Share the findings with the whole team.",e:{quality:2,morale:3}}]},
+      choices:[{t:"Capture those wins for future projects.",e:{quality:4,morale:3},s:'V'},{t:"What about things that didn't work?",e:{quality:3},s:'C'},{t:"Share the findings with the whole team.",e:{quality:2,morale:3},s:'S'}]},
      {text:"I'm thinking of writing a technical paper about our innovative solutions on this project.",
-      choices:[{t:"That's a great idea — go for it!",e:{morale:4,quality:2}},{t:"Make sure it doesn't reveal anything confidential.",e:{quality:2}},{t:"Include the whole design team as co-authors.",e:{morale:4,quality:1}}]}]
+      choices:[{t:"That's a great idea — go for it!",e:{morale:4,quality:2},s:'S'},{t:"Make sure it doesn't reveal anything confidential.",e:{quality:2},s:'D'},{t:"Include the whole design team as co-authors.",e:{morale:4,quality:1},s:'C'}]}]
   ],
   mike:[
     [{text:"Hey! Mike here, Site Manager. I'll be running things on the ground once construction starts.",
@@ -1811,7 +1828,7 @@ function openNPCDialogue(npc){
   if(opener)html+='<div class="dt" style="color:#caa86a;font-style:italic">'+opener+'</div>';
   html+='<div class="dt">'+dlg.text+'</div>';
   dlg.choices.forEach((c,i)=>{
-    html+='<div class="dc" onclick="chooseDlg(\''+npc.id+'\','+phaseIdx+','+dlgIdx+','+i+')">'+c.t+'</div>';
+    html+='<div class="dc" onclick="chooseDlg(\''+npc.id+'\','+phaseIdx+','+dlgIdx+','+i+')">'+styleChip(c.s)+c.t+'</div>';
   });
   el.innerHTML=html;
   el.className='on';
@@ -2030,6 +2047,7 @@ function chooseDlg(npcId,pi,di,ci){
   const effects=choice.e||{};
   const _before=snapshotMetrics();      // for the unified post-choice score reveal
   applyEffects(effects);
+  if(choice.s)tallyLeadership(choice.s); // record the leadership stance you took
   spendInteraction('npc_'+npcId); // weekly catch-up used up
 
   const npc=NPCS.find(n=>n.id===npcId);
@@ -2572,7 +2590,15 @@ function getLeadershipArchetype(){
   else if(people>=72&&avgHeart>=3&&ethics>=70) a={name:'The Mentor',icon:'\ud83c\udf1f',color:'#5cd29a',blurb:'People-first and principled. They would run through a wall for you (with the correct PPE).'};
   else if(people>=70&&m.schedule<55) a={name:'The Peacemaker',icon:'\ud83d\udd4a\ufe0f',color:'#6b9ef5',blurb:'Everyone is delighted. The deadline is having a quietly stressful time.'};
   else if(lowest>=60) a={name:'Safe Pair of Hands',icon:'\ud83e\udd1d',color:'#5cd29a',blurb:'Calm, balanced, trusted. Boringly brilliant \u2014 the best kind of PM.'};
-  else a={name:'The Operator',icon:'\u2699\ufe0f',color:'#c4a878',blurb:'Heads down, getting it done, still finding your leadership style.'};
+  else {
+    // No strong metric pattern \u2014 read the leadership STYLE you've leaned on in conversations.
+    const ds=dominantStyle();
+    if(ds==='directive') a={name:'The Commander',icon:'\ud83c\udf96\ufe0f',color:'#d98a4a',blurb:'You take charge and call the shots. Decisive \u2014 just make sure the team is with you, not just under you.'};
+    else if(ds==='collaborative') a={name:'The Facilitator',icon:'\ud83e\udd1d',color:'#6b9ef5',blurb:'You build decisions together. Slower, but the buy-in is real and it sticks.'};
+    else if(ds==='supportive') a={name:'The Coach',icon:'\ud83c\udf31',color:'#5cd29a',blurb:'You back your people first. They grow under you \u2014 keep an eye on the programme too.'};
+    else if(ds==='visionary') a={name:'The Visionary',icon:'\ud83d\udd2d',color:'#b08fd8',blurb:'You lead with the bigger picture. Inspiring \u2014 ground it in the week-to-week and it sings.'};
+    else a={name:'The Operator',icon:'\u2699\ufe0f',color:'#c4a878',blurb:'Heads down, getting it done, still finding your leadership style.'};
+  }
   return a;
 }
 function showArchetypeInfo(){
@@ -4467,7 +4493,8 @@ function saveGame(){
     npcMemory:S.npcMemory||{},
     deferred:S._deferred||{},
     masterVol:S.masterVol,
-    metricHistory:S.metricHistory||[]
+    metricHistory:S.metricHistory||[],
+    leadershipChoices:S.leadershipChoices||{}
   };
   try{localStorage.setItem('projectValley_save',JSON.stringify(data));}catch(e){}
 }
@@ -4500,6 +4527,9 @@ function loadGame(){
     const vd=document.getElementById('volDial'); if(vd)vd.value=Math.round((S.masterVol/0.6)*100);
     S.metricHistory=Array.isArray(data.metricHistory)?data.metricHistory:[];
     if(!S.metricHistory.length)recordMetricHistory(); // older saves: seed from current standing
+    S.leadershipChoices=(data.leadershipChoices&&typeof data.leadershipChoices==='object')?
+      Object.assign({directive:0,collaborative:0,supportive:0,visionary:0},data.leadershipChoices):
+      {directive:0,collaborative:0,supportive:0,visionary:0};
     // Validate spawn against the current map; snap to a known-good spawn if loaded coords are solid/out-of-bounds.
     const _sp=MD().spawn; const safe={x:_sp.x*TS,y:_sp.y*TS};
     const px=data.px,py=data.py;

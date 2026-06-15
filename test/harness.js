@@ -75,7 +75,7 @@ const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
 const scripts=[...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)].map(m=>m[1]);
 let code=scripts.join('\n;\n');
 // epilogue: capture top-level consts/fns into global for assertions
-const names=['S','applyEffects','advanceWeek','getPhase','getPhaseIdx','getDlgPhaseIdx','chooseDlg','NPCS','OMAP','SMAP','ZONES','isSolid','render','updatePlayer','startGame','newGame','selectCharacter','beginGame','saveGame','loadGame','EVENTS','PHASES','DLG','transitionToMap','showEvent','triggerEvent','getObjectives','updateHUD','updateNotepad','WALK_FRAMES','updateNPCAI','CHARS','ATLAS','drawSprite','OFFICE_W','OFFICE_H','OFFICE_OBJECTS','OFFICE_SOLID_OBJ','objBaseCells','OFFICE_SOLID','SITE_W','SITE_H','SITE_OBJECTS','SITE_SOLID_OBJ','ZONES','NPC_WANDER_OFFICE','NPC_WANDER_SITE','siteTrackFrac','POPUPS','enterWeek','afterEvent','chooseEvent','closeReport','REPORT_WEEKS','getObjectives','showEndScreen','chooseDlg','openNPCDialogue','interactionSpent','spendInteraction','getDlgPhaseIdx','EVENTS','showInsight','rng','seedRng','DIFFICULTY','diff','getPMRating','getLeadershipArchetype','resolveRisk','eventCallback','PERSONA','reflectionNote','showEvent','showReport','applyEventChoice','skipPhase','hintsVisible','metricDeltaHTML','snapshotMetrics','showLockerRoom','togglePPE','closeEventResult','presentEvent','beginDecision','eventHesitate','eventTimerMs','startEventTimer','stopEventTimer','tickEventTimer','SCENES','THEMES','getTheme','setMasterVolume','playMumble','VOICE','playSFX','playLocationAmbient','startBGM','stopBGM','DELIVERABLES','deliverableAvailable','deliverablesAvailableCount','openDeliverable','recordMetricHistory','perfPanelHTML','perfBarsHTML','showDocsOverlay','startNewWeek','MAPS','MD','npcCell','mapW','mapH','SUPPLIER_W','SUPPLIER_H','SUPMAP','transitionToMap','updateTransition'];
+const names=['S','applyEffects','advanceWeek','getPhase','getPhaseIdx','getDlgPhaseIdx','chooseDlg','NPCS','OMAP','SMAP','ZONES','isSolid','render','updatePlayer','startGame','newGame','selectCharacter','beginGame','saveGame','loadGame','EVENTS','PHASES','DLG','transitionToMap','showEvent','triggerEvent','getObjectives','updateHUD','updateNotepad','WALK_FRAMES','updateNPCAI','CHARS','ATLAS','drawSprite','OFFICE_W','OFFICE_H','OFFICE_OBJECTS','OFFICE_SOLID_OBJ','objBaseCells','OFFICE_SOLID','SITE_W','SITE_H','SITE_OBJECTS','SITE_SOLID_OBJ','ZONES','NPC_WANDER_OFFICE','NPC_WANDER_SITE','siteTrackFrac','POPUPS','enterWeek','afterEvent','chooseEvent','closeReport','REPORT_WEEKS','getObjectives','showEndScreen','chooseDlg','openNPCDialogue','interactionSpent','spendInteraction','getDlgPhaseIdx','EVENTS','showInsight','rng','seedRng','DIFFICULTY','diff','getPMRating','getLeadershipArchetype','resolveRisk','eventCallback','PERSONA','reflectionNote','showEvent','showReport','applyEventChoice','skipPhase','hintsVisible','metricDeltaHTML','snapshotMetrics','showLockerRoom','togglePPE','closeEventResult','presentEvent','beginDecision','eventHesitate','eventTimerMs','startEventTimer','stopEventTimer','tickEventTimer','SCENES','THEMES','getTheme','setMasterVolume','playMumble','VOICE','playSFX','playLocationAmbient','startBGM','stopBGM','DELIVERABLES','deliverableAvailable','deliverablesAvailableCount','openDeliverable','recordMetricHistory','perfPanelHTML','perfBarsHTML','showDocsOverlay','startNewWeek','MAPS','MD','npcCell','mapW','mapH','SUPPLIER_W','SUPPLIER_H','SUPMAP','transitionToMap','updateTransition','tallyLeadership','dominantStyle','STYLE_KEY'];
 code+='\n;globalThis.__G=(function(){const o={};'+names.map(n=>`try{o['${n}']=${n};}catch(e){}`).join('')+'return o;})();';
 
 const results={pass:[],fail:[]};
@@ -420,6 +420,21 @@ check('performance journey records per week (start→now) and renders an SVG tre
 check('docs overlay renders (timeline + journey + deliverables) without throwing',()=>{
   g.S.docsOpen=false; g.S.week=8; g.showDocsOverlay();
   if(!g.S.docsOpen) throw new Error('docs overlay did not open');
+});
+check('leadership-style engine: valid stance tags tally, dominant style reads, archetype reflects it',()=>{
+  // every tagged dialogue choice uses a valid stance (D/C/S/V)
+  for(const id in g.DLG){ g.DLG[id].forEach(ph=>ph.forEach(l=>(l.choices||[]).forEach(c=>{ if(c.s&&!g.STYLE_KEY[c.s]) throw new Error('invalid style tag '+c.s+' on '+id); }))); }
+  // Sarah is fully stance-tagged (the rewrite template) — every choice has a stance
+  g.DLG.sarah.forEach(ph=>ph.forEach(l=>l.choices.forEach(c=>{ if(!c.s) throw new Error('Sarah choice missing stance tag: '+c.t); })));
+  g.S.leadershipChoices={directive:0,collaborative:0,supportive:0,visionary:0};
+  g.tallyLeadership('D'); g.tallyLeadership('D'); g.tallyLeadership('D'); g.tallyLeadership('C');
+  if(g.S.leadershipChoices.directive!==3) throw new Error('directive tag not tallied');
+  if(g.dominantStyle()!=='directive') throw new Error('dominant style should be directive, got '+g.dominantStyle());
+  // with middling metrics (no strong pattern) the badge should read the leadership STYLE
+  g.S.metrics={schedule:55,budget:55,safety:55,quality:55,morale:55};
+  g.S.relationships={sarah:{hearts:1,talked:1},mike:{hearts:1,talked:1},emma:{hearts:1,talked:1},james:{hearts:1,talked:1},priya:{hearts:1,talked:1}};
+  g.S.npcMemory={};
+  if(g.getLeadershipArchetype().name!=='The Commander') throw new Error('directive lean should read as The Commander');
 });
 check('NPCs carry memory of the last interaction (drives their next opener)',()=>{
   g.S.npcMemory={}; g.S.spentInteractions=[]; g.S.week=20;
