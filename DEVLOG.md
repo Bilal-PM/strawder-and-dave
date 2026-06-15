@@ -519,3 +519,19 @@ Owner playtest of the finish screen:
   persisted in save/load).
 - Harness hardened: every core NPC fully tagged + per-line stance variety asserted. **51/51 green**, node --check
   clean. Phase E (the last big approved piece) is done — leadership styles run end-to-end across the game.
+
+
+### 2026-06-15 — Iteration 35 (World+UI overhaul Phase 1: legibility & crispness)
+Playtest feedback: cramped world, low-res/blurry labels, HUD overflow (leadership badge collides with stars),
+tiny unreadable fonts. Owner direction: keep the Canvas client, fix in place (no re-platform/backend yet).
+- **Crisp canvas:** `fitCanvas()` sizes the canvas BACKING STORE to its real device pixels (1:1 with screen)
+  and keeps all game coords in logical IW×IH via a base transform — no CSS up/downscale of the backing, so
+  canvas-drawn text/labels/sprites are sharp on hi-DPI (the root of the "low-resolution words" complaint).
+  Re-runs at the top of `render()` + on resize when the size changes. render() only uses save/translate/restore,
+  so the base transform is preserved.
+- **HUD legibility:** the leadership badge no longer overlaps the stars (`max-width`+ellipsis); HUD now wraps
+  (`flex-wrap`, `min-height`) so metrics+badge+stars+audio never collide; bumped `.hl`8→9, `.hpct`7→9, wider meters.
+- **Fonts:** removed the unreadable 6px tutorial + raised in-game 7px (cutscene names, toasts, volume %, difficulty
+  blurb, stance chips) to 8–9px.
+- **Area labels:** smaller (7px) + slim semi-transparent rounded plate so they read but don't blot the scene/clash.
+- **51/51 green**, node --check clean. (Visual crispness verified by logic; owner playtest confirms.)

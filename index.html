@@ -22,14 +22,14 @@ body{background:#3a2a18;color:#f0e6d3;font-family:'Press Start 2P',monospace;ove
 .btn.gld{border-color:#f7c948}.btn.gld:hover{background:linear-gradient(180deg,#f7c948,#c9a020);color:#3a2210}
 .btn.sm{font-size:8px;padding:8px 16px;min-width:auto}
 .btn:disabled{opacity:0.4;cursor:not-allowed;transform:none!important}
-#hud{position:absolute;top:0;left:0;right:220px;height:56px;background:linear-gradient(180deg,rgba(90,58,30,0.97),rgba(58,34,16,0.95));border-bottom:2px solid #7a5c3a;display:none;z-index:20;padding:0 8px;align-items:center;justify-content:space-between;font-size:10px}
+#hud{position:absolute;top:0;left:0;right:220px;min-height:56px;background:linear-gradient(180deg,rgba(90,58,30,0.97),rgba(58,34,16,0.95));border-bottom:2px solid #7a5c3a;display:none;z-index:20;padding:4px 8px;align-items:center;justify-content:space-between;flex-wrap:wrap;row-gap:3px;column-gap:6px;font-size:10px}
 #hud.on{display:flex}
-.hg{display:flex;align-items:center;gap:4px}
-.hi{display:flex;align-items:center;gap:2px}
+.hg{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.hi{display:flex;align-items:center;gap:3px}
 .hi img{width:12px;height:12px;image-rendering:pixelated}
-.hl{color:#c4a878;font-size:8px}.hv{color:#f7c948;font-size:10px}
-.hpct{font-size:7px;min-width:20px;text-align:right}
-.meter{width:50px;height:12px;background:#3a2210;border:1px solid #5a3a1e;border-radius:3px;overflow:hidden;position:relative}
+.hl{color:#c4a878;font-size:9px}.hv{color:#f7c948;font-size:11px}
+.hpct{font-size:9px;min-width:22px;text-align:right}
+.meter{width:54px;height:13px;background:#3a2210;border:1px solid #5a3a1e;border-radius:3px;overflow:hidden;position:relative}
 .meter::after{content:'';position:absolute;top:0;left:25%;width:1px;height:100%;background:rgba(255,255,255,0.15);box-shadow:calc(25% * 1) 0 0 rgba(255,255,255,0.15),calc(25% * 2) 0 0 rgba(255,255,255,0.15)}
 .mf{height:100%;border-radius:2px;transition:width .5s}
 .mf.grn{background:linear-gradient(90deg,#2a8a5a,#4aca8a)}
@@ -43,7 +43,7 @@ body{background:#3a2a18;color:#f0e6d3;font-family:'Press Start 2P',monospace;ove
 #notepad .sep{color:#c4a878;margin:4px 0}
 .obj{padding:2px 0;color:#5a3a1e;font-size:9px}
 .obj.done{color:#2a8a5a;text-decoration:line-through}
-.tip{color:#4a6a90;font-size:8px;margin-top:8px;line-height:2}
+.tip{color:#4a6a90;font-size:9px;margin-top:8px;line-height:1.9}
 #dlg{position:absolute;bottom:10px;left:10px;right:230px;background:linear-gradient(180deg,#f5ead0ee,#e8d4b0ee);border:3px solid #7a5c3a;border-radius:8px;padding:14px;z-index:25;display:none}
 #dlg.on{display:block}
 #dlg .dn{color:#5a3a1e;font-size:11px;margin-bottom:6px;font-weight:bold}
@@ -69,7 +69,7 @@ body{background:#3a2a18;color:#f0e6d3;font-family:'Press Start 2P',monospace;ove
 @keyframes csBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
 @keyframes csClashL{0%,100%{transform:translateX(0) rotate(0)}50%{transform:translateX(4px) rotate(3deg)}}
 @keyframes csClashR{0%,100%{transform:translateX(0) rotate(0)}50%{transform:translateX(-4px) rotate(-3deg)}}
-#cutscene .cs-nm{font-size:7px;color:#e8d4b0}
+#cutscene .cs-nm{font-size:9px;color:#e8d4b0}
 #cutscene .cs-prop{font-size:34px;align-self:center;animation:csBob 1.4s ease-in-out infinite}
 #cutscene .cs-cap{font-size:8px;color:#d9b070;font-style:italic;text-align:center;margin:2px 14px 8px;line-height:1.7;max-width:520px}
 #cutscene .cs-text{font-size:9px;color:#f0e6d3;text-align:center;margin:0 14px 12px;line-height:1.9;max-width:520px;min-height:34px}
@@ -121,9 +121,9 @@ body{background:#3a2a18;color:#f0e6d3;font-family:'Press Start 2P',monospace;ove
 .ach-toast.show{top:10px}
 .ach-toast .ach-icon{font-size:24px;flex-shrink:0}
 .ach-toast .ach-info{flex:1}
-.ach-toast .ach-label{font-size:7px;color:#c4a878;letter-spacing:2px}
+.ach-toast .ach-label{font-size:8px;color:#c4a878;letter-spacing:1px}
 .ach-toast .ach-name{font-size:10px;color:#5a3a1e;margin-top:2px}
-.ach-toast .ach-desc{font-size:7px;color:#7a5a38;margin-top:2px;line-height:1.5}
+.ach-toast .ach-desc{font-size:8px;color:#7a5a38;margin-top:2px;line-height:1.6}
 @keyframes hudpunch{0%{transform:scale(1)}40%{transform:scale(1.35);filter:brightness(1.7)}100%{transform:scale(1)}}
 .punch{display:inline-block;animation:hudpunch .42s ease-out}
 @keyframes modalslam{0%{transform:translate(-50%,-50%) scale(.85);opacity:0}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
@@ -154,7 +154,7 @@ body{background:#3a2a18;color:#f0e6d3;font-family:'Press Start 2P',monospace;ove
   <canvas id="titleArt" width="320" height="100" style="image-rendering:pixelated;margin-bottom:16px"></canvas>
   <button class="btn gld" onclick="showCharSelect()">New Game</button>
   <button class="btn sm" onclick="loadGame()" id="contBtn" style="display:none">Continue</button>
-  <p style="font-size:6px;color:#533a7b;margin-top:20px">Arrow Keys / WASD to move | SPACE to interact</p>
+  <p style="font-size:9px;color:#6a4f9a;margin-top:20px;line-height:1.8">Arrow Keys / WASD to move · SPACE to interact</p>
 </div>
 <div id="charSel" class="scr">
   <h2 style="font-size:14px;color:#f7c948;margin-bottom:4px">Choose Your Character</h2>
@@ -162,7 +162,7 @@ body{background:#3a2a18;color:#f0e6d3;font-family:'Press Start 2P',monospace;ove
   <div class="chars" id="charGrid"></div>
   <p style="font-size:8px;color:#f7c948;margin:8px 0 4px">Difficulty</p>
   <div id="diffSel" style="display:flex;gap:6px;justify-content:center;margin-bottom:4px"></div>
-  <p id="diffBlurb" style="font-size:7px;color:#c4a878;margin-bottom:8px;min-height:10px"></p>
+  <p id="diffBlurb" style="font-size:9px;color:#c4a878;margin-bottom:8px;min-height:12px;line-height:1.7"></p>
   <input type="text" id="pName" placeholder="Enter your name" maxlength="12">
   <button class="btn gld" id="startBtn" onclick="startGame()">Start Project</button>
 </div>
@@ -196,13 +196,13 @@ body{background:#3a2a18;color:#f0e6d3;font-family:'Press Start 2P',monospace;ove
     <div class="hi"><img src="img/icon/Team.png" alt=""><span class="hl">MOR</span><div class="meter"><div class="mf pur" id="mMor" style="width:70%"></div></div><span class="hpct" id="pMor" style="color:#c4a878">70</span></div>
   </div>
   <div class="hg">
-    <span id="hArchetype" title="Your leadership style, based on how you're leading" style="font-size:8px;padding:2px 5px;border-radius:4px;background:rgba(0,0,0,0.25);white-space:nowrap;cursor:help" onclick="showArchetypeInfo()"></span>
+    <span id="hArchetype" title="Your leadership style, based on how you're leading" style="font-size:9px;padding:2px 6px;border-radius:4px;background:rgba(0,0,0,0.25);white-space:nowrap;max-width:130px;overflow:hidden;text-overflow:ellipsis;cursor:help" onclick="showArchetypeInfo()"></span>
     <span id="hStars" style="color:#f7c948;font-size:10px"></span>
     <button style="background:none;border:none;color:#c4a878;cursor:pointer;font-family:'Press Start 2P',monospace;font-size:8px" onclick="toggleMusic()" id="musBtn">&#9835;</button>
     <button style="background:none;border:none;cursor:pointer;font-size:12px" onclick="toggleSFX()" id="sfxBtn" title="Sound effects">&#128266;</button>
     <span title="Master volume — slide to 0 to mute everything" style="display:inline-flex;align-items:center;gap:3px">
       <input id="volDial" type="range" min="0" max="100" value="50" oninput="setMasterVolume(this.value/100*0.6)" style="width:46px;height:10px;vertical-align:middle;accent-color:#f7c948;cursor:pointer">
-      <span id="volPct" style="font-size:7px;color:#c4a878;min-width:22px">50%</span>
+      <span id="volPct" style="font-size:9px;color:#c4a878;min-width:24px">50%</span>
     </span>
     <button style="background:none;border:none;color:#5b8ef5;cursor:pointer;font-family:'Press Start 2P',monospace;font-size:10px" onclick="showHelp()">?</button>
   </div>
@@ -235,7 +235,19 @@ body{background:#3a2a18;color:#f0e6d3;font-family:'Press Start 2P',monospace;ove
 // === PROJECT VALLEY — Complete Rebuilt Game Engine ===
 const CV=document.getElementById('cv'),CTX=CV.getContext('2d');
 const IW=480,IH=320,TS=16;
-CTX.imageSmoothingEnabled=false;
+// Crispness: size the canvas BACKING STORE to its real device pixels (1:1 with the screen), and keep all
+// game coords in logical IW×IH via a base transform. No CSS up/downscale of the backing → text & pixel art
+// stay sharp on hi-DPI. fitCanvas() is cheap and re-runs at the top of render()/on resize if the size changed.
+function fitCanvas(){
+  const dpr=Math.min(window.devicePixelRatio||1,3);
+  const cw=CV.clientWidth||IW, ch=CV.clientHeight||IH;
+  const bw=Math.max(IW,Math.round(cw*dpr)), bh=Math.max(IH,Math.round(ch*dpr));
+  if(CV.width!==bw||CV.height!==bh){ CV.width=bw; CV.height=bh; }
+  CTX.setTransform(bw/IW,0,0,bh/IH,0,0); // logical → backing
+  CTX.imageSmoothingEnabled=false;
+}
+fitCanvas();
+window.addEventListener('resize',fitCanvas);
 
 // === ASSET LOADING ===
 const ASSETS={};
@@ -316,7 +328,7 @@ const S={
 const STYLE_KEY={D:'directive',C:'collaborative',S:'supportive',V:'visionary'};
 // Visible stance chip per style so the player can SEE the leadership approach they're choosing.
 const STYLE_CHIP={D:['⚡','#d98a4a','Directive'],C:['🤝','#6b9ef5','Collaborative'],S:['💚','#5cd29a','Supportive'],V:['🎯','#b08fd8','Visionary']};
-function styleChip(s){ const c=STYLE_CHIP[s]; return c?'<span style="color:'+c[1]+';font-size:7px;margin-right:5px" title="'+c[2]+' leadership">'+c[0]+'</span>':''; }
+function styleChip(s){ const c=STYLE_CHIP[s]; return c?'<span style="color:'+c[1]+';font-size:8px;margin-right:5px" title="'+c[2]+' leadership">'+c[0]+'</span>':''; }
 function tallyLeadership(styleTag){
   const k=STYLE_KEY[styleTag]; if(!k)return;
   S.leadershipChoices=S.leadershipChoices||{directive:0,collaborative:0,supportive:0,visionary:0};
@@ -4040,14 +4052,16 @@ function drawOfficePhaseOverlay(ctx,week){} // disabled (TODO P3: rebuild phase 
 // === AREA LABELS ===
 function drawAreaLabels(ctx){
   const labels=AREA_LABELS[S.map]||[];
-  ctx.font='bold 10px monospace';
+  ctx.font='bold 7px monospace';        // smaller + crisp (canvas is supersampled); less clashing
   ctx.textBaseline='middle';
+  ctx.textAlign='left';
   labels.forEach(l=>{
-    const tx=l.x*TS;
-    const ty=l.y*TS;
-    const tw=ctx.measureText(l.text).width+12;
-    ctx.fillStyle='rgba(20,10,5,0.92)';
-    ctx.fillRect(tx-6,ty-9,tw,18);
+    const tx=l.x*TS, ty=l.y*TS;
+    const tw=ctx.measureText(l.text).width;
+    // slim, semi-transparent rounded plate so labels read but don't blot out the scene
+    ctx.fillStyle='rgba(18,10,4,0.72)';
+    if(ctx.roundRect){ ctx.beginPath(); ctx.roundRect(tx-4,ty-7,tw+8,14,3); ctx.fill(); }
+    else ctx.fillRect(tx-4,ty-7,tw+8,14);
     ctx.fillStyle=l.color||'#ffffff';
     ctx.fillText(l.text,tx,ty);
   });
@@ -4126,9 +4140,10 @@ function drawObjectiveMarkers(ctx){
 }
 
 function render(){
+  fitCanvas(); // keep the backing store matched to the on-screen size (crisp, no scaling blur)
   CTX.fillStyle=C.bg;
   CTX.fillRect(0,0,IW,IH);
-  
+
   if(S.screen!=='game')return;
 
   const mw=mapW();
