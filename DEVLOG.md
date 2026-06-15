@@ -193,3 +193,14 @@ Work the loop should execute in order (tick in this file as done):
 - node --check clean, **22/22 green**.
 - Next: onboarding next-objective breadcrumb (kid clarity), week-transition stinger, compound fence
   enclosure; then P3 (choice-aware ending, office phase visuals).
+
+
+### 2026-06-15 — Iteration 12 (P2 onboarding: objective breadcrumbs)
+- Added Stardew-style bobbing "!" markers (`drawObjectiveMarkers`, world-space in render) over each
+  incomplete weekly objective's target — the NPC to talk to or the zone to visit. Newcomers/children
+  always see where to go next; hidden during modals/dialogue.
+- Harness +1: **every** objective target (npc/zone) across all 11 weeks resolves to a real NPC/zone — this
+  also retro-validated that the office/site zone-id redesign didn't break objective completion. **23/23
+  green.** node --check clean.
+- Next: week-transition stinger, compound fence enclosure, then P3 (choice-aware ending, office phase
+  visuals, state-dependent events).

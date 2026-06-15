@@ -74,7 +74,7 @@ const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
 const scripts=[...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)].map(m=>m[1]);
 let code=scripts.join('\n;\n');
 // epilogue: capture top-level consts/fns into global for assertions
-const names=['S','applyEffects','advanceWeek','getPhase','getPhaseIdx','getDlgPhaseIdx','chooseDlg','NPCS','OMAP','SMAP','ZONES','isSolid','render','updatePlayer','startGame','newGame','selectCharacter','beginGame','saveGame','loadGame','EVENTS','PHASES','DLG','transitionToMap','showEvent','triggerEvent','getObjectives','updateHUD','updateNotepad','WALK_FRAMES','updateNPCAI','CHARS','ATLAS','drawSprite','OFFICE_W','OFFICE_H','OFFICE_OBJECTS','OFFICE_SOLID_OBJ','objBaseCells','OFFICE_SOLID','SITE_W','SITE_H','SITE_OBJECTS','SITE_SOLID_OBJ','ZONES','NPC_WANDER_OFFICE','NPC_WANDER_SITE','siteTrackFrac','POPUPS','enterWeek','afterEvent','chooseEvent','closeReport','REPORT_WEEKS'];
+const names=['S','applyEffects','advanceWeek','getPhase','getPhaseIdx','getDlgPhaseIdx','chooseDlg','NPCS','OMAP','SMAP','ZONES','isSolid','render','updatePlayer','startGame','newGame','selectCharacter','beginGame','saveGame','loadGame','EVENTS','PHASES','DLG','transitionToMap','showEvent','triggerEvent','getObjectives','updateHUD','updateNotepad','WALK_FRAMES','updateNPCAI','CHARS','ATLAS','drawSprite','OFFICE_W','OFFICE_H','OFFICE_OBJECTS','OFFICE_SOLID_OBJ','objBaseCells','OFFICE_SOLID','SITE_W','SITE_H','SITE_OBJECTS','SITE_SOLID_OBJ','ZONES','NPC_WANDER_OFFICE','NPC_WANDER_SITE','siteTrackFrac','POPUPS','enterWeek','afterEvent','chooseEvent','closeReport','REPORT_WEEKS','getObjectives'];
 code+='\n;globalThis.__G=(function(){const o={};'+names.map(n=>`try{o['${n}']=${n};}catch(e){}`).join('')+'return o;})();';
 
 const results={pass:[],fail:[]};
@@ -183,6 +183,16 @@ check('enterWeek funnel: event-then-report ordering at a collision week (28), no
   if(g.closeReport) g.closeReport();
   if(g.S.eventOpen) throw new Error('report did not close');
   if(!Array.isArray(g.S.objectives)) throw new Error('startNewWeek did not run after report');
+});
+check('every weekly objective target resolves to a real NPC or zone (breadcrumbs + completion work)',()=>{
+  const npcIds=new Set(g.NPCS.map(n=>n.id));
+  const zoneIds=new Set([].concat(g.ZONES.office||[],g.ZONES.site||[]).map(z=>z.id));
+  [32,28,24,20,16,12,8,4,0,-4,-8].forEach(w=>{
+    (g.getObjectives(w)||[]).forEach(o=>{
+      if(o.type==='npc'&&!npcIds.has(o.target)) throw new Error('objective npc target missing: '+o.target+' @week '+w);
+      if(o.type==='zone'&&!zoneIds.has(o.target)) throw new Error('objective zone target missing: '+o.target+' @week '+w);
+    });
+  });
 });
 
 // ---------- report ----------

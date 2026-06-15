@@ -3275,6 +3275,33 @@ function drawExpressionBubble(ctx,npc,nx,ny){
 }
 
 // === MAIN RENDERING ===
+// Stardew-style "!" markers bobbing over each incomplete objective's target (NPC or zone),
+// so newcomers/children always know where to go next.
+function drawObjectiveMarkers(ctx){
+  if(S.dlgOpen||S.eventOpen||S.weekTransOpen||S.docsOpen||S.statsOpen)return;
+  const bob=Math.sin(Date.now()/250)*2;
+  for(const o of (S.objectives||[])){
+    if(S.completedObj.includes(o.type+'_'+o.target+'_'+S.week))continue;
+    let wx,wy;
+    if(o.type==='npc'){
+      const n=NPCS.find(x=>x.id===o.target); if(!n)continue;
+      const onMap=S.map==='office'?n.officeX>0:n.siteX>0; if(!onMap)continue;
+      wx=(n.curX!==undefined?n.curX:(S.map==='office'?n.officeX:n.siteX)*TS)+8;
+      wy=(n.curY!==undefined?n.curY:(S.map==='office'?n.officeY:n.siteY)*TS)-16;
+    }else{
+      const z=(ZONES[S.map]||[]).find(x=>x.id===o.target); if(!z)continue;
+      wx=z.x*TS+z.w*8; wy=z.y*TS-8;
+    }
+    ctx.save();
+    ctx.fillStyle='rgba(20,12,6,0.35)';ctx.beginPath();ctx.ellipse(wx,wy+8,4,1.5,0,0,Math.PI*2);ctx.fill(); // tiny shadow
+    ctx.fillStyle='#f7c948';ctx.strokeStyle='#3a2210';ctx.lineWidth=1;
+    ctx.beginPath();ctx.arc(wx,wy+bob,5,0,Math.PI*2);ctx.fill();ctx.stroke();
+    ctx.fillStyle='#3a2210';ctx.font='bold 8px monospace';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('!',wx,wy+bob+1);ctx.textAlign='left';ctx.textBaseline='alphabetic';
+    ctx.restore();
+  }
+}
+
 function render(){
   CTX.fillStyle=C.bg;
   CTX.fillRect(0,0,IW,IH);
@@ -3413,6 +3440,8 @@ function render(){
     });
   }
   
+  // Objective breadcrumbs over the next things to do (world space)
+  drawObjectiveMarkers(CTX);
   // Draw particles (in world space)
   drawParticles(CTX);
 
