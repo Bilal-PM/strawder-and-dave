@@ -204,3 +204,13 @@ Work the loop should execute in order (tick in this file as done):
   green.** node --check clean.
 - Next: week-transition stinger, compound fence enclosure, then P3 (choice-aware ending, office phase
   visuals, state-dependent events).
+
+
+### 2026-06-15 — Iteration 13 (P3: choice-aware ending)
+- The end screen now reflects the player's actual decisions: `chooseEvent` logs each curveball choice to
+  `S.eventChoices` (persisted in save/load), the closing story names the **trade-off** they made (strongest
+  vs weakest metric: "you protected safety (90%); budget (40%) was where it cost you most"), and a new
+  **YOUR KEY DECISIONS** block recaps every curveball call. Cements the PM-judgement learning.
+- Harness +1 (choices logged; end screen renders). **24/24 green.** node --check clean.
+- Next: state-dependent events / choice callbacks (P3 depth), compound fence enclosure + week-transition
+  stinger (P2-feel), office phase visuals (P3).

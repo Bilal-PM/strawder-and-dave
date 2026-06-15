@@ -2368,6 +2368,8 @@ function chooseEvent(week,ci){
   const choice=ev.choices[ci];
   applyEffects(choice.e);
   S.eventsDone.push(week);
+  S.eventChoices=S.eventChoices||[];
+  S.eventChoices.push({title:ev.title,choice:choice.t}); // for the choice-aware ending
   document.getElementById('eventModal').className='modal';
   S.eventOpen=false;
   afterEvent();
@@ -2573,6 +2575,9 @@ function showEndScreen(){
   if(m.quality>=80)story+='Quality standards were consistently met, producing a railway to be proud of.';
   else if(m.quality<50)story+='Quality issues plagued the build, requiring costly rework.';
   if(!story)story=S.playerName+' delivered the project with a mixed bag of results — some wins, some lessons learned.';
+  // Leadership verdict — name the trade-off the player actually made (strongest vs weakest metric).
+  const _mm=[['schedule',m.schedule],['budget',m.budget],['safety',m.safety],['quality',m.quality],['morale',m.morale]].sort((a,b)=>b[1]-a[1]);
+  story+=' Above all, you protected '+_mm[0][0]+' ('+_mm[0][1]+'%); '+_mm[4][0]+' ('+_mm[4][1]+'%) was where it cost you most.';
 
   let html='<div style="max-width:520px;margin:0 auto;text-align:center">';
   html+='<h2 style="font-size:20px;color:#f7c948;margin-bottom:4px">PROJECT COMPLETE!</h2>';
@@ -2609,6 +2614,15 @@ function showEndScreen(){
   html+='<div style="font-size:7px;color:#c4a878;margin-bottom:4px;letter-spacing:1px">YOUR STORY</div>';
   html+='<p style="font-size:8px;color:#f0e6d3;line-height:1.8;margin:0">'+story+'</p>';
   html+='</div>';
+
+  // Choice-aware recap — the actual curveball calls the player made this run.
+  const _ec=S.eventChoices||[];
+  if(_ec.length){
+    html+='<div style="text-align:left;margin:10px 0;padding:8px 12px;background:rgba(0,0,0,0.15);border-radius:6px;border-left:3px solid #5b8ef5">';
+    html+='<div style="font-size:7px;color:#c4a878;margin-bottom:4px;letter-spacing:1px">YOUR KEY DECISIONS</div>';
+    _ec.forEach(d=>{ html+='<div style="font-size:7.5px;color:#f0e6d3;line-height:1.7;margin:2px 0">• <span style="color:#f7c948">'+d.title+':</span> '+d.choice+'</div>'; });
+    html+='</div>';
+  }
 
   // NPC relationship summary
   html+='<div style="text-align:left;margin:10px 0">';
@@ -3642,7 +3656,8 @@ function saveGame(){
     achievements:[...S.achievements],
     pmKnowledge:[...S.pmKnowledge],
     siteVisits:_siteVisits,
-    ppeEquipped:S.ppeEquipped
+    ppeEquipped:S.ppeEquipped,
+    eventChoices:S.eventChoices||[]
   };
   try{localStorage.setItem('projectValley_save',JSON.stringify(data));}catch(e){}
 }
@@ -3665,6 +3680,7 @@ function loadGame(){
     if(Array.isArray(data.pmKnowledge))S.pmKnowledge=data.pmKnowledge;
     if(typeof data.siteVisits==='number')_siteVisits=data.siteVisits;
     S.ppeEquipped=!!data.ppeEquipped;
+    S.eventChoices=Array.isArray(data.eventChoices)?data.eventChoices:[];
     // Validate spawn against the current map; snap to a known-good spawn if loaded coords are solid/out-of-bounds.
     const safe=(S.map==='site')?{x:3*TS,y:13*TS}:{x:14*TS,y:15*TS};
     const px=data.px,py=data.py;
