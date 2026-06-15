@@ -204,6 +204,13 @@ check('choice-aware ending: curveball choices are logged and the end screen rend
   g.S.week=-8; g.showEndScreen();
   if(g.S.screen!=='end') throw new Error('end screen did not render');
 });
+check('troubled-project ending renders at low metrics (and a strong run at high)',()=>{
+  g.S.eventChoices=[];
+  g.S.metrics={schedule:20,budget:15,safety:25,quality:30,morale:18}; g.S.week=-8; g.showEndScreen();
+  if(g.S.screen!=='end') throw new Error('low-metric end screen did not render');
+  g.S.metrics={schedule:95,budget:90,safety:92,quality:96,morale:90}; g.showEndScreen();
+  if(g.S.screen!=='end') throw new Error('high-metric end screen did not render');
+});
 check('weekly interaction cap: re-talking an NPC after a choice applies no further effects',()=>{
   g.S.spentInteractions=[]; g.S.week=20; g.S.dlgOpen=false;
   g.S.metrics={schedule:70,budget:70,safety:70,quality:70,morale:70};

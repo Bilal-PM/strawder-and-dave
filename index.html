@@ -2601,9 +2601,15 @@ function showEndScreen(){
   const _mm=[['schedule',m.schedule],['budget',m.budget],['safety',m.safety],['quality',m.quality],['morale',m.morale]].sort((a,b)=>b[1]-a[1]);
   story+=' Above all, you protected '+_mm[0][0]+' ('+_mm[0][1]+'%); '+_mm[4][0]+' ('+_mm[4][1]+'%) was where it cost you most.';
 
+  // Outcome framing scales with performance — a troubled project gets a distinct, honest ending.
+  let endTitle,endSub,endColor;
+  if(rating>=4){endTitle='PROJECT COMPLETE!';endSub='The railway is open and running — a job well done.';endColor='#f7c948';}
+  else if(rating===3){endTitle='PROJECT DELIVERED';endSub='The railway is open and running.';endColor='#f7c948';}
+  else if(rating===2){endTitle='A ROUGH DELIVERY';endSub='The line opened — but it was a hard road, and it shows.';endColor='#e88030';}
+  else{endTitle='A TROUBLED PROJECT';endSub='The railway limped open, late and over budget. Painful — but PMs learn most from these.';endColor='#e05577';}
   let html='<div style="max-width:520px;margin:0 auto;text-align:center">';
-  html+='<h2 style="font-size:20px;color:#f7c948;margin-bottom:4px">PROJECT COMPLETE!</h2>';
-  html+='<p style="font-size:8px;color:#c4a878;margin-bottom:12px">The railway is open and running!</p>';
+  html+='<h2 style="font-size:20px;color:'+endColor+';margin-bottom:4px">'+endTitle+'</h2>';
+  html+='<p style="font-size:8px;color:#c4a878;margin-bottom:12px">'+endSub+'</p>';
   html+='<div style="font-size:16px;color:#f7c948;margin:6px 0">'+getStarText()+'</div>';
   html+='<p style="font-size:12px;color:#f0e6d3;margin:4px 0">'+titles[rating-1]+'</p>';
 

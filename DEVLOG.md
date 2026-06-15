@@ -228,7 +228,7 @@ desktop. Priorities for THIS audience (kids on phones via Squarespace):
 **P2:**
 - [x] "Week Complete" is now drift-free (removed the hidden morale/schedule penalty + dead branch). Only Skip This Phase gambles with drift.
 - [x] loadGame calls checkWeekComplete() (completed-week save now shows its advance button).
-- [ ] Low-metric warning + a distinct 'troubled project' ending below ~40 avg.
+- [x] Distinct ending arc by performance: PROJECT COMPLETE (4-5★) / DELIVERED (3★) / ROUGH DELIVERY (2★) / TROUBLED PROJECT (1★), with colour + honest framing. (Low-metric in-play warning already covered by the HUD alarm.)
 - [ ] Split music/SFX toggles + master volume; colourblind text tags on metrics.
 **P3:** remove dead getNPCsOnMap()/overlay stubs; tie PM_KNOWLEDGE unlocks to decisions; compress
 post-delivery; idle/turn animations.
@@ -267,3 +267,11 @@ post-delivery; idle/turn animations.
   test now **actually walks 32 -> -8** and asserts morale is unchanged by honest completion. **25/25 green.**
 - Next P2: troubled-project ending below ~40 avg; music/SFX split + colourblind metric tags. P3: dead-code,
   PM-knowledge-on-decision, animations.
+
+
+### 2026-06-15 — Iteration 18 (P2: outcome-scaled ending)
+- The end screen now frames the outcome by performance instead of always 'PROJECT COMPLETE!': a 1★ run
+  reads 'A TROUBLED PROJECT — limped open, late and over budget' (red), 2★ 'A ROUGH DELIVERY' (orange),
+  3★ 'DELIVERED', 4-5★ 'COMPLETE — a job well done' (gold). Combined with the choice-aware verdict + key-
+  decisions recap, failure now teaches. Harness +1 (renders at low & high metrics). **26/26 green.**
+- Next: music/SFX split + colourblind metric tags; dead-code (getNPCsOnMap); PM-knowledge-on-decision.
