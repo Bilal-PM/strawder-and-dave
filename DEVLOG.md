@@ -321,3 +321,29 @@ Three items from the owner's mobile playtest (IMG_4617):
   Acted on its two P2 thematic nits — moved the tamper onto the running line (9,9) and the dumper onto
   the track heading to the yard (22,11), so both machines now read as working ON the track (and the
   dumper no longer overlaps the return-to-office zone).
+
+
+### 2026-06-15 — Iteration 23 (judgment-deepening pass + leadership path + humour)
+Reviewed the full logic/story and ran an INDEPENDENT expert (PM practitioner + instructional designer).
+Verdict: strong *awareness* tool, but it taught arithmetic-against-a-rubric, not *judgment under uncertainty*
+— no real risk, no involuntary setbacks, no delayed consequence, cosmetic pushback. Implemented their top-5
+plus the owner's two new asks. All gated by the harness (now **35/35 green**, +8 assertions) and node --check.
+- **Seedable RNG** (`rng`/`seedRng`, mulberry32) so gameplay randomness is testable/deterministic.
+- **Difficulty modes** Apprentice/Manager/Director — selector on character-select; `applyEffects` scales
+  penalties/rewards; eases the rating gate for Apprentice; persisted in save/load.
+- **Real risk**: "gamble" choices (push back, ask for funding, wait-and-hope, concession, dispute snags) now
+  roll the dice and can BACKFIRE — odds hidden (qualitative desc only), with a post-roll beat that teaches
+  "judge the decision, not the dice."
+- **Involuntary setbacks**: Supplier Collapse (wk12) and Quality Question (wk0) pre-apply an unavoidable hit,
+  then offer recovery choices — resilience, not just avoidance.
+- **Consequence callbacks with NAMED causality**: skipping the wk28 survey worsens the wk8 near-miss; waving
+  through the wk8 near-miss worsens the wk4 weather event — each spelled out in-fiction.
+- **NPC personalities + memory with teeth** (`PERSONA`): Mike/James are time-poor and may wave you off once
+  at low rapport; James is hard to win over; warm/cool/overruled openers driven by rapport+memory; taking a
+  side in the wk20 clash costs hearts with the other lead, who remembers being overruled.
+- **Rating gate**: a red metric caps the star rating (red safety caps harder) — governance, not averages.
+- **Reflection beat** in the monthly report names the delayed cost of an earlier call.
+- **NEW — Leadership Path indicator** (owner ask): a live HUD badge + report + end-screen badge classifying
+  the run hero→villain — Mentor, Peacemaker, Safe Pair of Hands, Taskmaster, Cowboy, Dictator, Empire-Builder,
+  Firefighter, Operator — so players see the path they're carving and can steer.
+- **NEW — humour** (owner ask): a bank of funny-but-true PM proverbs shown on each week transition.

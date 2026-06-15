@@ -75,7 +75,7 @@ const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
 const scripts=[...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)].map(m=>m[1]);
 let code=scripts.join('\n;\n');
 // epilogue: capture top-level consts/fns into global for assertions
-const names=['S','applyEffects','advanceWeek','getPhase','getPhaseIdx','getDlgPhaseIdx','chooseDlg','NPCS','OMAP','SMAP','ZONES','isSolid','render','updatePlayer','startGame','newGame','selectCharacter','beginGame','saveGame','loadGame','EVENTS','PHASES','DLG','transitionToMap','showEvent','triggerEvent','getObjectives','updateHUD','updateNotepad','WALK_FRAMES','updateNPCAI','CHARS','ATLAS','drawSprite','OFFICE_W','OFFICE_H','OFFICE_OBJECTS','OFFICE_SOLID_OBJ','objBaseCells','OFFICE_SOLID','SITE_W','SITE_H','SITE_OBJECTS','SITE_SOLID_OBJ','ZONES','NPC_WANDER_OFFICE','NPC_WANDER_SITE','siteTrackFrac','POPUPS','enterWeek','afterEvent','chooseEvent','closeReport','REPORT_WEEKS','getObjectives','showEndScreen','chooseDlg','openNPCDialogue','interactionSpent','spendInteraction','getDlgPhaseIdx','EVENTS','showInsight'];
+const names=['S','applyEffects','advanceWeek','getPhase','getPhaseIdx','getDlgPhaseIdx','chooseDlg','NPCS','OMAP','SMAP','ZONES','isSolid','render','updatePlayer','startGame','newGame','selectCharacter','beginGame','saveGame','loadGame','EVENTS','PHASES','DLG','transitionToMap','showEvent','triggerEvent','getObjectives','updateHUD','updateNotepad','WALK_FRAMES','updateNPCAI','CHARS','ATLAS','drawSprite','OFFICE_W','OFFICE_H','OFFICE_OBJECTS','OFFICE_SOLID_OBJ','objBaseCells','OFFICE_SOLID','SITE_W','SITE_H','SITE_OBJECTS','SITE_SOLID_OBJ','ZONES','NPC_WANDER_OFFICE','NPC_WANDER_SITE','siteTrackFrac','POPUPS','enterWeek','afterEvent','chooseEvent','closeReport','REPORT_WEEKS','getObjectives','showEndScreen','chooseDlg','openNPCDialogue','interactionSpent','spendInteraction','getDlgPhaseIdx','EVENTS','showInsight','rng','seedRng','DIFFICULTY','diff','getPMRating','getLeadershipArchetype','resolveRisk','eventCallback','PERSONA','reflectionNote','showEvent','showReport'];
 code+='\n;globalThis.__G=(function(){const o={};'+names.map(n=>`try{o['${n}']=${n};}catch(e){}`).join('')+'return o;})();';
 
 const results={pass:[],fail:[]};
@@ -224,6 +224,70 @@ check('weekly interaction cap: re-talking an NPC after a choice applies no furth
 check('every curveball event carries a PM insight (lesson attaches to the decision)',()=>{
   if(typeof g.showInsight!=='function') throw new Error('showInsight missing');
   (g.EVENTS||[]).forEach(ev=>{ if(!ev.insight||typeof ev.insight!=='string'||ev.insight.length<10) throw new Error('event missing insight: '+ev.title); });
+});
+check('seedable RNG is deterministic',()=>{
+  g.seedRng(12345); const a=[g.rng(),g.rng(),g.rng()];
+  g.seedRng(12345); const b=[g.rng(),g.rng(),g.rng()];
+  if(JSON.stringify(a)!==JSON.stringify(b)) throw new Error('rng not deterministic for a fixed seed');
+  if(a.some(x=>x<0||x>=1)) throw new Error('rng out of [0,1)');
+});
+check('difficulty scales penalties/rewards (Apprentice softens, Director sharpens; Manager unchanged)',()=>{
+  const base='manager';
+  g.S.difficulty='manager'; g.S.metrics.safety=50; g.applyEffects({safety:-10});
+  if(g.S.metrics.safety!==40) throw new Error('manager should be 1:1 (-10), got '+g.S.metrics.safety);
+  g.S.difficulty='apprentice'; g.S.metrics.safety=50; g.applyEffects({safety:-10});
+  if(g.S.metrics.safety<=40) throw new Error('apprentice should soften the penalty, got '+g.S.metrics.safety);
+  g.S.difficulty='director'; g.S.metrics.safety=50; g.applyEffects({safety:-10});
+  if(g.S.metrics.safety>=40) throw new Error('director should sharpen the penalty, got '+g.S.metrics.safety);
+  g.S.difficulty=base;
+});
+check('risky choices resolve probabilistically against the seeded RNG (success vs backfire)',()=>{
+  g.S.difficulty='manager';
+  const ev=g.EVENTS.find(e=>e.week===16); const risky=ev.choices.find(c=>c.risk); if(!risky) throw new Error('no risky choice on wk16');
+  const p=risky.risk.p; // manager riskBonus=0
+  g.seedRng(7); const peek=g.rng(); g.seedRng(7); const res=g.resolveRisk(risky);
+  if(res.ok!==(peek<p)) throw new Error('risk outcome did not match the seeded roll');
+  if(res.ok&&res.e!==risky.e) throw new Error('success should apply the success effect');
+  if(!res.ok&&res.e!==risky.risk.fail) throw new Error('backfire should apply the fail effect');
+});
+check('involuntary setback pre-applies its hit exactly once on showEvent',()=>{
+  g.S.difficulty='manager'; g.S.flags={}; g.S.eventOpen=false;
+  g.S.metrics={schedule:70,budget:70,safety:70,quality:70,morale:70};
+  const ev=g.EVENTS.find(e=>e.week===12); if(!ev.setback) throw new Error('wk12 should be a setback');
+  const before=g.S.metrics.schedule; g.showEvent(ev);
+  if(g.S.metrics.schedule>=before) throw new Error('setback did not apply its schedule hit');
+  if(!g.S.flags['sb_12']) throw new Error('setback flag not set');
+  const after=g.S.metrics.schedule; g.showEvent(ev);
+  if(g.S.metrics.schedule!==after) throw new Error('setback double-applied on re-show');
+});
+check('consequence callback fires only when the earlier decision flag is set (named causality)',()=>{
+  const ev4=g.EVENTS.find(e=>e.week===4);
+  g.S.flags={}; if(g.eventCallback(ev4)!==null) throw new Error('callback should be null without the flag');
+  g.S.flags={safety_skip:'ok'}; const cb=g.eventCallback(ev4);
+  if(!cb||!cb.text||!cb.e||cb.e.safety>=0) throw new Error('callback should add a named safety penalty when safety_skip is set');
+  g.S.flags={};
+});
+check('rating gate: a red metric caps stars; red safety caps harder',()=>{
+  g.S.difficulty='manager';
+  g.S.metrics={schedule:95,budget:95,safety:95,quality:95,morale:95}; if(g.getPMRating()!==5) throw new Error('clean run should be 5');
+  g.S.metrics={schedule:95,budget:95,safety:95,quality:35,morale:95}; if(g.getPMRating()>3) throw new Error('a red metric should cap at 3, got '+g.getPMRating());
+  g.S.metrics={schedule:95,budget:95,safety:30,quality:95,morale:95}; if(g.getPMRating()>2) throw new Error('red safety should cap at 2, got '+g.getPMRating());
+});
+check('leadership archetype classifies the run (hero → villain) and always returns a labelled path',()=>{
+  g.S.relationships={sarah:{hearts:0,talked:1},mike:{hearts:0,talked:1},emma:{hearts:0,talked:1},james:{hearts:0,talked:1},priya:{hearts:0,talked:1}};
+  g.S.npcMemory={};
+  g.S.metrics={schedule:75,budget:75,safety:25,quality:70,morale:25}; let a=g.getLeadershipArchetype();
+  if(!a||!a.name||!a.icon) throw new Error('archetype must return a labelled path');
+  if(a.name!=='The Empire-Builder') throw new Error('low safety+morale, decent results → Empire-Builder, got '+a.name);
+  g.S.metrics={schedule:80,budget:80,safety:80,quality:80,morale:80};
+  g.S.relationships={sarah:{hearts:4,talked:3},mike:{hearts:4,talked:3},emma:{hearts:4,talked:3},james:{hearts:3,talked:3},priya:{hearts:4,talked:3}};
+  a=g.getLeadershipArchetype(); if(a.name!=='The Mentor') throw new Error('high people+safety+hearts → Mentor, got '+a.name);
+});
+check('NPCs carry memory of the last interaction (drives their next opener)',()=>{
+  g.S.npcMemory={}; g.S.spentInteractions=[]; g.S.week=20;
+  g.S.metrics={schedule:70,budget:70,safety:70,quality:70,morale:70};
+  const pi=g.getDlgPhaseIdx(20); g.chooseDlg('james',pi,0,0);
+  if(!g.S.npcMemory.james||!g.S.npcMemory.james.lastTier) throw new Error('NPC memory not recorded after a choice');
 });
 
 // ---------- report ----------

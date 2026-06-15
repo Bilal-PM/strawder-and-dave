@@ -134,6 +134,9 @@ body{background:#3a2a18;color:#f0e6d3;font-family:'Press Start 2P',monospace;ove
   <h2 style="font-size:14px;color:#f7c948;margin-bottom:4px">Choose Your Character</h2>
   <p style="font-size:8px;color:#c4a878;margin-bottom:10px">You've been appointed Project Manager for a major railway upgrade!</p>
   <div class="chars" id="charGrid"></div>
+  <p style="font-size:8px;color:#f7c948;margin:8px 0 4px">Difficulty</p>
+  <div id="diffSel" style="display:flex;gap:6px;justify-content:center;margin-bottom:4px"></div>
+  <p id="diffBlurb" style="font-size:7px;color:#c4a878;margin-bottom:8px;min-height:10px"></p>
   <input type="text" id="pName" placeholder="Enter your name" maxlength="12">
   <button class="btn gld" id="startBtn" onclick="startGame()">Start Project</button>
 </div>
@@ -167,6 +170,7 @@ body{background:#3a2a18;color:#f0e6d3;font-family:'Press Start 2P',monospace;ove
     <div class="hi"><img src="img/icon/Team.png" alt=""><span class="hl">MOR</span><div class="meter"><div class="mf pur" id="mMor" style="width:70%"></div></div><span class="hpct" id="pMor" style="color:#c4a878">70</span></div>
   </div>
   <div class="hg">
+    <span id="hArchetype" title="Your leadership style, based on how you're leading" style="font-size:8px;padding:2px 5px;border-radius:4px;background:rgba(0,0,0,0.25);white-space:nowrap;cursor:help" onclick="showArchetypeInfo()"></span>
     <span id="hStars" style="color:#f7c948;font-size:10px"></span>
     <button style="background:none;border:none;color:#c4a878;cursor:pointer;font-family:'Press Start 2P',monospace;font-size:8px" onclick="toggleMusic()" id="musBtn">&#9835;</button>
     <button style="background:none;border:none;cursor:pointer;font-size:12px" onclick="toggleSFX()" id="sfxBtn" title="Sound effects">&#128266;</button>
@@ -269,8 +273,30 @@ const S={
   ppeEquipped:false,
   relationships:{sarah:{hearts:0,talked:0},mike:{hearts:0,talked:0},emma:{hearts:0,talked:0},james:{hearts:0,talked:0},priya:{hearts:0,talked:0}},
   achievements:[],
-  pmKnowledge:[]
+  pmKnowledge:[],
+  difficulty:'manager',   // apprentice | manager | director (tunes penalty/reward + gamble odds)
+  flags:{},               // sticky decision flags for consequence callbacks (e.g. safety_skip)
+  npcMemory:{},           // per-NPC memory: last tier + whether you overruled their domain
+  _deferred:{}            // per-week busy brush-offs already used (so a 2nd approach always works)
 };
+
+// === SEEDABLE RNG (deterministic so the harness can force gamble outcomes) ===
+let _rngState=(Date.now()>>>0)||1;
+function seedRng(n){ _rngState=(n>>>0)||1; }
+function rng(){ // mulberry32
+  _rngState=(_rngState+0x6D2B79F5)|0;
+  let t=Math.imul(_rngState^(_rngState>>>15),1|_rngState);
+  t=(t+Math.imul(t^(t>>>7),61|t))^t;
+  return ((t^(t>>>14))>>>0)/4294967296;
+}
+
+// === DIFFICULTY MODES (dual audience: kids → seasoned peers) ===
+const DIFFICULTY={
+  apprentice:{label:'Apprentice',blurb:'Forgiving. Great for first-timers and younger players.',negMult:0.6,posMult:1.15,riskBonus:0.18,setbackMult:0.5},
+  manager:   {label:'Manager',   blurb:'The real job — balanced pressure. Recommended.',         negMult:1.0,posMult:1.0, riskBonus:0.0, setbackMult:1.0},
+  director:  {label:'Director',   blurb:'Punishing but fair. For experienced PMs.',               negMult:1.35,posMult:0.9,riskBonus:-0.12,setbackMult:1.4}
+};
+function diff(){ return DIFFICULTY[S.difficulty]||DIFFICULTY.manager; }
 
 // === TIMELINE — Key Weeks ===
 const KEY_WEEKS=[32,28,24,20,16,12,8,4,0,-4,-8];
@@ -838,22 +864,23 @@ const EVENTS=[
    choices:[
      {t:'Redesign immediately.',desc:'Costs money but gets it right.',e:{budget:-4,quality:4,schedule:-2}},
      {t:'Delay to assess options.',desc:'Take time to find the best solution.',e:{schedule:-4,quality:3}},
-     {t:'Proceed with caution.',desc:'Risky \u2014 could cause problems later.',e:{schedule:2,quality:-3,safety:-2}}
+     {t:'Proceed with caution.',desc:'Risky \u2014 could store up problems for later.',e:{schedule:2,quality:-3,safety:-2},id:'survey_skip'}
    ]},
   {week:24,title:'Scope Surprise',
    insight:'Scope changes carry downstream cost — negotiate trade-offs, don\'t just say yes.',
    text:'Your client wants to add a pedestrian crossing to the project. "It\'ll only take a few weeks extra," they say.',
    choices:[
      {t:'Accept it \u2014 keep the client happy.',desc:'More scope means more work and cost.',e:{schedule:-5,budget:-4,morale:2}},
-     {t:'Push back firmly.',desc:'Protect your plan, but may upset the client.',e:{schedule:2,budget:2,morale:-2}},
+     {t:'Push back firmly.',desc:'Protect the plan — but the client may not take it well.',e:{schedule:2,budget:2,morale:-2},
+      risk:{p:0.6,fail:{schedule:-2,budget:-2,morale:-3},successText:'The client accepted your rationale and held the line.',failText:'The client escalated to the sponsor — it cost you goodwill.'}},
      {t:'Negotiate a trade-off.',desc:'Swap some scope to fit it in. Smart PM move.',e:{schedule:-1,budget:-1,quality:2,morale:1}}
    ]},
   {week:20,title:'Team Trouble',
    insight:'Mediating conflict builds a stronger team than picking sides.',
    text:'Sarah and Mike disagree about the design approach. The tension is affecting the team.',
    choices:[
-     {t:'Back Sarah\'s approach.',desc:'Better design quality, Mike may feel sidelined.',e:{quality:4,morale:-2,schedule:-1}},
-     {t:'Back Mike\'s approach.',desc:'Faster to build, design might suffer.',e:{quality:-3,schedule:3,morale:-1}},
+     {t:'Back Sarah\'s approach.',desc:'Better design quality, Mike may feel sidelined.',e:{quality:4,morale:-2,schedule:-1},id:'sided_sarah',relHit:{mike:-1}},
+     {t:'Back Mike\'s approach.',desc:'Faster to build, design might suffer.',e:{quality:-3,schedule:3,morale:-1},id:'sided_mike',relHit:{sarah:-1}},
      {t:'Mediate and find middle ground.',desc:'Takes time but brings the team together.',e:{morale:4,schedule:-2,quality:1}}
    ]},
   {week:16,title:'Budget Alert',
@@ -861,40 +888,45 @@ const EVENTS=[
    text:'Finance says you\'re trending 10% over budget. Management wants a plan.',
    choices:[
      {t:'Cut scope to save money.',desc:'Reduces what you deliver but gets costs down.',e:{quality:-4,budget:5}},
-     {t:'Ask for more funding.',desc:'Risky \u2014 they might say no.',e:{budget:3,morale:1}},
-     {t:'Find efficiencies.',desc:'Smarter working, small savings add up.',e:{budget:3,quality:1}}
+     {t:'Ask for more funding.',desc:'It might be approved \u2014 or firmly refused.',e:{budget:4,morale:1},
+      risk:{p:0.5,fail:{budget:-2,morale:-2},successText:'The sponsor released extra funds.',failText:'Request refused \u2014 and it dented the sponsor\'s confidence.'}},
+     {t:'Find efficiencies.',desc:'Smarter working \u2014 but it takes time to bed in.',e:{budget:3,quality:1,schedule:-1}}
    ]},
-  {week:12,title:'Supplier Problem',
+  {week:12,title:'Supplier Collapse',setback:{e:{schedule:-2,budget:-1},note:'Your key supplier collapsed — deliveries have stopped.'},
    insight:'Single-source dependencies are a risk — always keep a plan B.',
-   text:'Your key materials supplier has gone into administration. Materials delivery is at risk.',
+   text:'Your key materials supplier has gone into administration. The disruption has already landed; now you recover.',
    choices:[
-     {t:'Find alternative supplier urgently.',desc:'Costs more but keeps things moving.',e:{budget:-5,schedule:2,quality:1}},
-     {t:'Wait and hope they recover.',desc:'Big gamble \u2014 could work out or be a disaster.',e:{schedule:-3,budget:-2}},
-     {t:'Redesign for different materials.',desc:'Expensive and slow but improves long-term quality.',e:{schedule:-4,budget:-3,quality:4}}
+     {t:'Find an alternative supplier urgently.',desc:'Costs more but keeps things moving.',e:{budget:-4,schedule:2,quality:1}},
+     {t:'Wait and hope they recover.',desc:'A gamble \u2014 they might come back, or fold for good.',e:{schedule:1,budget:1},
+      risk:{p:0.35,fail:{schedule:-4,budget:-3},successText:'They were rescued and resumed supply.',failText:'They folded for good \u2014 you lost weeks scrambling.'}},
+     {t:'Redesign for available materials.',desc:'Expensive and slow but durable.',e:{schedule:-3,budget:-2,quality:4}}
    ]},
   {week:8,title:'Safety Scare',
    insight:'A near-miss is a warning — stopping to review is never wasted time.',
+   callback:(S)=> (S.flags&&S.flags.survey_skip) ? {text:'The unsurveyed ground you pressed past in Kick-Off is part of why this happened.',e:{safety:-3}} : null,
    text:'A near-miss incident on site \u2014 worker nearly hit by equipment. No one hurt, but it\'s serious.',
    choices:[
      {t:'Stop all work for safety review.',desc:'The right thing to do. Costs time.',e:{schedule:-4,safety:6,morale:3}},
      {t:'Review procedures but continue work.',desc:'Balanced approach \u2014 address the issue.',e:{safety:3,morale:1}},
-     {t:'Brief the team and move on.',desc:'Risky. The next near-miss might not be a miss.',e:{safety:-4,schedule:2,morale:-2}}
+     {t:'Brief the team and move on.',desc:'Risky. The next near-miss might not be a miss.',e:{safety:-4,schedule:2,morale:-2},id:'safety_skip'}
    ]},
   {week:4,title:'Weather Warning',
    insight:'Plan for foreseeable risks; protecting people beats chasing the schedule.',
+   callback:(S)=> (S.flags&&S.flags.safety_skip) ? {text:'The team never got the reset after the near-miss you waved through — focus is shaky.',e:{safety:-3,morale:-2}} : null,
    text:'Major storms forecast during your planned construction window.',
    choices:[
      {t:'Delay work by 2 weeks.',desc:'Safe but costly in time.',e:{schedule:-5,safety:4}},
      {t:'Proceed with extra precautions.',desc:'Extra cost, some risk remains.',e:{budget:-3,safety:1}},
      {t:'Reschedule to night shifts.',desc:'Costs more, tires the team, but protects schedule.',e:{budget:-3,morale:-3,schedule:2}}
    ]},
-  {week:0,title:'Quality Question',
+  {week:0,title:'Quality Question',setback:{e:{quality:-2},note:'Final inspection found work below spec — it\'s already on the record.'},
    insight:'Doing it right beats doing it twice — quality shortcuts resurface.',
    text:'Inspections found some work doesn\'t meet specification. Not safety-critical, but below standard.',
    choices:[
      {t:'Rip it out and redo properly.',desc:'Expensive and slow, but right.',e:{schedule:-4,budget:-4,quality:6}},
-     {t:'Apply for a concession.',desc:'Ask to accept lower standard. Risky.',e:{quality:-2}},
-     {t:'Patch and monitor.',desc:'Quick fix, but may not last.',e:{budget:-1,quality:1}}
+     {t:'Apply for a concession.',desc:'Ask to accept it as-is — the assessor may say no.',e:{quality:0},
+      risk:{p:0.45,fail:{quality:-3,schedule:-2},successText:'Concession granted — accepted as-is.',failText:'Concession refused — now you must redo it, late.'}},
+     {t:'Patch and monitor.',desc:'Quick fix, but it may resurface.',e:{budget:-1,quality:1}}
    ]},
   {week:-4,title:'Snag List Growing',
    insight:'A committed close-out protects the client relationship and your reputation.',
@@ -902,7 +934,8 @@ const EVENTS=[
    choices:[
      {t:'Mobilize a dedicated snag team.',desc:'Costs money but shows commitment to quality.',e:{budget:-4,quality:5,morale:2}},
      {t:'Prioritize \u2014 fix critical only.',desc:'Pragmatic but some items may linger.',e:{quality:2,schedule:2,morale:-1}},
-     {t:'Dispute non-genuine snags.',desc:'Push back on items that aren\'t defects.',e:{budget:2,quality:-1,morale:-2}}
+     {t:'Dispute non-genuine snags.',desc:'Push back — but the client may dig in.',e:{budget:2,quality:-1,morale:-1},
+      risk:{p:0.5,fail:{budget:-2,morale:-3,quality:-1},successText:'Several snags were withdrawn — a fair challenge upheld.',failText:'The client took it badly — the relationship is strained.'}}
    ]},
   {week:-8,title:'Lessons Learned',
    insight:'Honest retrospectives turn one project\'s pain into the next one\'s gain.',
@@ -1413,6 +1446,34 @@ function handleInteract(){
 function interactionSpent(key){ return (S.spentInteractions||[]).includes(key+'_'+S.week); }
 function spendInteraction(key){ S.spentInteractions=S.spentInteractions||[]; const k=key+'_'+S.week; if(!S.spentInteractions.includes(k))S.spentInteractions.push(k); }
 
+// === NPC PERSONALITIES — each lead engages as an individual, not a generic advisor ===
+// busy: chance a time-poor lead waves you off once at low rapport. winHard: how slowly trust is earned.
+const PERSONA={
+  sarah:{busy:0.0,winHard:1.0,
+    warm:['"Oh good, it\'s you — I could use a sensible second opinion on this."','"Perfect timing. I\'ve been hoping to talk this through with someone who gets it."'],
+    cool:['"...Right. Wasn\'t sure you\'d swing by, after last time. Let\'s keep it professional."'],
+    overruled:['"I\'ll be honest — being overruled in front of the team stung. But I\'m listening."']},
+  mike:{busy:0.55,winHard:1.1,
+    warm:['"Alright boss! Good to see a PM who actually comes to site. Go on, what d\'you need?"','"There they are. Right, what\'s the damage?"'],
+    cool:['"Make it quick, yeah? I\'ve got a gang stood waiting on me."'],
+    busyLine:['"Not now — concrete\'s going in and it won\'t wait for a chat. Catch me in a bit.","I\'m up to my eyes, mate. Two minutes? Come back round."'],
+    overruled:['"Still reckon you called that one wrong, but you\'re the boss. What is it?"']},
+  emma:{busy:0.0,winHard:1.05,
+    warm:['"Good to see you. Honestly, a PM who takes safety seriously makes my whole job easier."'],
+    cool:['"I\'ll help — but for the record, I\'m not happy with how safety\'s been treated lately."'],
+    overruled:['"I haven\'t forgotten being talked over on a safety call. Let\'s do better. What do you need?"']},
+  james:{busy:0.45,winHard:1.4,
+    warm:['"Ah — the only PM who\'s ever made my spreadsheets look good. Pull up a chair."'],
+    cool:['"Month-end run\'s going, so be brief. Let me guess: you want to spend money."'],
+    busyLine:['"Mid-reconciliation and the numbers won\'t add themselves. Give me five."'],
+    overruled:['"Noted your... creative interpretation of the budget last time. Anyway — go on."']},
+  priya:{busy:0.0,winHard:0.8,
+    warm:['"Heyyy! Come in, come in — I was literally about to come find you."'],
+    cool:['"Oh. Hi. ...Look, can we clear the air at some point? But sure, what\'s up?"'],
+    overruled:['"Water under the bridge, mostly. What can I do for you?"']},
+};
+function pick(a){ return (a&&a.length)?a[Math.floor(rng()*a.length)]:''; }
+
 function openNPCDialogue(npc){
   playSFX('interact');
   // Turn the NPC to face the player (and hold still while talking).
@@ -1430,16 +1491,33 @@ function openNPCDialogue(npc){
     showZoneText(npc.name+' ('+npc.role+')','You’ve already had your weekly catch-up. '+npc.name+' is heads-down now — come back next week.');
     return;
   }
+  const p=PERSONA[npc.id]||{};
+  const rel=S.relationships[npc.id]||{hearts:0,talked:0};
+  const mem=S.npcMemory[npc.id]||{};
+  S._deferred=S._deferred||{};
+  // A genuinely busy, low-rapport lead may wave you off once per week — no slot spent, just try again.
+  const deferKey=npc.id+'_'+S.week;
+  if(p.busy>=0.4&&rel.hearts<=1&&p.busyLine&&!S._deferred[deferKey]&&rng()<p.busy){
+    S._deferred[deferKey]=1;
+    showZoneText(npc.name+' ('+npc.role+')',pick(p.busyLine)+'\n\n(Swamped right now — give it a moment and try again.)');
+    return;
+  }
 
   const coolKey=npc.id+'_'+S.week;
   const lastIdx=S.dlgCooldowns[coolKey]||0;
   const pool=npcDlgs[phaseIdx];
   const dlgIdx=lastIdx%pool.length;
   S.dlgCooldowns[coolKey]=lastIdx+1;
-  
+
   const dlg=pool[dlgIdx];
   const el=document.getElementById('dlg');
   let html='<div class="dn">'+npc.name+' ('+npc.role+')</div>';
+  // Personality opener — warm if you've built rapport, guarded if it's frosty or you overruled them.
+  let opener='';
+  if(mem.overruled&&p.overruled&&rng()<0.5)opener=pick(p.overruled);
+  else if(rel.hearts>=3&&p.warm)opener=pick(p.warm);
+  else if(((rel.hearts<=1&&rel.talked>0)||mem.overruled)&&p.cool)opener=pick(p.cool);
+  if(opener)html+='<div class="dt" style="color:#caa86a;font-style:italic">'+opener+'</div>';
   html+='<div class="dt">'+dlg.text+'</div>';
   dlg.choices.forEach((c,i)=>{
     html+='<div class="dc" onclick="chooseDlg(\''+npc.id+'\','+phaseIdx+','+dlgIdx+','+i+')">'+c.t+'</div>';
@@ -1674,12 +1752,15 @@ function chooseDlg(npcId,pi,di,ci){
   else if(totalEffect>=-3)tier='negative';
   else tier='vnegative';
 
-  // Update relationship hearts
+  // Update relationship hearts — personality-tuned (hard-to-win leads warm slowly, cool fast).
   if(S.relationships[npcId]){
-    S.relationships[npcId].talked++;
-    if(tier==='vpositive')S.relationships[npcId].hearts=Math.min(5,S.relationships[npcId].hearts+1);
-    else if(tier==='positive'&&Math.random()<0.5)S.relationships[npcId].hearts=Math.min(5,S.relationships[npcId].hearts+1);
-    else if(tier==='vnegative')S.relationships[npcId].hearts=Math.max(0,S.relationships[npcId].hearts-1);
+    const wh=(PERSONA[npcId]&&PERSONA[npcId].winHard)||1;
+    const r=S.relationships[npcId]; r.talked++;
+    if(tier==='vpositive'){ if(rng()<(wh>1.2?0.7:1.0))r.hearts=Math.min(5,r.hearts+1); }
+    else if(tier==='positive'){ if(rng()<(0.5/wh))r.hearts=Math.min(5,r.hearts+1); }
+    else if(tier==='vnegative'){ r.hearts=Math.max(0,r.hearts-(wh>=1.3?2:1)); }
+    // Memory: leads remember the last way you left them (drives the next opener).
+    S.npcMemory[npcId]=Object.assign(S.npcMemory[npcId]||{},{lastTier:tier});
   }
 
   // Trigger screen effects based on sentiment
@@ -2141,12 +2222,17 @@ function checkWeekComplete(){
 }
 
 // === METRICS ===
-function applyEffects(e){
+function applyEffects(e,scale){
   if(!e)return;
   let anyPos=false,anyNeg=false,idx=0;
+  const d=diff();
   const bx=Math.floor(S.px-S.camX+8), by=Math.floor(S.py-S.camY-4);
-  for(const[k,v] of Object.entries(e)){
-    if(S.metrics[k]!==undefined&&v!==0){
+  for(const[k,v0] of Object.entries(e)){
+    if(S.metrics[k]!==undefined&&v0!==0){
+      // Difficulty tunes how hard penalties bite / how much rewards pay (Manager = unchanged).
+      // `scale` (used by involuntary setbacks) overrides the per-sign multipliers with one factor.
+      let v=(scale!=null)?Math.round(v0*scale):(v0>0?Math.round(v0*d.posMult):Math.round(v0*d.negMult));
+      if(v===0)v=v0>0?1:-1; // never silently erase a real effect
       S.metrics[k]=Math.max(0,Math.min(100,S.metrics[k]+v));
       if(v>0)anyPos=true;else anyNeg=true;
       const m=METRIC_META[k];
@@ -2160,13 +2246,55 @@ function applyEffects(e){
 }
 
 function getPMRating(){
-  const avg=(S.metrics.schedule+S.metrics.budget+S.metrics.safety+S.metrics.quality+S.metrics.morale)/5;
-  if(avg>=90)return 5;if(avg>=75)return 4;if(avg>=60)return 3;if(avg>=45)return 2;return 1;
+  const m=S.metrics;
+  const avg=(m.schedule+m.budget+m.safety+m.quality+m.morale)/5;
+  let r= avg>=90?5: avg>=75?4: avg>=60?3: avg>=45?2:1;
+  // Governance gate: real projects fail on a single red, not the average. (Eased for Apprentice.)
+  const lowest=Math.min(m.schedule,m.budget,m.safety,m.quality,m.morale);
+  if(S.difficulty!=='apprentice'&&lowest<40&&r>3)r=3; // any red metric → no 4–5★
+  if(m.safety<40&&r>2)r=2;                            // red safety → capped (no gold star running unsafe)
+  return r;
 }
 
 function getStarText(){
   const r=getPMRating();
   return '\u2605'.repeat(r)+'\u2606'.repeat(5-r);
+}
+
+// === LEADERSHIP PATH \u2014 a live read on the kind of leader your decisions are making you ===
+// Spans hero \u2192 villain so the player can see what path they're heading down (and steer).
+function getLeadershipArchetype(){
+  const m=S.metrics, rel=S.relationships||{};
+  const hs=Object.values(rel).map(r=>(r&&r.hearts)||0);
+  const avgHeart=hs.length?hs.reduce((a,b)=>a+b,0)/hs.length:0;
+  const overruled=Object.values(S.npcMemory||{}).filter(x=>x&&x.overruled).length;
+  const results=(m.schedule+m.budget+m.quality)/3, people=m.morale, ethics=m.safety;
+  const lowest=Math.min(m.schedule,m.budget,m.safety,m.quality,m.morale);
+  let a;
+  if(ethics<45&&people<45&&results>=55) a={name:'The Empire-Builder',icon:'\ud83d\ude08',color:'#d06a80',blurb:'Targets met, corners cut. The board loves you; the team fears you. A classic supervillain arc \u2014 time to choose differently?'};
+  else if(ethics<45&&results>=58) a={name:'The Cowboy',icon:'\ud83e\udd20',color:'#e09a3a',blurb:'Fast, fearless, and one near-miss away from a very awkward headline.'};
+  else if(people<45&&overruled>=1&&results>=55) a={name:'The Dictator',icon:'\ud83d\udc51',color:'#c06088',blurb:'My way or the highway. The team stopped pushing back \u2014 and that is NOT a compliment.'};
+  else if(people<50&&results>=60) a={name:'The Taskmaster',icon:'\ud83d\udccb',color:'#d98a4a',blurb:'Every milestone hit. The team, meanwhile, has hit the vending machine.'};
+  else if(lowest<35) a={name:'The Firefighter',icon:'\ud83e\uddef',color:'#e05577',blurb:'Lurching from crisis to crisis armed with a fire blanket and pure optimism.'};
+  else if(people>=72&&avgHeart>=3&&ethics>=70) a={name:'The Mentor',icon:'\ud83c\udf1f',color:'#5cd29a',blurb:'People-first and principled. They would run through a wall for you (with the correct PPE).'};
+  else if(people>=70&&m.schedule<55) a={name:'The Peacemaker',icon:'\ud83d\udd4a\ufe0f',color:'#6b9ef5',blurb:'Everyone is delighted. The deadline is having a quietly stressful time.'};
+  else if(lowest>=60) a={name:'Safe Pair of Hands',icon:'\ud83e\udd1d',color:'#5cd29a',blurb:'Calm, balanced, trusted. Boringly brilliant \u2014 the best kind of PM.'};
+  else a={name:'The Operator',icon:'\u2699\ufe0f',color:'#c4a878',blurb:'Heads down, getting it done, still finding your leadership style.'};
+  return a;
+}
+function showArchetypeInfo(){
+  const a=getLeadershipArchetype();
+  showZoneText(a.icon+' '+a.name,a.blurb+'\n\nThis is the path your decisions are carving right now \u2014 keep leading and it will shift.');
+}
+// A reflective prompt that names the delayed cost of an earlier call \u2014 surfaced in the monthly report.
+function reflectionNote(){
+  const f=S.flags||{}, m=S.metrics;
+  if(f.safety_skip&&S.week<=4) return 'Earlier you waved a near-miss through. Was the time saved worth what it is costing the team now?';
+  if(f.survey_skip&&S.week<=8) return 'You pressed past the unsurveyed ground in Kick-Off \u2014 notice how that one keeps resurfacing?';
+  if(f.sided_sarah||f.sided_mike) return 'You took a side in the Sarah/Mike clash. Picking a winner is fast; the other person remembers.';
+  if(m.safety<50) return 'Safety is drifting into the red. A railway PM is judged first on whether everyone went home safe.';
+  if(m.morale<50) return 'Morale is sagging. The plan is only ever as strong as the people delivering it.';
+  return null;
 }
 
 // === HUD UPDATE ===
@@ -2183,6 +2311,9 @@ function updateHUD(){
   document.getElementById('pQty').textContent=mk(S.metrics.quality);
   document.getElementById('pMor').textContent=mk(S.metrics.morale);
   document.getElementById('hStars').textContent=getStarText();
+  const arch=getLeadershipArchetype();
+  const ab=document.getElementById('hArchetype');
+  if(ab){ ab.textContent=arch.icon+' '+arch.name; ab.style.color=arch.color; }
 }
 
 // === NOTEPAD ===
@@ -2334,6 +2465,22 @@ function showSkipTransition(fromWeek,toWeek,callback){
   },1500);
 }
 
+// Funny-but-true PM proverbs \u2014 relatable to peers, harmless for kids. One shows each week transition.
+const PM_QUIPS=[
+  '"It\'ll only take a few weeks" \u2014 the eight most expensive words in construction.',
+  'A risk register is just a to-do list that\'s a little bit scared of you.',
+  'The project plan survived contact with reality for almost a whole week. A new record.',
+  'Scope creep begins with five innocent words: "while you\'re at it, could you\u2026"',
+  'Contingency: the budget you pretend you don\'t have until precisely week 12.',
+  'Every status meeting could\'ve been an email. Every email could\'ve been a meeting. Balance is hard.',
+  'A good PM blames the process. A great PM fixes it. A tired PM blames Mercury retrograde.',
+  '"As per my last email" is just project management for "please read your emails."',
+  'The kettle in the welfare cabin is the true critical path. Protect it at all costs.',
+  'Nobody reads the 80-page report. Everybody reads the one-line RAG status. Plan accordingly.',
+  'Optimism is not a mitigation. (We checked. The risk register agrees.)',
+  'There are two types of plan: the one you showed the client, and the real one.'
+];
+function pmQuip(){ return PM_QUIPS[Math.floor(rng()*PM_QUIPS.length)]; }
 function showWeekTransition(){
   playSFX('weekup');
   S.weekTransOpen=true;
@@ -2341,11 +2488,14 @@ function showWeekTransition(){
   const prevWeek=KEY_WEEKS[KEY_WEEKS.indexOf(S.week)-1]||S.week+1;
   document.getElementById('wtTitle').textContent=weekLabel(prevWeek)+' Complete!';
   document.getElementById('wtText').textContent='Moving to '+weekLabel(S.week)+' \u2014 '+getPhase(S.week);
-  
+
   let changes='<div style="color:#c4a878">';
   changes+='Schedule: '+S.metrics.schedule+'% | Budget: '+S.metrics.budget+'% | Safety: '+S.metrics.safety+'%<br>';
   changes+='Quality: '+S.metrics.quality+'% | Morale: '+S.metrics.morale+'%';
   changes+='</div>';
+  const arch=getLeadershipArchetype();
+  changes+='<div style="color:'+arch.color+';margin-top:6px;font-size:8px">Leadership read: '+arch.icon+' '+arch.name+'</div>';
+  changes+='<div style="color:#9a8a6a;margin-top:6px;font-size:7px;font-style:italic">'+pmQuip()+'</div>';
   if(S.week===0)changes+='<div style="color:#4aca8a;margin-top:6px">DELIVERY DAY! The railway is ready!</div>';
   if(S.week<0)changes+='<div style="color:#c4a878;margin-top:6px">Post-delivery phase: '+getPhase(S.week)+'</div>';
   document.getElementById('wtChanges').innerHTML=changes;
@@ -2384,16 +2534,39 @@ function afterEvent(){
 }
 
 // === CURVEBALL EVENTS (Bug 8 fix: defensive desc check, Bug 9 fix: delay pointer events) ===
+// Resolve a possibly-risky choice. Risky choices roll the dice (odds tuned by difficulty, never shown
+// numerically) and can BACKFIRE \u2014 turning arithmetic into judgment under uncertainty.
+function resolveRisk(choice){
+  if(!choice||!choice.risk) return {e:(choice&&choice.e)||{}, note:null, ok:true, risky:false};
+  const r=choice.risk;
+  const p=Math.max(0.05,Math.min(0.95,(r.p!=null?r.p:0.55)+diff().riskBonus));
+  const ok=rng()<p;
+  return {e:ok?(choice.e||{}):(r.fail||{}), note:ok?(r.successText||null):(r.failText||null), ok:ok, risky:true};
+}
+// Some later events change because of an earlier decision \u2014 with NAMED causality so the lesson lands.
+function eventCallback(ev){
+  if(!ev.callback) return null;
+  try{ return ev.callback(S)||null; }catch(e){ return null; }
+}
 function showEvent(ev){
   playSFX('alert');
   triggerShake(2.5,350); // a curveball should feel like one
   S.eventOpen=true;
+  // Involuntary setback: an unavoidable hit has already landed \u2014 apply once, then offer recovery choices.
+  if(ev.setback&&!S.flags['sb_'+ev.week]){
+    S.flags['sb_'+ev.week]=1;
+    applyEffects(ev.setback.e, diff().setbackMult);
+    if(ev.setback.note)showToastMsg('\uD83D\uDED1',ev.setback.note,'SETBACK');
+  }
+  const cb=eventCallback(ev);
   const el=document.getElementById('eventModal');
   let html='<h3>\u26A0\uFE0F '+ev.title+'</h3>';
+  if(ev.setback)html+='<p style="color:#e05577;font-weight:bold;margin:0 0 4px">A setback has hit \u2014 now you manage it.</p>';
   html+='<p>'+ev.text+'</p>';
+  if(cb&&cb.text)html+='<p style="color:#d98a3a;font-size:8px;font-style:italic">'+cb.text+'</p>'; // named callback
   ev.choices.forEach((c,i)=>{
     html+='<div class="ch" onclick="chooseEvent('+ev.week+','+i+')">';
-    html+='<div style="color:#f7c948;font-size:9px;margin-bottom:4px">'+c.t+'</div>';
+    html+='<div style="color:#f7c948;font-size:9px;margin-bottom:4px">'+c.t+(c.risk?' \u2014 \u2684':'')+'</div>';
     html+='<div style="color:#7a5a38;font-size:8px">'+(c.desc||'')+'</div>';
     html+='</div>';
   });
@@ -2407,10 +2580,27 @@ function chooseEvent(week,ci){
   const ev=EVENTS.find(e=>e.week===week);
   if(!ev)return;
   const choice=ev.choices[ci];
-  applyEffects(choice.e);
+  // Apply an earlier decision's delayed consequence to THIS event, if any (named in showEvent).
+  const cb=eventCallback(ev);
+  if(cb&&cb.e)applyEffects(cb.e);
+  // Resolve the (possibly risky) choice.
+  const res=resolveRisk(choice);
+  applyEffects(res.e);
+  // Record a sticky flag so this decision can echo into later events.
+  if(choice.id){ S.flags=S.flags||{}; S.flags[choice.id]=res.ok?'ok':'fail'; }
+  // Taking a side with one specialist costs you with the other — and they remember being overruled.
+  if(choice.relHit){ for(const id in choice.relHit){
+    if(S.relationships[id])S.relationships[id].hearts=Math.max(0,Math.min(5,S.relationships[id].hearts+choice.relHit[id]));
+    S.npcMemory[id]=S.npcMemory[id]||{}; S.npcMemory[id].overruled=true;
+  }}
   S.eventsDone.push(week);
   S.eventChoices=S.eventChoices||[];
-  S.eventChoices.push({title:ev.title,choice:choice.t}); // for the choice-aware ending
+  S.eventChoices.push({title:ev.title,choice:choice.t,ok:res.ok}); // for the choice-aware ending
+  // Gamble outcome beat \u2014 judge the decision, not the dice.
+  if(res.risky){
+    if(res.ok)showToastMsg('\uD83C\uDFAF',res.note||'The gamble paid off.','IT PAID OFF');
+    else showToastMsg('\uD83D\uDCA5',res.note||'It backfired \u2014 but a sound bet that loses is still a sound bet.','IT BACKFIRED');
+  }
   if(ev.insight)showInsight(ev.insight);                 // attach the PM lesson to the decision
   document.getElementById('eventModal').className='modal';
   S.eventOpen=false;
@@ -2450,7 +2640,17 @@ function showReport(){
   if(m.morale<60)html+='<div style="font-size:7px;color:#e05577">\u2022 Team morale low \u2014 support your people</div>';
   if(m.schedule>=60&&m.budget>=60&&m.safety>=60&&m.quality>=60&&m.morale>=60)
     html+='<div style="font-size:7px;color:#4aca8a">\u2022 All metrics healthy \u2014 keep it up!</div>';
-  
+
+  // Reflection beat \u2014 surface the delayed cost of an earlier judgement call (learn by doing).
+  const refl=reflectionNote();
+  if(refl){
+    html+='<div style="font-size:8px;color:#d98a3a;margin:8px 0 2px">Reflection:</div>';
+    html+='<div style="font-size:7px;color:#9a7a4a;font-style:italic">'+refl+'</div>';
+  }
+  // Leadership read so the player sees the path they\'re on
+  const arch=getLeadershipArchetype();
+  html+='<div style="font-size:7px;color:'+arch.color+';margin-top:8px">Leadership read: '+arch.icon+' '+arch.name+'</div>';
+
   html+='<div style="text-align:center;margin-top:12px"><button class="btn sm gld" onclick="closeReport()">Continue</button></div>';
   el.innerHTML=html;
   el.className='modal report on';
@@ -2637,6 +2837,13 @@ function showEndScreen(){
   html+='<div style="display:inline-block;margin:10px auto;padding:6px 16px;border:2px solid '+certColor+';border-radius:6px;background:rgba(0,0,0,0.2)">';
   html+='<div style="font-size:7px;color:#c4a878;letter-spacing:2px">CERTIFICATION</div>';
   html+='<div style="font-size:9px;color:'+certColor+';margin-top:2px">\uD83C\uDF93 '+cert+'</div>';
+  html+='</div>';
+  // Leadership path \u2014 the kind of leader this run made you
+  const arch=getLeadershipArchetype();
+  html+='<div style="display:inline-block;margin:4px auto 10px;padding:6px 16px;border:2px solid '+arch.color+';border-radius:6px;background:rgba(0,0,0,0.2)">';
+  html+='<div style="font-size:7px;color:#c4a878;letter-spacing:2px">YOUR LEADERSHIP PATH</div>';
+  html+='<div style="font-size:11px;color:'+arch.color+';margin-top:3px">'+arch.icon+' '+arch.name+'</div>';
+  html+='<div style="font-size:7px;color:#c4a878;margin-top:3px;max-width:320px">'+arch.blurb+'</div>';
   html+='</div>';
 
   // Metric bar charts
@@ -2847,6 +3054,12 @@ function _showNextAchToast(){
 function showInsight(text){
   if(!text)return;
   _achToastQueue.push({icon:'💡',name:text,desc:'',label:'PM INSIGHT'});
+  if(!_achToastActive)_showNextAchToast();
+}
+// Generic labelled toast (setback alerts, gamble outcomes) — reuses the same queue.
+function showToastMsg(icon,text,label){
+  if(!text)return;
+  _achToastQueue.push({icon:icon||'📣',name:text,desc:'',label:label||''});
   if(!_achToastActive)_showNextAchToast();
 }
 
@@ -3620,7 +3833,25 @@ function showCharSelect(){
     grid.appendChild(div);
   });
   S.playerChar=0;
-  
+
+  // Difficulty selector (dual audience: kids → seasoned peers)
+  const ds=document.getElementById('diffSel'), db=document.getElementById('diffBlurb');
+  if(ds){
+    ds.innerHTML=''; S.difficulty=S.difficulty||'manager';
+    ['apprentice','manager','director'].forEach(key=>{
+      const cfg=DIFFICULTY[key];
+      const b=document.createElement('button');
+      b.className='btn sm'+(key===S.difficulty?' gld':'');
+      b.style.cssText='font-size:7px;padding:5px 7px;min-width:auto';
+      b.textContent=cfg.label;
+      b.onclick=()=>{ S.difficulty=key; playSFX('interact');
+        [...ds.children].forEach(c=>c.className='btn sm'); b.className='btn sm gld';
+        if(db)db.textContent=cfg.blurb; };
+      ds.appendChild(b);
+    });
+    if(db)db.textContent=DIFFICULTY[S.difficulty].blurb;
+  }
+
   // Bug 1: validate name input
   const nameInput=document.getElementById('pName');
   const startBtn=document.getElementById('startBtn');
@@ -3732,7 +3963,10 @@ function saveGame(){
     siteVisits:_siteVisits,
     ppeEquipped:S.ppeEquipped,
     eventChoices:S.eventChoices||[],
-    spentInteractions:S.spentInteractions||[]
+    spentInteractions:S.spentInteractions||[],
+    difficulty:S.difficulty,
+    flags:S.flags||{},
+    npcMemory:S.npcMemory||{}
   };
   try{localStorage.setItem('projectValley_save',JSON.stringify(data));}catch(e){}
 }
@@ -3757,6 +3991,9 @@ function loadGame(){
     S.ppeEquipped=!!data.ppeEquipped;
     S.eventChoices=Array.isArray(data.eventChoices)?data.eventChoices:[];
     S.spentInteractions=Array.isArray(data.spentInteractions)?data.spentInteractions:[];
+    if(DIFFICULTY[data.difficulty])S.difficulty=data.difficulty;
+    S.flags=(data.flags&&typeof data.flags==='object')?data.flags:{};
+    S.npcMemory=(data.npcMemory&&typeof data.npcMemory==='object')?data.npcMemory:{};
     // Validate spawn against the current map; snap to a known-good spawn if loaded coords are solid/out-of-bounds.
     const safe=(S.map==='site')?{x:3*TS,y:13*TS}:{x:14*TS,y:15*TS};
     const px=data.px,py=data.py;
