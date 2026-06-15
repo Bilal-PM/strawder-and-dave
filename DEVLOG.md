@@ -369,3 +369,17 @@ Owner playtest feedback → approved a 5-phase immersion epic. A+B shipped toget
   closing instantly; NPC dialogue uses the same component (and now shows the real applied deltas, not raw).
 - Harness +2 (hints gating + delta reveal; PPE toggle) and updated the event-funnel test for the new
   Continue step. **38/38 green**, node --check clean.
+
+
+### 2026-06-15 — Iteration 25 (Immersion epic Phase C: cut-scene events + timed decisions)
+- **Cut-scene presentation:** events now "act out" before you decide. New `#cutscene` overlay renders the
+  involved leads as live pixel actors (via `drawCharProcedural` to canvases) with idle-bob / clash animations,
+  a prop emoji, a stage-direction caption, the narrative, and screen juice (shake/flash). `SCENES` maps a scene
+  to every event week; `enterWeek` now calls `presentEvent`→`beginDecision`→`showEvent` (decision modal).
+- **Timed decision:** a countdown bar on the decision modal, ticked from `gameLoop` (`tickEventTimer`, dt-driven
+  so the headless harness never auto-fires). Length by difficulty — Apprentice none, Manager 14s, Director 8s.
+  On timeout → **hesitation**: a small morale cost + the team auto-takes a **non-risky default** (never a gamble
+  you didn't sanction) + a toast. `stopEventTimer` freezes it the instant you choose.
+- Harness +3 (timer scales by difficulty; hesitation resolves a non-risky default; every event has a cut-scene
+  and present() opens cleanly). **41/41 green**, node --check clean. Logic stays decoupled from presentation so
+  all existing event/funnel tests pass unchanged.

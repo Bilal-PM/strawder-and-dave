@@ -75,7 +75,7 @@ const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
 const scripts=[...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)].map(m=>m[1]);
 let code=scripts.join('\n;\n');
 // epilogue: capture top-level consts/fns into global for assertions
-const names=['S','applyEffects','advanceWeek','getPhase','getPhaseIdx','getDlgPhaseIdx','chooseDlg','NPCS','OMAP','SMAP','ZONES','isSolid','render','updatePlayer','startGame','newGame','selectCharacter','beginGame','saveGame','loadGame','EVENTS','PHASES','DLG','transitionToMap','showEvent','triggerEvent','getObjectives','updateHUD','updateNotepad','WALK_FRAMES','updateNPCAI','CHARS','ATLAS','drawSprite','OFFICE_W','OFFICE_H','OFFICE_OBJECTS','OFFICE_SOLID_OBJ','objBaseCells','OFFICE_SOLID','SITE_W','SITE_H','SITE_OBJECTS','SITE_SOLID_OBJ','ZONES','NPC_WANDER_OFFICE','NPC_WANDER_SITE','siteTrackFrac','POPUPS','enterWeek','afterEvent','chooseEvent','closeReport','REPORT_WEEKS','getObjectives','showEndScreen','chooseDlg','openNPCDialogue','interactionSpent','spendInteraction','getDlgPhaseIdx','EVENTS','showInsight','rng','seedRng','DIFFICULTY','diff','getPMRating','getLeadershipArchetype','resolveRisk','eventCallback','PERSONA','reflectionNote','showEvent','showReport','applyEventChoice','skipPhase','hintsVisible','metricDeltaHTML','snapshotMetrics','showLockerRoom','togglePPE','closeEventResult'];
+const names=['S','applyEffects','advanceWeek','getPhase','getPhaseIdx','getDlgPhaseIdx','chooseDlg','NPCS','OMAP','SMAP','ZONES','isSolid','render','updatePlayer','startGame','newGame','selectCharacter','beginGame','saveGame','loadGame','EVENTS','PHASES','DLG','transitionToMap','showEvent','triggerEvent','getObjectives','updateHUD','updateNotepad','WALK_FRAMES','updateNPCAI','CHARS','ATLAS','drawSprite','OFFICE_W','OFFICE_H','OFFICE_OBJECTS','OFFICE_SOLID_OBJ','objBaseCells','OFFICE_SOLID','SITE_W','SITE_H','SITE_OBJECTS','SITE_SOLID_OBJ','ZONES','NPC_WANDER_OFFICE','NPC_WANDER_SITE','siteTrackFrac','POPUPS','enterWeek','afterEvent','chooseEvent','closeReport','REPORT_WEEKS','getObjectives','showEndScreen','chooseDlg','openNPCDialogue','interactionSpent','spendInteraction','getDlgPhaseIdx','EVENTS','showInsight','rng','seedRng','DIFFICULTY','diff','getPMRating','getLeadershipArchetype','resolveRisk','eventCallback','PERSONA','reflectionNote','showEvent','showReport','applyEventChoice','skipPhase','hintsVisible','metricDeltaHTML','snapshotMetrics','showLockerRoom','togglePPE','closeEventResult','presentEvent','beginDecision','eventHesitate','eventTimerMs','startEventTimer','stopEventTimer','tickEventTimer','SCENES'];
 code+='\n;globalThis.__G=(function(){const o={};'+names.map(n=>`try{o['${n}']=${n};}catch(e){}`).join('')+'return o;})();';
 
 const results={pass:[],fail:[]};
@@ -318,6 +318,28 @@ check('PPE locker room shows a working on/off control (no crash, toggles state)'
   g.S.dlgOpen=false; g.S.ppeEquipped=false; g.showLockerRoom();
   g.togglePPE(true); if(!g.S.ppeEquipped) throw new Error('Put-on PPE did not set equipped');
   g.showLockerRoom(); g.togglePPE(false); if(g.S.ppeEquipped) throw new Error('Take-off PPE did not clear equipped');
+});
+check('event timer scales with difficulty (off on Apprentice, tighter on Director)',()=>{
+  g.S.difficulty='apprentice'; if(g.eventTimerMs()!==0) throw new Error('Apprentice should have no timer');
+  g.S.difficulty='manager'; const m=g.eventTimerMs();
+  g.S.difficulty='director'; const d=g.eventTimerMs();
+  if(!(d<m)) throw new Error('Director timer should be tighter than Manager ('+d+' vs '+m+')');
+  g.S.difficulty='manager';
+});
+check('hesitation on timeout auto-resolves a NON-risky default choice + records the event',()=>{
+  g.S.difficulty='manager'; g.S.flags={}; g.S.eventsDone=[]; g.S.eventChoices=[]; g.S.eventOpen=true;
+  g.S.metrics={schedule:70,budget:70,safety:70,quality:70,morale:70}; g.S.week=24;
+  g.eventHesitate(24);
+  if(!g.S.eventsDone.includes(24)) throw new Error('hesitation did not resolve the event');
+  if(!g.S.eventChoices.length) throw new Error('hesitation did not log a choice');
+  const ch=g.EVENTS.find(e=>e.week===24).choices; const di=ch.findIndex(c=>!c.risk);
+  if(di>=0&&ch[di].risk) throw new Error('hesitation default must be non-risky');
+  g.closeEventResult();
+});
+check('cut-scene present() opens without throwing and has a scene for every event week',()=>{
+  g.EVENTS.forEach(ev=>{ if(!g.SCENES[String(ev.week)]) throw new Error('no cut-scene for event week '+ev.week); });
+  g.S.eventOpen=false; g.S.week=8; g.presentEvent(g.EVENTS.find(e=>e.week===8));
+  if(!g.S.eventOpen) throw new Error('presentEvent should mark the event open');
 });
 check('NPCs carry memory of the last interaction (drives their next opener)',()=>{
   g.S.npcMemory={}; g.S.spentInteractions=[]; g.S.week=20;
