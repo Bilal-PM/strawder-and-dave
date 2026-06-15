@@ -317,4 +317,7 @@ Three items from the owner's mobile playtest (IMG_4617):
   (spoil tipper). They sit on/alongside the track corridor so renewal now shows a multi-plant work front.
 - Atlas re-baked (26 → 29 entries), inlined `ATLAS` const re-synced. Verified with Python scene renders
   (office reception + construction-phase site) and the new sprites in isolation. **27/27 green**, node
-  --check clean. Independent reviewer agent review in flight; findings (if any) fold into the next pass.
+  --check clean. Independent reviewer: no P0/P1 (Locker Room zone still reachable via proximity box).
+  Acted on its two P2 thematic nits — moved the tamper onto the running line (9,9) and the dumper onto
+  the track heading to the yard (22,11), so both machines now read as working ON the track (and the
+  dumper no longer overlaps the return-to-office zone).

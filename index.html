@@ -476,8 +476,8 @@ const SITE_OBJECTS=(()=>{
     {a:'railstack',tx:18,ty:14,m:3},{a:'sleeperstack',tx:23,ty:14,m:3},
     {a:'ballastpile',tx:18,ty:16,m:3},{a:'ballastpile',tx:23,ty:16,m:3}, // materials delivered from procurement (phase 3)
     {a:'excavator',tx:9,ty:5,m:4},                                 // plant mobilised pre-construction (phase 4)
-    {a:'tamper',tx:18,ty:9,m:5},                                   // rail tamper working the track (construction)
-    {a:'dumper',tx:3,ty:12,m:5},                                   // road-rail dumper hauling spoil (construction)
+    {a:'tamper',tx:9,ty:9,m:5},                                    // rail tamper working ON the running line (construction)
+    {a:'dumper',tx:22,ty:11,m:5},                                  // road-rail dumper on the track, hauling spoil to the yard
     {a:'cone',tx:3,ty:9,m:4},{a:'cone',tx:7,ty:9,m:4},{a:'cone',tx:13,ty:9,m:4},{a:'cone',tx:26,ty:12,m:4}
   ];
   for(let y=1;y<SITE_H-1;y++){ if(y>=9&&y<=11)continue; o.push({a:'fence',tx:16,ty:y}); } // compound fence (left), gate at the track
