@@ -161,3 +161,12 @@ Work the loop should execute in order (tick in this file as done):
 - Harness +1 (decisions spawn the right number of popups, no throw). **21/21 green.** node --check clean.
 - Next: enterWeek() funnel (last P0); more P2 (event slam-in, week-transition stinger, onboarding cues);
   P2 cleanup (delete orphaned SOLID/drawTile); fence-enclose the compound.
+
+
+### 2026-06-15 — Iteration 9 (P2 cleanup: remove dead render code)
+- Removed the orphaned numeric `SOLID` set and the ~305-line `drawTile()` (both maps now render via
+  drawOfficeGround/drawSiteGround from the atlas; reviewer confirmed zero callers). Gutted the two disabled
+  phase-overlay bodies to stubs (track progression now lives in drawSiteGround + phased site objects).
+- ~370 lines removed (4099->3727). Verified by brace-matched removal + node --check + harness boot.
+  **21/21 green.** Much clearer surface for the remaining work.
+- Next: enterWeek() funnel (last P0), event slam-in / week-transition juice, onboarding cues.
