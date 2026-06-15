@@ -226,8 +226,7 @@ desktop. Priorities for THIS audience (kids on phones via Squarespace):
       flavour-only. + anti-exploit harness test.
 - [x] PPE onboarding: phase-4 locker objective + automatic locker '!' breadcrumb whenever a site visit is pending without PPE.
 **P2:**
-- [ ] "Week Complete" applies a hidden morale drift (advanceWeek always takes the skipped>1 branch); make
-      the honest path drift-free, kill the dead else branch.
+- [x] "Week Complete" is now drift-free (removed the hidden morale/schedule penalty + dead branch). Only Skip This Phase gambles with drift.
 - [x] loadGame calls checkWeekComplete() (completed-week save now shows its advance button).
 - [ ] Low-metric warning + a distinct 'troubled project' ending below ~40 avg.
 - [ ] Split music/SFX toggles + master volume; colourblind text tags on metrics.
@@ -258,3 +257,13 @@ post-delivery; idle/turn animations.
   on Pages.)
 - This was the last P1. Remaining P2/P3: Week-Complete drift fix, troubled-project ending, music/SFX split,
   colourblind tags; dead-code, PM-knowledge-on-decision, animations.
+
+
+### 2026-06-15 — Iteration 17 (P2: honest week-complete is drift-free; harness progression hardened)
+- `advanceWeek` no longer applies the hidden morale-2 / random-schedule drift on honest 'Week Complete'
+  (it always hit that branch since phase gaps are 4). Completing a week on your own merit now carries no
+  secret penalty; only `skipPhase` ('let the team handle it') gambles with drift. Removed the dead branch.
+- Harness: mocked `setTimeout` to run synchronously so transition callbacks fire in-test; the progression
+  test now **actually walks 32 -> -8** and asserts morale is unchanged by honest completion. **25/25 green.**
+- Next P2: troubled-project ending below ~40 avg; music/SFX split + colourblind metric tags. P3: dead-code,
+  PM-knowledge-on-decision, animations.

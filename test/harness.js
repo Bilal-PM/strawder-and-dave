@@ -61,6 +61,7 @@ const G=globalThis;
 G.window=G; G.document=documentMock; G.localStorage=localStorageMock;
 G.Image=ImageMock; G.Audio=AudioMock; G.AudioContext=AudioCtxMock; G.webkitAudioContext=AudioCtxMock;
 G.requestAnimationFrame=(cb)=>{return 1;}; G.cancelAnimationFrame=()=>{};
+G.setTimeout=(fn,ms)=>{ if(typeof fn==='function'){ try{fn();}catch(e){} } return 0; }; G.clearTimeout=()=>{}; G.setInterval=()=>0; G.clearInterval=()=>{};
 G.performance={now:()=>Date.now()};
 G.navigator={userAgent:'node',maxTouchPoints:0,clipboard:{writeText:()=>Promise.resolve()}};
 G.devicePixelRatio=1; G.innerWidth=960; G.innerHeight=640;
@@ -101,7 +102,7 @@ check('every NPC dialogue choice applies without throwing & stays clamped',()=>{
 });
 check('EVENTS choices apply without throwing',()=>{ (g.EVENTS||[]).forEach(ev=>(ev.choices||[]).forEach(c=>{ if(c.e)g.applyEffects(c.e); })); });
 check('save -> load round-trip',()=>{ if(g.saveGame)g.saveGame(); if(g.loadGame)g.loadGame(); });
-check('advanceWeek progresses through phases without throwing',()=>{ g.S.week=32; let guard=0; while(g.S.week>-8 && guard++<40){ const before=g.S.week; try{g.advanceWeek();}catch(e){throw new Error('advanceWeek @week '+before+': '+e.message);} if(g.S.week===before)break; } });
+check('advanceWeek walks the full timeline 32 -> -8 (sync), no drift on honest completion',()=>{ g.S.week=32; g.S.metrics={schedule:70,budget:70,safety:70,quality:70,morale:70}; let guard=0; while(g.S.week>-8 && guard++<30){ const before=g.S.week; g.advanceWeek(); if(g.S.week===before) throw new Error('stuck advancing at week '+before); } if(g.S.week!==-8) throw new Error('did not reach close-out, ended at '+g.S.week); if(g.S.metrics.morale!==70) throw new Error('honest Week Complete applied a hidden morale drift: '+g.S.metrics.morale); });
 check('loadGame recovers from a corrupt save (clamp metrics + validate char + safe spawn)',()=>{
   G.localStorage.setItem('projectValley_save', JSON.stringify({week:32,map:'office',px:16,py:16,playerChar:99,metrics:{schedule:999,budget:-50,safety:'x'}}));
   g.loadGame();

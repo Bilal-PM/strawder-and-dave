@@ -2290,32 +2290,17 @@ function advanceWeek(){
   if(curIdx>=0&&curIdx<KEY_WEEKS.length-1){
     nextWeek=KEY_WEEKS[curIdx+1];
   }else{
-    // Find the next key week below current
     nextWeek=KEY_WEEKS.find(w=>w<S.week);
     if(nextWeek===undefined)return; // game over
   }
-  
-  const skippedWeeks=S.week-nextWeek;
-  
-  if(skippedWeeks>1){
-    // Show skip transition with metric drift
-    showSkipTransition(S.week,nextWeek,()=>{
-      S.week=nextWeek;
-      S.coffeeUsed=false;
-      // Small random metric drift for skipped weeks
-      const drift=Math.floor(skippedWeeks/2);
-      S.metrics.morale=Math.max(0,S.metrics.morale-drift);
-      S.metrics.schedule=Math.max(0,Math.min(100,S.metrics.schedule+Math.floor(Math.random()*3-1)));
-      showWeekTransition();
-      saveGame();
-    });
-  }else{
+  // Honest completion: the 4 weeks pass (transition card) but with NO hidden metric penalty — you earned it.
+  // (Only "Skip This Phase" gambles with drift.)
+  showSkipTransition(S.week,nextWeek,()=>{
     S.week=nextWeek;
     S.coffeeUsed=false;
-    S.metrics.morale=Math.max(0,S.metrics.morale-1);
     showWeekTransition();
     saveGame();
-  }
+  });
 }
 
 function showSkipTransition(fromWeek,toWeek,callback){
