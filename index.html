@@ -2728,6 +2728,7 @@ function chooseEvent(week,ci){
   el.className='modal on';
 }
 function closeEventResult(){
+  stopEventTimer(); // defensive: keep the no-late-fire invariant local, not path-dependent
   document.getElementById('eventModal').className='modal';
   S.eventOpen=false;
   afterEvent();
