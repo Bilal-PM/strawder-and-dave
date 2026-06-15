@@ -467,3 +467,15 @@ Owner: the new locations reused the same furniture and felt samey; make high-qua
     pinned-blueprint boards on the wall, a spec library.
 - Re-baked atlas, re-synced inlined `ATLAS`, verified all three layouts + the new props via Python renders.
   Denser layouts stay fully reachable. **49/49 green**, node --check clean.
+
+
+### 2026-06-15 — Iteration 31 (playtest fixes: NPC movement + findable location doors)
+Two issues from the owner's playtest:
+- **Office/interior NPCs were frozen** (wander list was emptied in the registry refactor → they idled in place).
+  Restored life with **gentle local wander**: interior NPCs now drift ±2 tiles around their own workstation
+  (walkability-checked), so they feel alive without the clustering/marker-clash the global wander caused. The
+  site keeps its roaming crew (global wander points).
+- **Other locations were impossible to find/enter** — the exit doors were tiny unlabelled tiles. Added a
+  **visible `door` sprite at each office exit** (Studio / Supplier / Site / Boardroom) plus **directional arrow
+  labels** ("↓ Supplier", "↓ Design Studio", "↓ Railway Site", "↓ Boardroom") so every destination is signposted.
+- **49/49 green**, node --check clean. Office render verified the doorways read clearly.

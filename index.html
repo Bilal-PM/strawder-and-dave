@@ -527,7 +527,9 @@ const OFFICE_OBJECTS=[
   {a:'bookshelf',tx:24,ty:9},{a:'bookshelf',tx:26,ty:9},{a:'bookshelf',tx:24,ty:13},{a:'bookshelf',tx:26,ty:13},
   // reception + accent plants
   {a:'desk',tx:12,ty:14},{a:'plant',tx:11,ty:14},{a:'plant',tx:19,ty:2},
-  {a:'lockers',tx:17,ty:14} // PPE lockers (hi-vis + hard hats) — Locker Room zone at (17,15)
+  {a:'lockers',tx:17,ty:14}, // PPE lockers (hi-vis + hard hats) — Locker Room zone at (17,15)
+  // visible doorways to the other locations (non-solid; you walk onto them to travel)
+  {a:'door',tx:3,ty:16},{a:'door',tx:12,ty:16},{a:'door',tx:14,ty:16},{a:'door',tx:25,ty:16}
 ];
 const OFFICE_SOLID_OBJ={desk:1,table:1,sofa:1,bookshelf:1,watercooler:1,lockers:1};
 // Solid cells for an object = its base row only (so you can walk *behind* tall furniture).
@@ -677,7 +679,12 @@ const AREA_LABELS={
     {x:23,y:1,text:'Your Office',color:'#f7c948'},
     {x:3,y:9,text:'Break Room',color:'#4aca8a'},
     {x:23,y:9,text:'Documents',color:'#b08fd8'},
-    {x:13,y:16,text:'Reception',color:'#8a7fad'}
+    {x:11,y:13,text:'Reception',color:'#8a7fad'},
+    // doorway signage — where each other location is reached
+    {x:2,y:15,text:'↓ Design Studio',color:'#5b8ef5'},
+    {x:11,y:15,text:'↓ Supplier',color:'#f7c948'},
+    {x:14,y:15,text:'↓ Railway Site',color:'#e05577'},
+    {x:23,y:15,text:'↓ Boardroom',color:'#b08fd8'}
   ],
   site:[
     {x:3,y:6,text:'Station',color:'#5b8ef5'},
@@ -1600,15 +1607,22 @@ function updateNPCAI(dt){
       if(npc.aiTimer<=0){
         const wander=MD().wander;
         if(wander&&wander.length){
-          // Maps with wander points (the site): crew moves around the works.
+          // Maps with global wander points (the site): crew roams the works.
           const tgt=wander[Math.floor(Math.random()*wander.length)];
           npc.aiTargetX=tgt.x*TS;
           npc.aiTargetY=tgt.y*TS;
           npc.aiState='walking';
           npc.aiTimer=10000; // max walk time before giving up
         }else{
-          // Interiors: people stay at their workstations (no wandering/clustering).
-          npc.aiTimer=3000+Math.random()*5000;
+          // Interiors: gentle local wander around their own workstation — alive, but no clustering.
+          const home=npcCell(npc,S.map);
+          if(home){
+            const tx=Math.max(1,Math.min(mapW()-2, home[0]+(Math.floor(Math.random()*5)-2)));
+            const ty=Math.max(1,Math.min(mapH()-2, home[1]+(Math.floor(Math.random()*3)-1)));
+            if(!isSolid(tx,ty)){
+              npc.aiTargetX=tx*TS; npc.aiTargetY=ty*TS; npc.aiState='walking'; npc.aiTimer=6000;
+            }else{ npc.aiTimer=2500+Math.random()*3500; }
+          }else{ npc.aiTimer=3000+Math.random()*5000; }
         }
       }
     } else if(npc.aiState==='walking'){
