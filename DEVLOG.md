@@ -648,3 +648,20 @@ leadership, no weekly slot) with a friendly, rotating natter:
   reachable); harness updated so ambient NPCs are exempt from the per-NPC DLG requirement and town wander
   points are validated. New test covers placement/walkability, no-metrics chat, line rotation, and that
   ambient NPCs don't block the achievement. **60/60 green**, node --check clean, town placement rendered.
+
+
+### 2026-06-15 — Iteration 42 (playtest fixes: camera clip, parked car, decor NPCs)
+Three issues from the owner's playtest:
+- **Office top clipped behind the HUD** — the office is now exactly the canvas height, so walking up hid the PM
+  behind the top HUD. `updateCamera` now reserves a top HUD band (30px): the map sits *below* the HUD, scrolls
+  so the top clears it, and the bottom still reaches the canvas edge (camY may now be negative; the tile loop
+  already clamps). Fixes "part of the office is cut off".
+- **Arrival car vanished too soon** — added `S.enteredOffice` (saved/loaded). The parked car now stays in the
+  town after the cut-scene and only disappears once the PM first heads into the Project Office.
+- **Empty rooms** — added six non-interactive **decor NPCs** "doing a task" (2 board members in the boardroom,
+  a warehouse worker, a design assistant, 2 hi-vis site workers). `decor:true` → skipped by `checkProximity`
+  (not talkable) and drawn without name tag/hearts; `static:true` keeps the seated board members put; their
+  expression pool is tuned to look busy. Achievement/harness checks updated so decor (and ambient) NPCs don't
+  break "talk to all leads" or the per-NPC DLG/voice requirements.
+- New harness coverage for decor placement/staticness; **61/61 green**, node --check clean; site decor placement
+  rendered. Independent review gating the push.

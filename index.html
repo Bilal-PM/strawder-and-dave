@@ -535,7 +535,20 @@ const NPCS=[
    chat:['Alright? Mind the forklift — it doesn\'t stop for anyone.',
          'Rail, sleepers, ballast — if it\'s on the order, it ships from here.',
          'Raj does the deals; I just shift the pallets. Talk to him at the counter.',
-         'Order early, that\'s my tip. Lead times have a habit of biting.']}
+         'Order early, that\'s my tip. Lead times have a habit of biting.']},
+  // === DECOR NPCs — non-interactive background figures "doing a task" so the rooms don't feel empty. ===
+  {id:'dec_board1',name:'Board Member',decor:true,static:true,hair:C.hairGray,hairStyle:'short',skin:C.skinB,shirt:C.suitGray,pants:C.pantsDk,eye:'#3a3020',
+   officeX:-1,officeY:-1,siteX:-1,siteY:-1,pos:{boardroom:[12,4]},aiState:'idle',aiTimer:0,aiTargetX:12,aiTargetY:4,aiFacing:0,aiFrame:0,aiExpr:'working',aiExprTimer:0,exprs:['working','chat']},
+  {id:'dec_board2',name:'Board Member',decor:true,static:true,hair:C.hairBlack,hairStyle:'long',skin:C.skinC,shirt:C.shirtBlue,pants:C.pantsDk,eye:'#1a2848',
+   officeX:-1,officeY:-1,siteX:-1,siteY:-1,pos:{boardroom:[15,9]},aiState:'idle',aiTimer:0,aiTargetX:15,aiTargetY:9,aiFacing:2,aiFrame:0,aiExpr:'chat',aiExprTimer:0,exprs:['working','chat']},
+  {id:'dec_sup1',name:'Warehouse Worker',decor:true,hair:C.hairBrown,hairStyle:'short',skin:C.skinA,shirt:C.hiVisOrange,pants:C.pantsDk,eye:'#284828',
+   officeX:-1,officeY:-1,siteX:-1,siteY:-1,pos:{supplier:[16,11]},aiState:'idle',aiTimer:0,aiTargetX:16,aiTargetY:11,aiFacing:2,aiFrame:0,aiExpr:'working',aiExprTimer:0,exprs:['working','chat']},
+  {id:'dec_studio1',name:'Design Assistant',decor:true,static:true,hair:C.hairRed,hairStyle:'long',skin:C.skinA,shirt:C.shirtPurple,pants:C.pantsBlue,eye:'#2848a0',
+   officeX:-1,officeY:-1,siteX:-1,siteY:-1,pos:{studio:[8,5]},aiState:'idle',aiTimer:0,aiTargetX:8,aiTargetY:5,aiFacing:2,aiFrame:0,aiExpr:'working',aiExprTimer:0,exprs:['working','chat']},
+  {id:'dec_site1',name:'Site Worker',decor:true,hair:C.hairBlonde,hairStyle:'short',skin:C.skinA,shirt:C.hiVis,pants:C.pantsDk,eye:'#285828',hat:C.yellow,
+   officeX:-1,officeY:-1,siteX:9,siteY:6,aiState:'idle',aiTimer:0,aiTargetX:9,aiTargetY:6,aiFacing:0,aiFrame:0,aiExpr:'working',aiExprTimer:0,exprs:['working','chat'],curX:9*16,curY:6*16},
+  {id:'dec_site2',name:'Site Worker',decor:true,hair:C.hairBrown,hairStyle:'short',skin:C.skinB,shirt:C.hiVisOrange,pants:C.pantsDk,eye:'#3a3020',hat:C.yellow,
+   officeX:-1,officeY:-1,siteX:21,siteY:7,aiState:'idle',aiTimer:0,aiTargetX:21,aiTargetY:7,aiFacing:3,aiFrame:0,aiExpr:'working',aiExprTimer:0,exprs:['working','chat'],curX:21*16,curY:7*16}
 ];
 
 // NPC wander targets in office
@@ -1649,16 +1662,21 @@ function updateCamera(){
   if(S.arrival)return; // the arrival cut-scene drives the camera itself
   const mw=mapW()*TS;
   const mh=mapH()*TS;
-  // 220px CSS notepad at 2x scale = 110px internal
-  const vpw=IW-110;
-  const vph=IH;
+  // The HUD overlays the top of the canvas and the notepad the right — reserve those bands so the
+  // player never walks behind them (the office is as tall as the canvas, so the top was being clipped).
+  const HUD_TOP=30;            // top band reserved for the HUD (internal px)
+  const vpw=IW-110;            // 220px CSS notepad at 2x scale = 110px internal
+  const vph=IH-HUD_TOP;        // playable height below the HUD
   const tx=S.px+8-vpw/2;
-  const ty=S.py+12-vph/2;
+  const ty=(S.py+12)-HUD_TOP-vph/2;
   S.camX+=(tx-S.camX)*0.08;
   S.camY+=(ty-S.camY)*0.08;
-  // Center the map when it's smaller than the viewport; otherwise clamp to bounds.
+  // Horizontal: centre when the map is narrower than the viewport; otherwise clamp to bounds.
   S.camX=mw<=vpw?(mw-vpw)/2:Math.max(0,Math.min(mw-vpw,S.camX));
-  S.camY=mh<=vph?(mh-vph)/2:Math.max(0,Math.min(mh-vph,S.camY));
+  // Vertical: keep the map below the HUD; centre it in the play area when it fits, else clamp so the
+  // top can scroll down clear of the HUD and the bottom still reaches the canvas edge.
+  if(mh<=vph){ S.camY=-(HUD_TOP+(vph-mh)/2); }
+  else { S.camY=Math.max(-HUD_TOP,Math.min(mh-IH,S.camY)); }
 }
 
 // === MOVEMENT (Bug 5 fix: clamp to map bounds) ===
@@ -1720,11 +1738,13 @@ function updateNPCAI(dt){
     npc.aiExprTimer-=dt;
     
     if(npc.aiExprTimer<=0){
-      const exprs=['working','chat','stress','confused'];
+      const exprs=npc.exprs||['working','chat','stress','confused'];
       npc.aiExpr=exprs[Math.floor(Math.random()*exprs.length)];
       npc.aiExprTimer=5000+Math.random()*8000;
     }
-    
+    // Static decor NPCs (e.g. board members seated at the table) hold their position + facing.
+    if(npc.static){ npc.aiState='idle'; npc.aiFrame=0; continue; }
+
     if(npc.aiState==='idle'){
       if(npc.aiTimer<=0){
         const wander=MD().wander;
@@ -1809,6 +1829,7 @@ function checkProximity(){
   
   if(!found){
     for(const n of NPCS){
+      if(n.decor)continue; // background workers — present for atmosphere, not interactive
       const cell=npcCell(n,S.map);
       if(!cell)continue;
       const nx=n.curX!==undefined?n.curX:cell[0]*TS;
@@ -2285,7 +2306,7 @@ function activateZone(zone){
     transitionToMap('town');
     return;
   }
-  if(zone.id==='to_office'){ transitionToMap('office'); completeObj('zone','to_office'); return; }
+  if(zone.id==='to_office'){ S.enteredOffice=true; transitionToMap('office'); completeObj('zone','to_office'); return; }
   if(zone.id==='to_site'){ transitionToMap('site'); completeObj('zone','to_site'); return; }
   if(zone.id==='to_supplier'){ transitionToMap('supplier'); completeObj('zone','to_supplier'); return; }
   if(zone.id==='to_boardroom'){ transitionToMap('boardroom'); completeObj('zone','to_boardroom'); return; }
@@ -3734,8 +3755,8 @@ function checkAchievements(){
       unlockAchievement('first_contact');break;
     }
   }
-  // Full House — talked to all 5 core leads (ambient townsfolk don't count)
-  if(NPCS.every(n=>n.ambient||(S.relationships[n.id]&&S.relationships[n.id].talked>0))){
+  // Full House — talked to all 5 core leads (ambient townsfolk & background workers don't count)
+  if(NPCS.every(n=>n.ambient||n.decor||(S.relationships[n.id]&&S.relationships[n.id].talked>0))){
     unlockAchievement('full_house');
   }
   // Safety First — safety > 80% and past Construction Early (pi >= 6)
@@ -3979,12 +4000,16 @@ function endArrival(){
   S.arrival=null; S.keys={};
   playSFX('positive');
 }
+// Draw the car (world space) at a given spot — shared by the arrival drive and the parked car.
+function drawCarAt(ctx,cx,cy){
+  ctx.fillStyle='rgba(20,12,6,0.22)';
+  ctx.beginPath(); ctx.ellipse(cx+24,cy+24,22,4,0,0,Math.PI*2); ctx.fill(); // shadow
+  drawSprite(ctx,'car',Math.floor(cx),Math.floor(cy));
+}
 // Draw the car (world space) — called from render while arrival is active.
 function drawArrivalCar(ctx){
   const a=S.arrival; if(!a)return;
-  ctx.fillStyle='rgba(20,12,6,0.22)';
-  ctx.beginPath(); ctx.ellipse(a.carX+24,a.carY+24,22,4,0,0,Math.PI*2); ctx.fill(); // shadow
-  drawSprite(ctx,'car',Math.floor(a.carX),Math.floor(a.carY));
+  drawCarAt(ctx,a.carX,a.carY);
 }
 // Caption + prompt (screen space) — called after the world is drawn.
 function drawArrivalOverlay(ctx){
@@ -4444,6 +4469,8 @@ function render(){
   // Arrival cut-scene: the car is y-sorted with the characters so the PM reads as stepping out
   // beside/behind it (never drawn on top of it).
   if(S.arrival){ const cy=S.arrival.carY+26; entities.push({y:cy,draw:()=>drawArrivalCar(CTX)}); }
+  // The car stays parked in town after the cut-scene until the PM first heads into the Project Office.
+  else if(S.map==='town'&&!S.enteredOffice){ entities.push({y:ARRIVAL_CARY+26,draw:()=>drawCarAt(CTX,ARRIVAL_PARKX,ARRIVAL_CARY)}); }
 
   // Player — hidden while still in the car during the arrival drive/park beats
   const pmHidden=S.arrival&&(S.arrival.phase==='drive'||S.arrival.phase==='park');
@@ -4480,6 +4507,7 @@ function render(){
     entities.push({y:ny+24,draw:()=>{
       const isWalking=npcRef.aiState==='walking';
       drawChar(CTX,npcRef,npcRef.aiFacing,isWalking?npcRef.aiFrame:0,nx,ny+(isWalking?0:idleBob(nx)),isWalking);
+      if(npcRef.decor)return; // background workers: no name tag / hearts — just there, doing their thing
       // Name tag above procedural character head
       CTX.font='bold 9px monospace';
       CTX.textBaseline='middle';
@@ -4732,6 +4760,7 @@ function beginGame(){
   const tsp=(MAPS.town||{spawn:{x:9,y:13}}).spawn;
   S.px=tsp.x*TS;S.py=tsp.y*TS;
   S._townPos={x:S.px,y:S.py};
+  S.enteredOffice=false; // the arrival car stays parked in town until the PM first heads into the office
   S.camX=S.px-IW/2;S.camY=S.py-IH/2;
   S.objectives=getObjectives(32);
   S.completedObj=[];
@@ -4771,7 +4800,7 @@ function saveGame(){
     version:2,
     week:S.week,metrics:{...S.metrics},playerName:S.playerName,
     playerChar:S.playerChar,eventsDone:[...S.eventsDone],
-    map:S.map,px:S.px,py:S.py,townPos:S._townPos||null,siteUnlocked:S.siteUnlocked,
+    map:S.map,px:S.px,py:S.py,townPos:S._townPos||null,enteredOffice:!!S.enteredOffice,siteUnlocked:S.siteUnlocked,
     completedObj:[...S.completedObj],dlgCooldowns:{...S.dlgCooldowns},
     relationships:JSON.parse(JSON.stringify(S.relationships)),
     achievements:[...S.achievements],
@@ -4802,6 +4831,7 @@ function loadGame(){
     S.eventsDone=Array.isArray(data.eventsDone)?data.eventsDone:[];
     S.map=MAPS[data.map]?data.map:'office';
     S.siteUnlocked=!!data.siteUnlocked;
+    S.enteredOffice=(data.enteredOffice!==undefined)?!!data.enteredOffice:true; // older/continued saves: assume already arrived
     S.completedObj=Array.isArray(data.completedObj)?data.completedObj:[];
     S.dlgCooldowns=(data.dlgCooldowns&&typeof data.dlgCooldowns==='object')?data.dlgCooldowns:{};
     if(data.relationships&&typeof data.relationships==='object')S.relationships=data.relationships;

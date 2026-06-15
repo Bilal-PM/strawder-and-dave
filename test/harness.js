@@ -94,7 +94,7 @@ check('PHASES/getPhase cover the timeline',()=>{ [32,28,20,12,4,0,-4,-8].forEach
 check('OMAP is a non-empty 2D grid',()=>{ if(!Array.isArray(g.OMAP)||!Array.isArray(g.OMAP[0]))throw new Error('OMAP not 2D'); });
 check('SMAP is a non-empty 2D grid',()=>{ if(!Array.isArray(g.SMAP)||!Array.isArray(g.SMAP[0]))throw new Error('SMAP not 2D'); });
 check('isSolid handles out-of-bounds',()=>{ g.isSolid(-1,-1); g.isSolid(99999,99999); });
-check('NPCS present (5) with dialogue',()=>{ if(!Array.isArray(g.NPCS)||g.NPCS.length<5)throw new Error('NPCS count '+(g.NPCS&&g.NPCS.length)); g.NPCS.forEach(n=>{ if(!n.ambient&&!g.DLG[n.id])throw new Error('no DLG for '+n.id); }); });
+check('NPCS present (5) with dialogue',()=>{ if(!Array.isArray(g.NPCS)||g.NPCS.length<5)throw new Error('NPCS count '+(g.NPCS&&g.NPCS.length)); g.NPCS.forEach(n=>{ if(!n.ambient&&!n.decor&&!g.DLG[n.id])throw new Error('no DLG for '+n.id); }); });
 check('every NPC dialogue choice applies without throwing & stays clamped',()=>{
   for(const id in g.DLG){ const phases=g.DLG[id];
     phases.forEach(ph=>ph.forEach(line=>(line.choices||[]).forEach(c=>{ if(c.e)g.applyEffects(c.e); })));
@@ -303,9 +303,24 @@ check('ambient town-life NPCs: placed on walkable cells, chat without metrics, a
   // rotating lines: index advances
   const i1=g.S._chatIdx['amb_resident']; g.openNPCDialogue(r);
   if(g.S._chatIdx['amb_resident']!==i1+1) throw new Error('ambient chat did not rotate');
-  // the Full House achievement must still be reachable with ambient NPCs present
-  g.S.relationships={}; g.NPCS.filter(n=>!n.ambient).forEach(n=>{ g.S.relationships[n.id]={hearts:1,talked:1}; });
-  if(!g.NPCS.every(n=>n.ambient||(g.S.relationships[n.id]&&g.S.relationships[n.id].talked>0))) throw new Error('ambient NPCs block the "talk to all leads" check');
+  // the Full House achievement must still be reachable with ambient + decor NPCs present
+  g.S.relationships={}; g.NPCS.filter(n=>!n.ambient&&!n.decor).forEach(n=>{ g.S.relationships[n.id]={hearts:1,talked:1}; });
+  if(!g.NPCS.every(n=>n.ambient||n.decor||(g.S.relationships[n.id]&&g.S.relationships[n.id].talked>0))) throw new Error('ambient/decor NPCs block the "talk to all leads" check');
+});
+check('decor NPCs: placed on walkable cells, no dialogue, not interactive, static ones hold still',()=>{
+  const dec=g.NPCS.filter(n=>n.decor);
+  if(dec.length<4) throw new Error('expected several decor NPCs, got '+dec.length);
+  dec.forEach(n=>{
+    if(g.DLG[n.id]) throw new Error(n.id+' is decor but has leadership dialogue');
+    if(n.ambient) throw new Error(n.id+' should not be both decor and ambient');
+    let placed=false;
+    for(const mn of ['town','office','supplier','boardroom','studio','site']){ const c=g.npcCell(n,mn); if(!c)continue; placed=true; g.S.map=mn; if(g.isSolid(c[0],c[1])) throw new Error(n.id+' stands on a solid cell on '+mn); }
+    if(!placed) throw new Error(n.id+' is not placed on any map');
+  });
+  // a static decor NPC does not drift when the AI ticks
+  const st=dec.find(n=>n.static); g.S.map='boardroom'; const c=g.npcCell(st,'boardroom'); st.curX=c[0]*16; st.curY=c[1]*16; const bx=st.curX,by=st.curY;
+  for(let i=0;i<20;i++) g.updateNPCAI(200);
+  if(st.curX!==bx||st.curY!==by) throw new Error('static decor NPC drifted from its spot');
 });
 check('NPC wander targets are in-bounds and walkable (office, site & town)',()=>{
   g.S.map='office'; g.NPC_WANDER_OFFICE.forEach(t=>{ if(t.x<0||t.x>=g.OFFICE_W||t.y<0||t.y>=g.OFFICE_H||g.isSolid(t.x,t.y)) throw new Error('office wander bad @'+t.x+','+t.y); });
@@ -529,7 +544,7 @@ check('new SFX + ambience + NPC mumble voices fire without throwing (and every N
   ['doorOpen','doorClose','excavator','drill','clang','reverse','trainHorn','phone'].forEach(s=>g.playSFX(s));
   g.S.map='site'; g.S.week=8; g.playLocationAmbient();      // construction-phase machinery branch
   g.S.map='office'; g.playLocationAmbient();
-  g.NPCS.forEach(n=>{ if(typeof g.VOICE[n.id]!=='number') throw new Error('no voice pitch for '+n.id); g.playMumble(n.id,40); });
+  g.NPCS.forEach(n=>{ if(!n.decor&&typeof g.VOICE[n.id]!=='number') throw new Error('no voice pitch for '+n.id); g.playMumble(n.id,40); }); // decor NPCs never speak
 });
 check('deliverables: each has readable body + readyWeek; more unlock as the project progresses',()=>{
   if(!Array.isArray(g.DELIVERABLES)||g.DELIVERABLES.length<6) throw new Error('too few deliverables');
