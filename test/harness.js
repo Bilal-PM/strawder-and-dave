@@ -134,8 +134,9 @@ check('office map: doorways/exit walkable, no furniture on doorways, seats clear
   // flood-fill reachability from spawn
   const seen=Array.from({length:H},()=>new Array(W).fill(false)); const st=[[14,15]]; seen[15][14]=true;
   while(st.length){ const p=st.pop(); [[1,0],[-1,0],[0,1],[0,-1]].forEach(d=>{ const nx=p[0]+d[0],ny=p[1]+d[1]; if(nx>=0&&ny>=0&&nx<W&&ny<H&&!seen[ny][nx]&&!solid(nx,ny)){ seen[ny][nx]=true; st.push([nx,ny]); } }); }
-  const rooms={meeting:[5,3],yourOffice:[25,3],breakRoom:[5,11],documents:[25,11],openPlan:[15,8]};
-  for(const k in rooms){ const r=rooms[k]; if(!seen[r[1]][r[0]]) throw new Error('room unreachable: '+k+' @'+r); }
+  const rooms={meeting:[5,3],yourOffice:[25,3],breakRoom:[5,11],documents:[25,11],openPlan:[15,8],
+    to_supplier:[12,16],to_studio:[3,16],to_boardroom:[25,16]}; // the three new exit doors must be reachable
+  for(const k in rooms){ const r=rooms[k]; if(!seen[r[1]][r[0]]) throw new Error('room/door unreachable: '+k+' @'+r); }
 });
 check('site map: spawn & compound gate walkable, NPC site seats clear, key areas reachable',()=>{
   g.S.map='site'; const W=g.SITE_W,H=g.SITE_H; const solid=(x,y)=>g.isSolid(x,y);

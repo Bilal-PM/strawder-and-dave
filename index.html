@@ -544,7 +544,7 @@ const OFFICE_SOLID=(()=>{
   return grid;
 })();
 
-// Site map: 50x30
+// Railway site map: 30x20
 const SITE_W=30,SITE_H=20;
 // Railway site ground layer. Chars: 'g' grass · 'r' gravel compound · 't' track · 'p' platform · 'e' platform edge
 const SMAP=(()=>{
@@ -1736,6 +1736,13 @@ const PERSONA={
     warm:['"Heyyy! Come in, come in — I was literally about to come find you."'],
     cool:['"Oh. Hi. ...Look, can we clear the air at some point? But sure, what\'s up?"'],
     overruled:['"Water under the bridge, mostly. What can I do for you?"']},
+  raj:{busy:0.0,winHard:1.0,
+    warm:['"Ah, my favourite PM! Always a pleasure. What do you need moving?"'],
+    cool:['"Back again. Look, I\'ll do what I can, but you\'ve been a tough customer lately."']},
+  okoye:{busy:0.35,winHard:1.5,
+    warm:['"Good to see you. You\'ve earned a bit of trust with this board — don\'t waste it."'],
+    cool:['"I\'ll be blunt: the board isn\'t convinced. Make this count."'],
+    busyLine:['"I have a board meeting in two minutes. Be quick, or come back."']},
 };
 function pick(a){ return (a&&a.length)?a[Math.floor(rng()*a.length)]:''; }
 
