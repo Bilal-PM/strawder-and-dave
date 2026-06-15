@@ -299,3 +299,22 @@ post-delivery; idle/turn animations.
   decision the player just made — instead of the knowledge being a passive phase dump. Reinforces the
   educational goal at the moment of judgement. Harness +1 (every event has an insight). **27/27 green.**
 - Core game is feature-complete; only optional 'compress post-delivery' remains.
+
+
+### 2026-06-15 — Iteration 22 (playtest feedback: markers, PPE station, machinery)
+Three items from the owner's mobile playtest (IMG_4617):
+- **Marker clash fixed**: the objective '!' marker over an NPC was overlapping their name/heart status
+  tag and expression bubble. Raised the NPC marker to `curY-28` (above the status tag), suppressed the
+  ambient expression bubble while an NPC is an active objective target (`npcHasObjective(id)`), and
+  anchored office NPCs at their desks (only site NPCs wander) so they no longer cluster.
+- **PPE station**: the Locker Room zone (already wired: PPE gate before site, hi-vis+hard-hat overlay)
+  had only a bookshelf as its visual. Authored a proper `lockers` sprite — grey locker bank with one door
+  open showing an **orange hi-vis vest** (reflective strips) + **white hard hat** — and placed it at the
+  zone (17,14), keeping the exact base-row collision the bookshelf had. Moved a reception plant to clear it.
+- **Realistic + multiple machines**: rebuilt the `excavator` (proper tracks, slew, cab glazing, boom +
+  dipper + toothed bucket) and added two new machine TYPES that mobilise in Construction (phase 5): a
+  yellow **rail `tamper`** (cab, hazard stripes, tamping tines on the track) and a road-rail **`dumper`**
+  (spoil tipper). They sit on/alongside the track corridor so renewal now shows a multi-plant work front.
+- Atlas re-baked (26 → 29 entries), inlined `ATLAS` const re-synced. Verified with Python scene renders
+  (office reception + construction-phase site) and the new sprites in isolation. **27/27 green**, node
+  --check clean. Independent reviewer agent review in flight; findings (if any) fold into the next pass.

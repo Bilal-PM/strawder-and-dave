@@ -78,13 +78,68 @@ def cabin():
     s.rect(20,38,12,2,h2('#9a9488'))
     return finish(s)
 def excavator():
-    s=Spr(46,40);yel=h2('#f0c020');dk=h2('#2e3138')
-    s.rect(2,30,30,9,dk);s.rect(2,30,30,2,lighten(dk,16))
-    for x in range(4,32,4):s.rect(x,33,2,4,h2('#15171b'))
-    s.rect(8,14,22,17,yel);s.rect(8,14,22,2,lighten(yel,25))
-    s.rect(11,17,9,8,h2('#8fc4dc'))
-    s.rect(28,10,4,16,yel);s.rect(30,6,14,4,yel);s.rect(40,8,4,10,yel)
-    s.rect(38,18,9,7,h2('#b0b4bc'));s.rect(38,23,9,2,h2('#7a7e86'))
+    s=Spr(48,44);yel=h2('#f0b81e');dk=h2('#2b2e33');steel=h2('#9aa0a8')
+    # tracks
+    s.rect(2,34,34,9,dk);s.rect(2,34,34,2,lighten(dk,14))
+    s.rect(3,41,32,2,h2('#16181c'))
+    for x in range(5,34,4):s.rect(x,36,2,5,h2('#15171b'))
+    s.rect(4,35,3,7,lighten(dk,10));s.rect(31,35,3,7,lighten(dk,10))
+    # slew base
+    s.rect(8,30,24,4,h2('#3a3e44'))
+    # rear counterweight + cab body
+    s.rect(6,16,12,15,yel);s.rect(6,16,12,2,lighten(yel,22));s.rect(6,28,12,3,darken(yel,18))
+    s.rect(17,12,15,19,yel);s.rect(17,12,15,2,lighten(yel,22))
+    s.rect(19,15,11,9,h2('#8fc4dc'));s.rect(19,15,11,2,h2('#b6dcec'));s.rect(19,15,2,9,h2('#6fa8c4'))
+    s.rect(17,24,15,1,darken(yel,18))
+    s.rect(9,12,2,4,h2('#4a4e54'))  # exhaust
+    # boom (up-right)
+    s.rect(30,16,4,8,yel);s.rect(33,12,5,5,yel)
+    s.rect(37,9,7,4,yel);s.rect(37,9,7,1,lighten(yel,22))
+    # dipper arm down
+    s.rect(41,12,3,12,yel);s.rect(41,12,3,1,lighten(yel,18))
+    # hydraulic ram
+    s.rect(33,14,7,2,h2('#c2c6ce'))
+    # bucket
+    s.rect(38,24,8,6,steel);s.rect(38,24,8,2,lighten(steel,18));s.rect(38,28,8,2,darken(steel,24))
+    for tx in range(39,46,2):s.set(tx,30,h2('#6a6e76'))
+    return finish(s)
+def lockers():  # PPE station: grey locker bank, one open with hi-vis + hard hat
+    s=Spr(36,30);body=h2('#8a9aa6');dk=h2('#5f6e78')
+    s.rect(0,2,36,28,body)
+    for x in (0,12,24,35):s.rect(x,2,1,28,dk)
+    s.rect(0,2,36,2,lighten(body,18))
+    for lx in (0,12):  # two closed lockers
+        s.rect(lx+2,5,8,22,lighten(body,8))
+        s.rect(lx+9,14,1,3,h2('#2a2e33'))
+        for vy in (6,9,11):s.rect(lx+3,vy,3,1,h2('#3a4047'))
+    ox=24  # open locker showing PPE
+    s.rect(ox+1,5,10,22,h2('#3a4047'))
+    vest=h2('#f06a20')
+    s.rect(ox+2,12,8,12,vest);s.rect(ox+2,12,8,2,lighten(vest,20))
+    s.rect(ox+4,13,1,11,h2('#f4f0e8'));s.rect(ox+7,13,1,11,h2('#f4f0e8'))
+    s.rect(ox+2,18,8,1,h2('#cfd6dc'))
+    s.rect(ox+3,6,6,4,h2('#f0f0e8'));s.rect(ox+3,6,6,1,h2('#ffffff'));s.rect(ox+2,9,8,1,h2('#d8d8cc'))
+    return finish(s)
+def tamper():  # yellow rail tamper machine
+    s=Spr(44,26);yel=h2('#f0b81e');dk=h2('#2b2e33');steel=h2('#9aa0a8')
+    s.rect(2,6,40,12,yel);s.rect(2,6,40,2,lighten(yel,22));s.rect(2,15,40,3,darken(yel,18))
+    s.rect(30,2,12,8,yel);s.rect(30,2,12,2,lighten(yel,22))
+    s.rect(32,4,8,5,h2('#8fc4dc'));s.rect(32,4,8,1,h2('#b6dcec'))
+    for x in range(4,28,6):s.rect(x,10,3,4,h2('#1c1e22'))  # hazard stripes
+    for wx in (6,18,34):
+        s.rect(wx,18,6,4,dk);s.set(wx+1,21,h2('#16181c'));s.set(wx+4,21,h2('#16181c'))
+    for tx in (12,26):  # tamping tines
+        s.rect(tx,18,2,6,steel);s.rect(tx+3,18,2,6,steel);s.rect(tx,23,5,1,h2('#6a6e76'))
+    return finish(s)
+def dumper():  # road-rail dumper / tipper
+    s=Spr(32,24);yel=h2('#f0b81e');dk=h2('#2b2e33');skip=h2('#b06a30')
+    s.rect(2,14,28,4,dk)
+    s.rect(22,6,8,9,yel);s.rect(22,6,8,2,lighten(yel,22))
+    s.rect(23,8,6,5,h2('#8fc4dc'));s.rect(23,8,6,1,h2('#b6dcec'))
+    s.rect(2,5,18,10,skip);s.rect(2,5,18,2,lighten(skip,18));s.rect(2,12,18,3,darken(skip,16))
+    s.rect(4,3,14,3,h2('#8f897e'));s.rect(6,2,4,2,h2('#a39c90'))  # spoil load
+    for wx in (5,14,24):
+        s.rect(wx,17,5,5,dk);s.rect(wx+1,18,3,3,h2('#4a4e54'));s.set(wx+2,19,h2('#16181c'))
     return finish(s)
 def fence():
     s=Spr(16,26);fr=h2('#9aa0a8')
@@ -114,7 +169,8 @@ def ballastpile():
 
 OBJ={'desk':desk,'chair':chair,'plant':plant,'sofa':sofa,'bookshelf':bookshelf,'table':table,
      'watercooler':watercooler,'door':door,'cabin':cabin,'excavator':excavator,'fence':fence,
-     'cone':cone,'railstack':railstack,'sleeperstack':sleeperstack,'ballastpile':ballastpile}
+     'cone':cone,'railstack':railstack,'sleeperstack':sleeperstack,'ballastpile':ballastpile,
+     'lockers':lockers,'tamper':tamper,'dumper':dumper}
 
 # ---------------- TILES (16x16) ----------------
 def tile_floor():
