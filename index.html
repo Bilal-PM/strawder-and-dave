@@ -200,6 +200,10 @@ body{background:#3a2a18;color:#f0e6d3;font-family:'Press Start 2P',monospace;ove
     <span id="hStars" style="color:#f7c948;font-size:10px"></span>
     <button style="background:none;border:none;color:#c4a878;cursor:pointer;font-family:'Press Start 2P',monospace;font-size:8px" onclick="toggleMusic()" id="musBtn">&#9835;</button>
     <button style="background:none;border:none;cursor:pointer;font-size:12px" onclick="toggleSFX()" id="sfxBtn" title="Sound effects">&#128266;</button>
+    <span title="Master volume — slide to 0 to mute everything" style="display:inline-flex;align-items:center;gap:3px">
+      <input id="volDial" type="range" min="0" max="100" value="50" oninput="setMasterVolume(this.value/100*0.6)" style="width:46px;height:10px;vertical-align:middle;accent-color:#f7c948;cursor:pointer">
+      <span id="volPct" style="font-size:7px;color:#c4a878;min-width:22px">50%</span>
+    </span>
     <button style="background:none;border:none;color:#5b8ef5;cursor:pointer;font-family:'Press Start 2P',monospace;font-size:10px" onclick="showHelp()">?</button>
   </div>
 </div>
@@ -291,7 +295,7 @@ const S={
   eventsDone:[],dlgCooldowns:{},
   coffeeUsed:false,siteUnlocked:false,
   introStep:0,weekTransOpen:false,
-  musicOn:true,sfxOn:true,gameRunning:false,
+  musicOn:true,sfxOn:true,masterVol:0.3,gameRunning:false,
   nearZone:null,nearNPC:null,dlgOpen:false,eventOpen:false,
   keys:{},lastTime:0,animTimer:0,
   weekObjMet:false,
@@ -1103,9 +1107,18 @@ function initAudio(){
   try{
     audioCtx=new(window.AudioContext||window.webkitAudioContext)();
     masterGain=audioCtx.createGain();
-    masterGain.gain.value=0.3;
+    masterGain.gain.value=(S.masterVol!=null)?S.masterVol:0.3;
     masterGain.connect(audioCtx.destination);
   }catch(e){console.warn('Audio init failed',e);}
+}
+
+// Master volume dial (0..0.6 internal). Setting it to 0 mutes everything.
+function setMasterVolume(v){
+  v=Math.max(0,Math.min(0.6,(typeof v==='number')?v:0.3));
+  S.masterVol=v;
+  if(masterGain)masterGain.gain.value=v;
+  const lbl=document.getElementById('volPct'); if(lbl)lbl.textContent=Math.round(v/0.6*100)+'%';
+  if(typeof saveGame==='function'&&S.screen==='game')saveGame();
 }
 
 function playNote(freq,dur,type,vol,delay){
@@ -1114,9 +1127,10 @@ function playNote(freq,dur,type,vol,delay){
     const t=audioCtx.currentTime+(delay||0);
     const o=audioCtx.createOscillator(),g=audioCtx.createGain();
     o.type=type||'square';o.frequency.value=freq;
+    const peak=(vol||0.1)*(masterGain?masterGain.gain.value:0.3); // dial scales everything
     g.gain.value=0;
     g.gain.setValueAtTime(0,t);
-    g.gain.linearRampToValueAtTime((vol||0.1)*masterGain.gain.value,t+0.02);
+    g.gain.linearRampToValueAtTime(peak,t+0.02);
     g.gain.linearRampToValueAtTime(0,t+dur);
     o.connect(g);g.connect(audioCtx.destination);
     o.start(t);o.stop(t+dur);
@@ -1135,9 +1149,35 @@ function playSFX(type){
     case'weekup':playNote(523,0.12,'square',0.07);playNote(659,0.12,'square',0.06,0.1);playNote(784,0.12,'square',0.06,0.2);playNote(1047,0.2,'square',0.07,0.3);break;
     case'celebration':playNote(523,0.1,'square',0.06);playNote(659,0.1,'square',0.06,0.06);playNote(784,0.1,'square',0.06,0.12);playNote(1047,0.15,'square',0.07,0.18);playNote(1319,0.2,'square',0.06,0.24);break;
     case'door':playNote(200,0.15,'triangle',0.06);playNote(150,0.2,'triangle',0.05,0.1);break;
+    case'doorOpen':playNote(160,0.18,'triangle',0.06);playNote(240,0.12,'triangle',0.04,0.08);playNote(90,0.1,'square',0.03,0.02);break; // creak + latch
+    case'doorClose':playNote(220,0.1,'triangle',0.05);playNote(120,0.16,'triangle',0.06,0.06);playNote(70,0.08,'square',0.05,0.12);break; // swing + thud
     case'paper':playNote(800+Math.random()*400,0.04,'triangle',0.03);playNote(1000+Math.random()*500,0.04,'triangle',0.02,0.03);break;
     case'bird':playNote(1200+Math.random()*400,0.08,'sine',0.03);playNote(1400+Math.random()*300,0.06,'sine',0.02,0.1);break;
+    // --- worksite machinery ---
+    case'excavator':for(let i=0;i<3;i++)playNote(55+Math.random()*12,0.16,'sawtooth',0.05,i*0.14);break; // low diesel rumble
+    case'drill':for(let i=0;i<8;i++)playNote(170+Math.random()*60,0.03,'square',0.025,i*0.035);break;     // rapid hammer-drill
+    case'clang':playNote(420,0.05,'square',0.05);playNote(640,0.2,'triangle',0.04,0.02);break;            // steel on steel
+    case'reverse':for(let i=0;i<3;i++)playNote(1000,0.12,'square',0.03,i*0.34);break;                     // reversing beep-beep-beep
+    case'trainHorn':playNote(196,0.5,'sawtooth',0.05);playNote(262,0.6,'sawtooth',0.045,0.05);break;      // distant two-tone horn
+    case'phone':for(let i=0;i<2;i++){playNote(1100,0.06,'sine',0.025,i*0.12);playNote(900,0.06,'sine',0.022,i*0.12+0.06);}break; // office phone trill
   }
+}
+// === NPC "voice" — soft mumbling blips as dialogue appears (Animal-Crossing style) ===
+const VOICE={sarah:560,mike:300,emma:620,james:360,priya:680}; // per-NPC base pitch
+let _mumbleTimer=null;
+function playMumble(npcId,len){
+  if(S.sfxOn===false)return; if(!audioCtx)initAudio();
+  if(_mumbleTimer){clearInterval(_mumbleTimer);_mumbleTimer=null;}
+  const base=VOICE[npcId]||480;
+  const blips=Math.max(3,Math.min(11,Math.round((len||30)/6))); // a few blips, scaled to line length
+  let i=0;
+  _mumbleTimer=setInterval(()=>{
+    if(i>=blips||S.sfxOn===false){clearInterval(_mumbleTimer);_mumbleTimer=null;return;}
+    const f=base*(0.85+Math.random()*0.4); // wobble around the voice pitch
+    playNote(f,0.05,'square',0.018);
+    playNote(f*0.5,0.05,'triangle',0.01,0.01);
+    i++;
+  },70);
 }
 
 // Pentatonic scale notes (C major pentatonic) — Stardew-style warmth
@@ -1160,6 +1200,38 @@ const SITE_MELODY=[
 const SITE_HARMONY=[2,2,4,4,3,3,2,2,0,0,4,4,2,2,0,0];
 const SITE_BASS=[0,0,2,2,4,4,3,3,0,0,2,2,4,4,0,0];
 
+// Supplier's office — brisk, transactional, a touch jazzy
+const SUP_MELODY=[
+  [5,4,2,3,4,2,1,2,4,5,4,2,3,1,2,0],
+  [2,3,5,4,3,5,4,2,1,2,3,4,5,4,2,1]
+];
+const SUP_HARMONY=[2,2,1,1,4,4,3,3,2,2,4,4,1,1,3,3];
+const SUP_BASS=[0,0,4,4,1,1,3,3,0,0,2,2,4,4,1,1];
+// Client & Sponsor boardroom — stately, sparse, a little tense
+const BOARD_MELODY=[
+  [0,0,3,0,4,0,3,2,0,0,4,0,5,0,4,3],
+  [2,0,4,0,5,0,4,3,0,0,3,0,2,0,1,0]
+];
+const BOARD_HARMONY=[0,0,0,0,3,3,3,3,2,2,2,2,4,4,4,4];
+const BOARD_BASS=[0,0,0,0,0,0,0,0,3,3,3,3,4,4,4,4];
+// Design studio — airy, creative, contemplative
+const STUDIO_MELODY=[
+  [4,5,7,5,4,2,4,5,7,8,7,5,4,2,4,5],
+  [5,7,8,7,5,4,5,7,4,5,7,5,4,2,1,2]
+];
+const STUDIO_HARMONY=[4,4,5,5,3,3,4,4,2,2,5,5,4,4,3,3];
+const STUDIO_BASS=[0,0,3,3,4,4,2,2,0,0,3,3,5,5,2,2];
+
+// Per-location soundtrack registry — startBGM picks by S.map; Phase-D maps already have themes ready.
+const THEMES={
+  office:{melody:OFFICE_MELODY,harmony:OFFICE_HARMONY,bass:OFFICE_BASS,tempo:0.35,interval:450},
+  site:{melody:SITE_MELODY,harmony:SITE_HARMONY,bass:SITE_BASS,tempo:0.28,interval:420},
+  supplier:{melody:SUP_MELODY,harmony:SUP_HARMONY,bass:SUP_BASS,tempo:0.24,interval:360},
+  boardroom:{melody:BOARD_MELODY,harmony:BOARD_HARMONY,bass:BOARD_BASS,tempo:0.42,interval:540},
+  studio:{melody:STUDIO_MELODY,harmony:STUDIO_HARMONY,bass:STUDIO_BASS,tempo:0.38,interval:480}
+};
+function getTheme(){ return THEMES[S.map]||THEMES.office; }
+
 let bgmInterval=null,bgmAmbientInterval=null;
 let _bgmStep=0,_bgmPhrase=0;
 
@@ -1173,14 +1245,12 @@ function startBGM(){
   if(bgmInterval)return;
   _bgmStep=0;_bgmPhrase=0;
 
+  const th0=getTheme();
   bgmInterval=setInterval(()=>{
     if(!S.musicOn||S.screen!=='game')return;
     const scale=_getMoodScale();
-    const inSite=S.map==='site';
-    const melody=inSite?SITE_MELODY:OFFICE_MELODY;
-    const harmony=inSite?SITE_HARMONY:OFFICE_HARMONY;
-    const bass=inSite?SITE_BASS:OFFICE_BASS;
-    const tempo=inSite?0.28:0.35; // site is punchier
+    const th=getTheme();
+    const melody=th.melody,harmony=th.harmony,bass=th.bass,tempo=th.tempo;
     const mIdx=melody[_bgmPhrase%melody.length][_bgmStep%16];
     const hIdx=harmony[_bgmStep%16];
     const bIdx=bass[_bgmStep%16];
@@ -1199,35 +1269,40 @@ function startBGM(){
 
     _bgmStep++;
     if(_bgmStep%16===0)_bgmPhrase++;
-  },450);
+  },th0.interval||450);
 
-  // Ambient sounds layer
+  // Location-aware ambient layer
   bgmAmbientInterval=setInterval(()=>{
     if(!S.musicOn||S.screen!=='game')return;
-    if(S.map==='office'){
-      // Soft keyboard typing
-      if(Math.random()<0.3){
-        for(let i=0;i<Math.floor(Math.random()*4)+1;i++){
-          playNote(2000+Math.random()*2000,0.02,'triangle',0.008,i*0.06);
-        }
-      }
-    }else{
-      // Birds on site
-      if(Math.random()<0.25){
-        const bf=1000+Math.random()*800;
-        playNote(bf,0.06,'sine',0.015);
-        playNote(bf*1.2,0.05,'sine',0.012,0.08);
-        playNote(bf*0.9,0.07,'sine',0.01,0.15);
-      }
-      // Distant hammering
-      if(Math.random()<0.1){
-        playNote(80,0.03,'square',0.015);
-        playNote(80,0.03,'square',0.012,0.15);
-      }
-    }
+    playLocationAmbient();
   },800);
 
   musicPlaying=true;
+}
+
+// Diegetic ambience per location (machines on a live worksite, phones in the office, etc.)
+function playLocationAmbient(){
+  const R=Math.random;
+  if(S.map==='site'){
+    if(R()<0.25){ const bf=1000+R()*800; playNote(bf,0.06,'sine',0.015); playNote(bf*1.2,0.05,'sine',0.012,0.08); } // birds
+    // Live construction: machinery only once the build is underway (Construction phases, idx>=5).
+    if(typeof getPhaseIdx==='function'&&getPhaseIdx(S.week)>=5){
+      const r=R();
+      if(r<0.30)playSFX('excavator');
+      else if(r<0.46)playSFX('drill');
+      else if(r<0.58)playSFX('clang');
+      else if(r<0.66)playSFX('reverse');
+      else if(r<0.69)playSFX('trainHorn');
+    }else if(R()<0.1){ playNote(80,0.03,'square',0.015); playNote(80,0.03,'square',0.012,0.15); } // pre-construction: distant hammering
+  }else if(S.map==='supplier'){
+    if(R()<0.2)playSFX('phone');                                   // warehouse phones
+    if(R()<0.12){ playNote(120,0.05,'sawtooth',0.02); playNote(90,0.06,'sawtooth',0.018,0.12); } // forklift hum
+  }else if(S.map==='boardroom'){
+    if(R()<0.12){ playNote(2200+R()*600,0.02,'triangle',0.006); }   // a quiet clock tick / pen click
+  }else{ // office & studio — soft keyboard typing + the odd phone
+    if(R()<0.3){ for(let i=0;i<Math.floor(R()*4)+1;i++)playNote(2000+R()*2000,0.02,'triangle',0.008,i*0.06); }
+    if(S.map==='office'&&R()<0.06)playSFX('phone');
+  }
 }
 
 function stopBGM(){
@@ -1567,7 +1642,8 @@ function openNPCDialogue(npc){
   el.className='on';
   el.style.display='block';
   S.dlgOpen=true;
-  
+  playMumble(npc.id,(opener+dlg.text).length); // soft voice blips as the line appears
+
   completeObj('npc',npc.id);
 }
 
@@ -1840,6 +1916,7 @@ function chooseDlg(npcId,pi,di,ci){
   const reaction=_pickReaction(pool,reactionKey);
 
   html+='<div class="dt">'+reaction+'</div>';
+  playMumble(npcId,reaction.length); // voice blips for the reply too
 
   // Unified post-choice score reveal \u2014 true difficulty-scaled deltas (\u25b2\u25bc), same component as events.
   html+='<div style="margin:6px 0">'+metricDeltaHTML(_before)+'</div>';
@@ -2225,10 +2302,11 @@ function transitionToMap(target){
       });
     }
     S.camX=S.px-IW/2;S.camY=S.py-IH/2;
-    // Restart BGM to switch theme (office vs site)
+    // Restart BGM so the soundtrack switches to the destination's theme.
     if(musicPlaying){stopBGM();startBGM();}
+    playSFX('doorClose'); // door shuts behind you as you arrive
   },400);
-  playSFX('door');
+  playSFX('doorOpen');    // door opens as you leave
 }
 
 // === OBJECTIVE TRACKING (Bug 10: updateNotepad called after every change) ===
@@ -3327,6 +3405,17 @@ function spawnAmbientParticles(dt){
       type:'dust',drift:0.05
     });
   }else{
+    // Live worksite: kicked-up dust/grit drifting off the works during construction phases.
+    if(typeof getPhaseIdx==='function'&&getPhaseIdx(S.week)>=5&&Math.random()<0.6){
+      spawnParticle({
+        x:S.camX+10+Math.random()*(IW-130),
+        y:S.camY+IH*0.55+Math.random()*IH*0.35,
+        vx:0.15+Math.random()*0.35,vy:-0.05-Math.random()*0.12,
+        life:1600+Math.random()*1400,size:1+Math.random()*1.5,
+        color:['#cdbca0','#bfae90','#d8c8a8'][Math.floor(Math.random()*3)],
+        type:'dust',drift:0.12,gravity:-0.002
+      });
+    }
     // Leaves and seeds on site
     if(Math.random()<0.5){
       spawnParticle({
@@ -4094,7 +4183,8 @@ function saveGame(){
     difficulty:S.difficulty,
     flags:S.flags||{},
     npcMemory:S.npcMemory||{},
-    deferred:S._deferred||{}
+    deferred:S._deferred||{},
+    masterVol:S.masterVol
   };
   try{localStorage.setItem('projectValley_save',JSON.stringify(data));}catch(e){}
 }
@@ -4123,6 +4213,8 @@ function loadGame(){
     S.flags=(data.flags&&typeof data.flags==='object')?data.flags:{};
     S.npcMemory=(data.npcMemory&&typeof data.npcMemory==='object')?data.npcMemory:{};
     S._deferred=(data.deferred&&typeof data.deferred==='object')?data.deferred:{};
+    if(typeof data.masterVol==='number')setMasterVolume(data.masterVol);
+    const vd=document.getElementById('volDial'); if(vd)vd.value=Math.round((S.masterVol/0.6)*100);
     // Validate spawn against the current map; snap to a known-good spawn if loaded coords are solid/out-of-bounds.
     const safe=(S.map==='site')?{x:3*TS,y:13*TS}:{x:14*TS,y:15*TS};
     const px=data.px,py=data.py;

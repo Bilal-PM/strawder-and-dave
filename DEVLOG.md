@@ -383,3 +383,22 @@ Owner playtest feedback → approved a 5-phase immersion epic. A+B shipped toget
 - Harness +3 (timer scales by difficulty; hesitation resolves a non-risky default; every event has a cut-scene
   and present() opens cleanly). **41/41 green**, node --check clean. Logic stays decoupled from presentation so
   all existing event/funnel tests pass unchanged.
+
+
+### 2026-06-15 — Iteration 26 (audio + ambience: dial, location themes, machinery, NPC voices)
+Owner asks (before D/E): a mute dial, location-based soundtracks, door/construction SFX, more worksite immersion,
+and Animal-Crossing-style mumble voices in dialogue.
+- **Master volume dial:** HUD slider (0→0.6 internal); slide to 0 = mute everything. `setMasterVolume` clamps,
+  scales all notes via `masterGain.gain.value`, updates the % label, and persists in save/load.
+- **Location soundtracks:** `THEMES` registry keyed by map — distinct office/site tracks plus composed
+  supplier (brisk), boardroom (stately/tense) and studio (airy) themes **ready for Phase D**. `startBGM` drives
+  melody/harmony/bass/tempo/interval from `getTheme()`; transitions restart BGM so the score switches per area.
+- **Doors:** richer `doorOpen` (creak+latch) on leaving and `doorClose` (swing+thud) on arriving, via `transitionToMap`.
+- **Live worksite:** new machinery SFX — `excavator` rumble, `drill`, `clang`, reversing `reverse` beeps, distant
+  `trainHorn` — played by a phase-gated ambient layer (`playLocationAmbient`) only once Construction starts
+  (idx≥5). Plus drifting **construction dust** particles on site during construction. Supplier gets phones/forklift,
+  boardroom a quiet clock tick, office keyboard+phone.
+- **NPC voices:** `playMumble(npcId,len)` plays soft per-NPC-pitched blips (`VOICE` table) as each dialogue line
+  and reply appears — five distinct voices, scaled to line length, self-cleaning timer.
+- Harness +3 (themes incl. D areas + default; volume clamp/mute/persist; new SFX/ambience/voices fire safely).
+  **44/44 green**, node --check clean.

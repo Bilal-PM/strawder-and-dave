@@ -75,7 +75,7 @@ const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
 const scripts=[...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)].map(m=>m[1]);
 let code=scripts.join('\n;\n');
 // epilogue: capture top-level consts/fns into global for assertions
-const names=['S','applyEffects','advanceWeek','getPhase','getPhaseIdx','getDlgPhaseIdx','chooseDlg','NPCS','OMAP','SMAP','ZONES','isSolid','render','updatePlayer','startGame','newGame','selectCharacter','beginGame','saveGame','loadGame','EVENTS','PHASES','DLG','transitionToMap','showEvent','triggerEvent','getObjectives','updateHUD','updateNotepad','WALK_FRAMES','updateNPCAI','CHARS','ATLAS','drawSprite','OFFICE_W','OFFICE_H','OFFICE_OBJECTS','OFFICE_SOLID_OBJ','objBaseCells','OFFICE_SOLID','SITE_W','SITE_H','SITE_OBJECTS','SITE_SOLID_OBJ','ZONES','NPC_WANDER_OFFICE','NPC_WANDER_SITE','siteTrackFrac','POPUPS','enterWeek','afterEvent','chooseEvent','closeReport','REPORT_WEEKS','getObjectives','showEndScreen','chooseDlg','openNPCDialogue','interactionSpent','spendInteraction','getDlgPhaseIdx','EVENTS','showInsight','rng','seedRng','DIFFICULTY','diff','getPMRating','getLeadershipArchetype','resolveRisk','eventCallback','PERSONA','reflectionNote','showEvent','showReport','applyEventChoice','skipPhase','hintsVisible','metricDeltaHTML','snapshotMetrics','showLockerRoom','togglePPE','closeEventResult','presentEvent','beginDecision','eventHesitate','eventTimerMs','startEventTimer','stopEventTimer','tickEventTimer','SCENES'];
+const names=['S','applyEffects','advanceWeek','getPhase','getPhaseIdx','getDlgPhaseIdx','chooseDlg','NPCS','OMAP','SMAP','ZONES','isSolid','render','updatePlayer','startGame','newGame','selectCharacter','beginGame','saveGame','loadGame','EVENTS','PHASES','DLG','transitionToMap','showEvent','triggerEvent','getObjectives','updateHUD','updateNotepad','WALK_FRAMES','updateNPCAI','CHARS','ATLAS','drawSprite','OFFICE_W','OFFICE_H','OFFICE_OBJECTS','OFFICE_SOLID_OBJ','objBaseCells','OFFICE_SOLID','SITE_W','SITE_H','SITE_OBJECTS','SITE_SOLID_OBJ','ZONES','NPC_WANDER_OFFICE','NPC_WANDER_SITE','siteTrackFrac','POPUPS','enterWeek','afterEvent','chooseEvent','closeReport','REPORT_WEEKS','getObjectives','showEndScreen','chooseDlg','openNPCDialogue','interactionSpent','spendInteraction','getDlgPhaseIdx','EVENTS','showInsight','rng','seedRng','DIFFICULTY','diff','getPMRating','getLeadershipArchetype','resolveRisk','eventCallback','PERSONA','reflectionNote','showEvent','showReport','applyEventChoice','skipPhase','hintsVisible','metricDeltaHTML','snapshotMetrics','showLockerRoom','togglePPE','closeEventResult','presentEvent','beginDecision','eventHesitate','eventTimerMs','startEventTimer','stopEventTimer','tickEventTimer','SCENES','THEMES','getTheme','setMasterVolume','playMumble','VOICE','playSFX','playLocationAmbient','startBGM','stopBGM'];
 code+='\n;globalThis.__G=(function(){const o={};'+names.map(n=>`try{o['${n}']=${n};}catch(e){}`).join('')+'return o;})();';
 
 const results={pass:[],fail:[]};
@@ -340,6 +340,25 @@ check('cut-scene present() opens without throwing and has a scene for every even
   g.EVENTS.forEach(ev=>{ if(!g.SCENES[String(ev.week)]) throw new Error('no cut-scene for event week '+ev.week); });
   g.S.eventOpen=false; g.S.week=8; g.presentEvent(g.EVENTS.find(e=>e.week===8));
   if(!g.S.eventOpen) throw new Error('presentEvent should mark the event open');
+});
+check('every location has its own soundtrack theme (incl. the 3 Phase-D areas) + safe default',()=>{
+  ['office','site','supplier','boardroom','studio'].forEach(m=>{
+    const t=g.THEMES[m]; if(!t||!Array.isArray(t.melody)||!Array.isArray(t.harmony)||!Array.isArray(t.bass)) throw new Error('theme malformed for '+m);
+  });
+  g.S.map='nowhere'; if(g.getTheme()!==g.THEMES.office) throw new Error('getTheme must default to office for unknown maps');
+  g.S.map='site'; if(g.getTheme()!==g.THEMES.site) throw new Error('getTheme should pick the site theme');
+});
+check('master volume dial clamps 0..0.6, mutes at 0, and persists to S.masterVol',()=>{
+  g.setMasterVolume(0.45); if(g.S.masterVol!==0.45) throw new Error('volume not stored');
+  g.setMasterVolume(99); if(g.S.masterVol!==0.6) throw new Error('volume not clamped high');
+  g.setMasterVolume(-5); if(g.S.masterVol!==0) throw new Error('volume not clamped low (mute)');
+  g.setMasterVolume(0.3);
+});
+check('new SFX + ambience + NPC mumble voices fire without throwing (and every NPC has a voice)',()=>{
+  ['doorOpen','doorClose','excavator','drill','clang','reverse','trainHorn','phone'].forEach(s=>g.playSFX(s));
+  g.S.map='site'; g.S.week=8; g.playLocationAmbient();      // construction-phase machinery branch
+  g.S.map='office'; g.playLocationAmbient();
+  g.NPCS.forEach(n=>{ if(typeof g.VOICE[n.id]!=='number') throw new Error('no voice pitch for '+n.id); g.playMumble(n.id,40); });
 });
 check('NPCs carry memory of the last interaction (drives their next opener)',()=>{
   g.S.npcMemory={}; g.S.spentInteractions=[]; g.S.week=20;
