@@ -939,6 +939,7 @@ function getObjectives(week){
       {id:'talk_emma'+w,text:'Safety briefing with Emma',type:'npc',target:'emma'},
       {id:'board'+w,text:'Update planning board',type:'zone',target:'planning'},
       {id:'talk_'+n1+w,text:'Talk to '+npcName(n1),type:'npc',target:n1},
+      {id:'ppe'+w,text:'Suit up — get PPE from the Locker Room',type:'zone',target:'locker_room'},
       {id:'site'+w,text:'Visit the railway site',type:'zone',target:'exit_site'}
     ];
   }
@@ -3332,6 +3333,20 @@ function drawObjectiveMarkers(ctx){
     ctx.fillStyle='#3a2210';ctx.font='bold 8px monospace';ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.fillText('!',wx,wy+bob+1);ctx.textAlign='left';ctx.textBaseline='alphabetic';
     ctx.restore();
+  }
+  // PPE breadcrumb: if a site visit is pending but you're not kitted out, point at the lockers
+  // (covers phases without an explicit locker objective).
+  const inc=t=>(S.objectives||[]).some(o=>o.target===t&&!S.completedObj.includes(o.type+'_'+o.target+'_'+S.week));
+  if(S.map==='office'&&!S.ppeEquipped&&inc('exit_site')&&!inc('locker_room')){
+    const z=(ZONES.office||[]).find(x=>x.id==='locker_room');
+    if(z){ const wx=z.x*TS+z.w*8, wy=z.y*TS-8;
+      ctx.save();
+      ctx.fillStyle='#e88030';ctx.strokeStyle='#3a2210';ctx.lineWidth=1;
+      ctx.beginPath();ctx.arc(wx,wy+bob,5,0,Math.PI*2);ctx.fill();ctx.stroke();
+      ctx.fillStyle='#3a2210';ctx.font='bold 8px monospace';ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText('!',wx,wy+bob+1);ctx.textAlign='left';ctx.textBaseline='alphabetic';
+      ctx.restore();
+    }
   }
 }
 

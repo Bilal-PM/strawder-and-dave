@@ -224,7 +224,7 @@ desktop. Priorities for THIS audience (kids on phones via Squarespace):
 - [x] Per-week interaction cap — re-talking NPCs / re-opening emails/meetings/inspections re-applied
       effects (metric-farm exploit, flattened difficulty + teaching). Now once-per-week each; repeats are
       flavour-only. + anti-exploit harness test.
-- [ ] PPE onboarding: no objective points to the locker; site door rejection has no breadcrumb.
+- [x] PPE onboarding: phase-4 locker objective + automatic locker '!' breadcrumb whenever a site visit is pending without PPE.
 **P2:**
 - [ ] "Week Complete" applies a hidden morale drift (advanceWeek always takes the skipped>1 branch); make
       the honest path drift-free, kill the dead else branch.
@@ -240,3 +240,11 @@ post-delivery; idle/turn animations.
   give effects once per week; repeats show a flavour message. Restores scarcity/stakes and protects the
   teaching goal. loadGame now also calls checkWeekComplete(). **25/25 green** (incl. anti-exploit test).
 - Next P1: PPE onboarding breadcrumb, then touch controls + responsive canvas.
+
+
+### 2026-06-15 — Iteration 15 (P1: PPE onboarding)
+- Added a 'Suit up — get PPE from the Locker Room' objective in pre-construction (phase 4) before the
+  site-visit objective, and an automatic orange '!' breadcrumb over the lockers in any office phase where a
+  site visit is pending and PPE isn't equipped. Newcomers/kids are now guided to PPE instead of getting
+  stuck at the site door. **25/25 green.** node --check clean.
+- Next P1: touch controls + responsive canvas (mobile). Then P2: Week-Complete drift fix, troubled ending.
