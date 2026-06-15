@@ -535,3 +535,14 @@ tiny unreadable fonts. Owner direction: keep the Canvas client, fix in place (no
   blurb, stance chips) to 8–9px.
 - **Area labels:** smaller (7px) + slim semi-transparent rounded plate so they read but don't blot the scene/clash.
 - **51/51 green**, node --check clean. (Visual crispness verified by logic; owner playtest confirms.)
+
+
+### 2026-06-15 — Iteration 36 (Phase 3: outdoor/town art)
+Authored the art that unblocks the outdoor town hub (atlas 42→54 entries):
+- **5 distinct building exteriors** — `ext_office` (glass office block), `ext_supplier` (corrugated warehouse +
+  roller shutter + signage), `ext_board` (civic glass-curtain + columns), `ext_studio` (warm brick + studio
+  window), `ext_site` (blue hoarding/gatehouse with safety sign + boom barrier).
+- **`car`** (side-view, drives right) for the arrival cut-scene, **`tree`/`tree2`** for greenery, and a little
+  **`pond`** (stone rim + lily pad + flower — owner request 🙂).
+- **Road tiles** — `road`, `roadline` (dashed centre), `pavement`.
+- Re-baked atlas, re-synced inlined `ATLAS`, verified every new sprite via a Python render. **51/51 green.**

@@ -248,6 +248,95 @@ def modeltable():
     s.rect(6,2,3,4,h2('#cfd6dc'));s.rect(12,1,3,5,h2('#e0e6ee'));s.rect(18,2,3,4,h2('#cfd6dc'))
     s.rect(4,6,22,1,h2('#6f7b88'))
     return finish(s)
+# ---- Outdoor / town-hub: trees, car, building exteriors ----
+def tree():
+    s=Spr(18,26);trunk=h2('#7a5230');leaf=h2('#4f9a4c')
+    s.rect(7,18,4,8,trunk);s.rect(7,18,2,8,lighten(trunk,12))
+    s.rect(3,4,12,14,leaf);s.rect(1,8,16,8,leaf);s.rect(5,1,8,8,h2('#62b052'))
+    s.rect(4,5,5,4,lighten(leaf,16));s.rect(9,12,5,4,darken(leaf,12))
+    return finish(s)
+def tree2():
+    s=Spr(22,30);trunk=h2('#6e4a2c');leaf=h2('#3f8a44')
+    s.rect(9,20,5,10,trunk);s.rect(9,20,2,10,lighten(trunk,12))
+    s.rect(2,6,18,16,leaf);s.rect(4,2,14,10,h2('#54a04e'));s.rect(0,12,22,8,leaf)
+    s.rect(5,7,6,5,lighten(leaf,16));s.rect(12,14,6,5,darken(leaf,12))
+    return finish(s)
+def car():
+    s=Spr(48,26);body=h2('#c0503e');glass=h2('#a8d8e8');dk=h2('#2b2e33')
+    s.rect(2,10,44,9,body);s.rect(2,10,44,2,lighten(body,18))     # lower body
+    s.rect(10,4,26,8,body);s.rect(10,4,26,2,lighten(body,18))     # cabin
+    s.rect(12,5,10,6,glass);s.rect(24,5,10,6,glass)               # windows
+    s.rect(2,14,44,2,darken(body,20))                             # trim
+    s.rect(44,11,3,4,h2('#f7e0a0'));s.rect(1,12,2,3,h2('#e05577')) # head/tail lights
+    s.rect(7,17,8,8,dk);s.rect(33,17,8,8,dk)
+    s.rect(9,19,4,4,h2('#6a6e76'));s.rect(35,19,4,4,h2('#6a6e76'))
+    return finish(s)
+def ext_office():
+    s=Spr(56,52);body=h2('#9aa6b4');glass=h2('#7fb4d0');roof=h2('#5b6470')
+    s.rect(0,8,56,42,body);s.rect(0,8,56,3,lighten(body,16))
+    s.rect(0,4,56,6,roof);s.rect(0,4,56,2,lighten(roof,18))       # parapet
+    for wy in (14,26,38):
+        for wx in range(4,52,9):
+            s.rect(wx,wy,6,7,glass);s.rect(wx,wy,6,2,lighten(glass,18));s.rect(wx+3,wy,1,7,darken(glass,18))
+    s.rect(23,40,10,10,h2('#3a4250'));s.rect(24,41,8,9,glass);s.rect(28,41,1,9,h2('#2a3038'))
+    s.rect(20,49,16,2,h2('#7a7e86'))
+    return finish(s)
+def ext_supplier():
+    s=Spr(60,48);body=h2('#cfc2a4');roof=h2('#8a6f4a');steel=h2('#9aa0a8')
+    s.rect(0,12,60,34,body)
+    for x in range(0,60,3):s.rect(x,12,1,34,darken(body,8))       # corrugation
+    s.rect(0,6,60,8,roof);s.rect(0,6,60,2,lighten(roof,16))
+    s.rect(20,22,22,24,steel)                                     # roller shutter
+    for ry in range(22,46,3):s.rect(20,ry,22,1,darken(steel,16))
+    s.rect(20,22,22,2,lighten(steel,18))
+    s.rect(6,18,8,7,h2('#7fb4d0'));s.rect(48,18,8,7,h2('#7fb4d0'))
+    s.rect(22,14,18,4,h2('#f06a20'))                              # signage band
+    return finish(s)
+def ext_board():
+    s=Spr(56,52);body=h2('#d8d2c2');glass=h2('#86c0dc');roof=h2('#6a5238')
+    s.rect(0,12,56,38,body);s.rect(0,12,56,3,lighten(body,14))
+    s.rect(0,6,56,8,roof);s.rect(0,6,56,2,lighten(roof,16))
+    s.rect(8,18,40,26,glass)
+    for gx in range(8,48,8):s.rect(gx,18,1,26,darken(glass,18))
+    for gy in range(18,44,8):s.rect(8,gy,40,1,darken(glass,18))
+    s.rect(8,18,40,2,lighten(glass,18))
+    for cx in (4,50):s.rect(cx,14,2,36,lighten(body,10))          # columns
+    s.rect(24,40,8,10,h2('#3a4250'))
+    return finish(s)
+def ext_studio():
+    s=Spr(52,44);brick=h2('#b06a4a');roof=h2('#7a4a30');glass=h2('#a8d8e8')
+    s.rect(0,10,52,32,brick)
+    for by in range(12,42,4):
+        off=2 if (by//4)%2 else 0
+        for bx in range(off,52,8):s.rect(bx,by,7,3,lighten(brick,6))
+    s.rect(0,5,52,7,roof);s.rect(0,5,52,2,lighten(roof,16))
+    s.rect(6,16,28,18,glass);s.rect(6,16,28,2,lighten(glass,16))
+    for gx in range(6,34,6):s.rect(gx,16,1,18,darken(glass,20))
+    s.rect(40,28,8,14,h2('#5a3a1e'));s.rect(41,29,6,13,h2('#8a5a2e'))
+    return finish(s)
+def pond():            # a little ornamental pond (rounded water + stone rim + ripples + a lily)
+    s=Spr(40,26);water=h2('#3f86c4');stone=h2('#9a948a');deep=h2('#2f6ea8')
+    rows=[6,10,12,12,12,10,6]  # half-widths per band → oval
+    for i,hw in enumerate(rows):
+        y=3+i*3; w=hw*2; x=20-hw
+        s.rect(x-2,y,w+4,3,stone)          # stone rim
+    for i,hw in enumerate(rows):
+        y=4+i*3; w=hw*2-2; x=20-hw+1
+        s.rect(x,y,w,3,water)
+    s.rect(8,11,24,6,deep)                 # deeper centre
+    s.rect(10,9,12,1,lighten(water,22));s.rect(22,14,8,1,lighten(water,18)) # ripples/glints
+    s.rect(24,9,5,4,h2('#5bb56a'));s.set(26,10,h2('#e86a8a'))               # lily pad + flower
+    return finish(s)
+def ext_site():
+    s=Spr(56,46);hoard=h2('#3a6ea0');steel=h2('#9aa0a8');yel=h2('#f0b81e')
+    s.rect(0,10,56,34,hoard);s.rect(0,10,56,3,lighten(hoard,14))
+    for x in range(0,56,8):s.rect(x,10,1,34,darken(hoard,14))
+    s.rect(0,8,3,38,steel);s.rect(53,8,3,38,steel)
+    s.rect(22,18,14,26,h2('#2a3038'))                            # gate opening
+    s.rect(20,22,18,3,yel)
+    for bx in range(21,38,5):s.rect(bx,22,2,3,h2('#1c1e22'))     # boom barrier stripes
+    s.rect(4,16,12,9,yel);s.rect(5,17,10,7,h2('#1c1e22'));s.rect(7,18,6,5,yel) # safety sign
+    return finish(s)
 
 OBJ={'desk':desk,'chair':chair,'plant':plant,'sofa':sofa,'bookshelf':bookshelf,'table':table,
      'watercooler':watercooler,'door':door,'cabin':cabin,'excavator':excavator,'fence':fence,
@@ -255,7 +344,9 @@ OBJ={'desk':desk,'chair':chair,'plant':plant,'sofa':sofa,'bookshelf':bookshelf,'
      'lockers':lockers,'tamper':tamper,'dumper':dumper,
      'palletrack':palletrack,'cratestack':cratestack,'forklift':forklift,
      'conftable':conftable,'projscreen':projscreen,'wallchart':wallchart,
-     'draftboard':draftboard,'plotter':plotter,'pinboard':pinboard,'modeltable':modeltable}
+     'draftboard':draftboard,'plotter':plotter,'pinboard':pinboard,'modeltable':modeltable,
+     'tree':tree,'tree2':tree2,'car':car,'pond':pond,
+     'ext_office':ext_office,'ext_supplier':ext_supplier,'ext_board':ext_board,'ext_studio':ext_studio,'ext_site':ext_site}
 
 # ---------------- TILES (16x16) ----------------
 def tile_floor():
@@ -382,9 +473,31 @@ def tile_boardcarpet(): # deep boardroom carpet with subtle weave
             if (x+y)%6==0:c=darken(base,8)
             s.set(x,y,c)
     return s
+def tile_road():       # asphalt
+    s=Spr(16,16);base=h2('#4a4e54')
+    for y in range(16):
+        for x in range(16):
+            c=base;r=(x*5+y*7)%13
+            if r==0:c=darken(base,8)
+            elif r==1:c=lighten(base,6)
+            s.set(x,y,c)
+    return s
+def tile_roadline():   # asphalt with a dashed centre line (horizontal road)
+    s=tile_road()
+    for x in range(2,14):
+        if x%6<4: s.set(x,7,h2('#e8c838'));s.set(x,8,h2('#e8c838'))
+    return s
+def tile_pavement():   # light paving slabs
+    s=Spr(16,16);base=h2('#bdb6a4')
+    for y in range(16):
+        for x in range(16):
+            if x%8==0 or y%8==0:s.set(x,y,darken(base,12))
+            else:s.set(x,y, base if (x//8+y//8)%2 else lighten(base,6))
+    return s
 TILE={'floor':tile_floor,'wall':tile_wall,'wallbase':tile_wallbase,'grass':tile_grass,
       'gravel':tile_gravel,'track':tile_track,'platform':tile_platform,'platedge':tile_platedge,'carpetM':tile_carpetM,'carpetO':tile_carpetO,'tilefloor':tile_tilefloor,
-      'concrete':tile_concrete,'parquet':tile_parquet,'boardcarpet':tile_boardcarpet}
+      'concrete':tile_concrete,'parquet':tile_parquet,'boardcarpet':tile_boardcarpet,
+      'road':tile_road,'roadline':tile_roadline,'pavement':tile_pavement}
 
 # ---------------- PACK ATLAS ----------------
 items=[]
