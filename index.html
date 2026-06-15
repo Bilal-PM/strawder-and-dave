@@ -100,6 +100,10 @@ body{background:#3a2a18;color:#f0e6d3;font-family:'Press Start 2P',monospace;ove
 .ach-toast .ach-desc{font-size:7px;color:#7a5a38;margin-top:2px;line-height:1.5}
 @keyframes hudpunch{0%{transform:scale(1)}40%{transform:scale(1.35);filter:brightness(1.7)}100%{transform:scale(1)}}
 .punch{display:inline-block;animation:hudpunch .42s ease-out}
+@keyframes modalslam{0%{transform:translate(-50%,-50%) scale(.85);opacity:0}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
+.modal.on{animation:modalslam .26s ease-out}
+@keyframes alarm{0%,100%{filter:none}50%{filter:brightness(1.5) saturate(1.4)}}
+.mf.danger{background:#e05577!important;animation:alarm .7s ease-in-out infinite}
 </style>
 </head>
 <body>
@@ -2115,11 +2119,9 @@ function getStarText(){
 function updateHUD(){
   document.getElementById('hWeek').textContent=weekLabel(S.week);
   document.getElementById('hPhase').textContent=getPhaseShort(S.week);
-  document.getElementById('mSch').style.width=S.metrics.schedule+'%';
-  document.getElementById('mBud').style.width=S.metrics.budget+'%';
-  document.getElementById('mSaf').style.width=S.metrics.safety+'%';
-  document.getElementById('mQty').style.width=S.metrics.quality+'%';
-  document.getElementById('mMor').style.width=S.metrics.morale+'%';
+  [['mSch','schedule'],['mBud','budget'],['mSaf','safety'],['mQty','quality'],['mMor','morale']].forEach(p=>{
+    const b=document.getElementById(p[0]); if(b){ b.style.width=S.metrics[p[1]]+'%'; b.classList.toggle('danger',S.metrics[p[1]]<40); } // low-metric alarm
+  });
   document.getElementById('pSch').textContent=S.metrics.schedule;
   document.getElementById('pBud').textContent=S.metrics.budget;
   document.getElementById('pSaf').textContent=S.metrics.safety;
@@ -2343,6 +2345,7 @@ function afterEvent(){
 // === CURVEBALL EVENTS (Bug 8 fix: defensive desc check, Bug 9 fix: delay pointer events) ===
 function showEvent(ev){
   playSFX('alert');
+  triggerShake(2.5,350); // a curveball should feel like one
   S.eventOpen=true;
   const el=document.getElementById('eventModal');
   let html='<h3>\u26A0\uFE0F '+ev.title+'</h3>';

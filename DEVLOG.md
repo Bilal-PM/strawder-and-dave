@@ -182,3 +182,14 @@ Work the loop should execute in order (tick in this file as done):
   report then shows, closeReport runs startNewWeek. **22/22 green.** node --check clean.
 - **All P0 + P1 complete.** Next: P2 juice (event slam-in, week-transition stinger), onboarding cues,
   fence-enclose the compound, then P3 (office phase visuals, choice-aware ending).
+
+
+### 2026-06-15 — Iteration 11 (P2 juice: alarm + event slam-in)
+- **Low-metric alarm**: any HUD meter below 40 turns red and pulses (`updateHUD` toggles a `.danger` class).
+  Makes a failing project legible at a glance and raises the stakes.
+- **Event slam-in**: curveball modals now slam in with a scale/fade keyframe and a `triggerShake` jolt +
+  the existing alert sting — a curveball feels like one. (Modal slam applies to all modals for consistent
+  feedback.)
+- node --check clean, **22/22 green**.
+- Next: onboarding next-objective breadcrumb (kid clarity), week-transition stinger, compound fence
+  enclosure; then P3 (choice-aware ending, office phase visuals).
