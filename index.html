@@ -2161,15 +2161,18 @@ function togglePPE(equip){
   saveGame();
 }
 
+// Industrial areas you can't enter without PPE (hi-vis + hard hat). The Supplier is a working warehouse.
+const PPE_REQUIRED={exit_site:1,to_site:1,to_supplier:1};
 function activateZone(zone){
   playSFX('interact');
-  
-  // Map transitions — PPE required before site access
+
+  // Safety gate: industrial destinations require PPE first.
+  if(PPE_REQUIRED[zone.id] && !S.ppeEquipped){
+    showZoneText('PPE Required','This is an active worksite — you need PPE (hi-vis + hard hat) first.\nGet kitted out at the Locker Room.');
+    return;
+  }
+  // Map transitions
   if(zone.id==='exit_site'){
-    if(!S.ppeEquipped){
-      showZoneText('Exit to Site','You need PPE before going to site!\nVisit the Locker Room to get changed.');
-      return;
-    }
     transitionToMap('site');
     completeObj('zone','exit_site');
     return;
