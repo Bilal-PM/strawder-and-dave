@@ -417,3 +417,22 @@ Two owner asks for the project dashboard (the 📊 docs overlay):
   players see where they began and where they ended up. Persisted in save/load.
 - Harness +3 (deliverables unlock/readable/openable; journey records per-week & renders SVG; docs overlay
   opens cleanly). **47/47 green**, node --check clean.
+
+
+### 2026-06-15 — Iteration 28 (Phase D, part 1: map registry + Supplier's office)
+First new playable area, on a clean foundation:
+- **Map registry refactor:** introduced `MAPS{office,site,supplier}` + `MD()`/`mapW()`/`mapH()`/`npcCell()`
+  and routed every `S.map==='office'?…:…` switch through it — `isSolid`, camera/player bounds, `updateNPCAI`
+  (onMap + wander via `MD().wander` + bounds), `checkProximity`, `render` (dims/ground/objects/NPC visibility),
+  objective markers, `transitionToMap` (generic spawn + NPC reposition), `loadGame` (whitelist + safe spawn +
+  reposition). Office/site behaviour is **identical** (harness stayed green throughout the refactor).
+- **Generic interior renderer** `drawInteriorGround` (reads `MD()`), so any interior map draws from data; the
+  site keeps its special progressive-track renderer.
+- **Supplier's office** (22×14): warehouse tile floor, a service **counter**, **stock shelving**, railway
+  material stacks, a **back office**, and a new NPC **Raj (Supplier Account Mgr)** with compact procurement
+  dialogue + his own voice pitch. Reached via a **"To Supplier"** door in the office reception; **return**
+  door back. Its soundtrack/ambience (composed last iteration) now plays. NPC seating generalised via
+  `npc.pos[map]` (legacy office/site fields untouched).
+- Harness +2 (supplier reachability/seats/zones; office↔supplier transition) and the zone-reachability check
+  now includes supplier. **49/49 green**, node --check clean. Verified the layout with a Python render.
+- Next: Client & Sponsor boardroom, then the Design studio (each drops in as registry data).

@@ -454,7 +454,10 @@ const NPCS=[
    aiState:'idle',aiTimer:0,aiTargetX:16,aiTargetY:8,aiFacing:0,aiFrame:0,aiExpr:'working',aiExprTimer:0,curX:16*16,curY:8*16},
   {id:'priya',name:'Priya',role:'Comms Lead',hair:C.hairBlack,hairStyle:'long',skin:C.skinC,shirt:C.shirtPurple,pants:C.pantsBlue,eye:'#1a2848',
    officeX:13,officeY:12,siteX:-1,siteY:-1,walkSheet:'char_amelia_walk',idleSheet:'char_amelia_idle',
-   aiState:'idle',aiTimer:0,aiTargetX:13,aiTargetY:12,aiFacing:0,aiFrame:0,aiExpr:'chat',aiExprTimer:0,curX:13*16,curY:12*16}
+   aiState:'idle',aiTimer:0,aiTargetX:13,aiTargetY:12,aiFacing:0,aiFrame:0,aiExpr:'chat',aiExprTimer:0,curX:13*16,curY:12*16},
+  {id:'raj',name:'Raj',role:'Supplier Account Mgr',hair:C.hairBlack,hairStyle:'short',skin:C.skinC,shirt:C.suitGray,pants:C.pantsDk,eye:'#2a2018',
+   officeX:-1,officeY:-1,siteX:-1,siteY:-1,pos:{supplier:[7,5]},walkSheet:'char_adam_walk',idleSheet:'char_adam_idle',
+   aiState:'idle',aiTimer:0,aiTargetX:7,aiTargetY:5,aiFacing:0,aiFrame:0,aiExpr:'chat',aiExprTimer:0}
 ];
 
 // NPC wander targets in office
@@ -572,6 +575,49 @@ const SITE_SOLID=(()=>{
   return grid;
 })();
 
+// ===== NEW INTERIOR: SUPPLIER'S OFFICE (procurement) =====
+const SUPPLIER_W=22,SUPPLIER_H=14;
+const SUPMAP=(()=>{
+  const W=SUPPLIER_W,H=SUPPLIER_H,g=[];
+  for(let y=0;y<H;y++){const r=[];for(let x=0;x<W;x++)r.push('B');g.push(r);} // warehouse tile floor
+  for(let x=0;x<W;x++){g[0][x]='#';g[H-1][x]='#';}
+  for(let y=0;y<H;y++){g[y][0]='#';g[y][W-1]='#';}
+  g[H-1][10]='X';                       // door back to the office
+  return g;
+})();
+const SUPPLIER_GROUND={'B':'tilefloor','#':'wall','X':'tilefloor'};
+const SUPPLIER_OBJECTS=[
+  {a:'table',tx:3,ty:5},                                   // service counter
+  {a:'bookshelf',tx:10,ty:2},{a:'bookshelf',tx:12,ty:2},{a:'bookshelf',tx:14,ty:2},{a:'bookshelf',tx:16,ty:2},{a:'bookshelf',tx:18,ty:2}, // stock shelving
+  {a:'desk',tx:17,ty:9},                                   // back-office desk
+  {a:'railstack',tx:8,ty:9},{a:'sleeperstack',tx:12,ty:9},{a:'ballastpile',tx:14,ty:10}, // railway stock (decor)
+  {a:'plant',tx:2,ty:11},{a:'plant',tx:19,ty:11},{a:'plant',tx:19,ty:2}
+];
+const SUPPLIER_SOLID_OBJ={table:1,desk:1,bookshelf:1};
+const SUPPLIER_SOLID=(()=>{
+  const grid=[]; for(let y=0;y<SUPPLIER_H;y++)grid.push(new Array(SUPPLIER_W).fill(false));
+  for(let y=0;y<SUPPLIER_H;y++)for(let x=0;x<SUPPLIER_W;x++)if(SUPMAP[y][x]==='#')grid[y][x]=true;
+  SUPPLIER_OBJECTS.forEach(o=>{ if(SUPPLIER_SOLID_OBJ[o.a]) objBaseCells(o).forEach(c=>{ if(c[0]>=0&&c[0]<SUPPLIER_W&&c[1]>=0&&c[1]<SUPPLIER_H)grid[c[1]][c[0]]=true; }); });
+  return grid;
+})();
+
+// ===== MAP REGISTRY — all map-aware code reads MD()/MAPS[id] (so new areas drop in as data) =====
+const MAPS={
+  office:{W:OFFICE_W,H:OFFICE_H,grid:OMAP,ground:OFFICE_GROUND,objects:OFFICE_OBJECTS,solidObj:OFFICE_SOLID_OBJ,solid:OFFICE_SOLID,wander:[],spawn:{x:14,y:15},interior:true},
+  site:{W:SITE_W,H:SITE_H,grid:SMAP,ground:SITE_GROUND,objects:SITE_OBJECTS,solidObj:SITE_SOLID_OBJ,solid:SITE_SOLID,wander:NPC_WANDER_SITE,spawn:{x:3,y:13},interior:false},
+  supplier:{W:SUPPLIER_W,H:SUPPLIER_H,grid:SUPMAP,ground:SUPPLIER_GROUND,objects:SUPPLIER_OBJECTS,solidObj:SUPPLIER_SOLID_OBJ,solid:SUPPLIER_SOLID,wander:[],spawn:{x:10,y:11},interior:true}
+};
+function MD(){ return MAPS[S.map]||MAPS.office; }
+function mapW(){ return MD().W; }
+function mapH(){ return MD().H; }
+// An NPC's tile on a given map: office/site keep their legacy fields; new maps use npc.pos[map].
+function npcCell(n,map){
+  if(map==='office') return n.officeX>0?[n.officeX,n.officeY]:null;
+  if(map==='site')   return n.siteX>0?[n.siteX,n.siteY]:null;
+  return (n.pos&&n.pos[map])?n.pos[map]:null;
+}
+function npcOnMap(n){ return !!npcCell(n,S.map); }
+
 // === ZONE LABELS (for drawing on map) ===
 const AREA_LABELS={
   office:[
@@ -589,6 +635,12 @@ const AREA_LABELS={
     {x:18,y:13,text:'Materials',color:'#e88030'},
     {x:9,y:4,text:'Construction',color:'#e05577'},
     {x:2,y:13,text:'Return',color:'#4aca8a'}
+  ],
+  supplier:[
+    {x:3,y:4,text:'Counter',color:'#f7c948'},
+    {x:11,y:1,text:'Stock',color:'#b08fd8'},
+    {x:16,y:8,text:'Back Office',color:'#5b8ef5'},
+    {x:9,y:12,text:'Return',color:'#4aca8a'}
   ]
 };
 
@@ -603,7 +655,12 @@ const ZONES={
     {id:'noticeboard',name:'Notice Board',x:18,y:1,w:2,h:1,hint:'Press SPACE \u2014 Notice Board'},
     {id:'reception',name:'Reception',x:12,y:14,w:3,h:1,hint:'Press SPACE \u2014 Reception'},
     {id:'locker_room',name:'Locker Room',x:17,y:15,w:2,h:1,hint:'Press SPACE \u2014 Locker Room (PPE)'},
-    {id:'exit_site',name:'Exit to Site',x:14,y:16,w:2,h:2,hint:'Press SPACE \u2014 Go to Railway Site'}
+    {id:'exit_site',name:'Exit to Site',x:14,y:16,w:2,h:2,hint:'Press SPACE \u2014 Go to Railway Site'},
+    {id:'to_supplier',name:'To Supplier',x:12,y:16,w:1,h:1,hint:'Press SPACE \u2014 Drive to the Supplier'}
+  ],
+  supplier:[
+    {id:'return_office',name:'Return to Office',x:9,y:12,w:2,h:1,hint:'Press SPACE \u2014 Return to Office'},
+    {id:'supplier_counter',name:'Service Counter',x:3,y:7,w:3,h:1,hint:'Press SPACE \u2014 Service Counter'}
   ],
   site:[
     {id:'return_office',name:'Return to Office',x:2,y:13,w:2,h:2,hint:'Press SPACE \u2014 Return to Office'},
@@ -909,6 +966,15 @@ const DLG={
       choices:[{t:"Excellent — share with the team!",e:{morale:4,quality:2}},{t:"What can we learn from the negative feedback?",e:{quality:3,morale:1}},{t:"Include it in the closeout report.",e:{quality:3,morale:2}}]}]
   ]
 };
+// Supplier account manager — procurement dialogue (compact; phase-agnostic pool reused across phases).
+DLG.raj=(()=>{ const pool=[
+  {text:"Raj here — your account manager. What can I get moving for you?",
+   choices:[{t:"Talk me through lead times.",e:{schedule:1,quality:1}},{t:"Can you hold buffer stock for us?",e:{schedule:2,budget:-1}},{t:"Push hard on the price.",e:{budget:2,morale:-1}}]},
+  {text:"Steel and ballast are tight in the market right now — worth locking in early.",
+   choices:[{t:"Lock in forward orders.",e:{budget:-1,schedule:2}},{t:"Keep a second supplier warm.",e:{quality:2,schedule:1}},{t:"Wait for prices to settle.",e:{budget:1,schedule:-2}}]},
+  {text:"Give me a firm programme and I'll prioritise your delivery slots.",
+   choices:[{t:"Here's the locked sequence.",e:{schedule:2,quality:1}},{t:"It's still moving, sorry.",e:{schedule:-1}},{t:"Let's co-plan the slots together.",e:{schedule:2,morale:1}}]}
+]; return Array.from({length:7},()=>pool); })();
 
 // === CURVEBALL EVENTS ===
 const EVENTS=[
@@ -1173,7 +1239,7 @@ function playSFX(type){
   }
 }
 // === NPC "voice" — soft mumbling blips as dialogue appears (Animal-Crossing style) ===
-const VOICE={sarah:560,mike:300,emma:620,james:360,priya:680}; // per-NPC base pitch
+const VOICE={sarah:560,mike:300,emma:620,james:360,priya:680,raj:400}; // per-NPC base pitch
 let _mumbleTimer=null;
 function playMumble(npcId,len){
   if(S.sfxOn===false)return; if(!audioCtx)initAudio();
@@ -1355,12 +1421,9 @@ document.addEventListener('DOMContentLoaded',()=>{
 
 // === COLLISION ===
 function isSolid(mx,my){
-  if(S.map==='office'){
-    if(mx<0||my<0||mx>=OFFICE_W||my>=OFFICE_H)return true;
-    return OFFICE_SOLID[my][mx];
-  }
-  if(mx<0||my<0||mx>=SITE_W||my>=SITE_H)return true;
-  return SITE_SOLID[my][mx];
+  const m=MD();
+  if(mx<0||my<0||mx>=m.W||my>=m.H)return true;
+  return m.solid[my][mx];
 }
 
 function canMove(nx,ny){
@@ -1375,8 +1438,8 @@ function canMove(nx,ny){
 
 // === CAMERA (Bug 6 fix: subtract notepad from viewport) ===
 function updateCamera(){
-  const mw=(S.map==='office'?OFFICE_W:SITE_W)*TS;
-  const mh=(S.map==='office'?OFFICE_H:SITE_H)*TS;
+  const mw=mapW()*TS;
+  const mh=mapH()*TS;
   // 220px CSS notepad at 2x scale = 110px internal
   const vpw=IW-110;
   const vph=IH;
@@ -1408,8 +1471,8 @@ function updatePlayer(dt){
     if(canMove(nx,S.py))S.px=nx;
     if(canMove(S.px,ny))S.py=ny;
     // Bug 5: Clamp to map bounds
-    const mw=(S.map==='office'?OFFICE_W:SITE_W)*TS;
-    const mh=(S.map==='office'?OFFICE_H:SITE_H)*TS;
+    const mw=mapW()*TS;
+    const mh=mapH()*TS;
     S.px=Math.max(0,Math.min(mw-16,S.px));
     S.py=Math.max(0,Math.min(mh-24,S.py));
     // Direction: 0=down,1=right,2=up,3=left
@@ -1435,13 +1498,13 @@ function updateNPCAI(dt){
   if(S.screen!=='game')return;
   for(const npc of NPCS){
     // Only update if NPC is on current map
-    const onMap=S.map==='office'?npc.officeX>0:npc.siteX>0;
-    if(!onMap)continue;
-    
+    const cell=npcCell(npc,S.map);
+    if(!cell)continue;
+
     // Initialize curX/curY if needed
     if(npc.curX===undefined){
-      npc.curX=(S.map==='office'?npc.officeX:npc.siteX)*TS;
-      npc.curY=(S.map==='office'?npc.officeY:npc.siteY)*TS;
+      npc.curX=cell[0]*TS;
+      npc.curY=cell[1]*TS;
     }
     
     npc.aiTimer-=dt;
@@ -1455,16 +1518,17 @@ function updateNPCAI(dt){
     
     if(npc.aiState==='idle'){
       if(npc.aiTimer<=0){
-        if(S.map==='office'){
-          // Office: people stay at their workstations (no wandering/clustering) — just keep idling.
-          npc.aiTimer=3000+Math.random()*5000;
-        }else{
-          // Site: crew moves around the works.
-          const tgt=NPC_WANDER_SITE[Math.floor(Math.random()*NPC_WANDER_SITE.length)];
+        const wander=MD().wander;
+        if(wander&&wander.length){
+          // Maps with wander points (the site): crew moves around the works.
+          const tgt=wander[Math.floor(Math.random()*wander.length)];
           npc.aiTargetX=tgt.x*TS;
           npc.aiTargetY=tgt.y*TS;
           npc.aiState='walking';
           npc.aiTimer=10000; // max walk time before giving up
+        }else{
+          // Interiors: people stay at their workstations (no wandering/clustering).
+          npc.aiTimer=3000+Math.random()*5000;
         }
       }
     } else if(npc.aiState==='walking'){
@@ -1493,8 +1557,8 @@ function updateNPCAI(dt){
         } else { npc.aiState='idle';npc.aiTimer=1000+Math.random()*2000;npc.aiFrame=0; }
 
         // Clamp to map
-        const mw=(S.map==='office'?OFFICE_W:SITE_W)*TS;
-        const mh=(S.map==='office'?OFFICE_H:SITE_H)*TS;
+        const mw=mapW()*TS;
+        const mh=mapH()*TS;
         npc.curX=Math.max(16,Math.min(mw-32,npc.curX));
         npc.curY=Math.max(16,Math.min(mh-32,npc.curY));
         
@@ -1529,10 +1593,10 @@ function checkProximity(){
   
   if(!found){
     for(const n of NPCS){
-      const onMap=S.map==='office'?n.officeX>0:n.siteX>0;
-      if(!onMap)continue;
-      const nx=n.curX!==undefined?n.curX:(S.map==='office'?n.officeX:n.siteX)*TS;
-      const ny=n.curY!==undefined?n.curY:(S.map==='office'?n.officeY:n.siteY)*TS;
+      const cell=npcCell(n,S.map);
+      if(!cell)continue;
+      const nx=n.curX!==undefined?n.curX:cell[0]*TS;
+      const ny=n.curY!==undefined?n.curY:cell[1]*TS;
       const dist=Math.abs(S.px+8-nx-8)+Math.abs(S.py+16-ny-16);
       if(dist<32){found={type:'npc',data:n};break;}
     }
@@ -1983,7 +2047,17 @@ function activateZone(zone){
     transitionToMap('office');
     return;
   }
-  
+  if(zone.id==='to_supplier'){
+    transitionToMap('supplier');
+    completeObj('zone','to_supplier');
+    return;
+  }
+  if(zone.id==='supplier_counter'){
+    showZoneText('Service Counter','Order forms, delivery schedules and price lists. Talk to Raj to chase lead times, hold buffer stock, or push on price.');
+    completeObj('zone','supplier_counter');
+    return;
+  }
+
   // Documents zone opens overlay
   if(zone.id==='documents'){
     showDocsOverlay();
@@ -2300,17 +2374,10 @@ function transitionToMap(target){
   startTransition(()=>{
     S.map=target;
     PARTICLES.length=0; // Clear particles on map change
-    if(target==='site'){
-      S.px=3*TS;S.py=13*TS;S.siteUnlocked=true;_siteVisits++;
-      NPCS.forEach(n=>{
-        if(n.siteX>0){n.curX=n.siteX*TS;n.curY=n.siteY*TS;n.aiState='idle';n.aiTimer=2000;}
-      });
-    } else {
-      S.px=14*TS;S.py=15*TS;
-      NPCS.forEach(n=>{
-        if(n.officeX>0){n.curX=n.officeX*TS;n.curY=n.officeY*TS;n.aiState='idle';n.aiTimer=2000;}
-      });
-    }
+    const sp=(MAPS[target]||MAPS.office).spawn;
+    S.px=sp.x*TS; S.py=sp.y*TS;
+    if(target==='site'){ S.siteUnlocked=true; _siteVisits++; }
+    NPCS.forEach(n=>{ const c=npcCell(n,target); if(c){ n.curX=c[0]*TS; n.curY=c[1]*TS; n.aiState='idle'; n.aiTimer=2000; } });
     S.camX=S.px-IW/2;S.camY=S.py-IH/2;
     // Restart BGM so the soundtrack switches to the destination's theme.
     if(musicPlaying){stopBGM();startBGM();}
@@ -3783,14 +3850,15 @@ function drawChar(ctx,cfg,dir,frame,x,y,isMoving){
   ctx.drawImage(cfg._fcache[key],Math.floor(x)-CHAR_PAD,Math.floor(y)-CHAR_PAD);
 }
 
-// Draw one office ground cell from the atlas. Walls fronting onto floor get a baseboard.
-function drawOfficeGround(ctx,ch,x,y){
+// Draw one interior ground cell from the atlas (office, supplier, …). Walls fronting onto floor get a baseboard.
+function drawInteriorGround(ctx,ch,x,y){
+  const m=MD();
   if(ch==='#'){
-    const below=(y+1<OFFICE_H)?OMAP[y+1][x]:'#';
+    const below=(y+1<m.H)?m.grid[y+1][x]:'#';
     const key=(below!=='#')?'wallbase':'wall';
     if(!drawSprite(ctx,key,x*TS,y*TS)){ctx.fillStyle='#cfc7b4';ctx.fillRect(x*TS,y*TS,TS,TS);}
   }else{
-    if(!drawSprite(ctx,OFFICE_GROUND[ch]||'floor',x*TS,y*TS)){ctx.fillStyle='#c79a5e';ctx.fillRect(x*TS,y*TS,TS,TS);}
+    if(!drawSprite(ctx,m.ground[ch]||'floor',x*TS,y*TS)){ctx.fillStyle='#c79a5e';ctx.fillRect(x*TS,y*TS,TS,TS);}
   }
 }
 
@@ -3867,9 +3935,9 @@ function drawObjectiveMarkers(ctx){
     let wx,wy;
     if(o.type==='npc'){
       const n=NPCS.find(x=>x.id===o.target); if(!n)continue;
-      const onMap=S.map==='office'?n.officeX>0:n.siteX>0; if(!onMap)continue;
-      wx=(n.curX!==undefined?n.curX:(S.map==='office'?n.officeX:n.siteX)*TS)+8;
-      wy=(n.curY!==undefined?n.curY:(S.map==='office'?n.officeY:n.siteY)*TS)-28; // above the name/hearts status
+      const cell=npcCell(n,S.map); if(!cell)continue;
+      wx=(n.curX!==undefined?n.curX:cell[0]*TS)+8;
+      wy=(n.curY!==undefined?n.curY:cell[1]*TS)-28; // above the name/hearts status
     }else{
       const z=(ZONES[S.map]||[]).find(x=>x.id===o.target); if(!z)continue;
       wx=z.x*TS+z.w*8; wy=z.y*TS-8;
@@ -3904,8 +3972,9 @@ function render(){
   
   if(S.screen!=='game')return;
 
-  const mw=S.map==='office'?OFFICE_W:SITE_W;
-  const mh=S.map==='office'?OFFICE_H:SITE_H;
+  const mw=mapW();
+  const mh=mapH();
+  const _grid=MD().grid;
   
   CTX.save();
   const shake=getShakeOffset();
@@ -3919,8 +3988,8 @@ function render(){
   
   for(let y=sy;y<ey;y++){
     for(let x=sx;x<ex;x++){
-      if(S.map==='office')drawOfficeGround(CTX,OMAP[y][x],x,y);
-      else drawSiteGround(CTX,SMAP[y][x],x,y);
+      if(S.map==='site')drawSiteGround(CTX,SMAP[y][x],x,y);
+      else drawInteriorGround(CTX,_grid[y][x],x,y);
     }
   }
   
@@ -3944,8 +4013,8 @@ function render(){
 
   // Furniture / site objects (atlas sprites, y-sorted with characters so you walk behind tall items)
   {
-    const objs=S.map==='office'?OFFICE_OBJECTS:SITE_OBJECTS;
-    const solidset=S.map==='office'?OFFICE_SOLID_OBJ:SITE_SOLID_OBJ;
+    const objs=MD().objects;
+    const solidset=MD().solidObj;
     const pi=getPhaseIdx(S.week);
     for(const o of objs){
       if(o.m!==undefined&&pi<o.m)continue; // construction progression: not delivered / on-site yet
@@ -3960,10 +4029,10 @@ function render(){
   
   // NPCs
   for(const n of NPCS){
-    const onMap=S.map==='office'?n.officeX>0:n.siteX>0;
-    if(!onMap)continue;
-    const nx=n.curX!==undefined?Math.floor(n.curX):(S.map==='office'?n.officeX:n.siteX)*TS;
-    const ny=n.curY!==undefined?Math.floor(n.curY):(S.map==='office'?n.officeY:n.siteY)*TS;
+    const cell=npcCell(n,S.map);
+    if(!cell)continue;
+    const nx=n.curX!==undefined?Math.floor(n.curX):cell[0]*TS;
+    const ny=n.curY!==undefined?Math.floor(n.curY):cell[1]*TS;
     const npcRef=n;
     entities.push({y:ny+24,draw:()=>{
       const isWalking=npcRef.aiState==='walking';
@@ -4279,7 +4348,7 @@ function loadGame(){
     S.week=(typeof data.week==='number')?data.week:32;S.metrics=clampM(data.metrics);
     S.playerName=data.playerName||'PM';S.playerChar=(data.playerChar>=0&&data.playerChar<CHARS.length)?data.playerChar:0;
     S.eventsDone=Array.isArray(data.eventsDone)?data.eventsDone:[];
-    S.map=(data.map==='site')?'site':'office';
+    S.map=MAPS[data.map]?data.map:'office';
     S.siteUnlocked=!!data.siteUnlocked;
     S.completedObj=Array.isArray(data.completedObj)?data.completedObj:[];
     S.dlgCooldowns=(data.dlgCooldowns&&typeof data.dlgCooldowns==='object')?data.dlgCooldowns:{};
@@ -4299,7 +4368,7 @@ function loadGame(){
     S.metricHistory=Array.isArray(data.metricHistory)?data.metricHistory:[];
     if(!S.metricHistory.length)recordMetricHistory(); // older saves: seed from current standing
     // Validate spawn against the current map; snap to a known-good spawn if loaded coords are solid/out-of-bounds.
-    const safe=(S.map==='site')?{x:3*TS,y:13*TS}:{x:14*TS,y:15*TS};
+    const _sp=MD().spawn; const safe={x:_sp.x*TS,y:_sp.y*TS};
     const px=data.px,py=data.py;
     const ok=(typeof px==='number'&&typeof py==='number'&&!isSolid(Math.floor((px+8)/TS),Math.floor((py+12)/TS)));
     S.px=ok?px:safe.x;S.py=ok?py:safe.y;
@@ -4315,8 +4384,7 @@ function loadGame(){
 
   // Init NPC positions
   NPCS.forEach(n=>{
-    if(S.map==='office'&&n.officeX>0){n.curX=n.officeX*TS;n.curY=n.officeY*TS;}
-    else if(S.map==='site'&&n.siteX>0){n.curX=n.siteX*TS;n.curY=n.siteY*TS;}
+    const c=npcCell(n,S.map); if(c){n.curX=c[0]*TS;n.curY=c[1]*TS;}
     n.aiState='idle';n.aiTimer=2000+Math.random()*3000;
   });
   
