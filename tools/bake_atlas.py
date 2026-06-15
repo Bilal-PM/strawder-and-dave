@@ -167,10 +167,95 @@ def ballastpile():
         wdt=int(28*(j/14));s.rect(14-wdt//2,14-j,wdt,1,g if j%2 else lighten(g,8))
     return finish(s)
 
+# ---- Supplier's office (warehouse) props ----
+def palletrack():
+    s=Spr(30,38);steel=h2('#6f7b88')
+    s.rect(1,2,3,36,steel);s.rect(26,2,3,36,steel)               # uprights
+    for sy in (2,13,24,35):s.rect(1,sy,28,2,lighten(steel,14))   # shelf beams
+    bcols=['#c79a5e','#b07c44','#caa86a','#9a6f3f']
+    for r,sy in enumerate((4,15,26)):
+        x=5
+        while x<24:
+            w=5+((x+r)%3);col=h2(bcols[(x+r)%4])
+            s.rect(x,sy,w,8,col);s.rect(x,sy,w,1,lighten(col,18));s.rect(x+w//2,sy,1,8,darken(col,14))
+            x+=w+1
+    return finish(s)
+def cratestack():
+    s=Spr(22,22);w=h2('#a87f47')
+    for (cx,cy,sz) in [(1,9,12),(10,10,11),(5,0,12)]:
+        s.rect(cx,cy,sz,12,w);s.rect(cx,cy,sz,1,lighten(w,18))
+        s.rect(cx,cy+4,sz,1,darken(w,14));s.rect(cx,cy+8,sz,1,darken(w,14));s.rect(cx+sz//2,cy,1,12,darken(w,14))
+    return finish(s)
+def forklift():
+    s=Spr(26,26);yel=h2('#f0b81e');dk=h2('#2b2e33')
+    s.rect(20,2,2,18,h2('#9aa0a8'));s.rect(23,2,2,18,h2('#9aa0a8'))  # mast
+    s.rect(19,18,7,2,h2('#c2c6ce'));s.rect(19,20,9,1,h2('#c2c6ce'))  # forks
+    s.rect(4,10,16,10,yel);s.rect(4,10,16,2,lighten(yel,20))         # body
+    s.rect(6,4,9,7,h2('#3a4250'));s.rect(7,5,7,5,h2('#8fc4dc'))      # cab
+    s.rect(5,19,5,5,dk);s.rect(14,19,5,5,dk)                         # wheels
+    return finish(s)
+# ---- Boardroom props ----
+def conftable():
+    s=Spr(60,26);wood=h2('#7a4f2e')
+    s.rect(0,5,60,16,wood);s.rect(0,5,60,3,lighten(wood,16));s.rect(0,18,60,3,darken(wood,16))
+    s.rect(4,21,3,4,darken(wood,22));s.rect(53,21,3,4,darken(wood,22))
+    s.rect(8,9,9,7,h2('#3a4250'));s.rect(9,10,7,5,h2('#7fd0e0'))     # laptop
+    s.rect(22,11,8,4,h2('#f4ecd8'))                                  # papers
+    s.rect(34,9,5,9,h2('#cfe0ec'));s.rect(34,9,5,2,h2('#e8f2fa'))    # water jug
+    s.rect(44,12,4,4,h2('#e0e6ee'));s.rect(50,12,4,4,h2('#e0e6ee'))  # mugs
+    return finish(s)
+def projscreen():
+    s=Spr(30,20);fr=h2('#3a3f47')
+    s.rect(0,0,30,2,fr)                                              # roller
+    s.rect(2,2,26,16,h2('#f4f1e6'));s.rect(2,2,26,1,h2('#ffffff'))
+    s.rect(4,4,1,12,h2('#c8c2b2'))                                   # axis
+    for i,c in enumerate(['#4aca8a','#f7c948','#e05577','#5b8ef5']):
+        hh=4+(i*3)%9;s.rect(7+i*5,16-hh,3,hh,h2(c))
+    return finish(s)
+def wallchart():
+    s=Spr(18,16);fr=h2('#5a3a1e')
+    s.rect(0,0,18,16,fr);s.rect(2,2,14,12,h2('#f4f1e6'))
+    for i,c in enumerate(['#4aca8a','#f7c948','#e05577']):s.rect(3,3+i*4,11,2,h2(c))
+    return finish(s)
+# ---- Design studio props ----
+def draftboard():
+    s=Spr(24,22);wood=h2('#9a6f3f');pap=h2('#e8e2d0')
+    s.rect(3,18,3,4,darken(wood,18));s.rect(18,18,3,4,darken(wood,18))
+    s.rect(2,4,20,12,pap);s.rect(2,4,20,2,lighten(pap,8));s.rect(2,4,20,1,h2('#3a4250'))
+    for ly in (8,11,14):s.rect(5,ly,14,1,h2('#5b8ef5'))
+    s.rect(13,6,1,10,h2('#5b8ef5'))
+    return finish(s)
+def plotter():
+    s=Spr(26,20);body=h2('#5b6470')
+    s.rect(1,4,24,12,body);s.rect(1,4,24,2,lighten(body,16))
+    s.rect(3,7,20,3,h2('#2b3138'))                                   # paper slot
+    s.rect(4,2,18,3,h2('#e8e2d0'));s.rect(4,2,18,1,h2('#5b8ef5'))    # emerging print
+    s.rect(3,16,3,4,h2('#2b2e33'));s.rect(20,16,3,4,h2('#2b2e33'))
+    s.set(22,6,h2('#4aca8a'))
+    return finish(s)
+def pinboard():
+    s=Spr(28,16);fr=h2('#7a5230')
+    s.rect(0,0,28,16,fr);s.rect(2,2,24,12,h2('#b9a886'))
+    for (px,py,c) in [(4,3,'#cfe0ec'),(12,4,'#f4f1e6'),(19,3,'#cfe0ec')]:
+        s.rect(px,py,7,8,h2(c));s.rect(px,py,7,1,h2('#ffffff'))
+        s.rect(px+1,py+3,5,1,h2('#5b8ef5'));s.rect(px+1,py+5,5,1,h2('#5b8ef5'));s.set(px+3,py,h2('#e05577'))
+    return finish(s)
+def modeltable():
+    s=Spr(30,18);wood=h2('#b07c44')
+    s.rect(0,8,30,7,wood);s.rect(0,8,30,2,lighten(wood,16))
+    s.rect(3,15,3,3,darken(wood,18));s.rect(24,15,3,3,darken(wood,18))
+    s.rect(4,3,22,5,h2('#7eba5a'))
+    s.rect(6,2,3,4,h2('#cfd6dc'));s.rect(12,1,3,5,h2('#e0e6ee'));s.rect(18,2,3,4,h2('#cfd6dc'))
+    s.rect(4,6,22,1,h2('#6f7b88'))
+    return finish(s)
+
 OBJ={'desk':desk,'chair':chair,'plant':plant,'sofa':sofa,'bookshelf':bookshelf,'table':table,
      'watercooler':watercooler,'door':door,'cabin':cabin,'excavator':excavator,'fence':fence,
      'cone':cone,'railstack':railstack,'sleeperstack':sleeperstack,'ballastpile':ballastpile,
-     'lockers':lockers,'tamper':tamper,'dumper':dumper}
+     'lockers':lockers,'tamper':tamper,'dumper':dumper,
+     'palletrack':palletrack,'cratestack':cratestack,'forklift':forklift,
+     'conftable':conftable,'projscreen':projscreen,'wallchart':wallchart,
+     'draftboard':draftboard,'plotter':plotter,'pinboard':pinboard,'modeltable':modeltable}
 
 # ---------------- TILES (16x16) ----------------
 def tile_floor():
@@ -269,8 +354,37 @@ def tile_tilefloor():
             if x%8==0 or y%8==0: s.set(x,y,darken(base,14))
             else: s.set(x,y, base if (x//8+y//8)%2 else lighten(base,8))
     return s
+def tile_concrete():   # warehouse concrete with expansion joints
+    s=Spr(16,16);base=h2('#b6bcc2')
+    for y in range(16):
+        for x in range(16):
+            c=base;r=(x*5+y*3)%13
+            if r==0:c=darken(base,8)
+            elif r==1:c=lighten(base,6)
+            if x%8==0 or y%8==0:c=darken(base,14)
+            s.set(x,y,c)
+    return s
+def tile_parquet():    # warm studio parquet, alternating plank blocks
+    s=Spr(16,16);a=h2('#c9a05a');b=h2('#bb8c48')
+    for y in range(16):
+        for x in range(16):
+            blk=((x//8)+(y//8))%2
+            c=a if blk else b
+            if (blk==0 and y%8==0) or (blk==1 and x%8==0):c=darken(c,12)
+            if (blk==0 and x%4==0) or (blk==1 and y%4==0):c=darken(c,5)
+            s.set(x,y,c)
+    return s
+def tile_boardcarpet(): # deep boardroom carpet with subtle weave
+    s=Spr(16,16);base=h2('#3f5e86')
+    for y in range(16):
+        for x in range(16):
+            c=base if (x//2+y//2)%2 else lighten(base,7)
+            if (x+y)%6==0:c=darken(base,8)
+            s.set(x,y,c)
+    return s
 TILE={'floor':tile_floor,'wall':tile_wall,'wallbase':tile_wallbase,'grass':tile_grass,
-      'gravel':tile_gravel,'track':tile_track,'platform':tile_platform,'platedge':tile_platedge,'carpetM':tile_carpetM,'carpetO':tile_carpetO,'tilefloor':tile_tilefloor}
+      'gravel':tile_gravel,'track':tile_track,'platform':tile_platform,'platedge':tile_platedge,'carpetM':tile_carpetM,'carpetO':tile_carpetO,'tilefloor':tile_tilefloor,
+      'concrete':tile_concrete,'parquet':tile_parquet,'boardcarpet':tile_boardcarpet}
 
 # ---------------- PACK ATLAS ----------------
 items=[]

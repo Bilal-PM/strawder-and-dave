@@ -451,3 +451,19 @@ The registry paid off — both areas dropped in as data:
 - Harness now loops all three new interiors (spawn + area-NPC reachable, NPC has dialogue, every zone
   reachable) and office↔interior transitions. **49/49 green**, node --check clean. Verified both layouts via
   Python renders. Phase D complete — five playable areas; next is Phase E (leadership-style dialogue rewrite).
+
+
+### 2026-06-15 — Iteration 30 (bespoke art: make each new location feel unique)
+Owner: the new locations reused the same furniture and felt samey; make high-quality, unique assets.
+- **13 new atlas sprites** authored in `tools/bake_atlas.py` (atlas 26→42 entries): warehouse `palletrack`,
+  `cratestack`, `forklift`; boardroom `conftable` (long), `projscreen`, `wallchart`; studio `draftboard`,
+  `plotter`, `pinboard`, `modeltable`; plus 3 distinct floor tiles — `concrete`, `parquet`, `boardcarpet`.
+- **Re-themed each interior** with its own props + floor so it reads as a different place:
+  - **Supplier** → concrete warehouse: pallet racking along the back wall, crate stacks, a forklift, the trade
+    counter + railway material stock.
+  - **Boardroom** → deep weave carpet: a long conference table (laptop/jug/mugs), six chairs, a wall projector
+    screen with a chart, framed RAG charts.
+  - **Studio** → parquet: three drafting boards with blueprints, a 3D site-model table, a large-format plotter,
+    pinned-blueprint boards on the wall, a spec library.
+- Re-baked atlas, re-synced inlined `ATLAS`, verified all three layouts + the new props via Python renders.
+  Denser layouts stay fully reachable. **49/49 green**, node --check clean.
