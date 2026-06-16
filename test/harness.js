@@ -77,7 +77,7 @@ let code=scripts.join('\n;\n');
 // epilogue: capture top-level consts/fns into global for assertions
 const names=['S','applyEffects','advanceWeek','getPhase','getPhaseIdx','getDlgPhaseIdx','chooseDlg','NPCS','OMAP','SMAP','ZONES','isSolid','render','updatePlayer','startGame','newGame','selectCharacter','beginGame','saveGame','loadGame','EVENTS','PHASES','DLG','transitionToMap','showEvent','triggerEvent','getObjectives','updateHUD','updateNotepad','WALK_FRAMES','updateNPCAI','CHARS','ATLAS','drawSprite','OFFICE_W','OFFICE_H','OFFICE_OBJECTS','OFFICE_SOLID_OBJ','objBaseCells','OFFICE_SOLID','SITE_W','SITE_H','SITE_OBJECTS','SITE_SOLID_OBJ','ZONES','NPC_WANDER_OFFICE','NPC_WANDER_SITE','siteTrackFrac','POPUPS','enterWeek','afterEvent','chooseEvent','closeReport','REPORT_WEEKS','getObjectives','showEndScreen','chooseDlg','openNPCDialogue','interactionSpent','spendInteraction','getDlgPhaseIdx','EVENTS','showInsight','rng','seedRng','DIFFICULTY','diff','getPMRating','getLeadershipArchetype','resolveRisk','eventCallback','PERSONA','reflectionNote','showEvent','showReport','applyEventChoice','skipPhase','hintsVisible','metricDeltaHTML','snapshotMetrics','showLockerRoom','togglePPE','closeEventResult','presentEvent','beginDecision','eventHesitate','eventTimerMs','startEventTimer','stopEventTimer','tickEventTimer','SCENES','THEMES','getTheme','setMasterVolume','playMumble','VOICE','playSFX','playLocationAmbient','startBGM','stopBGM','DELIVERABLES','deliverableAvailable','deliverablesAvailableCount','openDeliverable','recordMetricHistory','perfPanelHTML','perfBarsHTML','showDocsOverlay','startNewWeek','MAPS','MD','npcCell','mapW','mapH','SUPPLIER_W','SUPPLIER_H','SUPMAP','transitionToMap','updateTransition','tallyLeadership','dominantStyle','STYLE_KEY','activateZone','PPE_REQUIRED','completeObj','AREA_LABELS','TOWN_W','TOWN_H','TOWNMAP',
 'startArrival','updateArrival','skipArrival','endArrival','updateCamera','CS_MOODS','csEnterClass','townRouteEntrances',
-'startTrailer','updateTrailer','skipTrailer','endTrailer','drawTrailer','TRAILER_SCENES','showCharSelect','CTX'];
+'startTrailer','updateTrailer','skipTrailer','endTrailer','drawTrailer','TRAILER_SCENES','showCharSelect','CTX','advanceTrailerScene'];
 code+='\n;globalThis.__G=(function(){const o={};'+names.map(n=>`try{o['${n}']=${n};}catch(e){}`).join('')+'return o;})();';
 
 const results={pass:[],fail:[]};
@@ -194,7 +194,12 @@ check('opening trailer: every scene renders without throwing, the timeline ends 
   while(g.S.trailer&&guard++<400){ g.updateTrailer(200); }
   if(g.S.trailer) throw new Error('trailer never ended');
   if(g.S.screen!=='charSelect') throw new Error('trailer did not hand to character select, got '+g.S.screen);
-  // SPACE/tap skip ends it immediately
+  // tap/SPACE pages forward one scene at a time, ending at character select on the last
+  g.startTrailer(); const n=g.TRAILER_SCENES.length;
+  for(let i=0;i<n-1;i++){ const before=g.S.trailer.scene; g.advanceTrailerScene(); if(g.S.trailer.scene!==before+1) throw new Error('advance did not page forward a scene'); }
+  g.advanceTrailerScene(); // off the last scene → char select
+  if(g.S.trailer) throw new Error('advancing past the last scene did not end the trailer');
+  // ESC skip ends it immediately
   g.startTrailer(); g.skipTrailer();
   if(g.S.trailer) throw new Error('skip did not end the trailer');
 });

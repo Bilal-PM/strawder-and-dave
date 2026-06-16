@@ -1623,7 +1623,7 @@ function toggleSFX(){
 document.addEventListener('keydown',e=>{
   if(document.activeElement&&document.activeElement.tagName==='INPUT')return;
   S.keys[e.key]=true;
-  if(S.screen==='trailer'){ if(e.key===' '||e.key==='Enter'||e.key==='Escape'){e.preventDefault();skipTrailer();} return; }
+  if(S.screen==='trailer'){ if(e.key==='Escape'){e.preventDefault();skipTrailer();} else if(e.key===' '||e.key==='Enter'){e.preventDefault();advanceTrailerScene();} return; }
   if(e.key===' '||e.key==='Enter'){e.preventDefault();handleInteract();}
   if(e.key==='Escape'){closeAllModals();}
 });
@@ -1632,7 +1632,7 @@ document.addEventListener('keyup',e=>{
   S.keys[e.key]=false;
 });
 // Click / tap anywhere on the canvas skips the opening trailer.
-(function(){ const cv=document.getElementById('cv'); if(cv)cv.addEventListener('pointerdown',()=>{ if(S.screen==='trailer')skipTrailer(); }); })();
+(function(){ const cv=document.getElementById('cv'); if(cv)cv.addEventListener('pointerdown',()=>{ if(S.screen==='trailer')advanceTrailerScene(); }); })();
 
 // Bug 4: Prevent keyboard bleed from name input
 document.addEventListener('DOMContentLoaded',()=>{
@@ -4064,13 +4064,24 @@ function drawArrivalOverlay(ctx){
 // A short, skippable motion-graphics montage on the canvas that sells the hook:
 // drive in → lead a team → make trade-offs → build the railway → deliver. No libs.
 const TRAILER_SCENES=[
-  {d:2600}, // 0 title + car
-  {d:3000}, // 1 the team
-  {d:2900}, // 2 trade-offs
-  {d:2800}, // 3 build the railway
-  {d:2400}, // 4 deliver
-  {d:2600}  // 5 end card
+  {d:3200}, // 0 title + car
+  {d:3700}, // 1 the team
+  {d:3500}, // 2 trade-offs
+  {d:3400}, // 3 build the railway
+  {d:3000}, // 4 deliver
+  {d:3300}  // 5 end card
 ];
+// Short musical sting tuned to the trailer (rising fanfare) + a chime between scenes.
+function playTrailerSting(){
+  if(!audioCtx)return;
+  [392,523,659,784].forEach((f,i)=>playNote(f,0.5,'triangle',0.10,i*0.14)); // G–C–E–G rising
+  playNote(1047,0.8,'sine',0.06,0.58);
+}
+function playTrailerBeat(scene){
+  if(!audioCtx)return;
+  if(scene>=TRAILER_SCENES.length-1){ [523,659,784,1047].forEach((f,i)=>playNote(f,0.55,'triangle',0.09,i*0.11)); } // finale lift
+  else playNote(523+scene*44,0.18,'sine',0.05,0);
+}
 const TR_METRICS=[['SCHEDULE','#5b8ef5'],['BUDGET','#4aca8a'],['SAFETY','#e05577'],['QUALITY','#b08fd8'],['MORALE','#f7c948']];
 function startTrailer(){
   if(!audioCtx)initAudio();
@@ -4080,7 +4091,7 @@ function startTrailer(){
   S.trailer={scene:0,t:0};
   PARTICLES.length=0;
   if(S.musicOn){ try{ startBGM(); }catch(e){} }
-  playSFX('positive');
+  playTrailerSting();
 }
 function updateTrailer(dt){
   const tr=S.trailer; if(!tr)return;
@@ -4088,10 +4099,17 @@ function updateTrailer(dt){
   if(tr.t>=TRAILER_SCENES[tr.scene].d){
     tr.scene++; tr.t=0;
     if(tr.scene>=TRAILER_SCENES.length){ endTrailer(); return; }
-    playSFX('interact'); // soft beat between scenes
+    playTrailerBeat(tr.scene);
   }
 }
-function skipTrailer(){ if(S.trailer)endTrailer(); }
+// Tap / SPACE pages forward one scene (lets you self-pace); the last scene hands to character select.
+function advanceTrailerScene(){
+  const tr=S.trailer; if(!tr)return;
+  tr.scene++; tr.t=0;
+  if(tr.scene>=TRAILER_SCENES.length){ endTrailer(); return; }
+  playTrailerBeat(tr.scene);
+}
+function skipTrailer(){ if(S.trailer)endTrailer(); } // ESC jumps straight to character select
 function endTrailer(){ S.trailer=null; showCharSelect(); }
 // ease + scaled-character helpers
 function _trEase(p){ return 1-(1-p)*(1-p); }
@@ -4121,7 +4139,7 @@ function drawTrailer(ctx){
     // road strip + car driving across, big title drops in
     ctx.fillStyle='#22262c'; ctx.fillRect(0,IH-70,IW,40);
     ctx.fillStyle='#f0c83e'; for(let x=8;x<IW;x+=28){ ctx.fillRect(x,IH-51,12,2); }
-    const carX=-60+(_trEase(Math.min(1,t/2200)))*(IW+90);
+    const carX=-60+(_trEase(Math.min(1,t/2700)))*(IW+90);
     drawCarAt(ctx,carX,IH-70);
     const drop=_trEase(Math.min(1,t/600));
     _trText(ctx,'PROJECT VALLEY',IW/2,40-(1-drop)*30,18,'#f7c948',fade*drop);
@@ -4131,7 +4149,7 @@ function drawTrailer(ctx){
     _trText(ctx,'LEAD A TEAM OF EXPERTS',IW/2,40,11,'#9bc0ff',fade);
     const names=['Sarah · Design','Mike · Site','Emma · Safety','James · Commercial','Priya · Comms'];
     for(let i=0;i<5;i++){
-      const intro=Math.min(1,Math.max(0,(t-300-i*320)/420));
+      const intro=Math.min(1,Math.max(0,(t-340-i*380)/460));
       if(intro<=0)continue;
       const e=_trEase(intro);
       const cx=58+i*92, cy=170+(1-e)*60;
@@ -4166,7 +4184,7 @@ function drawTrailer(ctx){
   }else if(sc===3){
     _trText(ctx,'BUILD THE RAILWAY',IW/2,38,11,'#f0a050',fade);
     // track laying left→right
-    const laid=_trEase(Math.min(1,t/2000)); const ty=180;
+    const laid=_trEase(Math.min(1,t/2500)); const ty=180;
     for(let i=0;i<24;i++){ const tx=20+i*18; drawSprite(ctx,(i/24<=laid)?'track':'gravel',tx,ty,TS+1,TS+1); }
     // a couple of machines + a worker over the works
     drawSprite(ctx,'excavator',70+Math.sin(now/500)*4,ty-44);
@@ -4186,7 +4204,7 @@ function drawTrailer(ctx){
       ctx.globalAlpha=1;
     }
     // star rating
-    const stars=Math.floor(Math.min(5,(t/2200)*5));
+    const stars=Math.floor(Math.min(5,(t/2700)*5));
     for(let s2=0;s2<5;s2++){ _trText(ctx,'★',IW/2-44+s2*22,210,16,s2<stars?'#f7c948':'#3a3050',fade); }
     _trText(ctx,'Score your leadership. Earn your stars.',IW/2,250,8,'#cbb38a',fade);
   }else if(sc===5){
@@ -4201,7 +4219,7 @@ function drawTrailer(ctx){
   // chrome: progress dots + skip hint
   ctx.globalAlpha=1; ctx.textAlign='center'; ctx.textBaseline='middle';
   for(let i=0;i<TRAILER_SCENES.length;i++){ ctx.fillStyle=i===sc?'#f7c948':'rgba(240,230,211,0.3)'; ctx.fillRect(IW/2-26+i*9,IH-14,5,3); }
-  ctx.textAlign='right'; _trText(ctx,'SPACE to skip ▶',IW-8,12,7,'rgba(240,230,211,0.7)',1);
+  ctx.textAlign='right'; _trText(ctx,'tap / SPACE: next   ·   ESC: skip',IW-8,12,7,'rgba(240,230,211,0.7)',1);
   ctx.textAlign='left'; ctx.textBaseline='alphabetic';
 }
 

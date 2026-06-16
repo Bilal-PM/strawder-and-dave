@@ -683,3 +683,14 @@ Three issues from the owner's playtest:
 - Harness: new trailer test (every scene renders without throwing; timeline ends at char select; skip works);
   transition test ticks bumped for the longer site fade. **62/62 green**, node --check clean. Independent
   review: no P0/P1. (Trailer is animated canvas — owner playtest confirms the visual feel.)
+
+
+### 2026-06-16 — Iteration 44 (trailer polish: pacing, music sting, click-to-advance)
+Owner feedback on the opening trailer ("good, but slow it down just a tad" + the two offered next steps):
+- **Pacing** — scene durations bumped ~20% (now ~20s auto-play) and a few internal animations (car drive,
+  team stagger, track laying, star fill) eased out a touch so nothing feels rushed.
+- **Music sting** — a short rising fanfare (`playTrailerSting`) plays on start and a chime between scenes,
+  with a brighter lift on the finale (`playTrailerBeat`).
+- **Click to advance** — tap / SPACE now pages forward one scene at a time (self-pace), while **ESC** skips
+  straight to character select; on-screen hint updated to match.
+- Harness extended (page-forward one scene at a time ends at char select). **62/62 green**, node --check clean.
