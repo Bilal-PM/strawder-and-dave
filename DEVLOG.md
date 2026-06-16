@@ -665,3 +665,21 @@ Three issues from the owner's playtest:
   break "talk to all leads" or the per-NPC DLG/voice requirements.
 - New harness coverage for decor placement/staticness; **61/61 green**, node --check clean; site decor placement
   rendered. Independent review gating the push.
+
+
+### 2026-06-16 — Iteration 43 (opening trailer, tile-seam fix, cinematic transitions)
+- **Tile-seam artefact** (owner: "a line going top to bottom as I walk, on the grass") — the fractional
+  device-pixel canvas scale left sub-pixel gaps between ground tiles that drifted as the camera moved.
+  `drawSprite` gained an optional draw size; ground/wall tiles now blit 1px larger (`TILE_BLEED=TS+1`) so
+  neighbours overlap and the seam is gone. Objects/characters unchanged.
+- **Opening trailer** — a short, skippable Stardew-style cold-open montage on the canvas before character
+  select (title "New Game" → trailer → char select). Six timed scenes: drive-in title card, "lead a team of
+  experts" (the five leads slide in), "every choice is a trade-off" (metric bars swinging), "build the railway"
+  (track laying L→R with plant), "on time · on budget · safely" (glowing metrics + stars), and an end card.
+  dt-driven state machine (`startTrailer/updateTrailer/skipTrailer/endTrailer/drawTrailer`); SPACE/Esc/tap skip.
+- **Cinematic map transitions** — `startTransition` now takes a destination label; `transitionToMap` shows a
+  title card as the screen darkens and gives the **construction site** a longer, signed transition
+  ("🚧 To the Construction Site") so heading into the delivery works reads as a deliberate scene change.
+- Harness: new trailer test (every scene renders without throwing; timeline ends at char select; skip works);
+  transition test ticks bumped for the longer site fade. **62/62 green**, node --check clean. Independent
+  review: no P0/P1. (Trailer is animated canvas — owner playtest confirms the visual feel.)

@@ -167,7 +167,7 @@ body{background:#3a2a18;color:#f0e6d3;font-family:'Press Start 2P',monospace;ove
   <h1>PROJECT VALLEY</h1>
   <p class="sub">Build the Railway. Deliver the Project.</p>
   <canvas id="titleArt" width="320" height="100" style="image-rendering:pixelated;margin-bottom:16px"></canvas>
-  <button class="btn gld" onclick="showCharSelect()">New Game</button>
+  <button class="btn gld" onclick="startTrailer()">New Game</button>
   <button class="btn sm" onclick="loadGame()" id="contBtn" style="display:none">Continue</button>
   <p style="font-size:9px;color:#6a4f9a;margin-top:20px;line-height:1.8">Arrow Keys / WASD to move · SPACE to interact</p>
 </div>
@@ -576,10 +576,10 @@ const WALK_FRAMES=6; // walk-cycle length for the player/NPC animation counters
 // the build stays a single self-contained file (no manifest.json fetch needed).
 const ATLAS={"floor":[0,0,16,16],"wall":[17,0,16,16],"wallbase":[34,0,16,16],"grass":[51,0,16,16],"gravel":[68,0,16,16],"track":[85,0,16,16],"platform":[102,0,16,16],"platedge":[119,0,16,16],"carpetM":[136,0,16,16],"carpetO":[153,0,16,16],"tilefloor":[170,0,16,16],"concrete":[187,0,16,16],"parquet":[204,0,16,16],"boardcarpet":[221,0,16,16],"road":[238,0,16,16],"roadline":[0,17,16,16],"pavement":[17,17,16,16],"desk":[34,17,32,22],"chair":[67,17,14,16],"plant":[82,17,16,20],"sofa":[99,17,40,20],"bookshelf":[140,17,20,28],"table":[161,17,48,24],"watercooler":[210,17,12,22],"door":[223,17,20,8],"cabin":[0,46,52,40],"excavator":[53,46,48,44],"fence":[102,46,16,26],"cone":[119,46,10,14],"railstack":[130,46,44,12],"sleeperstack":[175,46,26,18],"ballastpile":[202,46,28,14],"lockers":[0,91,36,30],"tamper":[37,91,44,26],"dumper":[82,91,32,24],"palletrack":[115,91,30,38],"cratestack":[146,91,22,22],"forklift":[169,91,26,26],"conftable":[196,91,60,26],"projscreen":[0,130,30,20],"wallchart":[31,130,18,16],"draftboard":[50,130,24,22],"plotter":[75,130,26,20],"pinboard":[102,130,28,16],"modeltable":[131,130,30,18],"tree":[162,130,18,26],"tree2":[181,130,22,30],"car":[204,130,48,26],"pond":[0,161,64,40],"ext_office":[65,161,56,52],"ext_supplier":[122,161,60,48],"ext_board":[183,161,56,52],"ext_studio":[0,214,52,44],"ext_site":[53,214,56,46]};
 // Blit a named atlas sprite at world px (dx,dy). Returns false if the atlas isn't loaded.
-function drawSprite(ctx,name,dx,dy){
+function drawSprite(ctx,name,dx,dy,dw,dh){
   const a=ATLAS[name],img=ASSETS['atlas'];
   if(!a||!img||!img.naturalWidth)return false;
-  ctx.drawImage(img,a[0],a[1],a[2],a[3],Math.floor(dx),Math.floor(dy),a[2],a[3]);
+  ctx.drawImage(img,a[0],a[1],a[2],a[3],Math.floor(dx),Math.floor(dy),dw||a[2],dh||a[3]);
   return true;
 }
 
@@ -1623,6 +1623,7 @@ function toggleSFX(){
 document.addEventListener('keydown',e=>{
   if(document.activeElement&&document.activeElement.tagName==='INPUT')return;
   S.keys[e.key]=true;
+  if(S.screen==='trailer'){ if(e.key===' '||e.key==='Enter'||e.key==='Escape'){e.preventDefault();skipTrailer();} return; }
   if(e.key===' '||e.key==='Enter'){e.preventDefault();handleInteract();}
   if(e.key==='Escape'){closeAllModals();}
 });
@@ -1630,6 +1631,8 @@ document.addEventListener('keyup',e=>{
   if(document.activeElement&&document.activeElement.tagName==='INPUT')return;
   S.keys[e.key]=false;
 });
+// Click / tap anywhere on the canvas skips the opening trailer.
+(function(){ const cv=document.getElementById('cv'); if(cv)cv.addEventListener('pointerdown',()=>{ if(S.screen==='trailer')skipTrailer(); }); })();
 
 // Bug 4: Prevent keyboard bleed from name input
 document.addEventListener('DOMContentLoaded',()=>{
@@ -2636,9 +2639,12 @@ function resolveTrackIssue(btn,issueIdx,correct){
   updateHUD();
 }
 
+const MAP_TITLE={town:'Project Valley',office:'Project Office',site:'🚧 To the Construction Site',supplier:'Supplier Depot',boardroom:'Client Boardroom',studio:'Design Studio'};
 function transitionToMap(target){
   // Remember where we stood in the town so returning drops us back by the building we entered.
   if(S.map==='town'){ S._townPos={x:S.px,y:S.py}; }
+  // The delivery works get a slightly longer, signed transition so heading on-site feels cinematic.
+  const dur=(target==='site')?640:430;
   startTransition(()=>{
     S.map=target;
     PARTICLES.length=0; // Clear particles on map change
@@ -2652,7 +2658,7 @@ function transitionToMap(target){
     // Restart BGM so the soundtrack switches to the destination's theme.
     if(musicPlaying){stopBGM();startBGM();}
     playSFX('doorClose'); // door shuts behind you as you arrive
-  },400);
+  },dur,MAP_TITLE[target]||'');
   playSFX('doorOpen');    // door opens as you leave
 }
 
@@ -3919,14 +3925,15 @@ function spawnAmbientParticles(dt){
 }
 
 // === SCREEN TRANSITIONS ===
-const TRANS={active:false,alpha:0,phase:'none',callback:null,duration:400};
+const TRANS={active:false,alpha:0,phase:'none',callback:null,duration:400,label:''};
 
-function startTransition(callback,duration){
+function startTransition(callback,duration,label){
   TRANS.active=true;
   TRANS.alpha=0;
   TRANS.phase='out';
   TRANS.callback=callback;
   TRANS.duration=duration||400;
+  TRANS.label=label||'';
 }
 
 function updateTransition(dt){
@@ -3951,8 +3958,19 @@ function updateTransition(dt){
 
 function drawTransition(ctx){
   if(!TRANS.active||TRANS.alpha<=0)return;
-  ctx.fillStyle='rgba(58,42,24,'+TRANS.alpha+')';
+  ctx.fillStyle='rgba(36,26,16,'+TRANS.alpha+')';
   ctx.fillRect(0,0,IW,IH);
+  // Destination title card — fades up as the screen darkens, so a map change reads as a scene change.
+  if(TRANS.label){
+    const a=Math.max(0,(TRANS.alpha-0.4)/0.6);
+    if(a>0){
+      ctx.globalAlpha=a; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.font='bold 12px monospace'; ctx.fillStyle='#f7c948';
+      ctx.fillText(TRANS.label,IW/2,IH/2-2);
+      ctx.fillStyle='rgba(247,201,72,'+(a*0.55)+')'; ctx.fillRect(IW/2-46,IH/2+12,92,1);
+      ctx.globalAlpha=1; ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+    }
+  }
 }
 
 // === ARRIVAL CUT-SCENE (new game): PM drives in from the LEFT along the road into town ===
@@ -4039,6 +4057,151 @@ function drawArrivalOverlay(ctx){
     ctx.fillStyle='rgba(240,230,211,0.7)';
     ctx.fillText('SPACE to skip',IW-6,IH-8);
   }
+  ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+}
+
+// === OPENING TRAILER (Stardew-style cold open before character select) ===
+// A short, skippable motion-graphics montage on the canvas that sells the hook:
+// drive in → lead a team → make trade-offs → build the railway → deliver. No libs.
+const TRAILER_SCENES=[
+  {d:2600}, // 0 title + car
+  {d:3000}, // 1 the team
+  {d:2900}, // 2 trade-offs
+  {d:2800}, // 3 build the railway
+  {d:2400}, // 4 deliver
+  {d:2600}  // 5 end card
+];
+const TR_METRICS=[['SCHEDULE','#5b8ef5'],['BUDGET','#4aca8a'],['SAFETY','#e05577'],['QUALITY','#b08fd8'],['MORALE','#f7c948']];
+function startTrailer(){
+  if(!audioCtx)initAudio();
+  document.getElementById('title').className='scr';
+  document.getElementById('charSel').className='scr';
+  S.screen='trailer';
+  S.trailer={scene:0,t:0};
+  PARTICLES.length=0;
+  if(S.musicOn){ try{ startBGM(); }catch(e){} }
+  playSFX('positive');
+}
+function updateTrailer(dt){
+  const tr=S.trailer; if(!tr)return;
+  tr.t+=dt;
+  if(tr.t>=TRAILER_SCENES[tr.scene].d){
+    tr.scene++; tr.t=0;
+    if(tr.scene>=TRAILER_SCENES.length){ endTrailer(); return; }
+    playSFX('interact'); // soft beat between scenes
+  }
+}
+function skipTrailer(){ if(S.trailer)endTrailer(); }
+function endTrailer(){ S.trailer=null; showCharSelect(); }
+// ease + scaled-character helpers
+function _trEase(p){ return 1-(1-p)*(1-p); }
+function _trChar(ctx,cfg,x,y,s,dir,frame){
+  ctx.save(); ctx.translate(Math.round(x),Math.round(y)); ctx.scale(s,s);
+  try{ drawChar(ctx,cfg,dir||0,frame||0,0,0,false); }catch(e){}
+  ctx.restore();
+}
+function _trText(ctx,txt,x,y,size,col,a){
+  ctx.globalAlpha=a==null?1:a; ctx.font='bold '+size+'px monospace';
+  ctx.fillStyle=col; ctx.fillText(txt,x,y); ctx.globalAlpha=1;
+}
+function drawTrailer(ctx){
+  const tr=S.trailer; if(!tr)return;
+  const sc=tr.scene, t=tr.t, d=TRAILER_SCENES[sc].d, p=Math.min(1,t/d);
+  const fade=Math.min(Math.min(1,t/360),Math.min(1,(d-t)/360)); // ease in + out per scene
+  // cinematic backdrop + drifting motes
+  const bg=ctx.createLinearGradient(0,0,0,IH);
+  bg.addColorStop(0,'#1c1530'); bg.addColorStop(1,'#0b0712');
+  ctx.fillStyle=bg; ctx.fillRect(0,0,IW,IH);
+  const now=Date.now();
+  ctx.fillStyle='rgba(247,201,72,0.10)';
+  for(let i=0;i<14;i++){ const mx=(i*53+now*0.012*(1+i%3))%IW, my=(i*37+now*0.006)%IH; ctx.fillRect(mx,my,1,1); }
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+
+  if(sc===0){
+    // road strip + car driving across, big title drops in
+    ctx.fillStyle='#22262c'; ctx.fillRect(0,IH-70,IW,40);
+    ctx.fillStyle='#f0c83e'; for(let x=8;x<IW;x+=28){ ctx.fillRect(x,IH-51,12,2); }
+    const carX=-60+(_trEase(Math.min(1,t/2200)))*(IW+90);
+    drawCarAt(ctx,carX,IH-70);
+    const drop=_trEase(Math.min(1,t/600));
+    _trText(ctx,'PROJECT VALLEY',IW/2,40-(1-drop)*30,18,'#f7c948',fade*drop);
+    _trText(ctx,'A railway project-management adventure',IW/2,66,8,'#cbb38a',fade*Math.min(1,Math.max(0,(t-500)/500)));
+    _trText(ctx,'You\'ve been appointed Project Manager.',IW/2,IH-100,9,'#e8d4b0',fade*Math.min(1,Math.max(0,(t-900)/500)));
+  }else if(sc===1){
+    _trText(ctx,'LEAD A TEAM OF EXPERTS',IW/2,40,11,'#9bc0ff',fade);
+    const names=['Sarah · Design','Mike · Site','Emma · Safety','James · Commercial','Priya · Comms'];
+    for(let i=0;i<5;i++){
+      const intro=Math.min(1,Math.max(0,(t-300-i*320)/420));
+      if(intro<=0)continue;
+      const e=_trEase(intro);
+      const cx=58+i*92, cy=170+(1-e)*60;
+      ctx.globalAlpha=fade*e;
+      _trChar(ctx,NPCS[i],cx-14,cy-44,2.4,0,0);
+      ctx.globalAlpha=1;
+      _trText(ctx,names[i].split(' · ')[0],cx,cy+18,8,'#f0e6d3',fade*e);
+      _trText(ctx,names[i].split(' · ')[1],cx,cy+30,7,'#8a7fad',fade*e);
+    }
+  }else if(sc===2){
+    _trText(ctx,'EVERY CHOICE IS A TRADE-OFF',IW/2,38,11,'#caa6e8',fade);
+    // two decision chips
+    const chipA=Math.min(1,Math.max(0,(t-300)/400)), chipB=Math.min(1,Math.max(0,(t-700)/400));
+    ctx.globalAlpha=fade*chipA; ctx.fillStyle='#2a2440'; ctx.fillRect(40,66,180,26); ctx.strokeStyle='#f7c948'; ctx.strokeRect(40,66,180,26);
+    _trText(ctx,'Push the schedule',130,79,8,'#f0e6d3',fade*chipA);
+    ctx.globalAlpha=fade*chipB; ctx.fillStyle='#2a2440'; ctx.fillRect(260,66,180,26); ctx.strokeStyle='#8a7fad'; ctx.strokeRect(260,66,180,26);
+    _trText(ctx,'Protect the budget',350,79,8,'#f0e6d3',fade*chipB);
+    ctx.globalAlpha=1;
+    // metric bars swinging to show give-and-take
+    const dirs=[1,-1,1,-1,1];
+    for(let i=0;i<5;i++){
+      const bx=70, by=120+i*30, bw=220;
+      const swing=Math.sin(now/360+i)*0.5+0.5;
+      const fillv=0.5+dirs[i]*(swing-0.5)*0.7;
+      _trText(ctx,TR_METRICS[i][0],bx-8,by+6,7,'#cbb38a',fade); ctx.textAlign='left';
+      ctx.globalAlpha=fade; ctx.fillStyle='#241c34'; ctx.fillRect(bx+58,by,bw,10);
+      ctx.fillStyle=TR_METRICS[i][1]; ctx.fillRect(bx+58,by,bw*Math.max(0.06,fillv),10);
+      ctx.globalAlpha=1;
+      _trText(ctx,dirs[i]>0?'▲':'▼',bx+58+bw+12,by+6,8,dirs[i]>0?'#86f08a':'#ff7a8a',fade);
+      ctx.textAlign='center';
+    }
+  }else if(sc===3){
+    _trText(ctx,'BUILD THE RAILWAY',IW/2,38,11,'#f0a050',fade);
+    // track laying left→right
+    const laid=_trEase(Math.min(1,t/2000)); const ty=180;
+    for(let i=0;i<24;i++){ const tx=20+i*18; drawSprite(ctx,(i/24<=laid)?'track':'gravel',tx,ty,TS+1,TS+1); }
+    // a couple of machines + a worker over the works
+    drawSprite(ctx,'excavator',70+Math.sin(now/500)*4,ty-44);
+    drawSprite(ctx,'dumper',300+laid*60,ty-22);
+    _trChar(ctx,NPCS[1],200,ty-30,2.2,3,0); // Mike on site
+    _trText(ctx,'Surveys · procurement · construction · handover',IW/2,IH-46,8,'#cbb38a',fade);
+  }else if(sc===4){
+    _trText(ctx,'ON TIME · ON BUDGET · SAFELY',IW/2,44,11,'#6fe0a0',fade);
+    // five glowing metric pills
+    for(let i=0;i<5;i++){
+      const intro=Math.min(1,Math.max(0,(t-200-i*220)/360)); const e=_trEase(intro);
+      const cx=58+i*92, cy=150;
+      ctx.globalAlpha=fade*e;
+      ctx.fillStyle=TR_METRICS[i][1]; ctx.beginPath(); ctx.arc(cx,cy,16+Math.sin(now/300+i)*1.5,0,Math.PI*2); ctx.fill();
+      ctx.globalAlpha=fade*e;
+      _trText(ctx,TR_METRICS[i][0],cx,cy+34,7,'#e8d4b0',fade*e);
+      ctx.globalAlpha=1;
+    }
+    // star rating
+    const stars=Math.floor(Math.min(5,(t/2200)*5));
+    for(let s2=0;s2<5;s2++){ _trText(ctx,'★',IW/2-44+s2*22,210,16,s2<stars?'#f7c948':'#3a3050',fade); }
+    _trText(ctx,'Score your leadership. Earn your stars.',IW/2,250,8,'#cbb38a',fade);
+  }else if(sc===5){
+    const pop=_trEase(Math.min(1,t/600));
+    _trText(ctx,'YOUR PROJECT.',IW/2,120-(1-pop)*16,16,'#f7c948',fade*pop);
+    _trText(ctx,'YOUR CALL.',IW/2,150-(1-pop)*8,16,'#f7c948',fade*Math.min(1,Math.max(0,(t-300)/500)));
+    const pulse=0.5+0.4*Math.sin(now/280);
+    _trText(ctx,'PROJECT VALLEY',IW/2,200,10,'#9bc0ff',fade);
+    _trText(ctx,'▶ Press SPACE to begin',IW/2,236,9,'rgba(247,201,72,'+pulse.toFixed(2)+')',fade);
+  }
+
+  // chrome: progress dots + skip hint
+  ctx.globalAlpha=1; ctx.textAlign='center'; ctx.textBaseline='middle';
+  for(let i=0;i<TRAILER_SCENES.length;i++){ ctx.fillStyle=i===sc?'#f7c948':'rgba(240,230,211,0.3)'; ctx.fillRect(IW/2-26+i*9,IH-14,5,3); }
+  ctx.textAlign='right'; _trText(ctx,'SPACE to skip ▶',IW-8,12,7,'rgba(240,230,211,0.7)',1);
   ctx.textAlign='left'; ctx.textBaseline='alphabetic';
 }
 
@@ -4272,14 +4435,17 @@ function drawChar(ctx,cfg,dir,frame,x,y,isMoving){
 }
 
 // Draw one interior ground cell from the atlas (office, supplier, …). Walls fronting onto floor get a baseboard.
+// Ground/wall tiles are blitted 1px larger (TILE_BLEED) so adjacent tiles overlap — this hides the
+// sub-pixel seams that the fractional device-pixel scaling would otherwise leave between columns/rows.
+const TILE_BLEED=TS+1;
 function drawInteriorGround(ctx,ch,x,y){
   const m=MD();
   if(ch==='#'){
     const below=(y+1<m.H)?m.grid[y+1][x]:'#';
     const key=(below!=='#')?'wallbase':'wall';
-    if(!drawSprite(ctx,key,x*TS,y*TS)){ctx.fillStyle='#cfc7b4';ctx.fillRect(x*TS,y*TS,TS,TS);}
+    if(!drawSprite(ctx,key,x*TS,y*TS,TILE_BLEED,TILE_BLEED)){ctx.fillStyle='#cfc7b4';ctx.fillRect(x*TS,y*TS,TILE_BLEED,TILE_BLEED);}
   }else{
-    if(!drawSprite(ctx,m.ground[ch]||'floor',x*TS,y*TS)){ctx.fillStyle='#c79a5e';ctx.fillRect(x*TS,y*TS,TS,TS);}
+    if(!drawSprite(ctx,m.ground[ch]||'floor',x*TS,y*TS,TILE_BLEED,TILE_BLEED)){ctx.fillStyle='#c79a5e';ctx.fillRect(x*TS,y*TS,TILE_BLEED,TILE_BLEED);}
   }
 }
 
@@ -4289,7 +4455,7 @@ function siteTrackFrac(){ const pi=getPhaseIdx(S.week); if(pi<5)return 0; if(pi=
 function drawSiteGround(ctx,ch,x,y){
   let key=SITE_GROUND[ch]||'grass';
   if(ch==='t'){ key=(x/SITE_W<=siteTrackFrac())?'track':'gravel'; } // unlaid track shows as formation/ballast, rails appear as the build progresses
-  if(!drawSprite(ctx,key,x*TS,y*TS)){ctx.fillStyle='#6fae4e';ctx.fillRect(x*TS,y*TS,TS,TS);}
+  if(!drawSprite(ctx,key,x*TS,y*TS,TILE_BLEED,TILE_BLEED)){ctx.fillStyle='#6fae4e';ctx.fillRect(x*TS,y*TS,TILE_BLEED,TILE_BLEED);}
 }
 
 // drawTile() removed — both maps render via drawOfficeGround / drawSiteGround (atlas tiles).
@@ -4433,6 +4599,7 @@ function render(){
   CTX.fillStyle=C.bg;
   CTX.fillRect(0,0,IW,IH);
 
+  if(S.screen==='trailer'){ drawTrailer(CTX); return; }
   if(S.screen!=='game')return;
 
   const mw=mapW();
@@ -4891,6 +5058,7 @@ function gameLoop(ts){
   S.lastTime=ts;
   if(IS_TOUCH){const _t=document.getElementById('touch'); if(_t)_t.style.display=(S.screen==='game')?'block':'none';}
 
+  if(S.screen==='trailer'){ updateTrailer(dt); shakeTimer+=dt; flashTimer+=dt; render(); requestAnimationFrame(gameLoop); return; }
   updatePlayer(dt);
   updateNPCAI(dt);
   if(S.arrival)updateArrival(dt);

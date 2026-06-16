@@ -76,7 +76,8 @@ const scripts=[...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script
 let code=scripts.join('\n;\n');
 // epilogue: capture top-level consts/fns into global for assertions
 const names=['S','applyEffects','advanceWeek','getPhase','getPhaseIdx','getDlgPhaseIdx','chooseDlg','NPCS','OMAP','SMAP','ZONES','isSolid','render','updatePlayer','startGame','newGame','selectCharacter','beginGame','saveGame','loadGame','EVENTS','PHASES','DLG','transitionToMap','showEvent','triggerEvent','getObjectives','updateHUD','updateNotepad','WALK_FRAMES','updateNPCAI','CHARS','ATLAS','drawSprite','OFFICE_W','OFFICE_H','OFFICE_OBJECTS','OFFICE_SOLID_OBJ','objBaseCells','OFFICE_SOLID','SITE_W','SITE_H','SITE_OBJECTS','SITE_SOLID_OBJ','ZONES','NPC_WANDER_OFFICE','NPC_WANDER_SITE','siteTrackFrac','POPUPS','enterWeek','afterEvent','chooseEvent','closeReport','REPORT_WEEKS','getObjectives','showEndScreen','chooseDlg','openNPCDialogue','interactionSpent','spendInteraction','getDlgPhaseIdx','EVENTS','showInsight','rng','seedRng','DIFFICULTY','diff','getPMRating','getLeadershipArchetype','resolveRisk','eventCallback','PERSONA','reflectionNote','showEvent','showReport','applyEventChoice','skipPhase','hintsVisible','metricDeltaHTML','snapshotMetrics','showLockerRoom','togglePPE','closeEventResult','presentEvent','beginDecision','eventHesitate','eventTimerMs','startEventTimer','stopEventTimer','tickEventTimer','SCENES','THEMES','getTheme','setMasterVolume','playMumble','VOICE','playSFX','playLocationAmbient','startBGM','stopBGM','DELIVERABLES','deliverableAvailable','deliverablesAvailableCount','openDeliverable','recordMetricHistory','perfPanelHTML','perfBarsHTML','showDocsOverlay','startNewWeek','MAPS','MD','npcCell','mapW','mapH','SUPPLIER_W','SUPPLIER_H','SUPMAP','transitionToMap','updateTransition','tallyLeadership','dominantStyle','STYLE_KEY','activateZone','PPE_REQUIRED','completeObj','AREA_LABELS','TOWN_W','TOWN_H','TOWNMAP',
-'startArrival','updateArrival','skipArrival','endArrival','updateCamera','CS_MOODS','csEnterClass','townRouteEntrances'];
+'startArrival','updateArrival','skipArrival','endArrival','updateCamera','CS_MOODS','csEnterClass','townRouteEntrances',
+'startTrailer','updateTrailer','skipTrailer','endTrailer','drawTrailer','TRAILER_SCENES','showCharSelect','CTX'];
 code+='\n;globalThis.__G=(function(){const o={};'+names.map(n=>`try{o['${n}']=${n};}catch(e){}`).join('')+'return o;})();';
 
 const results={pass:[],fail:[]};
@@ -158,9 +159,9 @@ check('town navigation: entering each town destination sets its map; each return
   g.S.ppeEquipped=true; // clear the PPE gate so worksites are enterable in the test
   pairs.forEach(([zid,mapName])=>{
     g.S.map='town';
-    g.activateZone({id:zid}); g.updateTransition(500);
+    g.activateZone({id:zid}); g.updateTransition(800);
     if(g.S.map!==mapName) throw new Error(zid+' did not enter '+mapName);
-    g.activateZone({id:'return_town'}); g.updateTransition(500);
+    g.activateZone({id:'return_town'}); g.updateTransition(800);
     if(g.S.map!=='town') throw new Error(mapName+' return_town did not go back to town');
   });
 });
@@ -168,19 +169,34 @@ check('office contains the boardroom + changing room: in-office door enters boar
   const oids=(g.ZONES.office||[]).map(z=>z.id);
   ['to_boardroom','locker_room'].forEach(id=>{ if(!oids.includes(id)) throw new Error('office missing '+id); });
   g.S.map='office';
-  g.activateZone({id:'to_boardroom'}); g.updateTransition(500);
+  g.activateZone({id:'to_boardroom'}); g.updateTransition(800);
   if(g.S.map!=='boardroom') throw new Error('to_boardroom did not enter the boardroom');
-  g.activateZone({id:'return_office'}); g.updateTransition(500);
+  g.activateZone({id:'return_office'}); g.updateTransition(800);
   if(g.S.map!=='office') throw new Error('boardroom return_office did not go back to the office');
 });
 check('PPE gate: worksites refuse entry without PPE, then admit once kitted out in the office changing room',()=>{
   g.S.map='town'; g.S.ppeEquipped=false;
-  g.activateZone({id:'to_site'}); g.updateTransition(500);
+  g.activateZone({id:'to_site'}); g.updateTransition(800);
   if(g.S.map==='site') throw new Error('site entered without PPE (gate failed)');
   g.S.ppeEquipped=true;
-  g.activateZone({id:'to_site'}); g.updateTransition(500);
+  g.activateZone({id:'to_site'}); g.updateTransition(800);
   if(g.S.map!=='site') throw new Error('site refused entry even with PPE on');
-  g.activateZone({id:'return_town'}); g.updateTransition(500);
+  g.activateZone({id:'return_town'}); g.updateTransition(800);
+});
+check('opening trailer: every scene renders without throwing, the timeline ends at character select, skip works',()=>{
+  g.startTrailer();
+  if(!g.S.trailer) throw new Error('trailer did not start');
+  if(!Array.isArray(g.TRAILER_SCENES)||g.TRAILER_SCENES.length<4) throw new Error('expected several trailer scenes');
+  // each scene must render without throwing (covers char/sprite/gradient draw paths)
+  for(let s=0;s<g.TRAILER_SCENES.length;s++){ g.S.trailer.scene=s; g.S.trailer.t=400; g.drawTrailer(g.CTX); }
+  // run the dt-driven timeline to completion → character select
+  g.S.trailer={scene:0,t:0}; let guard=0;
+  while(g.S.trailer&&guard++<400){ g.updateTrailer(200); }
+  if(g.S.trailer) throw new Error('trailer never ended');
+  if(g.S.screen!=='charSelect') throw new Error('trailer did not hand to character select, got '+g.S.screen);
+  // SPACE/tap skip ends it immediately
+  g.startTrailer(); g.skipTrailer();
+  if(g.S.trailer) throw new Error('skip did not end the trailer');
 });
 check('arrival cut-scene: drives in, parks the PM at the town spawn, waits at the briefing, then hands to play',()=>{
   g.S.screen='game'; g.S.map='town'; g.S.playerName='Test'; g.S.arrival=null;
@@ -272,11 +288,11 @@ check('new interiors (supplier/boardroom/studio): spawn+area NPC reachable, zone
 check('map registry: transitions office↔(supplier/boardroom/studio) set map+spawn and derive NPCs',()=>{
   [['supplier','raj'],['boardroom','okoye'],['studio','sarah']].forEach(([mapName,npcId])=>{
     g.S.map='office';
-    g.transitionToMap(mapName); g.updateTransition(500);
+    g.transitionToMap(mapName); g.updateTransition(800);
     if(g.S.map!==mapName) throw new Error('did not switch to '+mapName);
     if(g.S.px!==g.MAPS[mapName].spawn.x*16) throw new Error(mapName+' spawn not applied');
     if(!g.npcCell(g.NPCS.find(n=>n.id===npcId),mapName)) throw new Error(npcId+' has no '+mapName+' cell');
-    g.transitionToMap('office'); g.updateTransition(500);
+    g.transitionToMap('office'); g.updateTransition(800);
     if(g.S.map!=='office') throw new Error('did not return to office from '+mapName);
   });
 });
