@@ -4122,104 +4122,139 @@ function _trText(ctx,txt,x,y,size,col,a){
   ctx.globalAlpha=a==null?1:a; ctx.font='bold '+size+'px monospace';
   ctx.fillStyle=col; ctx.fillText(txt,x,y); ctx.globalAlpha=1;
 }
+function _trPC(){ return (CHARS&&CHARS[0])||NPCS[0]; }
+function _trNpc(id){ return NPCS.find(n=>n.id===id); }
+// Render an actual map as a live "gameplay clip": ground + objects + given characters, y-sorted,
+// under a camera offset. Used by the trailer so the segments are real game footage, not mock-ups.
+// Clamp a vignette camera so it never reveals past the map edges (centre maps smaller than the view).
+function _trClampCam(mapId,cx,cy){
+  const M=MAPS[mapId]; const mw=M.W*TS, mh=M.H*TS;
+  return [ mw<=IW?(mw-IW)/2:Math.max(0,Math.min(mw-IW,cx)), mh<=IH?(mh-IH)/2:Math.max(0,Math.min(mh-IH,cy)) ];
+}
+function drawTrailerMap(ctx,mapId,camX,camY,opts){
+  opts=opts||{};
+  const M=MAPS[mapId]; if(!M)return;
+  const cc=_trClampCam(mapId,camX,camY); camX=cc[0]; camY=cc[1];
+  const _m=S.map,_w=S.week; S.map=mapId; if(opts.week!=null)S.week=opts.week;
+  try{
+    const pi=getPhaseIdx(S.week);
+    ctx.save();
+    ctx.beginPath(); ctx.rect(0,0,IW,IH); ctx.clip();
+    ctx.translate(-Math.round(camX),-Math.round(camY));
+    const grid=M.grid,W=M.W,H=M.H;
+    const sx=Math.max(0,Math.floor(camX/TS)),sy=Math.max(0,Math.floor(camY/TS));
+    const ex=Math.min(W,Math.ceil((camX+IW)/TS)+1),ey=Math.min(H,Math.ceil((camY+IH)/TS)+1);
+    for(let y=sy;y<ey;y++)for(let x=sx;x<ex;x++){
+      if(mapId==='site')drawSiteGround(ctx,SMAP[y][x],x,y);
+      else drawInteriorGround(ctx,grid[y][x],x,y);
+    }
+    const ents=[];
+    (M.objects||[]).forEach(o=>{ const a=ATLAS[o.a]; if(!a)return; if(o.m!==undefined&&pi<o.m)return; const ox=o.tx*TS,oy=o.ty*TS; ents.push({y:o.ty*TS+a[3],draw:()=>drawSprite(ctx,o.a,ox,oy)}); });
+    if(opts.car)ents.push({y:opts.car.y+26,draw:()=>drawCarAt(ctx,opts.car.x,opts.car.y)});
+    (opts.chars||[]).forEach(c=>{ if(!c.cfg)return; ents.push({y:c.y+24,draw:()=>{ const fr=c.walk?(Math.floor(Date.now()/130)%WALK_FRAMES):0; drawChar(ctx,c.cfg,c.dir||0,fr,Math.round(c.x),Math.round(c.y),!!c.walk); }}); });
+    ents.sort((a,b)=>a.y-b.y); ents.forEach(e=>e.draw());
+    ctx.restore();
+  }finally{ S.map=_m; S.week=_w; } // always restore even if a draw throws — never leak the trailer map into the game
+}
+function _trCaption(ctx,txt,a){
+  ctx.globalAlpha=(a==null?1:a); ctx.fillStyle='rgba(10,7,4,0.74)'; ctx.fillRect(0,IH-30,IW,18);
+  ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.font='bold 9px monospace'; ctx.fillStyle='#f7e6b8';
+  ctx.fillText(txt,IW/2,IH-21); ctx.globalAlpha=1;
+}
+function _trTag(ctx,txt,a){
+  ctx.globalAlpha=(a==null?1:a)*0.92; ctx.textAlign='left'; ctx.textBaseline='middle';
+  ctx.font='bold 8px monospace'; ctx.fillStyle='#f7c948'; ctx.fillText('▸ '+txt,10,12); ctx.globalAlpha=1; ctx.textAlign='center';
+}
 function drawTrailer(ctx){
   const tr=S.trailer; if(!tr)return;
-  const sc=tr.scene, t=tr.t, d=TRAILER_SCENES[sc].d, p=Math.min(1,t/d);
-  const fade=Math.min(Math.min(1,t/360),Math.min(1,(d-t)/360)); // ease in + out per scene
-  // cinematic backdrop + drifting motes
-  const bg=ctx.createLinearGradient(0,0,0,IH);
-  bg.addColorStop(0,'#1c1530'); bg.addColorStop(1,'#0b0712');
-  ctx.fillStyle=bg; ctx.fillRect(0,0,IW,IH);
+  const sc=tr.scene, t=tr.t, d=TRAILER_SCENES[sc].d;
+  const fade=Math.min(Math.min(1,t/360),Math.min(1,(d-t)/300)); // ease in + out per scene
   const now=Date.now();
-  ctx.fillStyle='rgba(247,201,72,0.10)';
-  for(let i=0;i<14;i++){ const mx=(i*53+now*0.012*(1+i%3))%IW, my=(i*37+now*0.006)%IH; ctx.fillRect(mx,my,1,1); }
+  ctx.fillStyle='#0b0712'; ctx.fillRect(0,0,IW,IH);
   ctx.textAlign='center'; ctx.textBaseline='middle';
 
   if(sc===0){
-    // road strip + car driving across, big title drops in
-    ctx.fillStyle='#22262c'; ctx.fillRect(0,IH-70,IW,40);
-    ctx.fillStyle='#f0c83e'; for(let x=8;x<IW;x+=28){ ctx.fillRect(x,IH-51,12,2); }
-    const carX=-60+(_trEase(Math.min(1,t/2700)))*(IW+90);
-    drawCarAt(ctx,carX,IH-70);
+    // ARRIVE — real town footage: the car drives in past the buildings, logo overlaid
+    const camX=24+(t/d)*46;
+    const carX=camX-60+_trEase(Math.min(1,t/2700))*(IW+120);
+    drawTrailerMap(ctx,'town',camX,64,{car:{x:carX,y:14*TS-6}});
+    const gd=ctx.createLinearGradient(0,0,0,118); gd.addColorStop(0,'rgba(8,5,12,0.86)'); gd.addColorStop(1,'rgba(8,5,12,0)');
+    ctx.fillStyle=gd; ctx.fillRect(0,0,IW,118);
     const drop=_trEase(Math.min(1,t/600));
-    _trText(ctx,'PROJECT VALLEY',IW/2,40-(1-drop)*30,18,'#f7c948',fade*drop);
-    _trText(ctx,'A railway project-management adventure',IW/2,66,8,'#cbb38a',fade*Math.min(1,Math.max(0,(t-500)/500)));
-    _trText(ctx,'You\'ve been appointed Project Manager.',IW/2,IH-100,9,'#e8d4b0',fade*Math.min(1,Math.max(0,(t-900)/500)));
+    _trText(ctx,'PROJECT VALLEY',IW/2,42-(1-drop)*26,18,'#f7c948',fade*drop);
+    _trText(ctx,'Lead the project. Build the railway.',IW/2,66,8,'#cbb38a',fade*Math.min(1,Math.max(0,(t-500)/500)));
+    _trCaption(ctx,'You arrive to deliver a major railway upgrade.',fade);
   }else if(sc===1){
-    _trText(ctx,'LEAD A TEAM OF EXPERTS',IW/2,40,11,'#9bc0ff',fade);
-    const names=['Sarah · Design','Mike · Site','Emma · Safety','James · Commercial','Priya · Comms'];
-    for(let i=0;i<5;i++){
-      const intro=Math.min(1,Math.max(0,(t-340-i*380)/460));
-      if(intro<=0)continue;
-      const e=_trEase(intro);
-      const cx=58+i*92, cy=170+(1-e)*60;
-      ctx.globalAlpha=fade*e;
-      _trChar(ctx,NPCS[i],cx-14,cy-44,2.4,0,0);
-      ctx.globalAlpha=1;
-      _trText(ctx,names[i].split(' · ')[0],cx,cy+18,8,'#f0e6d3',fade*e);
-      _trText(ctx,names[i].split(' · ')[1],cx,cy+30,7,'#8a7fad',fade*e);
-    }
+    // EXPLORE — walk the living town hub
+    const pmX=118+_trEase(Math.min(1,t/d))*150;
+    drawTrailerMap(ctx,'town',pmX-150,64,{car:{x:88,y:14*TS-6},chars:[
+      {cfg:_trPC(),x:pmX,y:13*TS,dir:1,walk:true},
+      {cfg:_trNpc('amb_apprentice'),x:14*TS,y:13*TS,dir:2},
+      {cfg:_trNpc('amb_resident'),x:6*TS,y:16*TS,dir:1},
+      {cfg:_trNpc('amb_commuter'),x:20*TS,y:16*TS,dir:3}
+    ]});
+    _trTag(ctx,'EXPLORE',fade);
+    _trCaption(ctx,'A living project town — your hub between the works.',fade);
   }else if(sc===2){
-    _trText(ctx,'EVERY CHOICE IS A TRADE-OFF',IW/2,38,11,'#caa6e8',fade);
-    // two decision chips
-    const chipA=Math.min(1,Math.max(0,(t-300)/400)), chipB=Math.min(1,Math.max(0,(t-700)/400));
-    ctx.globalAlpha=fade*chipA; ctx.fillStyle='#2a2440'; ctx.fillRect(40,66,180,26); ctx.strokeStyle='#f7c948'; ctx.strokeRect(40,66,180,26);
-    _trText(ctx,'Push the schedule',130,79,8,'#f0e6d3',fade*chipA);
-    ctx.globalAlpha=fade*chipB; ctx.fillStyle='#2a2440'; ctx.fillRect(260,66,180,26); ctx.strokeStyle='#8a7fad'; ctx.strokeRect(260,66,180,26);
-    _trText(ctx,'Protect the budget',350,79,8,'#f0e6d3',fade*chipB);
-    ctx.globalAlpha=1;
-    // metric bars swinging to show give-and-take
-    const dirs=[1,-1,1,-1,1];
-    for(let i=0;i<5;i++){
-      const bx=70, by=120+i*30, bw=220;
-      const swing=Math.sin(now/360+i)*0.5+0.5;
-      const fillv=0.5+dirs[i]*(swing-0.5)*0.7;
-      _trText(ctx,TR_METRICS[i][0],bx-8,by+6,7,'#cbb38a',fade); ctx.textAlign='left';
-      ctx.globalAlpha=fade; ctx.fillStyle='#241c34'; ctx.fillRect(bx+58,by,bw,10);
-      ctx.fillStyle=TR_METRICS[i][1]; ctx.fillRect(bx+58,by,bw*Math.max(0.06,fillv),10);
-      ctx.globalAlpha=1;
-      _trText(ctx,dirs[i]>0?'▲':'▼',bx+58+bw+12,by+6,8,dirs[i]>0?'#86f08a':'#ff7a8a',fade);
-      ctx.textAlign='center';
-    }
+    // TEAM — the office, five experts at their desks
+    const camX=_trClampCam('office',140,8)[0], pmY=16*TS-_trEase(Math.min(1,t/d))*84;
+    drawTrailerMap(ctx,'office',camX,8,{chars:[
+      {cfg:NPCS[0],x:13*TS,y:5*TS},{cfg:NPCS[1],x:18*TS,y:5*TS},
+      {cfg:NPCS[2],x:13*TS,y:9*TS},{cfg:NPCS[3],x:18*TS,y:9*TS},
+      {cfg:NPCS[4],x:16*TS,y:13*TS},
+      {cfg:_trPC(),x:16*TS,y:pmY,dir:2,walk:true}
+    ]});
+    const hx=13*TS-camX+8, hy=5*TS-8-8;
+    _trText(ctx,'♥ ♥ ♥',hx,hy,9,'#e05577',fade*Math.min(1,Math.max(0,(t-700)/500)));
+    _trTag(ctx,'YOUR TEAM',fade);
+    _trCaption(ctx,'Meet five experts — build real rapport, week by week.',fade);
   }else if(sc===3){
-    _trText(ctx,'BUILD THE RAILWAY',IW/2,38,11,'#f0a050',fade);
-    // track laying left→right
-    const laid=_trEase(Math.min(1,t/2500)); const ty=180;
-    for(let i=0;i<24;i++){ const tx=20+i*18; drawSprite(ctx,(i/24<=laid)?'track':'gravel',tx,ty,TS+1,TS+1); }
-    // a couple of machines + a worker over the works
-    drawSprite(ctx,'excavator',70+Math.sin(now/500)*4,ty-44);
-    drawSprite(ctx,'dumper',300+laid*60,ty-22);
-    _trChar(ctx,NPCS[1],200,ty-30,2.2,3,0); // Mike on site
-    _trText(ctx,'Surveys · procurement · construction · handover',IW/2,IH-46,8,'#cbb38a',fade);
+    // DECISIONS — boardroom footage with the event modal over it
+    drawTrailerMap(ctx,'boardroom',60,20,{chars:[
+      {cfg:_trNpc('okoye')||NPCS[0],x:13*TS,y:6*TS,dir:2},
+      {cfg:_trNpc('dec_board1')||NPCS[3],x:12*TS,y:4*TS},
+      {cfg:_trNpc('dec_board2')||NPCS[2],x:15*TS,y:9*TS,dir:2}
+    ]});
+    ctx.fillStyle='rgba(8,5,12,0.55)'; ctx.fillRect(0,0,IW,IH);
+    const mw=300,mh=150,mx=(IW-mw)/2,my=(IH-mh)/2-8, pop=_trEase(Math.min(1,t/450)), oy=(1-pop)*8;
+    ctx.globalAlpha=fade; ctx.fillStyle='#1d1730'; ctx.fillRect(mx,my-oy,mw,mh); ctx.strokeStyle='#caa6e8'; ctx.lineWidth=2; ctx.strokeRect(mx,my-oy,mw,mh); ctx.globalAlpha=1;
+    _trText(ctx,'⚠ SCOPE SURPRISE',IW/2,my-oy+16,10,'#caa6e8',fade*pop);
+    _trText(ctx,'The client wants a new crossing added.',IW/2,my-oy+36,8,'#e8d4b0',fade*pop);
+    const ca=Math.min(1,Math.max(0,(t-700)/400)), cb=Math.min(1,Math.max(0,(t-1100)/400));
+    ctx.globalAlpha=fade*ca; ctx.fillStyle='#2a2440'; ctx.fillRect(mx+14,my+56,mw-28,22); ctx.strokeStyle='#f7c948'; ctx.lineWidth=1; ctx.strokeRect(mx+14,my+56,mw-28,22); ctx.globalAlpha=1;
+    _trText(ctx,'Accept it — keep the client happy',IW/2,my+67,7,'#f0e6d3',fade*ca);
+    ctx.globalAlpha=fade*cb; ctx.fillStyle='#2a2440'; ctx.fillRect(mx+14,my+84,mw-28,22); ctx.strokeStyle='#8a7fad'; ctx.strokeRect(mx+14,my+84,mw-28,22); ctx.globalAlpha=1;
+    _trText(ctx,'Negotiate a trade-off',IW/2,my+95,7,'#f0e6d3',fade*cb);
+    const frac=Math.max(0,1-(t/d)); ctx.globalAlpha=fade; ctx.fillStyle='#241c34'; ctx.fillRect(mx+14,my+mh-16,mw-28,6); ctx.fillStyle=frac<0.34?'#e05577':'#4aca8a'; ctx.fillRect(mx+14,my+mh-16,(mw-28)*frac,6); ctx.globalAlpha=1;
+    _trTag(ctx,'DECISIONS',fade);
+    _trCaption(ctx,'Make the tough calls — under a ticking clock.',fade);
   }else if(sc===4){
-    _trText(ctx,'ON TIME · ON BUDGET · SAFELY',IW/2,44,11,'#6fe0a0',fade);
-    // five glowing metric pills
-    for(let i=0;i<5;i++){
-      const intro=Math.min(1,Math.max(0,(t-200-i*220)/360)); const e=_trEase(intro);
-      const cx=58+i*92, cy=150;
-      ctx.globalAlpha=fade*e;
-      ctx.fillStyle=TR_METRICS[i][1]; ctx.beginPath(); ctx.arc(cx,cy,16+Math.sin(now/300+i)*1.5,0,Math.PI*2); ctx.fill();
-      ctx.globalAlpha=fade*e;
-      _trText(ctx,TR_METRICS[i][0],cx,cy+34,7,'#e8d4b0',fade*e);
-      ctx.globalAlpha=1;
-    }
-    // star rating
-    const stars=Math.floor(Math.min(5,(t/2700)*5));
-    for(let s2=0;s2<5;s2++){ _trText(ctx,'★',IW/2-44+s2*22,210,16,s2<stars?'#f7c948':'#3a3050',fade); }
-    _trText(ctx,'Score your leadership. Earn your stars.',IW/2,250,8,'#cbb38a',fade);
+    // BUILD — the live construction site
+    const camX=40+(t/d)*80;
+    drawTrailerMap(ctx,'site',camX,8,{week:8,chars:[
+      {cfg:_trNpc('dec_site1')||NPCS[1],x:9*TS,y:6*TS,dir:0},
+      {cfg:_trNpc('dec_site2')||NPCS[1],x:21*TS,y:7*TS,dir:3},
+      {cfg:NPCS[1],x:13*TS,y:13*TS,dir:1,walk:true}
+    ]});
+    _trTag(ctx,'BUILD',fade);
+    _trCaption(ctx,'Build the railway — on time, on budget, safely.',fade);
   }else if(sc===5){
+    // END CARD
+    const bg=ctx.createLinearGradient(0,0,0,IH); bg.addColorStop(0,'#1c1530'); bg.addColorStop(1,'#0b0712'); ctx.fillStyle=bg; ctx.fillRect(0,0,IW,IH);
+    ctx.fillStyle='rgba(247,201,72,0.10)'; for(let i=0;i<14;i++){ const mx2=(i*53+now*0.012*(1+i%3))%IW, my2=(i*37+now*0.006)%IH; ctx.fillRect(mx2,my2,1,1); }
     const pop=_trEase(Math.min(1,t/600));
-    _trText(ctx,'YOUR PROJECT.',IW/2,120-(1-pop)*16,16,'#f7c948',fade*pop);
-    _trText(ctx,'YOUR CALL.',IW/2,150-(1-pop)*8,16,'#f7c948',fade*Math.min(1,Math.max(0,(t-300)/500)));
+    _trText(ctx,'YOUR PROJECT.',IW/2,116-(1-pop)*16,16,'#f7c948',fade*pop);
+    _trText(ctx,'YOUR CALL.',IW/2,146-(1-pop)*8,16,'#f7c948',fade*Math.min(1,Math.max(0,(t-300)/500)));
+    for(let s2=0;s2<5;s2++){ _trText(ctx,'★',IW/2-44+s2*22,182,15,'#f7c948',fade*Math.min(1,Math.max(0,(t-600-s2*120)/300))); }
+    _trText(ctx,'PROJECT VALLEY',IW/2,212,10,'#9bc0ff',fade);
     const pulse=0.5+0.4*Math.sin(now/280);
-    _trText(ctx,'PROJECT VALLEY',IW/2,200,10,'#9bc0ff',fade);
-    _trText(ctx,'▶ Press SPACE to begin',IW/2,236,9,'rgba(247,201,72,'+pulse.toFixed(2)+')',fade);
+    _trText(ctx,'▶ Press SPACE to begin',IW/2,240,9,'rgba(247,201,72,'+pulse.toFixed(2)+')',fade);
   }
 
   // chrome: progress dots + skip hint
   ctx.globalAlpha=1; ctx.textAlign='center'; ctx.textBaseline='middle';
-  for(let i=0;i<TRAILER_SCENES.length;i++){ ctx.fillStyle=i===sc?'#f7c948':'rgba(240,230,211,0.3)'; ctx.fillRect(IW/2-26+i*9,IH-14,5,3); }
-  ctx.textAlign='right'; _trText(ctx,'tap / SPACE: next   ·   ESC: skip',IW-8,12,7,'rgba(240,230,211,0.7)',1);
+  for(let i=0;i<TRAILER_SCENES.length;i++){ ctx.fillStyle=i===sc?'#f7c948':'rgba(240,230,211,0.35)'; ctx.fillRect(IW/2-26+i*9,IH-6,5,3); }
+  ctx.textAlign='right'; _trText(ctx,'tap / SPACE: next   ·   ESC: skip',IW-8,10,7,'rgba(240,230,211,0.7)',1);
   ctx.textAlign='left'; ctx.textBaseline='alphabetic';
 }
 

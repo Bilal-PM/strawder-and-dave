@@ -694,3 +694,18 @@ Owner feedback on the opening trailer ("good, but slow it down just a tad" + the
 - **Click to advance** — tap / SPACE now pages forward one scene at a time (self-pace), while **ESC** skips
   straight to character select; on-screen hint updated to match.
 - Harness extended (page-forward one scene at a time ends at char select). **62/62 green**, node --check clean.
+
+
+### 2026-06-16 — Iteration 45 (trailer = real gameplay segments, Stardew-style)
+Owner: "trailer needs segments of gameplay like Stardew Valley." Reworked the opening trailer from abstract
+motion-graphics into **real gameplay vignettes** rendered from the actual maps:
+- New `drawTrailerMap(ctx,mapId,camX,camY,opts)` draws a live clip of a real map (ground + objects + a car +
+  characters, y-sorted) under a clamped camera, reusing the game's own draw path (temporarily sets S.map/S.week,
+  restored in a `finally`). `_trClampCam` keeps every clip inside the map edges (no black bands; centres small maps).
+- Six segments now read as footage: (0) **arrive** — the car drives past the town's buildings under the logo;
+  (1) **explore** — walk the living town with the ambient NPCs; (2) **your team** — the office with all five
+  leads at their desks + the PM walking in + a rapport ♥ pop; (3) **decisions** — the boardroom with the real
+  event modal (Scope Surprise, two choices, ticking countdown); (4) **build** — the live site with workers,
+  machines and track; (5) end card. Captions + a scene tag over each, like a real trailer.
+- Pacing/audio/skip/click-to-advance unchanged from iter 44. **62/62 green**, node --check clean; town + office
+  vignette framings rendered to verify the camera. Independent review: no P0/P1 (folded its two P2 hardening notes).
