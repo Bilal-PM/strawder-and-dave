@@ -1660,6 +1660,23 @@ function canMove(nx,ny){
   return true;
 }
 
+// People are solid too — the player walks AROUND NPCs (and decor/ambient folk), not through them.
+// Uses a small lower-body box so you can still stand adjacent to talk. Blocks *entering* an NPC from
+// clear space, but never *leaving* one — so if an NPC wanders onto you, you can always step out (no softlock).
+function npcBlocks(nx,ny){
+  const ax=nx+4, ay=ny+15, S2=8, cx=S.px+4, cy=S.py+15;
+  for(const n of NPCS){
+    if(n.curX===undefined)continue;
+    if(!npcCell(n,S.map))continue;
+    const bx=n.curX+4, by=n.curY+15;
+    const newOv = ax<bx+S2 && ax+S2>bx && ay<by+S2 && ay+S2>by;
+    if(!newOv)continue;
+    const curOv = cx<bx+S2 && cx+S2>bx && cy<by+S2 && cy+S2>by;
+    if(!curOv)return true; // moving into an NPC from clear space → blocked (go around)
+  }
+  return false;
+}
+
 // === CAMERA (Bug 6 fix: subtract notepad from viewport) ===
 function updateCamera(){
   if(S.arrival)return; // the arrival cut-scene drives the camera itself
@@ -1698,8 +1715,8 @@ function updatePlayer(dt){
     const len=Math.sqrt(dx*dx+dy*dy);
     dx/=len;dy/=len;
     const nx=S.px+dx*SPEED,ny=S.py+dy*SPEED;
-    if(canMove(nx,S.py))S.px=nx;
-    if(canMove(S.px,ny))S.py=ny;
+    if(canMove(nx,S.py)&&!npcBlocks(nx,S.py))S.px=nx;
+    if(canMove(S.px,ny)&&!npcBlocks(S.px,ny))S.py=ny;
     // Bug 5: Clamp to map bounds
     const mw=mapW()*TS;
     const mh=mapH()*TS;
@@ -4188,7 +4205,7 @@ function drawTrailer(ctx){
     // EXPLORE — walk the living town hub
     const pmX=118+_trEase(Math.min(1,t/d))*150;
     drawTrailerMap(ctx,'town',pmX-150,64,{car:{x:88,y:14*TS-6},chars:[
-      {cfg:_trPC(),x:pmX,y:13*TS,dir:1,walk:true},
+      {cfg:_trPC(),x:pmX,y:16*TS,dir:1,walk:true}, // clear bottom pavement, between the townsfolk
       {cfg:_trNpc('amb_apprentice'),x:14*TS,y:13*TS,dir:2},
       {cfg:_trNpc('amb_resident'),x:6*TS,y:16*TS,dir:1},
       {cfg:_trNpc('amb_commuter'),x:20*TS,y:16*TS,dir:3}
@@ -4202,7 +4219,7 @@ function drawTrailer(ctx){
       {cfg:NPCS[0],x:13*TS,y:5*TS},{cfg:NPCS[1],x:18*TS,y:5*TS},
       {cfg:NPCS[2],x:13*TS,y:9*TS},{cfg:NPCS[3],x:18*TS,y:9*TS},
       {cfg:NPCS[4],x:16*TS,y:13*TS},
-      {cfg:_trPC(),x:16*TS,y:pmY,dir:2,walk:true}
+      {cfg:_trPC(),x:15*TS,y:pmY,dir:2,walk:true} // PM walks a clear lane beside the desks, not through them
     ]});
     const hx=13*TS-camX+8, hy=5*TS-8-8;
     _trText(ctx,'♥ ♥ ♥',hx,hy,9,'#e05577',fade*Math.min(1,Math.max(0,(t-700)/500)));
@@ -4606,6 +4623,25 @@ function townRouteEntrances(){
 
 // Stardew-style "!" markers bobbing over each incomplete objective's target (NPC or zone),
 // so newcomers/children always know where to go next.
+// A zone the player travels through (a door / building / area entrance) — gets a wayfinding arrow.
+function isEntranceZone(id){ return /^(to_|return_)/.test(id) || id==='locker_room'; }
+// Small persistent bobbing chevron over every entrance so doorways are easy to spot (e.g. the Changing Room).
+function drawEntranceArrows(ctx){
+  if(S.dlgOpen||S.eventOpen||S.weekTransOpen||S.docsOpen||S.statsOpen||S.arrival)return;
+  const zones=ZONES[S.map]||[];
+  const pendObj=t=>(S.objectives||[]).some(o=>o.target===t&&!S.completedObj.includes(o.type+'_'+o.target+'_'+S.week));
+  const bob=Math.sin(Date.now()/320)*1.5;
+  zones.forEach(z=>{
+    if(!isEntranceZone(z.id))return;
+    if(pendObj(z.id))return; // an active objective already shows a brighter '!' here — don't double up
+    const cx=z.x*TS+z.w*8, cy=z.y*TS-7+bob;
+    ctx.save();
+    ctx.fillStyle='rgba(20,12,6,0.30)'; ctx.beginPath(); ctx.ellipse(cx,cy+9,4,1.5,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#f7e6b8'; ctx.strokeStyle='#3a2210'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(cx-4,cy); ctx.lineTo(cx+4,cy); ctx.lineTo(cx,cy+5); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.restore();
+  });
+}
 function drawObjectiveMarkers(ctx){
   if(S.dlgOpen||S.eventOpen||S.weekTransOpen||S.docsOpen||S.statsOpen||S.arrival)return;
   const bob=Math.sin(Date.now()/250)*2;
@@ -4796,6 +4832,8 @@ function render(){
     });
   }
   
+  // Persistent wayfinding arrows over every doorway/entrance (world space)
+  drawEntranceArrows(CTX);
   // Objective breadcrumbs over the next things to do (world space)
   drawObjectiveMarkers(CTX);
   // Draw particles (in world space)

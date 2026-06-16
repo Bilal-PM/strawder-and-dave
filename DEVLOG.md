@@ -709,3 +709,17 @@ motion-graphics into **real gameplay vignettes** rendered from the actual maps:
   machines and track; (5) end card. Captions + a scene tag over each, like a real trailer.
 - Pacing/audio/skip/click-to-advance unchanged from iter 44. **62/62 green**, node --check clean; town + office
   vignette framings rendered to verify the camera. Independent review: no P0/P1 (folded its two P2 hardening notes).
+
+
+### 2026-06-16 — Iteration 46 (people are solid + entrance arrows)
+Two playtest catches:
+- **Walking through people** — `isSolid`/furniture already blocked the player, but **NPCs weren't solid**, so
+  you could walk through the team/townsfolk. Added `npcBlocks(nx,ny)`: the player now goes AROUND people
+  (small lower-body box). It blocks *entering* an NPC from clear space but always allows *leaving* one, so an
+  NPC wandering onto you (or spawning where one stands) can never trap you — no softlock. Furniture bases were
+  already solid; the trailer's scripted PM was also rerouted to clear lanes so it visibly walks around things.
+- **Hard-to-find entrances** (esp. the Changing Room) — `drawEntranceArrows` draws a small bobbing chevron over
+  every door/transition/area entrance (`to_*`, `return_*`, `locker_room`), skipping any that already shows an
+  objective '!'. Makes every doorway discoverable at a glance.
+- Harness: NPC-collision test (blocks entering, clear away, can escape an overlap) + entrance-classification
+  test. **64/64 green**, node --check clean. Independent review gating the push.

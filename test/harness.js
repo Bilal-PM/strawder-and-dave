@@ -77,7 +77,8 @@ let code=scripts.join('\n;\n');
 // epilogue: capture top-level consts/fns into global for assertions
 const names=['S','applyEffects','advanceWeek','getPhase','getPhaseIdx','getDlgPhaseIdx','chooseDlg','NPCS','OMAP','SMAP','ZONES','isSolid','render','updatePlayer','startGame','newGame','selectCharacter','beginGame','saveGame','loadGame','EVENTS','PHASES','DLG','transitionToMap','showEvent','triggerEvent','getObjectives','updateHUD','updateNotepad','WALK_FRAMES','updateNPCAI','CHARS','ATLAS','drawSprite','OFFICE_W','OFFICE_H','OFFICE_OBJECTS','OFFICE_SOLID_OBJ','objBaseCells','OFFICE_SOLID','SITE_W','SITE_H','SITE_OBJECTS','SITE_SOLID_OBJ','ZONES','NPC_WANDER_OFFICE','NPC_WANDER_SITE','siteTrackFrac','POPUPS','enterWeek','afterEvent','chooseEvent','closeReport','REPORT_WEEKS','getObjectives','showEndScreen','chooseDlg','openNPCDialogue','interactionSpent','spendInteraction','getDlgPhaseIdx','EVENTS','showInsight','rng','seedRng','DIFFICULTY','diff','getPMRating','getLeadershipArchetype','resolveRisk','eventCallback','PERSONA','reflectionNote','showEvent','showReport','applyEventChoice','skipPhase','hintsVisible','metricDeltaHTML','snapshotMetrics','showLockerRoom','togglePPE','closeEventResult','presentEvent','beginDecision','eventHesitate','eventTimerMs','startEventTimer','stopEventTimer','tickEventTimer','SCENES','THEMES','getTheme','setMasterVolume','playMumble','VOICE','playSFX','playLocationAmbient','startBGM','stopBGM','DELIVERABLES','deliverableAvailable','deliverablesAvailableCount','openDeliverable','recordMetricHistory','perfPanelHTML','perfBarsHTML','showDocsOverlay','startNewWeek','MAPS','MD','npcCell','mapW','mapH','SUPPLIER_W','SUPPLIER_H','SUPMAP','transitionToMap','updateTransition','tallyLeadership','dominantStyle','STYLE_KEY','activateZone','PPE_REQUIRED','completeObj','AREA_LABELS','TOWN_W','TOWN_H','TOWNMAP',
 'startArrival','updateArrival','skipArrival','endArrival','updateCamera','CS_MOODS','csEnterClass','townRouteEntrances',
-'startTrailer','updateTrailer','skipTrailer','endTrailer','drawTrailer','TRAILER_SCENES','showCharSelect','CTX','advanceTrailerScene'];
+'startTrailer','updateTrailer','skipTrailer','endTrailer','drawTrailer','TRAILER_SCENES','showCharSelect','CTX','advanceTrailerScene',
+'npcBlocks','canMove','isEntranceZone','drawEntranceArrows'];
 code+='\n;globalThis.__G=(function(){const o={};'+names.map(n=>`try{o['${n}']=${n};}catch(e){}`).join('')+'return o;})();';
 
 const results={pass:[],fail:[]};
@@ -342,6 +343,22 @@ check('decor NPCs: placed on walkable cells, no dialogue, not interactive, stati
   const st=dec.find(n=>n.static); g.S.map='boardroom'; const c=g.npcCell(st,'boardroom'); st.curX=c[0]*16; st.curY=c[1]*16; const bx=st.curX,by=st.curY;
   for(let i=0;i<20;i++) g.updateNPCAI(200);
   if(st.curX!==bx||st.curY!==by) throw new Error('static decor NPC drifted from its spot');
+});
+check('people are solid: player collides entering an NPC, stays clear of empty space, never gets stuck inside one',()=>{
+  g.S.map='office';
+  // herd every office-present NPC into one corner so the test point is deterministic
+  g.NPCS.forEach(n=>{ if(g.npcCell(n,'office')){ n.curX=2*16; n.curY=2*16; } });
+  g.S.px=28*16; g.S.py=16*16; // standing clear
+  if(!g.npcBlocks(2*16,2*16)) throw new Error('npcBlocks should block ENTERING an NPC from clear space');
+  if(g.npcBlocks(28*16,16*16)) throw new Error('npcBlocks should be clear well away from every NPC');
+  // already overlapping → must be able to leave (no softlock)
+  g.S.px=2*16; g.S.py=2*16;
+  if(g.npcBlocks(2*16+1,2*16)) throw new Error('npcBlocks must let the player step OUT of an overlap');
+});
+check('entrance wayfinding: doors/transitions are flagged for an arrow; activity zones are not',()=>{
+  ['to_office','to_site','return_town','return_office','locker_room'].forEach(id=>{ if(!g.isEntranceZone(id)) throw new Error('entrance not flagged: '+id); });
+  ['desk','meeting','documents','board_table','design_desk'].forEach(id=>{ if(g.isEntranceZone(id)) throw new Error('activity zone wrongly flagged as entrance: '+id); });
+  g.S.map='town'; g.S.dlgOpen=false; g.S.arrival=null; g.drawEntranceArrows(g.CTX); // renders without throwing
 });
 check('NPC wander targets are in-bounds and walkable (office, site & town)',()=>{
   g.S.map='office'; g.NPC_WANDER_OFFICE.forEach(t=>{ if(t.x<0||t.x>=g.OFFICE_W||t.y<0||t.y>=g.OFFICE_H||g.isSolid(t.x,t.y)) throw new Error('office wander bad @'+t.x+','+t.y); });
