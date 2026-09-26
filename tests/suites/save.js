@@ -24,11 +24,16 @@ const strip = S => { const c = Object.assign({}, S); for (const k of IGNORE) del
 
 // Reload, check the title offers Continue, press it, and wait until the player can walk again.
 async function reloadAndContinue(page, r, before) {
+  const savedBefore = await page.evaluate(() => {
+    let ser = 'ok'; try { JSON.stringify(__T.S()); } catch (e) { ser = 'JSON.stringify(S) throws: ' + e.message; }
+    if (__T.storageLog.length) ser += ' · storage log: ' + JSON.stringify(__T.storageLog);
+    try { const s = JSON.parse(localStorage.getItem('lineside_v2')); return { done: s ? Object.keys(s.done || {}) : null, keys: Object.keys(localStorage), ser, introDone: __T.S().introDone }; } catch (e) { return { err: String(e), ser }; } });
+  r.log(`save before the reload: ${JSON.stringify(savedBefore)}`);
   await H.load(page);
   const t = await page.evaluate(() => { const b = document.querySelector('#tCont'); return b ? { vis: __T.visibleEl(b), text: b.textContent.trim() } : null; });
   if (!t || !t.vis) {
-    const why = await page.evaluate(() => ({ title: (document.querySelector('#title').innerText || '').replace(/\s+/g, ' ').slice(0, 160), saved: (() => { try { const s = JSON.parse(localStorage.getItem('lineside_v2')); return s ? Object.keys(s.done || {}) : null; } catch (e) { return 'unreadable'; } })() }));
-    r.fail(`after reload the title has no visible Continue button (#tCont). Title: "${why.title}"; saved game in localStorage: ${JSON.stringify(why.saved)}`);
+    const why = await page.evaluate(() => ({ log: __T.storageLog, title: (document.querySelector('#title').innerText || '').replace(/\s+/g, ' ').slice(0, 160), saved: (() => { try { const s = JSON.parse(localStorage.getItem('lineside_v2')); return s ? Object.keys(s.done || {}) : null; } catch (e) { return 'unreadable'; } })() }));
+    r.fail(`after reload the title has no visible Continue button (#tCont). Title: "${why.title}"; saved game in localStorage: ${JSON.stringify(why.saved)}; storage log after reload: ${JSON.stringify(why.log)}`);
     return false;
   }
   r.ok(!before || new RegExp('\\b' + before.S.week + '\\b').test(t.text), `Continue says "${t.text}" but the save is in week ${before && before.S.week}`);
@@ -49,7 +54,17 @@ function compare(r, label, a, b, o) {
   r.ok(!dk.length, `${label}: state changed across the reload:\n  ` + dk.slice(0, 12).join('\n  '));
   r.ok(a.target === b.target, `${label}: the objective changed from ${a.target} to ${b.target}`);
 }
-const dupGraded = S => { const seen = {}, d = []; for (const g of S.graded) { const k = g.kind + ':' + g.id; if (seen[k]) d.push(k); seen[k] = 1; } return d; };
+// Decisions recorded twice. Drop-in and panel questions are keyed by who asks (one person can ask two), so those are
+// checked by count against the pack instead of by id.
+const dupGraded = (S, C) => {
+  const seen = {}, d = [];
+  for (const g of S.graded) { if (g.kind === 'dropin' || g.kind === 'panelQ') continue; const k = g.kind + ':' + g.id; if (seen[k]) d.push(k); seen[k] = 1; }
+  const n = k => S.graded.filter(g => g.kind === k).length;
+  if (C && C.dropin && S.done.dropin && n('dropin') > C.dropin) d.push(`dropin ×${n('dropin')} (pack has ${C.dropin} questions)`);
+  if (C && C.panel && S.done.panel && n('panelQ') > C.panel) d.push(`panelQ ×${n('panelQ')} (pack has ${C.panel} questions)`);
+  return d;
+};
+const qCounts = page => page.evaluate(() => { const c = __T.pack().c1; return { dropin: ((c.dropin || {}).questions || []).length, panel: ((c.panel || {}).questions || []).length }; });
 
 module.exports = {
   name: 'save',
@@ -77,8 +92,8 @@ module.exports = {
         r.log(`2) resumed in ${d.room} with ${Object.keys(d.S.defects).length} defects judged, flags ${JSON.stringify(d.S.flags)}`);
         // and the chapter still plays to the end from here
         await H.until(P.page, "st.k==='report'", { timeoutMs: 240000 });
-        const e = await snap(P.page);
-        r.ok(!dupGraded(e.S).length, 'decisions recorded twice after resuming: ' + dupGraded(e.S).join(', '));
+        const e = await snap(P.page), qc = await qCounts(P.page);
+        r.ok(!dupGraded(e.S, qc).length, 'decisions recorded twice after resuming: ' + dupGraded(e.S, qc).join(', '));
         r.ok(P.errors.length === 0, 'JS errors:\n' + H.fmtErrors(P.errors));
         r.note(`resumed in ${b.room} (after the induction) and ${d.room} (2 defects in); finished ${e.S.panel && e.S.panel.outcome}`);
       } finally { await P.close(); }
@@ -102,8 +117,8 @@ module.exports = {
         const b = await snap(P.page);
         compare(r, `mid "${task}"`, a, b);
         await H.until(P.page, `T.S().done[${JSON.stringify(task)}] && st.k==='explore'`, { timeoutMs: 60000 });
-        const c = await snap(P.page);
-        r.ok(!dupGraded(c.S).length, 'decisions recorded twice after replaying the activity: ' + dupGraded(c.S).join(', '));
+        const c = await snap(P.page), qc = await qCounts(P.page);
+        r.ok(!dupGraded(c.S, qc).length, 'decisions recorded twice after replaying the activity: ' + dupGraded(c.S, qc).join(', '));
         r.ok(P.errors.length === 0, 'JS errors:\n' + H.fmtErrors(P.errors));
         r.note(`reloaded mid "${task}": rolled back to the last save and replayed it cleanly`);
       } finally { await P.close(); }

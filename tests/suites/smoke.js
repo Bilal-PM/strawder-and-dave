@@ -52,7 +52,7 @@ module.exports = {
           r.ok(setup.pname && setup.go, 'setup screen: #pname or #sGo not visible');
           await P.page.fill('#pname', 'Smoke');
           await P.page.evaluate(() => __T.click(document.querySelector('#sGo')));
-          const d = await H.drive(P.page, { stop: "st.k==='explore'", timeoutMs: 90000 });
+          const d = await H.drive(P.page, { stop: H.FREE_ROAM, timeoutMs: 90000 });
           const s = await P.page.evaluate(() => { const w = __T.W(), t = LS.game.currentTarget(); return { room: w.room, name: __T.S().name, hud: document.querySelector('#hud').classList.contains('on'), target: t && t.task.id, log: __T.layerLog.map(x => x[0] + ':' + x[1]).join(' ') }; });
           r.ok(s.name === 'Smoke', `player name not applied (S.name = ${s.name})`);
           r.ok(s.target, 'no objective (currentTarget() is null) at the start');

@@ -126,6 +126,11 @@ window.LS = window.LS || {};
       return astar(G.g, G.cols, G.rows, s[0], s[1], gl[0], gl[1], ok);
     }
     tileToPx(tx, ty) { return tp(tx, ty); }
+    stepSound(x, y) {
+      if (this.room === 'hall') return 'step_wood'; if (this.room !== 'outside') return 'step_floor';
+      const c = (L.rows[Math.floor(y / T)] || '')[Math.floor(x / T)] || '.';
+      return ':=/bza'.includes(c) ? 'step_ballast' : 'p_!y'.includes(c) ? 'step_gravel' : 'rl-xsecnoq^#+kgm%'.includes(c) ? 'step_floor' : 'step_grass';
+    }
 
     // ---------- Input ----------
     bindInput() {
@@ -167,7 +172,7 @@ window.LS = window.LS || {};
       const t = performance.now();
       if (d.needs === 'ppe' && !this.ppe && !(this.flags && this.flags.openDepot)) { if (t - this.lastBlock > 2500) { this.lastBlock = t; if (this.onDoorRefused) this.onDoorRefused(d); } return; }
       const R = ROOMS[d.room]; this.enter(d.room, R.enter.x, R.enter.y, 'up');
-      if (LS.audio && LS.audio.sfx) LS.audio.sfx('door');
+      if (LS.audio && LS.audio.sfx) LS.audio.sfx('door', { to: d.room });
     }
     exitRoom() { const R = ROOMS[this.room]; this.enter('outside', R.exitTo.x, R.exitTo.y, 'down'); if (LS.audio && LS.audio.sfx) LS.audio.sfx('door'); }
     enter(room, x, y, face) {
@@ -220,9 +225,10 @@ window.LS = window.LS || {};
         if (bx && by && p.path) { p.path = null; p.use = null; }
         p.face = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
         p.moving = true; p.phase += dt * 8;
+        const st = Math.floor(p.phase / Math.PI); if (st !== p.lastStep) { p.lastStep = st; if (LS.audio && LS.audio.sfx) LS.audio.sfx(this.stepSound(p.x, p.y)); }
         if (manual) this.checkDoorStep(dy);
         const lt = this.trail[this.trail.length - 1]; if (!lt || Math.hypot(lt.x - p.x, lt.y - p.y) > 6) { this.trail.push({ x: p.x, y: p.y }); if (this.trail.length > 40) this.trail.shift(); }
-      } else { p.moving = false; p.phase = 0; }
+      } else { p.moving = false; p.phase = 0; p.lastStep = -1; }
       this.updateNPCs(dt);
       for (const s of this.sheep) { s.t -= dt; if (s.t <= 0) { s.t = 2 + Math.random() * 5; const a = Math.random() * 6.28, m = Math.random() < 0.5 ? 0 : 8; s.dx = Math.cos(a) * m; s.dy = Math.sin(a) * m * 0.6; if (s.dx) s.face = s.dx > 0 ? 1 : -1; } const nx = s.x + s.dx * dt, ny = s.y + s.dy * dt; if (L.rows[Math.floor(ny / T)] && L.rows[Math.floor(ny / T)][Math.floor(nx / T)] === '"') { s.x = nx; s.y = ny; } }
       // focus: the nearest interactable within reach of its stand point
@@ -233,7 +239,7 @@ window.LS = window.LS || {};
       const [tx, ty] = this.camTarget(), k = Math.min(1, dt * (this.attract ? 1 : 7));
       this.camX += (tx - this.camX) * k; this.camY += (ty - this.camY) * k;
       if (this.fadeDir) { this.fade += this.fadeDir * dt * 3.2; if (this.fade >= 1) { this.fade = 1; this.fadeDir = -1; if (this.fadeCb) { this.fadeCb(); this.fadeCb = null; } } if (this.fade <= 0 && this.fadeDir < 0) { this.fade = 0; this.fadeDir = 0; } }
-      const mt = this.mainTrain; mt.next -= dt; if (mt.next <= 0 && mt.y < -2000) { mt.dir = Math.random() < 0.5 ? 1 : -1; mt.y = mt.dir > 0 ? -200 : MAP.H + 200; mt.next = 24 + Math.random() * 18; if (LS.audio && LS.audio.sfx && this.room === 'outside' && Math.abs(this.player.x - 120 * T) < 30 * T) LS.audio.sfx('train_pass'); }
+      const mt = this.mainTrain; mt.next -= dt; if (mt.next <= 0 && mt.y < -2000) { mt.dir = Math.random() < 0.5 ? 1 : -1; mt.y = mt.dir > 0 ? -200 : MAP.H + 200; mt.next = 24 + Math.random() * 18; if (LS.audio && LS.audio.sfx && this.room === 'outside' && Math.abs(this.player.x - 120 * T) < 30 * T) LS.audio.sfx('train_pass', { dir: mt.dir }); }
       if (mt.y > -2000) { mt.y += mt.dir * 260 * dt; if (mt.y > MAP.H + 400 || mt.y < -400) mt.y = -9999; }
       const now = performance.now(); this.fx = this.fx.filter(f => f.until > now);
       // breadcrumb path to the objective

@@ -23,6 +23,27 @@ const FAST = { sound: false, instant: true, reduced: false, large: false };
 
 const opts = { fonts: process.env.LS_FONTS || 'cache', headed: false, seed: null, verbose: false, url: GAME_URL };
 
+// A tiny static server, so the game runs from a real http origin. (Under headless Chromium, file:// localStorage was
+// occasionally wiped across a reload of the game page, which made save/resume tests flaky; over http it never is.)
+const http = require('http');
+const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.png': 'image/png', '.jpg': 'image/jpeg', '.webp': 'image/webp', '.gif': 'image/gif', '.svg': 'image/svg+xml', '.json': 'application/json', '.woff2': 'font/woff2', '.mp3': 'audio/mpeg', '.ogg': 'audio/ogg', '.wav': 'audio/wav', '.ico': 'image/x-icon' };
+let server = null;
+function serve(root) {
+  return new Promise((res, rej) => {
+    root = path.resolve(root);
+    server = http.createServer((q, s) => {
+      let f = path.join(root, decodeURIComponent(q.url.split('?')[0]));
+      if (f.endsWith(path.sep)) f = path.join(f, 'index.html');
+      if (!f.startsWith(root) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) { s.writeHead(404, { 'content-type': 'text/plain' }); return s.end('not found'); }
+      s.writeHead(200, { 'content-type': MIME[path.extname(f).toLowerCase()] || 'application/octet-stream', 'cache-control': 'no-store' });
+      fs.createReadStream(f).pipe(s);
+    });
+    server.on('error', rej);
+    server.listen(0, '127.0.0.1', () => res(`http://127.0.0.1:${server.address().port}/index.html`));
+  });
+}
+function stopServer() { if (server) { server.close(); server = null; } }
+
 let browser = null;
 async function getBrowser() {
   if (!browser) browser = await chromium.launch({ headless: !opts.headed });
@@ -74,14 +95,26 @@ async function openPage(o) {
   page.on('console', m => {
     const loc = (m.location && m.location()) || {}, url = loc.url || '';
     if (FONT_RE.test(url) || /fonts\.(googleapis|gstatic)\.com/.test(m.text())) return;   // sandbox font failures are expected
-    if (m.type() === 'error' && /ERR_FILE_NOT_FOUND|404/.test(m.text()) && /^file:/.test(url)) return;   // counted once, as a missing file
+    if (m.type() === 'error' && /ERR_FILE_NOT_FOUND|404/.test(m.text()) && url.startsWith(opts.url.replace(/[^/]*$/, ''))) return;   // counted once, as a missing file
     if (m.type() === 'error') errors.push(`console.error: ${m.text()}${url ? ` (${url.replace(/^file:\/\/.*?\/strawder-and-dave\//, '')}:${loc.lineNumber})` : ''}`);
     else if (m.type() === 'warning') warnings.push(m.text());
   });
   // A missing local file (e.g. a script index.html references but nobody has committed yet) is its own kind of problem:
   // the smoke suite fails on it; other suites note it and carry on, so one missing file doesn't fail every check.
-  page.on('requestfailed', r => { if (FONT_RE.test(r.url())) return; const t = (r.failure() || {}).errorText || ''; if (/^file:/.test(r.url()) && /FILE_NOT_FOUND/.test(t)) { const base = opts.url.replace(/[^/]*$/, ''), f = r.url().startsWith(base) ? r.url().slice(base.length) : r.url(); if (!missing.includes(f)) missing.push(f); return; } errors.push(`request failed: ${r.url()} ${t}`); });
-  page.on('response', r => { if (r.status() >= 400 && !FONT_RE.test(r.url())) errors.push(`HTTP ${r.status()}: ${r.url()}`); });
+  page.on('requestfailed', r => {
+    if (FONT_RE.test(r.url())) return;
+    const t = (r.failure() || {}).errorText || '', base = opts.url.replace(/[^/]*$/, ''), f = r.url().startsWith(base) ? r.url().slice(base.length) : r.url();
+    if (/^file:/.test(r.url()) && /FILE_NOT_FOUND/.test(t)) { if (!missing.includes(f)) missing.push(f); return; }
+    // over http a 404'd script is also reported as an aborted request: count it once, as missing
+    if (/ERR_ABORTED/.test(t) && r.url().startsWith(base)) { setTimeout(() => { if (!missing.includes(f)) errors.push(`request failed: ${r.url()} ${t}`); }, 100); return; }
+    errors.push(`request failed: ${r.url()} ${t}`);
+  });
+  page.on('response', r => {
+    if (r.status() < 400 || FONT_RE.test(r.url())) return;
+    const base = opts.url.replace(/[^/]*$/, '');
+    if (r.status() === 404 && r.url().startsWith(base)) { const f = r.url().slice(base.length); if (!missing.includes(f)) missing.push(f); return; }
+    errors.push(`HTTP ${r.status()}: ${r.url()}`);
+  });
   page.on('crash', () => errors.push('page crashed'));
   page.setDefaultTimeout(20000);
   page.__errors = errors;
@@ -183,4 +216,4 @@ async function settle(page, timeout) {
 
 const fmtErrors = errs => errs.slice(0, 6).map(e => '  ' + e.split('\n').join('\n  ')).join('\n') + (errs.length > 6 ? `\n  …and ${errs.length - 6} more` : '');
 
-module.exports = { FREE_ROAM, chromium, ROOT, OUT, GAME_URL, VIEWPORTS, FAST, opts, getBrowser, closeBrowser, openPage, load, drive, until, newGame, gotoRoom, settle, dump, DriveError, BootError, fmtErrors };
+module.exports = { serve, stopServer, FREE_ROAM, chromium, ROOT, OUT, GAME_URL, VIEWPORTS, FAST, opts, getBrowser, closeBrowser, openPage, load, drive, until, newGame, gotoRoom, settle, dump, DriveError, BootError, fmtErrors };

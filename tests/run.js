@@ -4,7 +4,8 @@
  *   node tests/run.js                    run every suite
  *   node tests/run.js smoke gating       run the named suites
  *   node tests/run.js --list             list the suites
- *   options: --seed=N (random policy + game randomness) · --headed · --fonts=cache|block|offline · --verbose · --grep=text
+ *   options: --rev=<git rev> (test a committed build) · --file (open index.html via file:// instead of the local
+ *            http server) · --seed=N · --grep=text · --verbose · --headed · --fonts=cache|block|offline
  *
  * Prints a PASS/FAIL table, writes tests/out/results.json and tests/out/results.txt, and exits 1 if anything FAILed.
  */
@@ -26,6 +27,7 @@ for (const a of args) {
   else if (a.startsWith('--fonts=')) H.opts.fonts = a.slice(8);
   else if (a.startsWith('--grep=')) H.opts.grep = a.slice(7).toLowerCase();
   else if (a.startsWith('--rev=')) H.opts.rev = a.slice(6);
+  else if (a === '--file') H.opts.file = true;
   else if (a.startsWith('-')) { console.error('unknown option ' + a); process.exit(2); }
   else if (!ORDER.includes(a)) { console.error(`unknown suite "${a}". Suites: ${ORDER.join(', ')}`); process.exit(2); }
   else names.push(a);
@@ -44,7 +46,7 @@ if (H.opts.rev) {
     const tar = execFileSync('git', ['-C', H.ROOT, 'archive', '--format=tar', sha], { maxBuffer: 1 << 30 });
     execFileSync('tar', ['-x', '-C', dir], { input: tar });
   }
-  H.opts.url = 'file://' + path.join(dir, 'index.html');
+  H.opts.root = dir;
   H.opts.revLabel = `${H.opts.rev} (${sha})`;
 }
 
@@ -93,7 +95,6 @@ function table() {
 function details() {
   const out = [];
   for (const r of results) {
-    if (r.status === 'PASS' && !H.opts.verbose && !r.info.length) continue;
     if (r.status === 'PASS' && !H.opts.verbose) continue;
     out.push(`\n[${r.status}] ${r.suite} · ${r.check}${r.viewport ? ' · ' + r.viewport : ''}`);
     for (const f of r.fails) out.push('  ✗ ' + f.split('\n').join('\n    '));
@@ -105,6 +106,11 @@ function details() {
 
 (async () => {
   fs.mkdirSync(H.OUT, { recursive: true });
+  // Where the game comes from: LS_URL if set, else file:// (--file), else our local http server (default).
+  const root = H.opts.root || H.ROOT;
+  if (process.env.LS_URL) H.opts.url = process.env.LS_URL;
+  else if (H.opts.file) H.opts.url = 'file://' + path.join(root, 'index.html');
+  else H.opts.url = await H.serve(root);
   const started = new Date();
   console.log(`LINESIDE tests · ${started.toISOString().replace('T', ' ').slice(0, 19)} · ${H.opts.url}${H.opts.revLabel ? ' · git ' + H.opts.revLabel : ' · working tree'}`);
   console.log(`suites: ${run.join(', ')} · seed ${H.opts.seed} · fonts ${H.opts.fonts}\n`);
@@ -122,7 +128,7 @@ function details() {
       await S.run({ check: (name, vp, fn) => check(n, name, vp, fn), H, seed: H.opts.seed });
     }
   } catch (e) { crashed = e; console.error('\nrunner error: ' + (e.stack || e)); }
-  finally { await H.closeBrowser(); }
+  finally { await H.closeBrowser(); H.stopServer(); }
 
   const counts = results.reduce((a, r) => (a[r.status] = (a[r.status] || 0) + 1, a), {});
   const summary = `${results.length} checks · ${['PASS', 'WARN', 'FAIL', 'SKIP'].filter(s => counts[s]).map(s => `${counts[s]} ${s}`).join(' · ')} · ${((Date.now() - started) / 1000).toFixed(0)}s · seed ${H.opts.seed}`;

@@ -1,0 +1,10 @@
+Art assets in this folder (assets/src/*.png) are by Kenney (www.kenney.nl) and are released under
+Creative Commons Zero, CC0 1.0 Universal: https://creativecommons.org/publicdomain/zero/1.0/
+
+  Tiny Town (1.0)       — Kenney, CC0 1.0
+  RPG Urban Pack (1.0)  — Kenney, CC0 1.0
+
+"This content is free to use in personal, educational and commercial projects.
+ Support us by crediting Kenney or www.kenney.nl (this is not mandatory)."
+
+The derived atlas (js/world/atlas.js) and the procedurally drawn art in js/world/tileart.js are part of LINESIDE.

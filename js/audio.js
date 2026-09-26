@@ -1,34 +1,58 @@
 /* LINESIDE — audio engine. Web Audio API only: every sound is synthesised, there are no asset files.
  *
  * ─── PUBLIC API ───────────────────────────────────────────────────────────────────────────────────────
- * Every call is safe before init() and does nothing at all if the browser has no Web Audio.
+ * Every call is safe before init() (state is remembered and applied at init) and does nothing at all if
+ * the browser has no Web Audio.
  *
- *   LS.audio.init()                     Create the AudioContext (first call) or resume it. Call it from a user
- *                                       gesture (tap, click, key): mobile Safari only unlocks audio there.
- *   LS.audio.toggle(on)                 Sound on or off. Fades, then suspends the context to save battery.
- *   LS.audio.on                         Current on/off state (boolean).
- *   LS.audio.setMood(m)                 'warm' | 'tense' | 'hopeful'. The score changes cue at the next bar line.
- *   LS.audio.setWeather(w)              'clear' | 'rain' | 'snow'. Wind and rain beds, muffled indoors.
- *   LS.audio.setRoom(r)                 'outside' | 'office' | 'hall' | 'shed'. Swaps the ambience and the
- *                                       acoustic (reverb) and sets how present the score is.
- *   LS.audio.setCrowd(x)                0..1: how full the village hall is (murmur, teacups, chairs). Hall only.
- *   LS.audio.setNear({ river, mainline }) 0..1 each: proximity to the beck (babbling bed) and to the main
- *                                       line (level of passing trains). Outside only. Either key may be omitted.
- *   LS.audio.setVolume({ music, sfx, amb })  Optional mix levels 0..1 (defaults 0.55 / 0.8 / 0.8).
- *   LS.audio.sfx(name, opts)            One-shot sound. opts is optional: { vol: 0..2 multiplier, pan: -1..1 }.
- *       UI (non-diegetic, in the key of the score):
- *         tap, select, page, stamp, good, bad, ripple, chapter, unlock, place, rankup
- *       World (diegetic, through the current room's acoustic):
- *         peep (Marjorie's flat-battery horn), meow, coo, clank, paper, kettle, radio, crowd_laugh,
- *         door           opts.kind 'wood' | 'heavy' (default heavy if opts.to === 'shed' or already in the shed)
- *         step_grass, step_gravel, step_ballast, step_wood, step_floor   quiet, varied, rate-limited
- *         horn           a proper two-tone diesel horn (for when Marjorie runs again)
- *         train_pass     a main-line train going by; loudness follows setNear().mainline. opts.dir ±1.
- *                        Calling it switches the automatic distant trains off (autoTrains) so they
- *                        don't double up with trains the game shows.
- *         phone          a UK double ring. opts.rings 1..3 (default 1).
- *   LS.audio.autoTrains                 true (default): distant main-line trains pass on their own when
- *                                       mainline proximity > 0 and the game isn't triggering them itself.
+ *   LS.audio.init()                       Create the AudioContext (first call) or resume it. Call it from a user
+ *                                         gesture (tap, click, key): mobile Safari only unlocks audio there. After
+ *                                         init the engine also resumes itself on any later tap/key if the OS
+ *                                         suspended it (iOS interruptions, tab switches).
+ *   LS.audio.toggle(on)                   Sound on/off. Fades, then suspends the context to save battery.
+ *   LS.audio.on                           Current on/off state (boolean).
+ *   LS.audio.setMood(m)                   'warm' | 'tense' | 'hopeful'. The score changes cue at the next bar line.
+ *   LS.audio.setWeather(w)                'clear' | 'rain' | 'snow'. Wind and rain beds, muffled indoors.
+ *   LS.audio.setRoom(r)                   'outside' | 'office' | 'hall' | 'shed'. Swaps the ambience and the
+ *                                         acoustic (reverb) and sets how present the score is. Cheap to repeat.
+ *   LS.audio.setCrowd(x)                  0..1: how full the village hall is (murmur, teacups, chairs, the odd
+ *                                         laugh). Heard in the hall only. Cheap to call every frame.
+ *   LS.audio.setNear({ river, mainline }) 0..1 each: closeness to the beck (babbling bed) and to the main line
+ *                                         (loudness/brightness of passing trains). Outside only; either key may
+ *                                         be left out. Cheap to call every frame (changes < 0.01 are ignored).
+ *   LS.audio.setVolume({ music, sfx, amb })  Optional mix levels 0..1 (defaults 0.55 / 0.8 / 0.8). A layer at 0
+ *                                         also stops being generated, which saves CPU.
+ *   LS.audio.sfx(name, opts)              One-shot sound. opts (optional): { vol: 0..2 multiplier, pan: -1..1 }.
+ *     UI, non-diegetic, always in the key of the score:
+ *       tap, select, page, stamp, good, bad, ripple, chapter, unlock, place, rankup (promotion fanfare)
+ *     World, diegetic, heard through the current room's acoustic:
+ *       peep          Marjorie's horn with a flat battery (a wheezy little toot)
+ *       horn          a proper two-tone diesel horn, high then low (for when she runs again); echoes outside
+ *       door          opts.kind 'wood' | 'heavy', or opts.to = the room being entered. Heavy (the depot's big
+ *                     rolling door) is used for kind 'heavy', to 'shed', or when leaving the shed.
+ *       step_grass, step_gravel, step_ballast, step_wood, step_floor
+ *                     quiet footsteps with random pitch/level and alternating feet; calls closer than 100 ms
+ *                     apart are ignored, so calling it too often can't pile up
+ *       train_pass    a main-line train going by (~8 s). Level follows setNear().mainline; opts.dir ±1 pans it
+ *                     the way the train is moving. The first call switches autoTrains off.
+ *       kettle, paper, radio (a two-way radio squelch), phone (UK double ring; opts.rings 1..3),
+ *       crowd_laugh, meow, coo, clank
+ *   LS.audio.autoTrains                   true until the game first calls sfx('train_pass'): distant main-line
+ *                                         trains pass by themselves while mainline proximity > 0.
+ *   LS.audio.meter()                      Dev tool: current output level { rms, peak } in dBFS.
+ *   LS.audio.errors                       Dev tool: the last internal errors (the engine never throws).
+ *
+ * ─── WHAT PLAYS ───────────────────────────────────────────────────────────────────────────────────────
+ * Score: felt piano (pre-rendered per octave), warm pad, Karplus–Strong harp and nylon guitar. The Lineside
+ * theme is eight bars of pentatonic tune (a question that ends open, an answer that comes home). Each mood has
+ * its own key, tempo, chords and accompaniment: warm (D major, 72 bpm, a harp figure like wheels over rail
+ * joints), hopeful (E major, 80, flowing arpeggios, the tune an octave up), tense (D minor, 62, sparse guitar).
+ * Sections swell and relax (intro, theme, bridge, theme with a second voice, a breath, sometimes a longer
+ * rest), and after the first pass the form varies so the theme stays a treat rather than a loop.
+ * Rooms: outside = breeze, leaves, birds (blackbird, robin, chiffchaff, great tit, wood pigeon), far-off sheep;
+ * office = mains hum, room tone, typing, paper, someone's kettle; hall = room air, tea urn, murmur, teacups,
+ * chairs, laughter (all scaled by setCrowd); shed = a big dark space, drips (more in rain) and Gaz's radio in
+ * the back room playing the theme as 1960s light music, then the presenter talking.
+ * Levels are metered: music about -27 dBFS RMS, UI peaks -17..-25, footsteps about -30, nothing above -8.
  *
  * ─── SIGNAL FLOW ──────────────────────────────────────────────────────────────────────────────────────
  *   music ─ duck ─ roomMix ─┬──────────────────────┐
@@ -39,9 +63,9 @@
  *   ambience ─(weather LP)──┤                      │
  *                           └─ send ─ room reverb ─┘   (room reverb is swapped by setRoom)
  *
- * CPU: shared noise and plucked-string buffers are made once (brook and rain lazily), ambience beds start
- * only while audible and stop after a few silent seconds, every one-shot stops its own nodes, and
- * ambience events are skipped when too many voices are already sounding.
+ * CPU: shared noise and plucked-string buffers are made once (beck and rain lazily), piano notes are single
+ * buffers, filters sweep at block rate, ambience beds exist only while audible and stop after a few silent
+ * seconds, every one-shot stops its own nodes, and ambience events are skipped when many voices are sounding.
  */
 window.LS = window.LS || {};
 (function () {
@@ -52,7 +76,7 @@ window.LS = window.LS || {};
     autoTrains: true, errors: []
   };
   const AC = window.AudioContext || window.webkitAudioContext;
-  const MASTER = 0.8;
+  const MASTER = 0.8, MUSIC = 2.5, UIGAIN = 1.6;   // bus trims, set by metering
   let c = null;                  // the AudioContext
   const N = {};                  // persistent nodes
   const B = {};                  // cached buffers
@@ -65,7 +89,9 @@ window.LS = window.LS || {};
   const clamp01 = v => Math.max(0, Math.min(1, +v || 0));
   const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
   const G = (v, dest) => { const g = c.createGain(); g.gain.value = v; if (dest) g.connect(dest); return g; };
-  const F = (type, f, q, dest) => { const n = c.createBiquadFilter(); n.type = type; n.frequency.value = f; if (q != null) n.Q.value = q; if (dest) n.connect(dest); return n; };
+  // Filters run their coefficients at block rate: sweeps still sound smooth, and it saves a lot of CPU
+  const kRate = n => { try { n.frequency.automationRate = n.Q.automationRate = n.gain.automationRate = n.detune.automationRate = 'k-rate'; } catch (e) { } };
+  const F = (type, f, q, dest) => { const n = c.createBiquadFilter(); kRate(n); n.type = type; n.frequency.value = f; if (q != null) n.Q.value = q; if (dest) n.connect(dest); return n; };
   const PAN = (p, dest) => { if (!c.createStereoPanner) return dest; const n = c.createStereoPanner(); n.pan.value = Math.max(-1, Math.min(1, p || 0)); n.connect(dest); return n; };
   const O = (wave, f, dest) => { const o = c.createOscillator(); if (typeof wave === 'string') o.type = wave; else o.setPeriodicWave(wave); o.frequency.value = f; if (dest) o.connect(dest); return o; };
   const SRC = (buf, dest, rate) => { const s = c.createBufferSource(); s.buffer = buf; if (rate) s.playbackRate.value = rate; if (dest) s.connect(dest); return s; };
@@ -153,13 +179,14 @@ window.LS = window.LS || {};
       for (let i = n; i < d.length; i++) d[i] = d[i - n];
     });
   }
+  const PIANO_H = [0, 1, 0.42, 0.16, 0.09, 0.045, 0.025, 0.012];
   function makeWave(harm) { const re = new Float32Array(harm.length), im = new Float32Array(harm); return c.createPeriodicWave(re, im); }
 
   const ROOM_IR = {
     outside: () => impulse(1.5, 4.5, 0.35, [[0.17, 0.25], [0.31, 0.16], [0.52, 0.08]], 0.01),
     office: () => impulse(0.55, 3, 0.55, [[0.007, 0.4], [0.013, 0.3], [0.021, 0.2]]),
-    hall: () => impulse(1.8, 3, 0.42, [[0.016, 0.35], [0.029, 0.25], [0.043, 0.18]], 0.008),
-    shed: () => impulse(4.2, 2.2, 0.22, [[0.031, 0.3], [0.058, 0.24], [0.094, 0.18], [0.14, 0.1]], 0.015)
+    hall: () => impulse(1.6, 3, 0.42, [[0.016, 0.35], [0.029, 0.25], [0.043, 0.18]], 0.008),
+    shed: () => impulse(3.4, 2, 0.22, [[0.031, 0.3], [0.058, 0.24], [0.094, 0.18], [0.14, 0.1]], 0.015)
   };
   const ROOMS = { outside: 1, office: 1, hall: 1, shed: 1 };
   const ir = r => B['ir_' + r] || (B['ir_' + r] = ROOM_IR[r]());
@@ -229,7 +256,7 @@ window.LS = window.LS || {};
   function build() {
     B.white = loopBuf(3, white); B.pink = loopBuf(4, pink); B.brown = loopBuf(4, brown);
     B.harp = pluck(440, 3.5, 0.5, 0.9985); B.gtr = pluck(196, 3, 0.32, 0.996);
-    W.piano = makeWave([0, 1, 0.42, 0.16, 0.09, 0.045, 0.025, 0.012]);
+    W.piano = makeWave(PIANO_H);
     W.pad = makeWave([0, 1, 0.5, 0.3, 0.18, 0.1, 0.06, 0.035, 0.02]);
     W.horn = makeWave([0, 1, 0.85, 0.7, 0.55, 0.42, 0.3, 0.22, 0.15, 0.1, 0.07, 0.05]);
     W.radio = makeWave([0, 1, 0.1, 0.33, 0.05, 0.16, 0.02, 0.07]);
@@ -237,11 +264,11 @@ window.LS = window.LS || {};
     lim.threshold.value = -12; lim.knee.value = 8; lim.ratio.value = 6; lim.attack.value = 0.004; lim.release.value = 0.25;
     N.master = G(A.on ? MASTER : 0, c.destination); lim.connect(N.master);
     N.sum = G(1, lim);
-    N.verbM = c.createConvolver(); N.verbM.buffer = impulse(3.0, 2.8, 0.35, null, 0.02); N.verbM.connect(G(0.6, N.sum));
+    N.verbM = c.createConvolver(); N.verbM.buffer = impulse(2.6, 2.6, 0.35, null, 0.02); N.verbM.connect(G(0.6, N.sum));
     N.room = G(0.12); swapRoomVerb(A.room);
-    N.music = G(A.music * 0.9); N.duck = G(1); N.musicMix = G(1, N.sum);
+    N.music = G(A.music * MUSIC); N.duck = G(1); N.musicMix = G(1, N.sum);
     N.music.connect(N.duck); N.duck.connect(N.musicMix); N.musicMix.connect(G(0.5, N.verbM));
-    N.ui = G(A.sfxVol, N.sum); N.ui.connect(G(0.25, N.verbM));
+    N.ui = G(A.sfxVol * UIGAIN, N.sum); N.ui.connect(G(0.25, N.verbM));
     N.world = G(A.sfxVol, N.sum); N.world.connect(N.room);
     N.amb = G(A.amb, N.sum); N.amb.connect(N.room);
     N.wx = G(1); N.wxLP = F('lowpass', 16000, 0.5, N.amb); N.wx.connect(N.wxLP);
@@ -269,41 +296,73 @@ window.LS = window.LS || {};
     hall: { send: 0.3, music: 0.85, lp: 1200, wx: 0.45 },
     shed: { send: 0.55, music: 0.5, lp: 1700, wx: 0.7 }
   };
+  const RIVER = 0.16;
   function mix(secs) {
     if (!c || !N.sum) return;
     const s = secs == null ? 1.2 : secs, t = c.currentTime, r = A.room, M = ROOMMIX[r], out = r === 'outside', w = A.weather, rain = w === 'rain', snow = w === 'snow';
     const st = (p, v, k) => p.setTargetAtTime(v, t, Math.max(0.03, (k == null ? s : k) / 3));
     st(N.room.gain, M.send, 0.3); st(N.wxLP.frequency, M.lp, 0.3);
     st(N.musicMix.gain, r === 'hall' ? M.music - 0.35 * A.crowd : M.music);
-    BED.wind.set((snow ? 0.5 : rain ? 0.3 : 0.17) * (out ? 1 : r === 'shed' ? 0.45 : 0.3), s);
-    BED.leaves.set(out ? (snow ? 0.16 : rain ? 0.06 : 0.11) : 0, s);
-    BED.rainHiss.set(rain ? 0.05 * M.wx : 0, s * 2);
-    BED.rainDrops.set(rain ? 0.16 * M.wx : 0, s * 2);
-    BED.river.set(out ? A.near.river * 0.5 : 0, s);
+    BED.wind.set((snow ? 0.18 : rain ? 0.1 : 0.055) * (out ? 1 : r === 'shed' ? 0.45 : 0.3), s);
+    BED.leaves.set(out ? (snow ? 0.05 : rain ? 0.02 : 0.035) : 0, s);
+    BED.rainHiss.set(rain ? 0.02 * M.wx : 0, s * 2);
+    BED.rainDrops.set(rain ? 0.09 * M.wx : 0, s * 2);
+    BED.river.set(out ? A.near.river * RIVER : 0, s);
     BED.hum.set(r === 'office' ? 0.004 : 0, s);
-    BED.office.set(r === 'office' ? 0.12 : 0, s);
-    BED.hall.set(r === 'hall' ? 0.1 : 0, s);
-    BED.murmur.set(r === 'hall' ? 0.006 + A.crowd * 0.09 : 0, s);
-    BED.shed.set(r === 'shed' ? 0.16 : 0, s);
+    BED.office.set(r === 'office' ? 0.02 : 0, s);
+    BED.hall.set(r === 'hall' ? 0.02 : 0, s);
+    BED.murmur.set(r === 'hall' ? 0.01 + A.crowd * 0.145 : 0, s);
+    BED.shed.set(r === 'shed' ? 0.026 : 0, s);
     st(N.radio.gain, r === 'shed' ? 1 : 0, 0.6); BED.radioHiss.set(r === 'shed' ? 0.02 : 0, 0.6);
   }
 
   // ---------- instruments ----------
-  // Felt piano: soft hammer, two slightly detuned strings, brightness that fades faster than the note
-  function piano(t, m, vel, len, dest, low) {
+  // Felt piano: soft hammer, two slightly detuned strings, brightness that fades faster than the note.
+  // It is synthesised once per octave-ish into samples (OfflineAudioContext, at start-up), then each note is a
+  // single transposed buffer: the same sound for a fraction of the CPU. Until the samples exist it plays live.
+  const tilt = m => 1 - Math.max(0, Math.min(1, (m - 70) / 30)) * 0.45;
+  function pianoSynth(t, m, vel, len, dest, low, natural) {
     vel = Math.max(0.05, Math.min(1.2, vel));
     const f = mtof(m), g = G(0, dest || N.music), lp = F('lowpass', 1000, 0.5, g);
-    const o1 = O(W.piano, f, lp), o2 = O(W.piano, f, G(0.45, lp)); o2.detune.value = rnd(2.5, 5) * (Math.random() < 0.5 ? -1 : 1);
-    const tilt = 1 - Math.max(0, Math.min(1, (m - 70) / 30)) * 0.45, pk = 0.1 * vel * tilt, l = Math.max(len, 0.5), end = t + l + (low ? 2.2 : 1.6);
+    const o1 = O(W.piano, f, lp), o2 = O(W.piano, f, G(0.45, lp)); o2.detune.value = natural ? 3.5 : rnd(2.5, 5) * (Math.random() < 0.5 ? -1 : 1);
+    const pk = Math.max(0.0003, 0.1 * vel * tilt(m) * (dest ? 1 : LV.piano)), l = Math.max(len, 0.5), end = natural ? t + len : t + l + (low ? 2.2 : 1.6);
     lp.frequency.setValueAtTime(Math.min(8000, f * (2 + 5 * vel)), t); lp.frequency.exponentialRampToValueAtTime(Math.max(180, f * 1.3), t + 1.5);
     const p = g.gain; p.setValueAtTime(0.0001, t); p.linearRampToValueAtTime(pk, t + 0.005 + (1 - Math.min(1, vel)) * 0.006);
-    p.exponentialRampToValueAtTime(pk * 0.35, t + 0.4); p.exponentialRampToValueAtTime(pk * 0.12, t + l); p.exponentialRampToValueAtTime(0.0001, end);
+    p.exponentialRampToValueAtTime(pk * 0.35, t + 0.4); p.exponentialRampToValueAtTime(pk * 0.12, natural ? end - 1.6 : t + l); p.exponentialRampToValueAtTime(0.0001, end);
     o1.start(t); o2.start(t); o1.stop(end + 0.05); o2.stop(end + 0.05);
-    if (!low && vel > 0.35) { const n = SRC(B.pink), nl = F('lowpass', 700, 0.7), ng = G(0, dest || N.music); n.connect(nl); nl.connect(ng); env(ng, t, 0.002, 0.03 * vel, 0.035); startAt(n, t, 0.05); }
+    if (!low && vel > 0.35) { const n = SRC(B.pink), nl = F('lowpass', 700, 0.7), ng = G(0, dest || N.music); n.connect(nl); nl.connect(ng); env(ng, t, 0.002, 0.018 * vel, 0.035); startAt(n, t, 0.05); }
+  }
+  const PIANO_AT = [40, 48, 56, 64, 72, 80, 88], PIANO_VEL = 0.8;
+  function renderPiano() {
+    const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext; if (!OAC || B.piano) return;
+    const sr = c.sampleRate, dur = m => m < 60 ? 4.5 : m < 76 ? 3.5 : 2.5, slots = []; let at = 0.02;
+    PIANO_AT.forEach(m => { slots.push({ m, at, d: dur(m) }); at += dur(m) + 0.05; });
+    let off; try { off = new OAC(1, Math.ceil(sr * at), sr); } catch (e) { return; }
+    const real = c, rw = W.piano; let fired = false;
+    try { c = off; W.piano = makeWave(PIANO_H); slots.forEach(s => pianoSynth(s.at, s.m, PIANO_VEL, s.d, off.destination, s.m < 52, true)); }
+    catch (e) { note(e); return; } finally { c = real; W.piano = rw; }
+    const done = buf => {
+      if (fired || !buf || !c) return; fired = true; const src = buf.getChannelData(0);
+      B.piano = slots.map(s => { const n = Math.floor(sr * s.d), b = c.createBuffer(1, n, sr), d = b.getChannelData(0), o = Math.floor(sr * s.at), fade = Math.floor(sr * 0.05); for (let i = 0; i < n; i++) d[i] = src[o + i] * (i > n - fade ? (n - i) / fade : 1); b.m = s.m; return b; });
+    };
+    off.oncomplete = e => done(e.renderedBuffer);
+    try { const p = off.startRendering(); if (p && p.then) p.then(done, note); } catch (e) { note(e); }
+  }
+  function piano(t, m, vel, len, dest, low) {
+    if (!B.piano) return pianoSynth(t, m, vel, len, dest, low);
+    vel = Math.max(0.05, Math.min(1.2, vel));
+    let smp = B.piano[0]; for (const b of B.piano) if (Math.abs(b.m - m) < Math.abs(smp.m - m)) smp = b;
+    const rate = Math.pow(2, (m - smp.m) / 12), s = SRC(smp, null, rate), g = G(0, dest || N.music);
+    const gain = Math.max(0.003, (vel / PIANO_VEL) * (tilt(m) / tilt(smp.m)) * (dest ? 1 : LV.piano));
+    s.connect(vel < 0.55 ? F('lowpass', Math.min(8000, mtof(m) * (2 + 4 * vel)), 0.5, g) : g);
+    const l = Math.max(len, 0.5), bufEnd = t + smp.duration / rate, rel = t + l + (low ? 1.3 : 0.9);
+    const p = g.gain; p.setValueAtTime(gain, t);
+    if (rel + 0.7 < bufEnd) { p.setValueAtTime(gain, rel); p.exponentialRampToValueAtTime(0.0003 * gain, rel + 0.7); s.start(t); s.stop(rel + 0.72); }
+    else { s.start(t); s.stop(bufEnd); }
   }
   // Warm pad: detuned soft-saw pairs through a swelling low-pass
   function padChord(t, notes, len, lvl, cut, dest) {
-    const g = G(0, dest || N.music), lp = F('lowpass', cut * 0.5, 0.5, g), end = t + len * 1.45;
+    const g = G(0, dest || N.music), lp = F('lowpass', cut * 0.5, 0.5, g), end = t + len * 1.45; lvl *= dest ? 1 : LV.pad;
     lp.frequency.setValueAtTime(cut * 0.5, t); lp.frequency.linearRampToValueAtTime(cut, t + len * 0.5); lp.frequency.linearRampToValueAtTime(cut * 0.55, end);
     const p = g.gain; p.setValueAtTime(0.0001, t); p.linearRampToValueAtTime(lvl, t + len * 0.3); p.setValueAtTime(lvl, t + len); p.linearRampToValueAtTime(0.0001, end);
     notes.forEach(m => [-7, 7].forEach(dt => { const o = O(W.pad, mtof(m), lp); o.detune.value = dt + rnd(-2, 2); o.start(t); o.stop(end + 0.05); }));
@@ -311,8 +370,8 @@ window.LS = window.LS || {};
   // Harp (and nylon guitar): a Karplus–Strong pluck, transposed
   function harp(t, m, vel, dest, buf) {
     buf = buf || B.harp; const f = mtof(m), rate = f / buf.f0, len = Math.min(3.4, buf.duration / rate);
-    const s = SRC(buf, null, rate), g = G(0.085 * vel, dest || N.music), lp = F('lowpass', Math.min(9000, f * 6), 0.3, g); s.connect(lp);
-    g.gain.setValueAtTime(0.085 * vel, t + len - 0.25); g.gain.linearRampToValueAtTime(0.0001, t + len);
+    const hv = 0.085 * vel * (dest ? 1 : LV.harp), s = SRC(buf, null, rate), g = G(hv, dest || N.music), lp = F('lowpass', Math.min(9000, f * 6), 0.3, g); s.connect(lp);
+    g.gain.setValueAtTime(hv, t + len - 0.25); g.gain.linearRampToValueAtTime(0.0001, t + len);
     s.start(t); s.stop(t + len + 0.02);
   }
   // Soft brass for the promotion fanfare
@@ -348,15 +407,17 @@ window.LS = window.LS || {};
     tense:   { key: 62, mode: 'min', bpm: 62, bright: 0.7,  oct: 0,  lvl: 0.85, harp: 'sparse', A: [0, 5, 3, 2, 5, 6, 3, 0],    B: [5, 6, 0, 0, 3, 5, 6, 6],    R: [0, 5, 0, 6] }
   };
   const S = { mood: null, secs: [], si: 0, bi: 0, next: 0, last: 74 };
+  const LV = { piano: 1, pad: 0.45, harp: 3.5 };   // score balance (measured)
+  // A new cue states the theme in full; after that each pass varies, so the theme stays a treat, not a loop.
   function plan(mood, fresh) {
-    const Mo = MOODS[mood], s = [];
-    if (fresh) s.push({ n: 'I', prog: Mo.R.slice(0, 2), vel: 0.45 });
-    s.push({ n: 'A', prog: Mo.A, vel: 0.72, theme: 1 });
-    s.push({ n: 'B', prog: Mo.B, vel: 0.85 });
-    if (mood !== 'tense' || Math.random() < 0.4) s.push({ n: 'A', prog: Mo.A, vel: 0.78, theme: 2 });
-    s.push({ n: 'R', prog: Mo.R, vel: 0.42 });
-    if (Math.random() < 0.45) s.push({ n: 'R', prog: Mo.R, vel: 0.3, bare: 1 });   // now and then, a longer rest
-    return s;
+    const Mo = MOODS[mood], A1 = { n: 'A', prog: Mo.A, vel: 0.72, theme: 1 }, A2 = { n: 'A', prog: Mo.A, vel: 0.78, theme: 2 },
+      Bb = { n: 'B', prog: Mo.B, vel: 0.85 }, R = { n: 'R', prog: Mo.R, vel: 0.42 }, rest = { n: 'R', prog: Mo.R, vel: 0.3, bare: 1 };
+    if (fresh) return [{ n: 'I', prog: Mo.R.slice(0, 2), vel: 0.45 }, A1, Bb, mood === 'tense' ? R : A2, R].concat(Math.random() < 0.45 ? [rest] : []);
+    const r = Math.random();
+    if (r < 0.3) return [A1, Bb, R];
+    if (r < 0.55) return [Bb, mood === 'tense' ? Object.assign({}, A1, { half: 1 }) : A2, R, rest];
+    if (r < 0.8) return [Bb, Object.assign({}, Bb, { vel: 0.7 }), rest];                    // no theme this time
+    return [Object.assign({}, A1, { half: 1 }), R, rest];                                     // just the question, left open
   }
   const hum = () => rnd(-0.008, 0.012);
   function scheduleBar(t) {
@@ -371,7 +432,7 @@ window.LS = window.LS || {};
     const r = parseInt(ch, 10), sus = typeof ch === 'string', md = Mo.mode, P = d => Mo.key + semi(md, d), bar = beat * 4, v = sec.vel * Mo.lvl;
     const tones = sus ? [r, r + 3, r + 4] : [r, r + 2, r + 4], nine = NO9[md].indexOf(((r % 7) + 7) % 7) < 0;
     // pad, voiced round G3–D4, swelling with the section's dynamic
-    padChord(t, tones.concat([nine ? r + 8 : r + 7]).map(d => fit(P(d) - 12, 52, 66)), bar, 0.011 * (0.55 + 0.6 * v), 850 * Mo.bright * (0.7 + 0.5 * v));
+    padChord(t, tones.concat([nine ? r + 8 : r + 7]).map(d => fit(P(d) - 12, 50, 64)), bar, 0.011 * (0.55 + 0.6 * v), 850 * Mo.bright * (0.7 + 0.5 * v));
     // bass: a low piano root, with the fifth on beat three when the music is fuller
     const bass = fit(P(r) - 24, 38, 50);
     if (sec.n !== 'R' || bi % 2 === 0) piano(t + hum(), bass, (sec.bare ? 0.3 : 0.5) * v, beat * 3, null, 1);
@@ -386,20 +447,22 @@ window.LS = window.LS || {};
       [r, r + 2, r + 4, r + 7, r + 9, r + 7, r + 4, r + 2].forEach((d, i) => harp(t + i * beat * 0.5 + hum(), fit(P(d), 57, 84), (i === 0 ? 0.5 : 0.34) * v * hv));
     }
     // melody
-    if (sec.theme) {
+    if (sec.theme && !(sec.half && bi % 8 >= 4)) {
+      // second voice: the nearest chord tone at least a minor third below the tune, so it always agrees with the pad
+      const harmony = m => { let best = 0; [-7, 0, 7].forEach(o => tones.forEach(d => { const q = P(d + o) + oct; if (m - q >= 3 && q > best) best = q; })); return best; };
       let pos = 0; const bars = THEME[bi % 8], oct = Mo.oct + (sec.theme === 2 && Mo.oct === 0 && S.mood !== 'tense' ? 12 : 0), end = bi % 4 === 3;
       bars.forEach(([d, len]) => {
         if (d != null) {
           const tt = t + pos * beat + hum(), m = P(d) + oct, vel = v * (0.82 + 0.22 * (d + 2) / 7) * (end ? 0.85 : 1) * rnd(0.93, 1.05);
           if (sec.theme === 2 && len >= 1 && pos > 0 && Math.random() < 0.2) piano(tt - 0.07, P(d + 1) + oct, vel * 0.35, 0.1);
           piano(tt, m, vel, len * beat);
-          if (sec.theme === 2 && len >= 1) piano(tt + 0.01, P(d - 2) + oct, vel * 0.5, len * beat);
+          if (sec.theme === 2 && len >= 1) { const h = harmony(m); if (h) piano(tt + 0.01, h, vel * 0.5, len * beat); }
           if (sec.theme === 2 && len >= 1.5) harp(tt + 0.015, m + 12, 0.3 * v);
           S.last = m;
         }
         pos += len;
       });
-    } else if (sec.n === 'B') {                               // a quiet counter-line from the chord tones
+    } else if (sec.n === 'B' || sec.half) {                   // a quiet counter-line from the chord tones
       const rh = pick([[0, 1.5, 3], [0.5, 2, 3], [0, 2.5], [1, 2, 2.5]]);
       rh.forEach(b => {
         const cands = tones.concat([r + 7]).map(d => fit(P(d) + Mo.oct, 66, 83));
@@ -411,7 +474,7 @@ window.LS = window.LS || {};
   }
   function musicTick(now) {
     if (S.next < now + 0.05) S.next = now + 0.1;      // fell behind (e.g. a background tab): pick up cleanly
-    while (S.next < now + 0.6) S.next += scheduleBar(S.next);
+    while (S.next < now + 0.6) { let bar = 3; try { bar = scheduleBar(S.next); } catch (e) { note(e); } S.next += bar; }
   }
 
   // ---------- one-shot building blocks ----------
@@ -489,7 +552,7 @@ window.LS = window.LS || {};
   function birdPhrase(t) {
     const w = A.weather, dusk = A.mood === 'hopeful';
     const sp = pick(dusk ? ['blackbird', 'blackbird', 'robin', 'pigeon'] : ['blackbird', 'blackbird', 'robin', 'robin', 'chiffchaff', 'greattit', 'pigeon']);
-    const dist = rnd(0.15, 1), lvl = 0.07 * (1 - dist * 0.6) * (w === 'rain' ? 0.5 : w === 'snow' ? 0.4 : 1);
+    const dist = rnd(0.15, 1), lvl = 0.055 * (1 - dist * 0.6) * (w === 'rain' ? 0.5 : w === 'snow' ? 0.4 : 1);
     const lp = F('lowpass', 3500 + 7000 * (1 - dist), 0.5, N.amb), into = G(lvl, PAN(rnd(-0.8, 0.8), lp));
     hold(t + BIRDS[sp](t, into), 8);
   }
@@ -537,7 +600,7 @@ window.LS = window.LS || {};
   function rtone(t, m, len, v, lead) {
     const o = O(W.radio, mtof(m)), g = G(0, N.radioIn); o.connect(g);
     if (lead) { o.frequency.setValueAtTime(mtof(m) * 0.99, t); o.frequency.linearRampToValueAtTime(mtof(m), t + 0.04); }
-    const e = lead ? env(g, t, 0.02, 0.05 * v, len * 0.5 + 0.1, len * 0.5) : env(g, t, 0.006, 0.05 * v, len);
+    const e = lead ? env(g, t, 0.02, 0.014 * v, len * 0.5 + 0.1, len * 0.5) : env(g, t, 0.006, 0.014 * v, len);
     o.start(t); o.stop(e + 0.02);
   }
   function radioBar(t, bi) {
@@ -556,7 +619,7 @@ window.LS = window.LS || {};
       return;
     }
     if (now > R.until) { R.mode = 'off'; R.next = now + rnd(1.5, 4); return; }
-    if (now > R.vnext) R.vnext = now + voice(now + 0.05, R.vf * rnd(0.9, 1.15), N.radioIn, 0.2) + rnd(0.05, 0.45);
+    if (now > R.vnext) R.vnext = now + voice(now + 0.05, R.vf * rnd(0.9, 1.15), N.radioIn, 0.06) + rnd(0.05, 0.45);
   }
   function typing(t) { const n = 5 + ((Math.random() * 12) | 0); const e = grains(t, PAN(rnd(-0.5, 0.2), N.world), 3200, 1.2, n, [0.06, 0.16], 0.035, [0.006, 0.012]); hold(e, 2); }
   function ambTick(now, dt) {
@@ -602,10 +665,10 @@ window.LS = window.LS || {};
     // UI
     tap(t, o, out) { const r = rnd(0.98, 1.02); blip(t, 1320 * r, 0.06, 0.06, out, 'sine', 950 * r); hit(t, { f: 3200, q: 1.5, v: 0.02, d: 0.012, dest: out }); },
     select(t, o, out) { const m = fit(KEY() + 7, 76, 88); mallet(t, m, 0.07, out); mallet(t + 0.06, m + 5, 0.05, out); },
-    page(t, o, out) { hit(t, { buf: B.pink, f: 1800, f2: 4200, q: 0.8, v: 0.1, a: 0.04, d: 0.18, dest: out }); },
-    stamp(t, o, out) { blip(t, 120, 0.16, 0.16, out, 'sine', 55); hit(t, { buf: B.brown, type: 'lowpass', f: 900, v: 0.3, d: 0.07, dest: out }); hit(t + 0.005, { f: 1600, q: 1.5, v: 0.05, d: 0.03, dest: out }); },
+    page(t, o, out) { hit(t, { buf: B.pink, f: 1800, f2: 4200, q: 0.8, v: 0.25, a: 0.04, d: 0.18, dest: out }); },
+    stamp(t, o, out) { blip(t, 120, 0.16, 0.08, out, 'sine', 55); hit(t, { buf: B.brown, type: 'lowpass', f: 900, v: 0.15, d: 0.07, dest: out }); hit(t + 0.005, { f: 1600, q: 1.5, v: 0.03, d: 0.03, dest: out }); },
     good(t, o, out) { const b = fit(KEY(), 62, 73); [0, 7, 12, 19].forEach((s, i) => harp(t + i * 0.07, b + s, 0.6, out)); piano(t + 0.3, b + 12, 0.4, 0.8, out); },
-    bad(t, o, out) { const b = fit(KEY(), 60, 71); piano(t, b + 7, 0.4, 0.3, out); piano(t + 0.2, b + 5, 0.35, 0.7, out); harp(t + 0.2, b - 12, 0.5, out, B.gtr); },
+    bad(t, o, out) { const b = fit(KEY(), 60, 71); piano(t, b + 7, 0.3, 0.3, out); piano(t + 0.2, b + 5, 0.26, 0.7, out); harp(t + 0.2, b - 12, 0.35, out, B.gtr); },
     ripple(t, o, out) { const b = fit(KEY(), 62, 73); [24, 19, 14, 12, 7].forEach((s, i) => harp(t + i * 0.065, b + s, 0.4, out)); piano(t + 0.36, b + 7, 0.25, 1, out); },
     chapter(t, o, out) {
       const b = fit(KEY(), 60, 71); duck(0.5, 2.5);
@@ -616,7 +679,7 @@ window.LS = window.LS || {};
     unlock(t, o, out) { const b = fit(KEY(), 62, 73); [7, 12, 14, 19, 24].forEach((s, i) => harp(t + i * 0.055, b + s, 0.45, out)); blip(t + 0.3, mtof(b + 24), 1.1, 0.02, out); blip(t + 0.3, mtof(b + 24) * 2.76, 0.4, 0.006, out); },
     place(t, o, out) { const r = rnd(0.96, 1.04); blip(t, 540 * r, 0.07, 0.07, out, 'triangle', 420 * r); hit(t, { f: 1100 * r, q: 2, v: 0.05, d: 0.03, dest: out }); },
     rankup(t, o, out) {        // da-da-daaa: root, fifth, octave, with a harp run and a bell on top
-      const b = fit(KEY(), 55, 66); duck(0.55, 2.6);
+      const b = fit(KEY(), 55, 66); duck(0.55, 2.6); out.gain.value *= 0.7;
       brass(t, b, 0.12, 0.75, out); brass(t + 0.16, b + 7, 0.12, 0.8, out);
       [b + 12, b + 7, b].forEach((m, i) => brass(t + 0.32, m, 1.1, [1, 0.6, 0.55][i], out));
       [0, 2, 7, 12, 14, 19, 24].forEach((s, i) => harp(t + 0.3 + i * 0.03, b + 12 + s, 0.35, out));
@@ -638,6 +701,7 @@ window.LS = window.LS || {};
     coo(t, o, out) { for (let i = 0; i < 3; i++) coo(t + i * 0.3, 330 - i * 10, 0.24, 0.08, out); for (let i = 0; i < 5; i++) hit(t + 0.95 + i * 0.07, { buf: B.pink, f: 1000, q: 0.8, v: 0.06, d: 0.04, dest: out }); },
     clank(t, o, out) { [[420, 0.03, 0.5], [1130, 0.018, 0.35], [1870, 0.011, 0.25], [2650, 0.007, 0.2]].forEach(([f, v, d]) => blip(t, f * rnd(0.98, 1.02), d, v, out)); hit(t, { f: 3000, q: 1, v: 0.06, d: 0.02, dest: out }); blip(t, 150, 0.1, 0.04, out, 'triangle'); },
     door(t, o, out) {
+      out.gain.value *= 0.6;
       const heavy = o.kind === 'heavy' || (o.kind !== 'wood' && (o.to === 'shed' || A.room === 'shed'));
       if (heavy) {                                                            // the depot's big door, rolling
         hit(t, { f: 900, q: 3, v: 0.08, d: 0.05, dest: out });
@@ -662,6 +726,7 @@ window.LS = window.LS || {};
     step_wood(t, o, out, pv) { blip(t, 140 * pv, 0.08, 0.06, out, 'sine', 90 * pv); hit(t, { f: 650 * pv, q: 3, v: 0.07, d: 0.05, dest: out }); if (Math.random() < 0.08) creak(t + 0.02, 0.18, out, 0.02); },
     step_floor(t, o, out, pv) { hit(t, { f: 2800 * pv, q: 0.8, v: 0.04, d: 0.03, dest: out }); blip(t, 100 * pv, 0.05, 0.05, out, 'sine', 70 * pv); },
     kettle(t, o, out) {
+      out.gain.value *= 1.6;
       const s = SRC(B.pink), bp = F('bandpass', 300, 1.4), g = G(0, out), am = G(1, g); s.connect(bp); bp.connect(am);   // the boil, rising
       const lfo = SRC(B.brown, null, 0.05); lfo.connect(G(1.6, am.gain));
       bp.frequency.setValueAtTime(300, t); bp.frequency.exponentialRampToValueAtTime(1100, t + 2.3);
@@ -696,6 +761,7 @@ window.LS = window.LS || {};
       hit(t + 0.02, { buf: B.pink, f: 1200, q: 0.8, v: 0.05, a: 0.05, d: 0.2, dest: out });
     },
     radio(t, o, out) {
+      out.gain.value *= 1.4;
       hit(t, { f: 2400, q: 2, v: 0.05, d: 0.01, dest: out });
       const s = SRC(B.white), hp = F('highpass', 500, 0.7), bp = F('bandpass', 1800, 1.1), g = G(0, out), p = g.gain; s.connect(hp); hp.connect(bp); bp.connect(g);
       p.setValueAtTime(0.0001, t + 0.012); let tt = t + 0.015; for (let i = 0; i < 9; i++) { p.linearRampToValueAtTime(rnd(0.05, 0.1), tt); tt += 0.025; }
@@ -712,7 +778,7 @@ window.LS = window.LS || {};
     }
   };
   const UI = { tap: 1, select: 1, page: 1, stamp: 1, good: 1, bad: 1, ripple: 1, chapter: 1, unlock: 1, place: 1, rankup: 1 };
-  const STEP = { last: 0, foot: 0 };
+  const STEP = { last: 0, foot: 0 }, STEPTRIM = { step_gravel: 1.2, step_ballast: 1.4, step_wood: 0.7, step_floor: 0.75 };
 
   // ---------- engine ----------
   function note(e) { if (A.errors.length < 20) A.errors.push(String((e && e.message) || e)); }
@@ -724,7 +790,7 @@ window.LS = window.LS || {};
     const now = c.currentTime;
     if (c.state !== 'running' || !A.on) { lastTick = now; return; }
     const dt = Math.min(0.5, Math.max(0, now - lastTick)); lastTick = now;
-    try { musicTick(now); ambTick(now, dt); for (const k in BED) BED[k].tick(dt); } catch (e) { note(e); }
+    try { if (A.music > 0) musicTick(now); else S.next = 0; if (A.amb > 0 || A.sfxVol > 0) ambTick(now, dt); for (const k in BED) BED[k].tick(dt); } catch (e) { note(e); }
   }
   function onVis() { if (!c) return; if (document.hidden) { if (c.state === 'running') try { quiet(c.suspend()); } catch (e) { } } else if (A.on) resume(); }
   function onGesture() { if (c && A.on && c.state !== 'running') resume(); }
@@ -737,6 +803,7 @@ window.LS = window.LS || {};
     try { build(); } catch (e) { note(e); try { quiet(c.close()); } catch (e2) { } c = A.ctx = null; Object.keys(N).forEach(k => delete N[k]); return; }
     try { const s = c.createBufferSource(); s.buffer = c.createBuffer(1, 1, c.sampleRate); s.connect(c.destination); s.start(0); } catch (e) { }   // iOS unlock
     resume(); mix(0.1);
+    try { renderPiano(); } catch (e) { note(e); }
     SHED.leaks = [rnd(1100, 1400), rnd(1650, 1950)];
     S.next = 0; TR.nextAuto = c.currentTime + rnd(25, 50); OFF.kettle = c.currentTime + rnd(30, 80); RADIO.next = c.currentTime + 1;
     lastTick = c.currentTime; timer = setInterval(tick, 100);
@@ -762,16 +829,19 @@ window.LS = window.LS || {};
     if (r === 'shed') { RADIO.mode = 'off'; RADIO.next = now + rnd(0.8, 2); }
     mix(0.8);
   };
-  A.setCrowd = function (x) { x = clamp01(x); if (Math.abs(x - A.crowd) < 0.01 && !(x === 0 && A.crowd)) return; A.crowd = x; mix(1.5); };
+  A.setCrowd = function (x) {
+    x = clamp01(x); if (Math.abs(x - A.crowd) < 0.01 && !(x === 0 && A.crowd)) return; A.crowd = x;
+    if (c && N.sum && A.room === 'hall') { BED.murmur.set(0.01 + x * 0.145, 1.5); N.musicMix.gain.setTargetAtTime(ROOMMIX.hall.music - 0.35 * x, c.currentTime, 0.5); }
+  };
   A.setNear = function (o) {
     if (!o) return; let ch = false;
     ['river', 'mainline'].forEach(k => { if (o[k] == null) return; const v = clamp01(o[k]); if (Math.abs(v - A.near[k]) >= 0.01 || (v === 0 && A.near[k])) { A.near[k] = v; ch = true; } });
-    if (ch && c && N.sum) BED.river.set(A.room === 'outside' ? A.near.river * 0.5 : 0, 0.6);
+    if (ch && c && N.sum) BED.river.set(A.room === 'outside' ? A.near.river * RIVER : 0, 0.6);
   };
   A.setVolume = function (o) {
     o = o || {}; if (o.music != null) A.music = clamp01(o.music); if (o.sfx != null) A.sfxVol = clamp01(o.sfx); if (o.amb != null) A.amb = clamp01(o.amb);
     if (!c || !N.sum) return; const t = c.currentTime;
-    N.music.gain.setTargetAtTime(A.music * 0.9, t, 0.1); N.ui.gain.setTargetAtTime(A.sfxVol, t, 0.1); N.world.gain.setTargetAtTime(A.sfxVol, t, 0.1); N.amb.gain.setTargetAtTime(A.amb, t, 0.1);
+    N.music.gain.setTargetAtTime(A.music * MUSIC, t, 0.1); N.ui.gain.setTargetAtTime(A.sfxVol * UIGAIN, t, 0.1); N.world.gain.setTargetAtTime(A.sfxVol, t, 0.1); N.amb.gain.setTargetAtTime(A.amb, t, 0.1);
   };
   A.sfx = function (name, opts) {
     const fn = SFX[name]; if (!fn || !live()) return;
@@ -781,7 +851,7 @@ window.LS = window.LS || {};
     try {
       const vol = (o.vol == null ? 1 : Math.max(0, Math.min(2, +o.vol || 0))) * (step ? rnd(0.75, 1) : 1);
       const pan = o.pan != null ? +o.pan : step ? (STEP.foot ? -0.05 : 0.05) : 0;
-      fn(t, o, G(vol, PAN(pan, UI[name] ? N.ui : N.world)), step ? rnd(0.92, 1.08) : 1);
+      fn(t, o, G(vol * (STEPTRIM[name] || 1), PAN(pan, UI[name] ? N.ui : N.world)), step ? rnd(0.92, 1.08) : 1);
     } catch (e) { note(e); }
   };
   // Dev tool: the output level right now, in dBFS ({ rms, peak }). Not needed by the game.

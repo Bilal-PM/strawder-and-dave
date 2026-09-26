@@ -22,6 +22,15 @@
   if (CFG.gameSeed != null) Math.random = mulberry(CFG.gameSeed);   // makes a run close to reproducible
   T.rnd = mulberry(CFG.policySeed == null ? 1 : CFG.policySeed);     // the test policy's own random stream
 
+  // ---------- Storage diagnostics: who removes what (in this page), and changes made by other pages ----------
+  T.storageLog = [];
+  try {
+    const rm = Storage.prototype.removeItem, clr = Storage.prototype.clear;
+    Storage.prototype.removeItem = function (k) { T.storageLog.push(['removeItem', k, (new Error().stack || '').split('\n').slice(2, 4).join(' | ')]); return rm.call(this, k); };
+    Storage.prototype.clear = function () { T.storageLog.push(['clear', '', (new Error().stack || '').split('\n').slice(2, 4).join(' | ')]); return clr.call(this); };
+    addEventListener('storage', e => T.storageLog.push(['other page', e.key, e.newValue == null ? 'removed' : 'set', e.url]));
+  } catch (e) { }
+
   // ---------- Frame counter and DOM mutation counter ----------
   const tick = () => { T.frames++; requestAnimationFrame(tick); }; requestAnimationFrame(tick);
   const LAYERS = T.LAYERS = ['title', 'setup', 'chapter', 'talk', 'panel', 'report', 'board', 'share'];
@@ -513,7 +522,7 @@
 
   // ---------- Layout audit ----------
   T.animsRunning = () => {
-    try { return document.getAnimations().filter(a => a.playState === 'running' && a.effect && a.effect.getTiming && isFinite(a.effect.getTiming().iterations) && a.effect.target && a.effect.target.closest && a.effect.target.closest('.layer.on')).length; } catch (e) { return 0; }
+    try { return document.getAnimations().filter(a => a.playState === 'running' && a.effect && a.effect.getTiming && isFinite(a.effect.getTiming().iterations) && a.effect.target && a.effect.target.closest && a.effect.target.closest('.layer.on, #ach.on, #tip.on, #toast.on')).length; } catch (e) { return 0; }
   };
   T.audit = (o) => {
     o = o || {};
@@ -521,6 +530,7 @@
     const pageSW = document.documentElement.scrollWidth;
     if (pageSW > vw + tol) issues.push({ type: 'page-overflow', msg: `page scrolls horizontally: scrollWidth ${pageSW} > viewport ${vw}` });
     const roots = T.layersOn().map(id => document.getElementById(id)); const hud = $('#hud'); if (hud && hud.classList.contains('on')) roots.push(hud);
+    for (const id of ['tip', 'toast', 'ach']) { const el = document.getElementById(id); if (el && el.classList.contains('on')) roots.push(el); }   // pop-ups over the game
     const clipAnc = el => { for (let n = el.parentElement; n && n !== document.body; n = n.parentElement) { const cs = getComputedStyle(n); if (cs.overflowX !== 'visible') return { el: n, mode: cs.overflowX }; } return null; };
     const seenMsg = new Set(), add = (type, el, msg) => { const k = type + T.desc(el); if (seenMsg.has(k)) return; seenMsg.add(k); issues.push({ type, el: T.desc(el), msg }); };
     for (const root of roots) for (const el of [root, ...root.querySelectorAll('*')]) {
@@ -565,6 +575,19 @@
         const ox = Math.min(pr.right, cr.right) - Math.max(pr.left, cr.left), oy = Math.min(pr.bottom, cr.bottom) - Math.max(pr.top, cr.top);
         if (ox > tol && oy > tol) add('hud-overlap', p, `HUD overlaps the dialogue card by ${Math.round(ox)}×${Math.round(oy)}px`);
       }
+    }
+    // 4) every button in the topmost layer that is on screen must actually receive a tap at its centre
+    const L = T.layersOn(), topIds = ['panel', 'board', 'share'].filter(id => L.includes(id));
+    const tops = topIds.length ? topIds : L.includes('report') ? ['report'] : L.filter(id => id !== 'report');
+    const tapRoots = tops.map(id => document.getElementById(id)); if (!topIds.length && !L.includes('report') && hud && hud.classList.contains('on')) tapRoots.push(hud);
+    for (const root of tapRoots) for (const b of root.querySelectorAll('button, [role=button], a[href], .opt, .choice, input')) {
+      if (!T.visibleEl(b)) continue;
+      const r = b.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2;
+      if (x < 0 || y < 0 || x > vw || y > vh) continue;                     // off screen: scroll or overflow checks cover it
+      let sc = false; for (let n = b.parentElement; n && n !== document.body; n = n.parentElement) { const nr = n.getBoundingClientRect(), ns = getComputedStyle(n); if (ns.overflowY !== 'visible' && (y < nr.top || y > nr.bottom)) { sc = true; break; } }
+      if (sc) continue;                                                      // scrolled out of its own container
+      const top = document.elementFromPoint(x, y);
+      if (top && !(top === b || b.contains(top))) add('covered', b, `a tap at its centre lands on ${T.desc(top).split(' "')[0]} instead`);
     }
     return { vw, vh, issues };
   };

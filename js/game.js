@@ -102,7 +102,7 @@
     const el = $('#hudJQ'); hud();
     if (el) { el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); const d = document.createElement('span'); d.className = 'delta'; d.textContent = (n > 0 ? '+' : '') + n + ' JP'; d.style.color = n > 0 ? '#ffe39a' : '#ffb0a6'; el.appendChild(d); setTimeout(() => d.remove(), 1700); }
     const after = rankOf(S.jp);
-    if (after.i > before.i) setTimeout(() => showBadge('🎓', 'Promoted', after.name, `${S.jp} Judgment Points. Your calls are getting noticed.`), 600);
+    if (after.i > before.i) setTimeout(() => { LS.audio.sfx('rankup'); showBadge('🎓', 'Promoted', after.name, `${S.jp} Judgment Points. Your calls are getting noticed.`); }, 600);
   }
   const achQ = []; let achBusy = false;
   function unlock(id) {
@@ -751,6 +751,7 @@
     $('#obj').innerHTML = items.join('');
     $('#obj').querySelectorAll('[data-track]').forEach(li => li.onclick = () => { S.track = li.dataset.track; LS.audio.sfx('tap'); refreshWorld(); });
     if (tgt && tgt.npc) tip('person');
+    if (LS.audio.setCrowd) LS.audio.setCrowd(world.flags.panel ? 0.15 : Math.min(1, world.entities.filter(e => e.room === 'hall' && e.kind === 'npc' && !e.hidden).length / 8));
   }
   function pad(on) { document.body.classList.toggle('exploring', !!on); }
   function explore() {
