@@ -109,7 +109,7 @@ LS.PACKS['kestrel-vale'] = {
       objective: 'Look inside the depot',
       finds: [
         { id: 'sheet', label: 'The shape under the dust sheet', text: `A railcar, asleep under a dust sheet that stops short of her cab. A little brass plate on her side: MARJORIE · 1961.` },
-        { id: 'flask', label: 'A flask on the workbench', text: `A flask on the workbench. You touch it. It's still warm.` },
+        { id: 'flask', label: 'A flask on the workbench', text: `Your torch finds a flask on the workbench, steam curling from the top. Someone's here, or was a minute ago.` },
         { id: 'window', label: 'The cab window', text: `Every window in here is grimy except one. Someone has wiped the cab window clean. Recently.` }
       ],
       meet: [
@@ -117,7 +117,7 @@ LS.PACKS['kestrel-vale'] = {
         ['narrator', `A woman in a sensible raincoat stands in the doorway. She doesn't look like someone who's been caught at anything.`],
         ['moira', `Moira Kell. I was the station master here until they locked that gate. I've still got a key. Nobody ever asked for it back.`],
         ['moira', `You'll be the new project lead. The fourth. The other three had lovely launch events. One had a balloon arch.`],
-        ['moira', `Mind that inspection pit. From tomorrow this is a worksite, and Hannah, the safety lead, will have you in full kit before you set foot in here. Quite right, too.`]
+        ['moira', `Now come out of there, slowly. There's an open inspection pit, it's dark, and neither of us has a scrap of kit on. I shouldn't be in here on my own either. From tomorrow you do it properly: induction and PPE from Hannah, and Gaz with you.`]
       ],
       // Ungraded and store-only (no JP, no metrics). Kept for a Chapter 6 callback.
       choice: { who: 'moira', q: `So. You've seen her. What do you reckon?`,
@@ -172,7 +172,7 @@ LS.PACKS['kestrel-vale'] = {
       metric_team: `Team: morale, and how much your people trust you.`,
       metric_town: `Town: how much of Harrowby believes you. They've heard it all before.`,
       metric_time: `Float: spare weeks before the opening date has to move.`,
-      metric_money: `Contingency: money held back for the risks you haven't met yet.`,
+      metric_money: `Contingency: money held back for risk: the ones you've found but can't price exactly, and some for the ones you haven't found yet.`,
       jp: `Judgment Points reward good decisions, never lucky ones.`
     },
 
@@ -299,9 +299,9 @@ LS.PACKS['kestrel-vale'] = {
     healthDecision: { who: 'gaz', lo: '1.2',
       q: `Before you go. Say the panel says yes. What do we do first, the week the money lands?`,
       options: [
-        { t: `Order the wheelsets and tyres now, and get an asbestos survey before any strip-down.`, grade: 'best', e: { evidence: 3, safety: 3 },
+        { t: `The week the money lands: order the wheelsets and tyres, and get an asbestos survey before any strip-down.`, grade: 'best', e: { evidence: 3, safety: 3 },
           why: `That's it, pal. Wheelsets and tyres take months to come, so they're ordered the week the money lands. And a 1961 train gets surveyed for asbestos before anyone takes a spanner to her.` },
-        { t: `Wait for the full detailed design, then order everything together so nothing's wasted.`, grade: 'ok', e: { evidence: 1, time: -1 },
+        { t: `Wait for the full detailed design, then order everything together so nothing's wasted.`, grade: 'ok', e: { evidence: 1 },
           why: `Safe, and tidy. But those wheelsets take months to come, and waiting for every drawing eats her float. The design won't change her wheels. Order the slow stuff early.` },
         { t: `Strip her down first thing next week, so we know exactly what we're dealing with.`, grade: 'poor', e: { safety: -4 },
           why: `Keen, and she does need opening up. But she's 1961, so assume asbestos behind those panels till a surveyor says otherwise. Survey first. And those wheelsets won't order themselves.` }
@@ -376,7 +376,7 @@ LS.PACKS['kestrel-vale'] = {
             { t: `Some, yes. We'll agree routes and times with the school, and avoid drop-off and pick-up.`, grade: 'best', e: { town: 5 }, reply: `Okay. Honest. I can work with honest.` },
             { t: `We'll keep lorries to a minimum, and every driver will be told to take it slowly near the school.`, grade: 'ok', e: { town: 1 }, reply: `“A minimum.” I've heard that one before.` },
             { t: `No. The materials can all come in by rail, so there won't be any lorries past the school.`, grade: 'poor', e: { town: 4 }, reply: `Really? Brilliant!`,
-              ripple: { title: `The first lorry`, text: `Ballast arrives by lorry, as ballast does: the line can't carry a train until it's relaid. Jess photographs it outside the school gate and tags the Authority.`,
+              ripple: { title: `The first lorry`, text: `Ballast arrives by lorry, as ballast does: no train can reach the branch until the junction is connected in the autumn. Jess photographs it outside the school gate and tags the Authority.`,
                 later: `Chapter 2 preview: the photo is shared four hundred times. The school asks for a meeting, and Priya spends a week rebuilding trust you'd already earned.` } }
           ] },
         { who: 'dev', lo: '1.6', text: `Will you be working at night? My nan's house backs onto the line.`,
@@ -422,7 +422,7 @@ LS.PACKS['kestrel-vale'] = {
       outcomes: {
         approved: { stamp: 'APPROVED', title: 'Approved to proceed, with no conditions', text: `The panel approves the business case and allocates the full £4.8 million, released stage by stage as you pass each gate. Sue also agrees to hold £100k of funder's risk allowance you can draw on, “because your risks are real and you've found them”.`, e: { money: 100, team: 6, town: 6 }, jp: 100 },
         conditions: { stamp: 'APPROVED WITH CONDITIONS', title: 'Approved, with conditions', text: `The panel approves the money, with conditions: a review of the weakest parts of the case before the first spend, and a report back to the panel.`, e: { team: 2, town: 2 }, jp: 50 },
-        deferred: { stamp: 'DEFERRED', title: 'Deferred: “not yet”', text: `The panel defers the decision for three months and asks for better evidence. That's not a no, but the clock doesn't stop.`, e: { time: -4, team: -4 }, jp: 0 }
+        deferred: { stamp: 'DEFERRED', title: 'Deferred: “not yet”', text: `The panel defers the decision to its next sitting, in a month's time, and asks for better evidence. That's not a no, but the clock doesn't stop.`, e: { time: -4, team: -4 }, jp: 0 }
       }
     },
 
@@ -670,7 +670,7 @@ LS.PACKS['kestrel-vale'] = {
     { term: 'Calibration', def: 'How well your confidence matches how often you turn out to be right.' },
     { term: 'Cess', def: 'The flat strip beside the track. It is where you walk, and where the drains usually run.' },
     { term: 'Change control', def: 'Writing a change down, pricing its effect on time, cost and risk, and getting it agreed before you do it.' },
-    { term: 'Contingency', def: 'Money held back for risks you know about but can’t price exactly yet.' },
+    { term: 'Contingency', def: 'Money held back for risk: the ones you’ve found but can’t price exactly, and some for the ones you haven’t found yet.' },
     { term: 'Critical path', def: 'The longest chain of work that depends on other work. It sets the finish date: any slip on it moves the date.' },
     { term: 'Float', def: 'How far a piece of work can slip before it delays the finish date.' },
     { term: 'Gate review', def: 'A decision point where a panel checks the case and says go, or not yet.' },

@@ -6,7 +6,7 @@ dependencies to install: the runner uses the Playwright that's already on the ma
 ## Running it
 
 ```sh
-node tests/run.js                      # every suite (about 8 minutes)
+node tests/run.js                      # every suite (about 7 minutes)
 node tests/run.js smoke gating         # just the named suites
 node tests/run.js --list               # what each suite does
 node tests/run.js --rev=HEAD           # test the last commit instead of the working tree
@@ -87,7 +87,8 @@ plants each kind of problem first, to prove the audit catches it.
 **performance**: samples `requestAnimationFrame` for 5 s outdoors and inside the depot, on desktop and mobile. It
 reports the average, p50, p95 and max frame time, fps, long frames, main-thread busy time per frame, script time and
 JS heap (from the Chrome DevTools Protocol). It FAILs if the average frame is over 50 ms and WARNs if the average is
-over 20 ms, the p95 over 33.4 ms, or the main thread busy over 12 ms per frame. Headless Chromium caps rAF at 60 Hz
+over 20 ms, the p95 over 33.4 ms, or the main thread busy over 12 ms per frame. A window over budget is sampled
+again once and the better one kept, because other work on a shared machine can spoil a window. Headless Chromium caps rAF at 60 Hz
 and renders in software, so compare builds with it rather than treating it as a device benchmark.
 
 **screenshots**: plays Chapter 1 on desktop and mobile and saves the first instance of every kind of screen (title,

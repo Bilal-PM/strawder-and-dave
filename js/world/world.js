@@ -220,6 +220,7 @@ window.LS = window.LS || {};
         const nx = p.x + dx * sp, ny = p.y + dy * sp;
         const bx = this.canStand(nx, p.y), by = this.canStand(p.x, ny);
         if (!bx) p.x = nx; if (!by) p.y = ny;
+        const lz = this.leash; if (lz && lz.room === this.room) { const ddx = p.x - lz.x, ddy = p.y - lz.y, dd = Math.hypot(ddx, ddy); if (dd > lz.r) { p.x = lz.x + ddx / dd * lz.r; p.y = lz.y + ddy / dd * lz.r; } }
         const why = [bx, by].find(b => typeof b === 'string');
         if (why && this.onBlocked && t - this.lastBlock > 3) { this.lastBlock = t; this.onBlocked(why); }
         if (bx && by && p.path) { p.path = null; p.use = null; }

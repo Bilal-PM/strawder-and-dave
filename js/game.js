@@ -413,7 +413,8 @@
           const order = shuffle(q.options.map((_, i) => i));
           const tot = l => l.cards.reduce((a, c) => a + c.w, 0), max = Math.max(...PL.lanes.map(tot)), bg = PL.background || [];
           const lo = Math.min(0, ...bg.map(b => b.from)), hi = Math.max(max + 4, ...bg.map(b => b.from + b.w)), span = hi - lo, pc = v => 100 * (v - lo) / span;
-          const gantt = `<div class="gantt">${PL.lanes.map(l => `<div class="row"><span>${l.id === 'train' ? '🚂' : '🛤️'} ${esc(l.label)}</span><i class="${l.color}" style="margin-left:${pc(0)}%;width:${100 * tot(l) / span}%">${tot(l)} wk</i></div>`).join('')}${bg.map(b => `<div class="row bgrow"><span>${esc(b.t)}</span><i class="grey" style="margin-left:${pc(b.from)}%;width:${100 * b.w / span}%"></i></div>`).join('')}<div class="axis"><span style="left:${pc(0)}%">start on site</span></div></div>`;
+          const bar = (cls, from, w, label) => `<div class="trk"><i class="${cls}" style="left:${pc(from)}%;width:${Math.min(100 - pc(from), 100 * w / span)}%">${label || ''}</i></div>`;
+          const gantt = `<div class="gantt">${PL.lanes.map(l => `<div class="row"><span>${l.id === 'train' ? '🚂' : '🛤️'} ${esc(l.label)}</span>${bar(l.color, 0, tot(l), tot(l) + ' wk')}</div>`).join('')}${bg.map(b => `<div class="row bgrow"><span>${esc(b.t)}</span>${bar('grey', b.from, b.w)}</div>`).join('')}<div class="row"><span></span><div class="trk axis"><span style="left:${pc(0)}%">start on site</span></div></div></div>`;
           const el = layer('panel', `<div class="center-wrap"><div class="card call plan"><div class="call-head"><span class="tag gold">Works plan · question ${qi + 1} of ${PL.questions.length}</span><span class="when">Project office<br>with Jo</span></div><div class="call-body">
             <h2>${q.title || (qi ? 'The critical path' : 'When can Marjorie run?')}</h2>${gantt}<p class="sit">${esc(q.q)}</p>
             ${order.map((i, n) => `<button class="opt" data-k="${n + 1}" data-c="${i}"><span class="l">${'ABC'[n]}</span><span><div class="t">${esc(q.options[i].t)}</div></span></button>`).join('')}</div></div></div>`);
@@ -464,7 +465,8 @@
     const rows = [
       { k: 'safety', nm: 'Safety & approvals', tx: S.defects.crossing === 'best' ? 'Crossing treated as a top risk; council and safety regulator involved early' : 'No clear route yet to approval for the crossing', s: 0.5 * clamp((S.m.safety - 40) / 40, 0, 1) + 0.5 * GSCORE[S.defects.crossing || 'poor'], w: 10 },
       { k: 'track', nm: 'Track condition', tx: `${dBest} of 5 defects judged like an engineer`, s: (dBest + dOk * 0.5) / 5, w: 14 },
-      { k: 'train', nm: 'Marjorie', tx: 'Full health check with Gaz', s: Object.keys(S.hotspots).length / 5, w: 8 },
+      { k: 'train', nm: 'Marjorie', tx: (() => { const g = (S.graded.find(x => x.id === 'healthDecision') || {}).grade; return g === 'best' ? 'Health check done; long-lead parts and the asbestos survey planned first' : g === 'ok' ? 'Health check done; ordering waits for the full design' : 'Health check done; strip-down planned before an asbestos survey'; })(),
+        s: 0.5 * (Object.keys(S.hotspots).length / 5) + 0.5 * (GSCORE[(S.graded.find(x => x.id === 'healthDecision') || {}).grade] || 0), w: 8 },
       { k: 'plan', nm: 'Works plan', tx: `${pl.first}/${pl.of} in order first time · critical path ${cp ? 'identified' : 'unclear'}`, s: (pl.first / pl.of) * 0.55 + ((GSCORE[pl.q[0]] || 0) + (GSCORE[pl.q[1]] || 0)) * 0.225, w: 20 },
       { k: 'forecast', nm: 'Ridership forecast', tx: !f ? '—' : f.grade === 'best' ? 'Independently checked, shown as a range' : f.grade === 'ok' ? 'Halved “to be safe”, with no evidence' : 'The consultant’s headline number', s: f ? GSCORE[f.grade] : 0, w: 16 },
       { k: 'date', nm: 'Opening date', tx: !d ? '—' : d.grade === 'best' ? 'A range, narrowing at each stage' : d.grade === 'ok' ? 'No date yet' : 'A fixed date: the bank holiday', s: d ? (d.grade === 'best' ? 1 : d.grade === 'ok' ? 0.6 : 0.2) : 0, w: 10 },
@@ -592,7 +594,8 @@
     await new Promise(res => { world.onEnterRoom = room => { if (room === 'shed') res(); }; world.onInteract = null; });
     // the dark depot: three finds by torchlight
     world.flags.dark = true; world.paused = true; pad(false);
-    const finds = CO.finds || [], spots = { sheet: [14, 7, 14, 7], flask: [27, 9, 27, 11], window: [5, 6, 5, 7] };
+    const finds = CO.finds || [], spots = { sheet: [15, 6, 15, 9], flask: [27, 9, 18, 11], window: [5, 6, 12, 10] };
+    world.leash = { room: 'shed', x: R.shed.enter.x, y: R.shed.enter.y, r: 3.5 * LS.WORLD.T }; // stay by the door: there's an open pit and no kit
     const fe = finds.map((f, i) => { const s = spots[f.id] || [8 + i * 6, 7, 8 + i * 6, 7], p = LS.WORLD.tp(s[0], s[1]), q = LS.WORLD.tp(s[2], s[3]); return { kind: 'find', id: 'co_' + f.id, room: 'shed', x: p.x, y: p.y, sx: q.x, sy: q.y, h: 16, prompt: f.label, marker: 'find', f }; });
     const hidShed = world.entities.filter(e => e.room === 'shed' && e.kind !== 'find'); hidShed.forEach(e => { e._h2 = e.hidden; e.hidden = true; });
     world.entities.push(...fe);
@@ -622,7 +625,7 @@
     for (const [who, text] of CO.advice || []) await say(who, text, 'smile');
     hide('talk');
     // Monday
-    world.fade = 1; world.flags.dark = false; world.allow = null; world.flags.openDepot = false;
+    world.fade = 1; world.flags.dark = false; world.allow = null; world.flags.openDepot = false; world.leash = null;
     fe.forEach(e => e.hidden = true); hidShed.forEach(e => e.hidden = e._h2);
     Object.assign(moira, home); team.forEach(e => e.hidden = e._h);
     setScene(sceneFor(1)); world.place('outside', sp.x, sp.y, 'up');
@@ -651,7 +654,7 @@
     const W = WD(), Lv = LS.LEVEL, tp = LS.WORLD.tp, ents = [];
     const at = (t, s) => { const p = tp(t[0], t[1]), q = s ? tp(s[0], s[1]) : p; return { x: p.x, y: p.y, sx: q.x, sy: q.y }; };
     const addE = (room, src, extra) => ents.push(Object.assign({ room }, at(src.tile, src.stand), extra));
-    const INSPECT = { station: 'Look at the station', buffer: 'The buffer stop', depot: 'Look at the depot', signalbox: 'Look at the signal box', crag: 'Kestrel Crag viewpoint', cottage: 'Beck Cottage', packhorse: 'The packhorse bridge', noticeboard: 'Read the noticeboard', busstop: 'The bus stop', war_memorial: 'The war memorial', site_board: 'Read the site board', postbox: 'The post box', board: 'Project board', lockers: 'PPE locker', kettle: 'Make a brew', urn: 'Tea urn', table: 'The Funding Panel', hall_noticeboard: 'Hall noticeboard', workbench: "Gaz's workbench", cushions: 'Seat cushions' };
+    const INSPECT = { station: 'Look at the station', buffer: 'The buffer stop', depot: 'Look at the depot', signalbox: 'Look at the signal box', crag: 'Kestrel Crag viewpoint', cottage: 'Beck Cottage', packhorse: 'The packhorse bridge', noticeboard: 'Read the noticeboard', busstop: 'The bus stop', war_memorial: 'The war memorial', site_board: 'Read the site board', postbox: 'The post box', trap: 'Trap points', board: 'Project board', lockers: 'PPE locker', kettle: 'Make a brew', urn: 'Tea urn', table: 'The Funding Panel', hall_noticeboard: 'Hall noticeboard', workbench: "Gaz's workbench", cushions: 'Seat cushions' };
     const place = (room, list) => list.forEach(src => {
       const id = src.id;
       if (src.kind === 'npc') {
@@ -809,15 +812,15 @@
       }
       if (e.id === 'lockers') { if (!S.ppe) await say('hannah', `Induction first, then kit. That's the rule, and I'm the rule.`); else await say('note', I.lockers, null, 'PPE locker'); return; }
       if (e.id === 'board') { await new Promise(res => { boardDone = res; openBoard('project'); }); return; }
-      if (e.id === 'table') { if (avail(task('panel'))) await panelReview(); return; }
-      const txt = { noticeboard: () => I.noticeboard(S.m), station: () => I.station, depot: () => I.depot, signalbox: () => I.signalbox, cottage: () => I.cottage, packhorse: () => I.packhorse, crag: () => I.crag, buffer: () => I.buffer, urn: () => I.urn, workbench: () => I.workbench, cushions: () => I.cushions, busstop: () => I.busstop, war_memorial: () => I.war_memorial, site_board: () => I.site_board, postbox: () => I.postbox, hall_noticeboard: () => I.hall_noticeboard }[e.id];
+      if (e.id === 'table') { if (avail(task('panel'))) { if (S.events.length < 2) { await director(); hide('panel'); } await panelReview(); } return; }
+      const txt = { noticeboard: () => I.noticeboard(S.m), station: () => I.station, depot: () => I.depot, signalbox: () => I.signalbox, cottage: () => I.cottage, packhorse: () => I.packhorse, crag: () => I.crag, buffer: () => I.buffer, urn: () => I.urn, workbench: () => I.workbench, cushions: () => I.cushions, busstop: () => I.busstop, war_memorial: () => I.war_memorial, site_board: () => I.site_board, postbox: () => I.postbox, hall_noticeboard: () => I.hall_noticeboard, trap: () => I.trap }[e.id];
       const val = txt && txt();
       await say('note', val || `Nothing out of the ordinary. Which, in Harrowby, is saying something.`, null, e.label);
       return;
     }
     if (e.kind !== 'npc') return;
     world.speaker = e.id;
-    if (e.panel || (e.id === 'helen' && avail(task('panel')))) { await panelReview(); return; }
+    if (e.panel || (e.id === 'helen' && avail(task('panel')))) { if (S.events.length < 2) { await director(); hide('panel'); } await panelReview(); return; }
     if (e.town) { await townChat(e.id); return; }
     if (e.id === 'moira') { const t = currentTarget(); await say('moira', W.hints[t ? t.task.id : 'done'] || W.hints.done); return; }
     if (e.team) {

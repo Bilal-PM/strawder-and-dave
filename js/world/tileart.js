@@ -2846,7 +2846,7 @@ window.LS = window.LS || {};
     const nx = 150;
     R(g, nx, by + 18, 37, 9, out); R(g, nx + 1, by + 19, 35, 7, K.wine); R(g, nx + 1, by + 19, 35, 1, K.yel); R(g, nx + 1, by + 25, 35, 1, K.yel);
     text(g, 'MARJORIE', nx + 3, by + 20, K.yel);
-    text(g, 'E79961', 22, by + 20, K.sand); text(g, 'E79961', L - 48, by + 20, K.sand);
+    text(g, 'KVL 61', 22, by + 20, K.sand); text(g, 'KVL 61', L - 48, by + 20, K.sand);
     // underframe: solebar, engines, tanks, bogies
     const uy = by + bh + 1;
     R(g, 2, uy, L - 4, 3, K.blk); R(g, 2, uy, L - 4, 1, K.s4);

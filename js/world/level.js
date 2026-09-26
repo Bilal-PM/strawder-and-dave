@@ -286,6 +286,15 @@ LS.LEVEL = {
    "note": "the parked car straddling the rails (lane stays passable at x104-105)"
   },
   {
+   "id": "trap",
+   "kind": "prop",
+   "tile": [
+    66,
+    26
+   ],
+   "note": "trap points on the depot siding, short of the turnout"
+  },
+  {
    "id": "postbox",
    "kind": "prop",
    "tile": [
@@ -474,7 +483,7 @@ LS.LEVEL = {
     53,
     38
    ],
-   "sign": "KESTREL VALE LINE REOPENING · Project compound · All visitors report to the site office · PPE beyond this point"
+   "sign": "KESTREL VALE LINE REOPENING · Project compound · All visitors report to the site office"
   }
  ],
  "benches": [

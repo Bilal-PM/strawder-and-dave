@@ -119,7 +119,7 @@
       cushions: `A pile of old seat cushions from Marjorie's saloon. They smell faintly of 1970s holidays.`,
       busstop: `The 41: Skelby, Harrowby, Kestrelford. Twice a day, if it's feeling generous. Someone has written “ha” next to the timetable.`,
       war_memorial: `The war memorial. The names have been cleaned recently, and there's a wreath at its foot. Harrowby looks after what matters to it.`,
-      site_board: `“Kestrel Vale Line reopening · Project compound · All visitors report to the site office · PPE beyond this point.” Someone has added “at last?” in pencil.`,
+      site_board: `“Kestrel Vale Line reopening · Project compound · All visitors report to the site office.” Someone has added “at last?” in pencil.`,
       postbox: `The Crag Lane postbox. It's why the car is parked across the rails. Last collection 9am, and the crossing gets forgotten at 8.58.`,
       hall_noticeboard: `The hall noticeboard: a whist drive, the minutes of the 1998 bypass consultation, and a sign-up sheet for the drop-in. Forty names. Some have brought a plus-one.`,
       car: `A hatchback parked across the rails while its driver posts a letter. Round here, people have forgotten this is a railway.`,
