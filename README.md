@@ -51,12 +51,33 @@ The world obeys engineering logic: the closed line needs PPE, the depot needs PP
 
 Helen Walsh (sponsor), Jo Adeyemi (engineering), Tom Brennan (track and site), Hannah Clarke (safety), Steve Hale (commercial), Priya Nair (community), Gaz Whitfield (depot fitter), Cllr Brian Pike (parish council, biscuits), Moira Kell (Harrowby's last station master, your mentor), and the townsfolk Len, June, Dev and Jess. Also Marjorie the railcar, Sleeper the cat and Kevin the pigeon. The humour is warm and relatable, never dark or rude.
 
-## The world (open world, top-down 3/4 view)
+## The world (open world, Stardew-style 3/4 pixel art)
 
-- **Harrowby** (south-west): High Street, the village green, school, cottages, Pritchard's bakery, the Kestrel Arms, the church and the **Village Hall** (enterable).
-- **The station yard**: Harrowby station ("temporarily closed, 2009"), **Harrowby Depot** (enterable, with Marjorie inside) and the **project office** (enterable: the planning board, the PPE lockers, the kettle).
-- **The old line**, running east: rusty bullhead rail and rotten sleepers, the little three-arch **Beck Bridge**, the **Crag Lane level crossing**, and **Kestrel Junction** on the live main line with its signal box.
-- **The beck valley** (stepping stones and a packhorse bridge), woods, **Kestrel Crag**, Moira's **Beck Cottage**, and farmland with sheep.
+A 128×84-tile valley, laid out by the level designer to a proper town plan and drawn by the technical artist in 16px pixel art (Kenney CC0 tiles plus hand-drawn railway pieces, ENDESGA-32 palette):
+
+- **Harrowby** is built along the High Street: the village hall (you can go in), the Kestrel Arms, Pritchard's bakery, cottages, the school, a green with the bus stop, and St Oswald's church. Fingerposts stand at the junctions.
+- **The station and yard:**
+  - The terminus has its platform on the track side, with a forecourt facing Station Road.
+  - Harrowby Depot stands on its own siding, off a turnout beyond the platform end. You can go in; Marjorie is inside.
+  - The project compound has a single marked **PPE access gate**, and the project office inside it can be entered.
+- **The line** runs east with a fenced corridor and cess:
+  - the three-arch **Beck Bridge**;
+  - the **Crag Lane level crossing**, a public road at 90°;
+  - the **limit of the closed line** board;
+  - **Kestrel Junction** on the live main line.
+- **Around the valley:** the beck, crossed by stepping stones, a road bridge and a packhorse bridge. Also woods, Kestrel Crag, Moira's Beck Cottage, and fields with sheep.
+
+**Getting around:**
+- Tap or click to walk: the path is worked out for you, so you can't get stuck.
+- Every door has a lit mat and a sign. Walk up onto the mat to go in, and walk out through the marked EXIT to leave.
+- A breadcrumb trail and a bouncing marker show your next objective.
+- Team members have name tags.
+- Controls: WASD, the arrow keys or tap-to-walk; E or Ⓐ to interact.
+
+**Engineering logic in the map:**
+- The closed line (within about 3 m of the rails) and the depot need your induction and PPE.
+- The live junction and main line are never walkable.
+- The level crossing is always public.
 
 ## Why it builds judgment (first principles)
 

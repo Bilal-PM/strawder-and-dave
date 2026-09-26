@@ -767,6 +767,7 @@
         try { await handle(e); } catch (err) { console.error(err); }
         hide('talk'); hide('panel'); world.speaker = null; world.ignoreTapUntil = performance.now() + 300; refreshWorld(); updateWeek(); refreshWorld();
         const after = C1.tasks.filter(t => S.done[t.id]).length;
+        save(); // save the finished activity before any surprise can interrupt
         if (!S.done.panel && after > before) { try { await director(); } catch (err) { console.error(err); } hide('panel'); refreshWorld(); }
         save();
         if (S.done.panel) { world.onInteract = null; resolve(); return; }
@@ -1168,7 +1169,9 @@
     joy.addEventListener('pointerdown', e => { e.preventDefault(); jid = e.pointerId; try { joy.setPointerCapture(jid); } catch (err) { } jmove(e); LS.audio.init(); });
     joy.addEventListener('pointermove', e => { if (e.pointerId === jid) jmove(e); });
     joy.addEventListener('pointerup', jend); joy.addEventListener('pointercancel', jend);
-    $('#padA').addEventListener('pointerdown', e => { e.preventDefault(); world.use(); });
+    // act on click (after the finger lifts), so the same tap can't also dismiss the dialogue it opens
+    $('#padA').addEventListener('pointerdown', e => e.preventDefault());
+    $('#padA').addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); world.use(); });
     applySet();
     $('#hudMenu').innerHTML = ICON.menu; $('#hudMenu').onclick = () => openBoard();
     // keep the objective arrow clear of the HUD and the touch controls

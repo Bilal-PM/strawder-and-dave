@@ -65,7 +65,7 @@ window.LS = window.LS || {};
       this.camX = 0; this.camY = 0; this.t0 = performance.now(); this.last = this.t0;
       this.fade = 0; this.fadeDir = 0; this.fadeCb = null; this.particles = []; this.objective = null; this.focus = null;
       this.touch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
-      this.onInteract = null; this.onEnterRoom = null; this.onBlocked = null; this.onDoorRefused = null; this.lastBlock = 0;
+      this.onInteract = null; this.onEnterRoom = null; this.onBlocked = null; this.onDoorRefused = null; this.lastBlock = -10;
       this.mainTrain = { y: -9999, next: 8, dir: 1 }; this.fx = []; this.scenes = {}; this.trail = []; this.crumbs = null; this.crumbT = 0;
       this.safe = { l: 0, t: 0, r: 0, b: 0 }; this.speaker = null; this.ignoreTapUntil = 0;
       this.art = null; this.ready = (LS.TileArt ? LS.TileArt.load().then(() => { this.art = LS.TileArt; this.scenes = {}; }).catch(e => console.error('TileArt', e)) : Promise.resolve());
@@ -152,7 +152,7 @@ window.LS = window.LS || {};
     }
     walkTo(x, y, use) {
       const p = this.player, path = this.findPath(this.room, p.x, p.y, x, y);
-      if (!path) { p.path = null; p.use = null; return; }
+      if (!path) { p.path = null; p.use = null; if (use && use.kind === 'door') this.tryDoor(use.door); return; }
       p.path = path.slice(1).map(([tx, ty]) => tp(tx, ty)); p.use = use || null;
       if (!p.path.length && use) { this.focus = use; this.use(); }
     }
@@ -170,7 +170,7 @@ window.LS = window.LS || {};
     }
     tryDoor(d) {
       const t = performance.now();
-      if (d.needs === 'ppe' && !this.ppe && !(this.flags && this.flags.openDepot)) { if (t - this.lastBlock > 2500) { this.lastBlock = t; if (this.onDoorRefused) this.onDoorRefused(d); } return; }
+      if (d.needs === 'ppe' && !this.ppe && !(this.flags && this.flags.openDepot)) { if (t - (this.lastRefuse || -1e9) > 2500) { this.lastRefuse = t; if (this.onDoorRefused) this.onDoorRefused(d); } return; }
       const R = ROOMS[d.room]; this.enter(d.room, R.enter.x, R.enter.y, 'up');
       if (LS.audio && LS.audio.sfx) LS.audio.sfx('door', { to: d.room });
     }
@@ -222,7 +222,13 @@ window.LS = window.LS || {};
         if (!bx) p.x = nx; if (!by) p.y = ny;
         const lz = this.leash; if (lz && lz.room === this.room) { const ddx = p.x - lz.x, ddy = p.y - lz.y, dd = Math.hypot(ddx, ddy); if (dd > lz.r) { p.x = lz.x + ddx / dd * lz.r; p.y = lz.y + ddy / dd * lz.r; } }
         const why = [bx, by].find(b => typeof b === 'string');
-        if (why && this.onBlocked && t - this.lastBlock > 3) { this.lastBlock = t; this.onBlocked(why); }
+        if (why && t - this.lastBlock > 3) {
+          this.lastBlock = t;
+          // walking into the depot yard gate before your induction: that's the depot saying no, not the line
+          const ch = this.room === 'outside' ? ((L.rows[Math.floor((ny + 2) / T)] || '')[Math.floor(nx / T)] || '') : '', D = DOORS.shed;
+          if (why === 'line_closed' && D && (ch === 'a' || (ch === '!' && Math.abs(ny - D.y) < 5 * T && Math.abs(nx - D.x) < 3 * T))) this.tryDoor(D);
+          else if (this.onBlocked) this.onBlocked(why);
+        }
         if (bx && by && p.path) { p.path = null; p.use = null; }
         p.face = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
         p.moving = true; p.phase += dt * 8;

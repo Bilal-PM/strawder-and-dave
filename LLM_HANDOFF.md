@@ -3,21 +3,30 @@
 > Last updated: 2026-09-26 · Branch `claude/lineside-chapter-1`
 
 ## Current state
-LINESIDE, **Chapter 1 "Make the Case"** of the redesigned Kestrel Vale Line story (branch `claude/lineside-chapter-1`). The viaduct story has been replaced: the line's track is worn out and Marjorie, a 1961 railcar, sits in the depot. Chapters 2–6 are designed in `docs/DESIGN.md`, but **don't build them until the user gives the go-ahead**. Do not reuse the old sponsor character’s first name (the user asked for it to be removed).
+LINESIDE, **Chapter 1 "Make the Case"**, rebuilt by a full studio team (see `docs/TEAM.md`) on branch `claude/lineside-chapter-1`. Chapters 2–6 are designed in `docs/DESIGN.md` but **must not be built until the user gives the go-ahead**. Do not reuse the old sponsor character's first name (the user asked for it to be removed). No real suppliers, rail organisations, regulators or brands.
 
-- `js/packs/kestrel-vale.js`: cast, `chapters[]` (roadmap), `c1` (intro, tasks with `needs`, talks, defects, hotspots, plan, dropin, panel, end), `calls`, `achievements`, `ranks`. **Edit content here, not in the engine.**
-- `js/packs/kestrel-vale-world.js`: `P.world.c1` placements (cast per room, task holders, panel cast, notes, memo, cat spots), townsfolk with two-tier lines by town support, hints keyed by the next task, idle lines and inspect text.
-- `js/world/world.js`: the top-down open world. Map 3450×2300. `TRACK` y 880–922 from x 1300 to 3250, `BRIDGE` (Beck Bridge) x 1725–1865, `CROSSING` (Crag Lane) x 2585–2625. Collision is a 10-unit grid: 1 = solid, 2 = the closed line (walkable only with `world.ppe`), 3 = live line (later chapters). The crossing is always open. Rooms: `office`, `hall` and `shed` (the depot, with `drawMarjorie`). `world.flags` drives visuals (pigeonGone, planned, panel). `world.pop()` shows speech bubbles.
+Files:
+- `js/world/level.js` (`LS.LEVEL`): the validated 128×84 tile map (16px tiles), with a legend of public, PPE-only and blocked tiles, building letters and door digits. It also holds the placements (`outside`, `rooms.*.entities`, `doors`, `gates`, `lamps`, `benches`, `fingerposts`, `spawn`) and the three interiors. Feet position for a tile is `LS.WORLD.tp(x, y)` = (x*16+8, y*16+12).
+- `js/world/tileart.js` + `js/world/atlas.js` (`LS.TileArt`, `LS.ATLAS`): the pixel-art renderer built on Kenney CC0 tiles (ENDESGA-32 palette), with images embedded as data URIs so canvases never taint. The API is `load`, `buildOutside(level, {lineState})`, `buildRoom(id, level, {flags})`, `drawAnimated`, `drawActor(ctx, look, x, y, facing, frame, {ppe})`, `drawAnimal` and `actorHeight`. Scenes contain `{ground, objects[{img,dx,dy,sortY,fade}], lights, anchors}`. `assets/build_atlas.py` rebuilds the atlas.
+- `js/world/world.js` (`LS.World`, `LS.WORLD`): the engine.
+  - **Collision per tile:** 0 public, 2 closed line (needs `world.ppe`, or `world.allow(room,tx,ty)` for scripted access), 3 live line, 4 junction and main line, 1 blocked.
+  - **Movement:** A* tap-to-walk (`walkTo`, `findPath`).
+  - **Doors and exits:** doors are entities with `kind:'door'` (`e.door.room`) and rooms have `kind:'exit'`. Both are handled inside `world.use()`, never through `onInteract`. Stepping up onto a mat enters; stepping down through an EXIT leaves. `onDoorRefused(d)` fires for the depot without PPE.
+  - **NPC behaviour:** `follow` (Tom on the walk), `guide(e, tx, ty)`, `wander` rects.
+  - **Guidance:** `leash` keeps the player near a point (used in the cold open); `objective` drives the chevron, edge arrow and breadcrumbs; `safe` holds the HUD margins; `speaker`, `pop()`, `flags` (`dark`, `pigeonGone`, `planned`, `panel`, `openDepot`).
+  - **Other hooks:** `onFocus` drives the mobile Ⓐ verb; `invalidate(room)` rebuilds a scene.
+- `js/packs/kestrel-vale.js`: all content: `c1.coldOpen`, `tasks` (with `needs`), `talks`, `defects`, `hotspots`, `healthDecision`, `plan` (lanes, questions, background), `dropin`, `panel`, `events` (the Director), `tips`, `end`, `calls`, `achievements`, `ranks`, `glossary`. **Edit content here, not in the engine.** `js/packs/kestrel-vale-world.js` holds text only: hints, idle and town lines (two tiers by town support), inspect text, notes, blocked messages, `doorRefused` and holders.
+- `js/audio.js`: the procedural score and SFX. `setRoom`, `setNear`, `setCrowd`, `sfx(name, opts)`; see the header in the file.
 
 ## Key engine facts (js/game.js)
-- Flow: `runChapter()` → `setupWorld()` → chapter card and intro (skipped once `S.introDone`) → `explore()` → `handle(e)` → `runTask(id)` for the task holders → `chapterEnd()` → `report()` → `comingSoon()`.
-- Gating: `avail(task)` = not done and all `needs` done. `currentTarget()` picks the objective arrow. `refreshWorld()` sets markers (task ◆, call !, find ?, done ✓, note i) and the compact objective list.
-- Activities: `defectCard`, `hotspot`, `planBoard` (tap to place, check, fix, then 2 questions), `dropin`, `panelReview` (case rows → readiness score → outcome), `doCall`/`reveal`.
-- Points: dashboard `S.m` in real units (METRICS with fmt/lfmt/df); `gainJP` + `rankOf`; the `JP` and `CAL` tables. `stats()` gives decision quality over `S.graded` plus Brier over the Calls. `unlock(id)` shows achievement toasts, persisted in `localStorage.lineside_ach`.
-- Save: `localStorage.lineside_v2`, written after every interaction, including position. Continue resumes mid-chapter. The completed result goes to `lineside_c1_result`.
+- **Flow:** `runChapter()` → `setupWorld()` (entities from `LS.LEVEL`) → `chapterCard` (waits for a click and shows the learning objective) → `coldOpen()` → `explore()` → `handle(e)` → `runTask(id)` → `chapterEnd()` → `report()` → `comingSoon()`.
+- **Gating and guidance:** `avail(task)` checks that every `needs` is done. `currentTarget()` picks the nearest unjudged defect or hotspot and returns null during the cold open. `refreshWorld()` sets the markers and the NOW/also/locked objective list, where tapping an item tracks it.
+- **Director:** `director()` fires only after a task completes. It never interrupts an activity in progress, waits 90 s after exploring starts, and leaves at least 60 s between events. It allows up to 3 surprises, and makes sure at least 1 fires before the panel (2 if a fast player reaches the panel). `runEvent` telegraphs the call ("Answer"), shows "Why now" and, after a luck roll, the odds.
+- **Scoring:** the dashboard `S.m` is in real units, with metrics revealed progressively. JP use the `JP` and `CAL` tables. `stats()` is decision quality plus Brier calibration. The panel readiness score comes from `caseRows()` (which includes a safety and approvals row) plus the answers to the questions.
+- **Save:** `localStorage.lineside_v2` is written after every interaction and before any surprise. Achievements are in `lineside_ach`. Note that headless Chromium sometimes wiped `file://` localStorage across a reload, so serve over http(s) in production.
 
 ## Testing
-No build step. Playwright (`/opt/node22/lib/node_modules/playwright`) scripts (kept outside the repo): a full playthrough with expert or random choices on desktop and mobile, a BFS reachability check with and without PPE, save/continue, and live walking. Use `ignoreHTTPSErrors:true` so Google Fonts load in the sandbox.
+Run `node tests/run.js` (about 7 min; see `tests/README.md`). It runs 8 suites: smoke, playthrough (expert and random, on desktop and mobile), gating, reachability, save, layout, performance and screenshots. `--rev=HEAD` tests the last commit and `--seed=N` replays a random run.
 
 ---
 
