@@ -1,11 +1,13 @@
 # Handover to Codex: full visual overhaul of LINESIDE
 
 > **Paste this to Codex:**
-> You are the art and rendering lead for LINESIDE, a browser game (vanilla JS, Canvas 2D, no build step). Repository: `Bilal-PM/strawder-and-dave`. Start from branch `claude/lineside-chapter-1` and work on a new branch, `codex/visual-overhaul`.
+> You are the art and rendering lead for LINESIDE, a browser game (vanilla JS, Canvas 2D, no build step). Repository: `Bilal-PM/strawder-and-dave`. Start from branch `claude/lineside-chapter-1`, not `main`, which holds an older prototype. Work on a new branch, `codex/visual-overhaul`. If you find yourself on `main`, run `git fetch origin claude/lineside-chapter-1 && git checkout -b codex/visual-overhaul origin/claude/lineside-chapter-1`.
+>
+> Read `AGENTS.md` first. It covers the project map, how to run and test, and the content rules.
 >
 > Your job: make the game world look **stunning**, using your image generation. That covers the outdoor valley, the three interiors, every character, the animals, the dialogue portraits, and the title and share key art. Do not change gameplay, map layout, story or rules.
 >
-> Read `docs/HANDOVER_CODEX_VISUALS.md` (this file) end to end first. Then look at `docs/visual-brief/`. Build a vertical slice, show screenshots, then do the rest. Every existing test must still pass: `node tests/run.js`.
+> Then read `docs/HANDOVER_CODEX_VISUALS.md` (this file) end to end, and look at `docs/visual-brief/`. Build a vertical slice, show screenshots, then do the rest. Every existing test must still pass: `node tests/run.js`.
 
 ---
 
