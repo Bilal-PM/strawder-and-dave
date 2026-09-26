@@ -364,7 +364,7 @@ window.LS = window.LS || {};
         const duck = (sc.anchors && sc.anchors.duck) || tp(83, 22); if (!this.flags.drainCleared) add(duck.y, () => this.animal(x, 'duck', duck.x, duck.y, t));
         if (this.mainTrain.y > -2000) add(this.mainTrain.y + 160, () => this.drawMainTrain(x, this.mainTrain.y));
       }
-      if (this.room === 'shed' && !this.flags.pigeonGone) { const a = (sc.anchors && sc.anchors.pigeon) || { x: 24 * T, y: 4 * T + 6 }; add(a.y + 40, () => this.animal(x, 'pigeon', a.x, a.y, t)); }
+      if (this.room === 'shed' && !this.flags.pigeonGone) { const a = (sc.anchors && sc.anchors.pigeon) || { x: 24 * T, y: 4 * T + 6 }; add(a.sortY != null ? a.sortY : a.y + 40, () => this.animal(x, 'pigeon', a.x, a.y, t)); }
       if (p.look && !this.attract) add(p.y, () => this.actor(x, p.look, p.x, p.y, p.face, p.moving ? Math.floor(p.phase) : 0, { ppe: this.ppe, moving: p.moving }));
       Lst.sort((a, b) => a[0] - b[0]); for (const [, fn] of Lst) fn();
       this.grade(x, t, sc);
@@ -450,6 +450,20 @@ window.LS = window.LS || {};
         const w = x.measureText(e.name).width + 12;
         x.fillStyle = 'rgba(24,20,37,.72)'; rrect(x, X - w / 2, Y - 8 * big, w, 16 * big, 8 * big); x.fill();
         x.fillStyle = '#f7f1e7'; x.fillText(e.name, X, Y + 0.5);
+      }
+      // sign labels: fingerposts and boards whose words would be too small in the art show them when you walk up
+      const scn = this.scenes[this.room], P = this.player;
+      if (scn && !this.attract) for (const ob of scn.objects) {
+        if (!ob.labels) continue;
+        const gx = ob.dx + ob.w / 2, dist = Math.hypot(P.x - gx, P.y - ob.sortY); if (dist > 4.5 * T) continue;
+        const a = Math.max(0, Math.min(1, (4.5 * T - dist) / T)), X = sx(gx), top = sy(ob.dy) - 6 * big;
+        x.font = `600 ${Math.round(11.5 * big)}px Inter, system-ui, sans-serif`; x.textAlign = 'left';
+        const lh = 17 * big, w = Math.max(...ob.labels.map(l => x.measureText(l).width)) + 20, h = ob.labels.length * lh + 10;
+        const L0 = Math.max(8, Math.min(innerWidth - w - 8, X - w / 2)), T0 = Math.max(8, top - h);
+        x.globalAlpha = a; x.fillStyle = 'rgba(247,241,231,.96)'; rrect(x, L0, T0, w, h, 8 * big); x.fill();
+        x.strokeStyle = 'rgba(24,20,37,.25)'; x.lineWidth = 1; x.stroke();
+        x.fillStyle = '#2a1d22'; ob.labels.forEach((l, i) => x.fillText(l, L0 + 10, T0 + 5 + lh * (i + 0.5)));
+        x.globalAlpha = 1; x.textAlign = 'center';
       }
       // entity markers
       for (const e of vis) {

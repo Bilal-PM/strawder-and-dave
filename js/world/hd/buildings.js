@@ -23,11 +23,11 @@
     return true;
   }
   // crisp pixel lettering: render with canvas text at art resolution, then snap alpha to on/off
-  function letter(src, rects, area, name) {
+  function letter(src, rects, area, name, words) {
     let c = null;
     for (const [key, r] of Object.entries(rects || {})) {
       if (!r) continue;
-      const text = WORDS[`${area}/${name}/${key}`] ?? (/^[A-Z0-9' .·-]+$/.test(key) && key.length > 2 ? key : '');
+      const text = (words || WORDS)[`${area}/${name}/${key}`] ?? (/^[A-Z0-9' .·-]+$/.test(key) && key.length > 2 ? key : '');
       if (!text) continue;
       if (!c) { c = HD.cv(src.width, src.height); HD.G(c).drawImage(src, 0, 0); }
       const g = HD.G(c), [x, y, w, h] = r;
@@ -46,6 +46,7 @@
     }
     return c || src;
   }
+  HD.letter = letter;
   const lettered = {};
   function area(sc, level, opts, name) {
     const A = HD.A[name]; if (!A) return { add: [], kill: [] };

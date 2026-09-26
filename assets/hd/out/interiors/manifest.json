@@ -188,7 +188,7 @@
      1248,
      144
     ],
-    "file": "hall_hall_noticeboard.png",
+    "file": "hall_noticeboard.png",
     "foot": [
      25,
      2,
@@ -1041,7 +1041,7 @@
      ]
     },
     "tile": [
-     26,
+     27,
      9
     ],
     "w": 148

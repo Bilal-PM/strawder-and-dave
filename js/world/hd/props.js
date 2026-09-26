@@ -56,8 +56,17 @@
           const n = obj(treeFor(x, y), x * T + 8, y * T + 14); if (n) add.push(n);
         }
       }
+      // fingerposts: HD post with the right arms; the words show as a readable label when the player walks up
+      const ARROW = { N: '↑', E: '→', S: '↓', W: '←' }, posts = level.fingerposts || [];
+      const fpFor = dirs => ['NESW', 'NEW', 'NE', 'EW'].find(k => dirs.every(d => k.includes(d))) || 'NESW';
+      for (const fp of posts) {
+        const dirs = fp.arms.map(a => a[0]), n = obj('fingerpost_' + fpFor(dirs), fp.tile[0] * T + 8, fp.tile[1] * T + 14);
+        if (n) { n.labels = fp.arms.map(a => `${ARROW[a[0]] || ''}  ${a.slice(3)}`); n.kind = 'hd_fingerpost'; add.push(n); }
+      }
+      const nearPost = o => posts.some(fp => Math.abs(o.dx + (o.w || 0) / 2 - (fp.tile[0] * T + 8)) < 40 && Math.abs(o.sortY - (fp.tile[1] * T + 14)) < 24);
       const keep = [];
       for (const o of sc.objects) {
+        if (o.kind === 'fingerpost' && posts.length && nearPost(o)) continue;
         const gx = o.dx + (o.w || 0) / 2, gy = o.sortY;
         if (o.kind === 'tree') continue;
         if (SWAP[o.kind]) { const n = obj(SWAP[o.kind], Math.round(gx), gy); if (n) { add.push(n); continue; } }

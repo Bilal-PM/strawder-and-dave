@@ -36,7 +36,7 @@ window.LS = window.LS || {};
     const m = A.chars && A.chars.manifest; if (!m) return;
     for (const [name, e] of Object.entries(m)) {
       if (!e || !e.file) continue;
-      if (e.anims) { CH.animals[name] = e; continue; }
+      if (e.anims) { CH.animals[e.id || name] = e; continue; }
       if (!e.look) continue;
       const k = lookKey(e.look), slot = CH.byLook.get(k) || {};
       slot[e.ppe ? 'ppe' : 'plain'] = e; CH.byLook.set(k, slot);
@@ -91,12 +91,14 @@ window.LS = window.LS || {};
   const HD = LS.HD = {
     R, T, A, IMG, img, cv, G, passes: [], onLoad: null,
     pass(p) { HD.passes.push(p); HD.passes.sort((a, b) => (a.order || 0) - (b.order || 0)); },
-    animal(ctx, e, im, kind, x, y, t, opts) {   // default animal drawer: first anim, looping at 4 fps
-      const names = Object.keys(e.anims || {}), a = e.anims[opts.anim] || e.anims[names[0]], [fw, fh] = e.frame, [ax, ay] = e.anchor || [fw / 2, fh - 2];
-      const f = Math.floor(t * 4) % a[1], flip = (opts.face || (opts.facing === 'left' ? -1 : 1)) < 0;
-      ctx.save(); ctx.translate(x, y); if (flip) ctx.scale(-1, 1);
+    animal(ctx, e, im, kind, x, y, t, opts) {   // idle animation per kind, facing left or right
+      const base = opts.anim || { cat: 'sit', duck: 'swim', pigeon: 'idle', sheep: 'graze' }[kind] || Object.keys(e.anims)[0].replace(/_(left|right)$/, '');
+      const left = (opts.face != null ? opts.face < 0 : opts.facing === 'left');
+      const a = e.anims[`${base}_${left ? 'left' : 'right'}`] || e.anims[base] || Object.values(e.anims)[0];
+      const [fw, fh] = e.frame, [ax, ay] = e.anchor || [fw / 2, fh - 2], f = Math.floor(t * 2 + (x % 7)) % a[1];
       if (opts.alpha != null) ctx.globalAlpha = opts.alpha;
-      ctx.drawImage(im, f * fw, a[0] * fh, fw, fh, -ax / R, -ay / R, fw / R, fh / R); ctx.restore();
+      ctx.drawImage(im, f * fw, a[0] * fh, fw, fh, x - ax / R, y - ay / R, fw / R, fh / R);
+      if (opts.alpha != null) ctx.globalAlpha = 1;
     }
   };
 
