@@ -166,6 +166,22 @@ window.LS = window.LS || {};
     a.useM = useM; a.useG = useG;
     this.drawRain(x, t, a, c, D, Z, cx, cy, toS, red, S);
   };
+  // depth of field: a gentle tilt-shift, softening the top and bottom of the view so the eye sits on the player
+  P.depthOfField = function (x) {
+    const a = A(this); if (a.lite || this.reduced || this.attract) return;
+    const D = this.cv, q = 6, sw = Math.ceil(D.width / q), sh = Math.ceil(D.height / q);
+    const c = this._dof || (this._dof = document.createElement('canvas')); if (c.width !== sw || c.height !== sh) { c.width = sw; c.height = sh; }
+    const g = c.getContext('2d'); g.imageSmoothingEnabled = true; g.drawImage(D, 0, 0, sw, sh);
+    x.setTransform(1, 0, 0, 1, 0, 0); x.imageSmoothingEnabled = true;
+    const band = 0.22, steps = 6;
+    for (let i = 0; i < steps; i++) {
+      const f0 = band * i / steps, f1 = band * (i + 1) / steps, al = 0.85 * (1 - i / steps);
+      x.globalAlpha = al;
+      x.drawImage(c, 0, f0 * sh, sw, (f1 - f0) * sh, 0, f0 * D.height, D.width, (f1 - f0) * D.height);                        // top
+      x.drawImage(c, 0, (1 - f1) * sh, sw, (f1 - f0) * sh, 0, (1 - f1) * D.height, D.width, (f1 - f0) * D.height);            // bottom
+    }
+    x.globalAlpha = 1; x.imageSmoothingEnabled = false;
+  };
   P.drawRain = function (x, t, a, c, D, Z, cx, cy, toS, red, S) {
     // 6. rain: streaks on the wind, splash rings on the ground
     if (c.rain > 0.03) {

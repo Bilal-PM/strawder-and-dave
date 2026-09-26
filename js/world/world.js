@@ -372,6 +372,7 @@ window.LS = window.LS || {};
       if (p.look && !this.attract) add(p.y, () => this.actor(x, p.look, p.x, p.y, p.face, p.moving ? Math.floor(p.phase) : 0, { ppe: this.ppe, moving: p.moving }));
       Lst.sort((a, b) => a[0] - b[0]); for (const [, fn] of Lst) fn();
       this.grade(x, t, sc);
+      if (this.depthOfField) this.depthOfField(x);
       this.drawUI(x, t, cx, cy);
     }
     actor(x, look, px, py, face, frame, opt) {

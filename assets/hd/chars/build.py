@@ -47,6 +47,8 @@ def main(only=None):
     preview(ppe_fronts, os.path.join(OUT, 'preview_ppe.png'), scale=3, cols=9)
     if not only or 'moira' in only:
         moira_vs_reference()
+    import profiles
+    profiles.build(only, os.path.join(OUT, 'preview_profiles.png'))
     if walks: preview(walks, os.path.join(OUT, 'preview_walk.png'), scale=3, cols=8)
     if gifs: walk_gif(gifs)
     return entries

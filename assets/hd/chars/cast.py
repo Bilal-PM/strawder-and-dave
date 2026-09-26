@@ -92,7 +92,7 @@ DRESS = {
     'sue': dict(topStyle='suit', top='plum', inner='cream', legwear='skirt', skirt='plum', tights='charcoal', legs='charcoal',
                 feet='shoes', feet_ramp='paint_black', earrings=True, sh=11),
     'raj': dict(topStyle='jacket', top='forest', inner='white', legs='charcoal', feet='shoes', feet_ramp='leather', sh=12),
-    'len': dict(topStyle='jacket', top='tweed', inner='cream', flatcap='tweed', legs='charcoal', feet='shoes', feet_ramp='leather',
+    'len': dict(topStyle='jacket', top='tweed', inner='cream', flatcap='tweed', cap=None, legs='charcoal', feet='shoes', feet_ramp='leather',
                 age='old', sh=12, button='leather', hair='hair_grey'),
     'june': dict(topStyle='tee', top='wine', apron=True, legs='charcoal', feet='shoes', feet_ramp='paint_black', sh=12,
                  hair='hair_brown', hairpin=True),

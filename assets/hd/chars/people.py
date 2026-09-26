@@ -1327,37 +1327,46 @@ class Person:
             for (x, y) in line(CX + 1, top, CX - 8, top + 19):
                 f.put(x, y, br, 1, sp); f.put(x + 1, y, br, 2, sp)
 
+    # profile head geometry (character faces LEFT). The ear sits at the head's horizontal centre, just behind the jaw.
+    EAR_X = CX - 1                                         # ear columns EAR_X .. EAR_X + 3, rows 28 .. 34
+    FRONT = {19: 16, 20: 14, 21: 13, 22: 13, 23: 12, 24: 12, 25: 12, 26: 12, 27: 12, 28: 13, 29: 13, 30: 12,
+             31: 11, 32: 10, 33: 10, 34: 11, 35: 12, 36: 12, 37: 11, 38: 12, 39: 13}
+    # forehead -> brow (27) -> eye socket (28-29) -> nose protruding 2px (32-33) -> recessed mouth (35) ->
+    # chin 1px behind the nose tip (37) -> under the chin (39)
+
+    @staticmethod
+    def jaw_bottom(x):
+        """Lowest face row at column x: the jaw runs from the chin back up to the bottom of the ear."""
+        return 39 - (x - 13) * 4.6 / (Person.EAR_X - 13)
+
     def side_head(self):
         s, f, b = self.s, self.f, self.b
-        sk = s['skin']
+        sk = s['skin']; EX = self.EAR_X
         np_ = f.part()
-        f.paint(rows({y: (CX - 3, CX + 3) for y in range(37 + b, 43 + b)}), sk, np_, bias=-0.3, lo=2, hi=3)
+        f.paint(rows({y: (CX - 4, CX + 4) for y in range(34 + b, 43 + b)}), sk, np_, bias=-0.3, lo=2, hi=3)
         hp = f.part()
-        # profile: an explicit face contour (forehead, a small nose bump, a flat mouth, a clear chin and jaw)
-        skull = set(ell(CX + 1.5, 27 + b, 12.6, 12.8))
-        front = {19: 14, 20: 13, 21: 13, 22: 12, 23: 12, 24: 12, 25: 12, 26: 12, 27: 12, 28: 12, 29: 12, 30: 12,
-                 31: 11, 32: 10, 33: 10, 34: 11, 35: 12, 36: 12, 37: 12, 38: 13, 39: 14, 40: 16}
+        skull = set(ell(CX + 2.0, 25.6 + b, 13.4, 12.9))            # egg: the back of the skull well behind the ear
         right = {}
         for (x, y) in skull: right[y] = max(right.get(y, -1), x)
-        m = set(p for p in skull if p[1] < 19 + b)
-        for yy, x0 in front.items():
+        m = set(p for p in skull if p[1] - b < 19 and p[0] >= 14)
+        for yy, x0 in self.FRONT.items():
             y = yy + b
-            r = right.get(y, CX + 8)
-            for x in range(x0, r + 1): m.add((x, y))
-        jaw = lambda x: 40 if x <= CX - 2 else (39 if x <= CX + 2 else 38)
-        m = set(p for p in m if p[1] - b <= jaw(p[0]) or p[0] > CX + 6)
+            for x in range(x0, right.get(y, CX + 10) + 1):
+                if x <= EX + 3 and yy > self.jaw_bottom(x) + 0.5: continue
+                m.add((x, y))
+        m = set(p for p in m if p in skull or p[0] < CX - 4)
         self.face_mask = m
         f.paint(m, sk, hp, mode='sph', cx=CX - 3, rx=15, cy=25 + b, ry=16, bias=0.34, lo=1, hi=3,
                 th=(0.99, 0.52, 0.30, 0.12))
-        for (x, y) in m:                                       # jaw line
-            if (x, y + 1) not in m and 14 < x < CX + 6: f.step(x, y, 1)
+        for (x, y) in m:                                             # the jaw line reads as one darker step
+            if (x, y + 1) not in m and 13 < x <= EX + 2: f.step(x, y, 1)
         ep = f.part(shadow=False)
-        ear = [(x, y) for x in range(CX + 2, CX + 6) for y in range(27 + b, 34 + b)]
-        ear = [p for p in ear if p not in {(CX + 2, 27 + b), (CX + 5, 27 + b), (CX + 5, 33 + b), (CX + 2, 33 + b)}]
+        ear = [(x, y) for x in range(EX, EX + 4) for y in range(28 + b, 35 + b)]
+        ear = [p for p in ear if p not in {(EX, 28 + b), (EX + 3, 28 + b), (EX + 3, 34 + b), (EX, 34 + b)}]
         for (x, y) in ear: f.put(x, y, sk, 2, ep)
-        for (x, y) in [(CX + 3, 29 + b), (CX + 3, 30 + b), (CX + 4, 29 + b), (CX + 3, 31 + b)]: f.put(x, y, sk, 3, ep)
-        f.put(CX + 2, 28 + b, sk, 1, ep); f.put(CX + 4, 28 + b, sk, 1, ep); f.put(CX + 5, 30 + b, sk, 3, ep)
-        if s.get('earrings'): f.put(CX + 3, 34 + b, 'gold', 1, ep)
+        for (x, y) in [(EX + 1, 30 + b), (EX + 1, 31 + b), (EX + 2, 30 + b), (EX + 1, 32 + b)]: f.put(x, y, sk, 3, ep)
+        f.put(EX, 29 + b, sk, 1, ep); f.put(EX + 2, 29 + b, sk, 1, ep); f.put(EX + 3, 31 + b, sk, 3, ep)
+        if s.get('earrings'): f.put(EX + 1, 35 + b, 'gold', 1, ep)
         self.ear = set(ear)
         fp = f.part(shadow=False, sep=False)
         ey = 28 + b; ex = 15
@@ -1368,15 +1377,16 @@ class Person:
         f.put(ex, ey + 3, eye, 1, fp); f.put(ex + 1, ey + 3, eye, 2, fp)
         br = s.get('brow', s['hair']); bi = s.get('brow_i', 3)
         by = ey - 3 if not s.get('glasses') else ey - 4
-        for k, x in enumerate(range(ex - 1, ex + 3)): f.put(x, by + (1 if k == 3 else 0), br, bi, fp)
-        f.put(ex + 2, ey + 6, sk + '_blush', 1, fp); f.put(ex + 3, ey + 6, sk + '_blush', 1, fp)
-        # nose: lit tip, shaded underside
+        for k, x in enumerate(range(ex - 2, ex + 2)): f.put(x, by + (1 if k == 3 else 0), br, bi, fp)
+        f.put(12, 27 + b, sk, 1, fp)                                                      # brow ridge catches light
+        f.put(13, 28 + b, sk, 2, fp)                                                      # eye socket
+        f.put(ex + 3, ey + 5, sk + '_blush', 1, fp); f.put(ex + 4, ey + 5, sk + '_blush', 1, fp)
+        # nose: 1px highlight on the bridge/tip, shaded underside
         f.put(11, 31 + b, sk, 1, fp); f.put(10, 32 + b, sk, 0, fp); f.put(10, 33 + b, sk, 1, fp)
         f.put(11, 34 + b, sk, 2, fp); f.put(12, 34 + b, sk, 2, fp)
-        if not s.get('beard'):
-            f.put(13, 36 + b, sk, 3, fp); f.put(14, 36 + b, sk + '_lip', 2, fp)      # a small closed smile
-            f.put(15, 35 + b, sk, 2, fp)
-        f.put(13, 38 + b, sk, 1, fp)                                                     # chin catches the light
+        # mouth: one darker line, recessed behind the nose tip (no lip pixels)
+        f.put(12, 35 + b, sk, 3, fp); f.put(13, 35 + b, sk, 2, fp)
+        f.put(11, 37 + b, sk, 1, fp)                                                      # chin highlight
         if s.get('age') == 'old': f.put(ex + 3, ey + 2, sk, 2, fp); f.put(ex + 3, ey + 3, sk, 2, fp)
         if s.get('beard'):
             bp = f.part(); hr = s.get('beard_ramp', s['hair'])
@@ -1384,17 +1394,23 @@ class Person:
             bm = []
             for (x, y) in m:
                 yy = y - b
+                if x > EX + 1: continue                     # never behind the ear
                 if style == 'goatee':
                     if yy >= 36 and x < 17: bm.append((x, y))
                     continue
-                if yy >= 35 and x < CX + 3: bm.append((x, y))
-                elif yy >= 31 and 18 <= x < CX + 3: bm.append((x, y))
-                elif CX <= x <= CX + 1 and yy >= 26: bm.append((x, y))     # sideburn
-            bm += [(x, 41 + b) for x in range(13, 22)] + [(x, 42 + b) for x in range(14, 19)]
-            f.paint(bm, hr, bp, mode='sph', cx=CX - 3, rx=13, cy=31 + b, ry=12, lo=1, hi=4,
+                if yy >= 36: bm.append((x, y))                                   # chin
+                elif yy >= 31 and 17 <= x: bm.append((x, y))                      # jaw and cheek
+                elif x >= EX - 2 and yy >= 27: bm.append((x, y))                  # sideburn in front of the ear
+            for x in range(12, EX + 1):                                           # a little fullness under the jaw
+                yb = int(round(self.jaw_bottom(x))) + 1
+                bm.append((x, yb + b))
+                if x < EX - 3: bm.append((x, yb + 1 + b))
+            bm = [p for p in bm if p not in self.ear]
+            f.paint(bm, hr, bp, mode='sph', cx=CX - 5, rx=13, cy=31 + b, ry=12, lo=1, hi=4,
                     tex=lambda x, y: -0.16 if hash01(x, (y - b) // 2, 5) > 0.7 else 0)
-            for x in range(11, 16): f.put(x, 35 + b, hr, 2 if x < 13 else 3, bp)            # moustache
-            f.put(13, 36 + b, hr, 4, bp); f.put(14, 36 + b, hr, 4, bp)                        # mouth line
+            for x in range(11, 15): f.put(x, 34 + b, hr, 2 if x < 13 else 3, bp)            # moustache under the nose
+            f.put(12, 35 + b, hr, 4, bp); f.put(13, 35 + b, hr, 4, bp)                        # mouth line
+            f.put(11, 36 + b, hr, 1, bp)
         self.side_hair()
         if s.get('glasses'):
             gp = f.part(shadow=False, sep=False)
@@ -1403,61 +1419,65 @@ class Person:
                            (ex - 2, ey + 2), (ex - 2, ey + 3), (ex - 1, ey + 4), (ex, ey + 4), (ex + 1, ey + 4), (ex + 2, ey + 3),
                            (ex + 2, ey - 1)]:
                 f.put(x, y, rim, 1 if y < ey + 2 else 2, gp)
-            for x in range(ex + 3, CX + 3): f.put(x, ey - 1, rim, 2, gp)
+            for x in range(ex + 3, EX + 1): f.put(x, ey - 1, rim, 2, gp)
             f.put(ex - 1, ey - 1, 'lens', 0, gp)
 
     def side_hair(self):
         s, f, b = self.s, self.f, self.b
-        st = s['hairStyle']; hr = s['hair']
+        st = s['hairStyle']; hr = s['hair']; EX = self.EAR_X
         if st == 'bald':
             dp = f.part(sep=False)
-            m = [p for p in ell(CX + 1, 25.5 + b, 13.4, 13.4) if p[1] < 23 + b]
+            m = [p for p in ell(CX + 2, 25.6 + b, 13.4, 12.9) if p[1] < 23 + b and p[0] >= 14]
             f.paint(m, s['skin'], dp, mode='sph', cx=CX - 3, rx=15, cy=20 + b, ry=13, bias=0.14, lo=0, hi=3,
                     th=(0.95, 0.66, 0.42, 0.2))
-            for (x, y) in [(CX - 5, 14 + b), (CX - 4, 14 + b), (CX - 5, 15 + b)]: f.put(x, y, s['skin'], 0, dp)
+            for (x, y) in [(CX - 5, 15 + b), (CX - 4, 15 + b), (CX - 5, 16 + b)]: f.put(x, y, s['skin'], 0, dp)
             hp = f.part()
-            mm = [p for p in ell(CX + 7, 30 + b, 8.4, 6.4) if p[0] >= CX + 5 and p not in self.ear and p in self.face_mask]
+            mm = [p for p in self.face_mask if p[0] > EX + 3 and 23 + b <= p[1] <= 36 + b] + \
+                 [p for p in self.face_mask if EX <= p[0] <= EX + 3 and 24 + b <= p[1] <= 27 + b]
             f.paint(mm, hr, hp, mode='sph', lo=1, hi=4, tex=lambda x, y: -0.14 if (x + 2 * y) % 5 == 0 else 0.03)
             self.hair_mask = set(mm)
             return
-        geo = {'curly': (16.6, 16.2, 1.8, 23.6), 'bob': (15.4, 16.2, 1.6, 25.4), 'short': (14.2, 13.2, 1.4, 24.4),
-               'bun': (14.6, 13.8, 1.6, 24.2), 'ponytail': (14.6, 13.8, 1.6, 24.2), 'long': (15.0, 14.4, 1.8, 24.4)}
+        geo = {'curly': (16.6, 16.2, 2.4, 23.6), 'bob': (15.4, 16.2, 2.2, 25.4), 'short': (14.4, 13.4, 2.0, 24.6),
+               'bun': (14.6, 13.8, 2.2, 24.4), 'ponytail': (14.6, 13.8, 2.2, 24.4), 'long': (15.0, 14.4, 2.4, 24.6)}
         crx, cry, ox, ccy = geo[st]
         ccx = CX + ox
         cran = set(ell(ccx, ccy + b, crx, cry))
         front = {'bun': 19.2, 'bob': 23.5, 'short': 18.6, 'curly': 20.6, 'ponytail': 19.0, 'long': 19.6}[st]
-        back_low = {'short': 36, 'bun': 38, 'ponytail': 36, 'bob': 41, 'curly': 39, 'long': 42}[st]
+        back_low = {'short': 37, 'bun': 38, 'ponytail': 37, 'bob': 41, 'curly': 39, 'long': 42}[st]
+        cover = {'bob': 40, 'curly': 34, 'long': 40}.get(st)            # styles that hang over the ear
         m = set()
-        sideburn = {'short': 31, 'bun': 27, 'ponytail': 27, 'bob': 40, 'curly': 34, 'long': 40}[st]
         for (x, y) in cran:
-            if (x, y) not in self.face_mask: m.add((x, y)); continue
+            if (x, y) not in self.face_mask:
+                if x >= 13: m.add((x, y))
+                continue
             yy = y + 0.5 - b
-            if x <= CX + 1:
-                # front hairline: from the forehead sweeping back and down towards the top of the ear
-                t = max(0.0, (x - 12) / (CX + 1 - 12))
-                lim = front + t * t * 8.5
-                if st == 'bob': lim = front + 1 + (t > 0.78) * 20
-                if st in ('long', 'curly') and t > 0.7: lim = sideburn
-                if x >= CX - 1 and st in ('short',): lim = max(lim, sideburn)
+            if x < EX:
+                # the hairline sweeps from the forehead back and down to the top of the ear
+                t = max(0.0, (x - 12) / (EX - 12))
+                lim = front + t * t * 8.0
+                if st == 'bob': lim = front + 1 + (t > 0.75) * 20
+                if cover and t > 0.72: lim = cover
+                if st == 'short' and x >= EX - 2: lim = 31                  # sideburn
                 if yy < lim: m.add((x, y))
-            elif x <= CX + 1 + 0:
-                pass
+            elif x <= EX + 3:
+                if yy < (cover or 28): m.add((x, y))
             else:
                 if yy < back_low: m.add((x, y))
         if st == 'bob':
             for y in range(26 + b, 42 + b):
-                for x in range(CX - 2, CX + 16):
+                for x in range(EX - 1, CX + 16):
                     if ((x + 0.5 - ccx - 1) / 15.6) ** 2 + ((y + 0.5 - 27 - b) / 15.4) ** 2 < 1: m.add((x, y))
         if st == 'long':
             for y in range(26 + b, 46 + b):
-                for x in range(CX - 1, CX + 15 - max(0, y - 40 - b)): m.add((x, y))
+                for x in range(EX, CX + 15 - max(0, y - 40 - b)): m.add((x, y))
         if st == 'curly':
             for k in range(26):
                 a = k / 26 * math.tau
                 bx = ccx + math.cos(a) * (crx + 0.2); by = ccy + b + math.sin(a) * (cry + 0.1)
-                if by > 28 + b and bx < CX: continue
+                if by > 27 + b and bx < CX: continue
+                if bx < 14: continue
                 for p in ell(bx, by, 2.4, 2.4): m.add(p)
-        if st not in ('bob', 'long', 'curly'):
+        if not cover:
             m -= self.ear
         if s.get('hat'): m = set(p for p in m if p[1] > 20 + b)
         pid = f.part()
@@ -1473,7 +1493,7 @@ class Person:
         f.paint(m, hr, pid, mode='sph', cx=ccx - 4, rx=crx + 3, cy=ccy - 5 + b, ry=cry + 5, bias=0.04,
                 lo=0, hi=4, tex=tex, th=(0.92, 0.70, 0.46, 0.25))
         for (x, y) in m:
-            if (x, y + 1) in self.face_mask and (x, y + 1) not in m and x < CX - 2: f.step(x, y, 1)
+            if (x, y + 1) in self.face_mask and (x, y + 1) not in m and x < EX: f.step(x, y, 1)
         self.hair_mask = m
         if st == 'bun' and not s.get('hat'):
             bp = f.part()
@@ -1508,9 +1528,9 @@ class Person:
             hr = s['hat']; hp = f.part()
             dome = [p for p in ell(CX + 1.5, 21 + b, 14.6, 13) if p[1] <= 20 + b]
             f.paint(dome, hr, hp, mode='sph', cx=CX - 3, rx=16, cy=15 + b, ry=13, bias=0.12, lo=0, hi=3)
-            for x in range(CX - 16, CX + 17): f.put(x, 22 + b, hr, 2 if x < CX + 6 else 3, hp)
-            for x in range(CX - 15, CX + 17): f.put(x, 21 + b, hr, 1 if x < CX + 4 else 2, hp)
-            for x in range(CX - 17, CX - 11): f.put(x, 23 + b, hr, 3, hp)            # the peak
+            for x in range(CX - 16, CX + 16): f.put(x, 22 + b, hr, 2 if x < CX + 6 else 3, hp)
+            for x in range(CX - 15, CX + 16): f.put(x, 21 + b, hr, 1 if x < CX + 4 else 2, hp)
+            for x in range(CX - 18, CX - 11): f.put(x, 23 + b, hr, 3, hp)            # the peak, forward over the face
             for x in range(CX - 8, CX + 10):
                 if f.has(x, 9 + b): f.put(x, 9 + b, hr, 0, hp)
             for x in range(CX - 6, CX + 8): f.put(x, 10 + b, hr, 0 if x < CX else 1, hp) if f.has(x, 10 + b) else None
