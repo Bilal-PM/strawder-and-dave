@@ -12,6 +12,7 @@ import station as ST
 import depot as DP
 import compound as CP
 import lineside as LN
+import fencing as FN
 
 OUT = os.path.join(ROOT, 'assets', 'hd', 'out', 'rail')
 MAN = {}
@@ -162,7 +163,43 @@ def build_lineside():
     prev('lineside_small', [(l, c) for l, c in small], scale=3, cols=7)
 
 
-GROUPS = {'station': build_station, 'depot': build_depot, 'compound': build_compound, 'lineside': build_lineside}
+def build_fencing():
+    sheets = {}
+    for style in ('palisade', 'wire', 'timber'):
+        fh = FN.STYLE[style]
+        cells = []
+        for mask in range(16):
+            for v in range(2):
+                cv = FN.fence(style, mask, v)
+                emit(f'{style}_{mask}_{v}', cv, None, (1, 1), anchor=[FN.T // 2, fh + FN.GY], origin=[0, fh], mask=mask,
+                     note=None)
+                MAN[f'{style}_{mask}_{v}'].pop('note', None)
+                cells.append((f'{mask}.{v}', cv))
+        sheets[style] = cells
+        prev('fence_' + style, cells, scale=3, cols=8)
+    gs = []
+    for kind in ('cess', 'track_n', 'track_s'):
+        for closed in (True, False):
+            g = FN.antitrespass(kind, closed); nm = f'antitrespass_{kind}_{"closed" if closed else "live"}'
+            emit(nm, g, (103, {'cess': 19, 'track_n': 20, 'track_s': 21}[kind]), (1, 1), anchor=[0, 0], origin=[0, 0], layer='ground',
+                 placements=[[x, y] for x in (103, 107) for y in ({'cess': (19, 22), 'track_n': (20,), 'track_s': (21,)}[kind])],
+                 note="ground tile for 'z'; track pieces draw their own rails at y=28 (row 20) / y=20 (row 21) — align the terrain rails or ask")
+            gs.append((nm[13:], g))
+    sigs = []
+    for asp in ('red', 'green'):
+        s, lamp = FN.colour_light(asp)
+        emit('signal_colour_' + asp, s, (118, 13), (1, 1), anchor=[0, s.h], lamp=lamp, facing='south',
+             note='main-line 4-aspect colour-light signal on the left of the down line; lamp = lit aspect centre (sprite px) for a glow')
+        sigs.append((asp, s))
+    tr = FN.trolley(); emit('trolley', tr, (97, 20), (1, 1), anchor=[-3, tr.h], note='prop lying in the cess/cutting, ~[97,20]; free-standing, sort by its bottom')
+    tp = FN.trap_points(True); emit('trap_points', tp, (66, 27), (1, 2), anchor=[0, 0], origin=[0, 0], layer='ground',
+                                    note='ground piece over the siding band rows 27-28 at x66; rails assumed at y 28 / 68 of the 96px band')
+    tl = FN.trap_points(False); emit('trap_points_live', tl, (66, 27), (1, 2), anchor=[0, 0], origin=[0, 0], layer='ground')
+    prev('fence_extras', [(l, g) for l, g in gs] + [('sig ' + l, s) for l, s in sigs] + [('trolley', tr), ('trap', tp), ('trapL', tl)], scale=3, cols=11)
+
+
+GROUPS = {'station': build_station, 'depot': build_depot, 'compound': build_compound, 'lineside': build_lineside,
+          'fencing': build_fencing}
 
 
 def main():

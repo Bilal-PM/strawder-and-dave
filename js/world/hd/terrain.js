@@ -7,7 +7,7 @@
   const M = HD.A.terrain.manifest, R = HD.R, T = HD.T;
   const hash = (x, y, s) => { let n = (x * 374761393 + y * 668265263 + (s || 0) * 982451653) | 0; n = Math.imul(n ^ (n >>> 13), 1274126177); return ((n ^ (n >>> 16)) >>> 0) / 4294967296; };
   const BASE = { ',': 'lawn', '.': 'grass', '"': 'meadow', p: 'dirt', _: 'gravel', s: 'setts', '-': 'flags', r: 'tarmac', '%': 'tarmac', c: 'tarmac',
-    a: 'concrete', e: 'platform', '^': 'platform_edge_N', w: 'water', ':': 'cess_old', '/': 'cess_old', z: 'cess_old', '=': 'ballast_old' };
+    a: 'concrete', v: 'soil', e: 'platform', '|': 'ballast_live', j: 'cess_old', l: 'tarmac', x: 'tarmac', b: 'cess_old', '^': 'platform_edge_N', w: 'water', ':': 'cess_old', '/': 'cess_old', z: 'cess_old', '=': 'ballast_old' };
   const SOFT = ',."', HARD = 'p:-rscae_%/z';
   function pick(e, x, y, s) {
     const n = e.cells.length, w = e.weights; if (!w) return e.cells[Math.floor(hash(x, y, s) * n)];
@@ -29,6 +29,89 @@
     const c = e.cells[v % e.cells.length], w = e.w, h = e.h;
     g.drawImage(im, e.x + c[0], e.y + c[1], w, h, wx - e.anchor[0] / R, wy - e.anchor[1] / R, w / R, h / R);
   }
+
+  /* ---------------------------------------------------------------- track (geometry ported from tileart.js) */
+  const KIND = {
+    old: { sl: ['sleeper_rotten', 'sleeper_weathered', 'sleeper_weathered'], rail: 'rail_rust', xs: 'rail_xsec_rust', bal: 'ballast_old' },
+    rot: { sl: ['sleeper_rotten'], rail: 'rail_rust', xs: 'rail_xsec_rust', bal: 'ballast_old' },
+    live: { sl: ['sleeper_new'], rail: 'rail_live', xs: 'rail_xsec_live', bal: 'ballast_live' },
+    main: { sl: ['sleeper_concrete'], rail: 'rail_live', xs: 'rail_xsec_live', bal: 'ballast_live' }
+  };
+  const ent = n => { const e = M[n], im = e && HD.img('terrain', e.file); return im ? [e, im] : null; };
+  function trackH(g, x0, x1, top, k) {                       // world units; top = band top (2 tiles deep)
+    const cy = top + T;
+    for (let sx = Math.ceil((x0 - 4) / 8) * 8 + 4; sx < x1; sx += 8) { const v = Math.floor(hash(Math.round(sx), top, 19) * 6); sprite(g, k.sl[v % k.sl.length] + '_H', v, sx, cy); }
+    const r = ent(k.rail + '_H'); if (!r) return; const [e, im] = r;
+    for (const off of [29, 65]) for (let x = x0; x < x1; x += T) { const w = Math.min(T, x1 - x); g.drawImage(im, e.x, e.y, w * R, e.h, x, top + off / R, w, e.h / R); }
+  }
+  function trackV(g, y0, y1, left, k) {                      // left = band left edge (2 tiles wide)
+    const cx = left + T;
+    for (let sy = Math.ceil((y0 - 4) / 8) * 8 + 4; sy < y1; sy += 8) { const v = Math.floor(hash(left, Math.round(sy), 23) * 4); sprite(g, k.sl[v % k.sl.length] + '_V', v, cx, sy); }
+    const r = ent(k.rail + '_V'); if (!r) return; const [e, im] = r;
+    for (const off of [29, 65]) for (let y = y0; y < y1; y += T) { const h = Math.min(T, y1 - y); g.drawImage(im, e.x, e.y, e.w, h * R, left + off / R, y, e.w / R, h); }
+  }
+  const bez = (p0, p1, p2, p3) => t => { const u = 1 - t; return [u * u * u * p0[0] + 3 * u * u * t * p1[0] + 3 * u * t * t * p2[0] + t * t * t * p3[0], u * u * u * p0[1] + 3 * u * u * t * p1[1] + 3 * u * t * t * p2[1] + t * t * t * p3[1]]; };
+  function curve(g, P, kAt, skipRail) {
+    const N = 360, pts = []; for (let i = 0; i <= N; i++) pts.push(P(i / N));
+    // ballast bed: stroke the path with the ballast texture
+    const b = ent(kAt(pts[N >> 1]).bal);
+    if (b) { const c = HD.cv(48, 48); HD.G(c).drawImage(b[1], b[0].x, b[0].y, 48, 48, 0, 0, 48, 48); const pat = g.createPattern(c, 'repeat'); pat.setTransform && pat.setTransform(new DOMMatrix().scale(1 / R));
+      g.save(); g.strokeStyle = pat; g.lineWidth = 30; g.lineCap = 'butt'; g.beginPath(); pts.forEach((p, i) => i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1])); g.stroke(); g.restore(); }
+    // sleepers every 8 world units of arc, turned to the curve
+    let acc = 0;
+    for (let i = 1; i <= N; i++) {
+      const [x0, y0] = pts[i - 1], [x1, y1] = pts[i]; acc += Math.hypot(x1 - x0, y1 - y0); if (acc < 8) continue; acc -= 8;
+      const k = kAt({ x: x1, y: y1 }), v = Math.floor(hash(Math.round(x1), Math.round(y1), 31) * 6), s = ent(k.sl[v % k.sl.length] + '_H'); if (!s) continue;
+      const [e, im] = s, c = e.cells[v % e.cells.length], ang = Math.atan2(y1 - y0, x1 - x0);
+      g.save(); g.translate(x1, y1); g.rotate(ang); g.drawImage(im, e.x + c[0], e.y + c[1], e.w, e.h, -e.anchor[0] / R, -e.anchor[1] / R, e.w / R, e.h / R); g.restore();
+    }
+    // rails: stamp the 1px cross-section along each rail, heads 6 world units either side of the centre line
+    for (let i = 1; i <= N * 2; i++) {
+      const t = i / (N * 2), p = P(t), q = P(Math.max(0, t - 0.002)), ang = Math.atan2(p[1] - q[1], p[0] - q[0]), nx = -Math.sin(ang), ny = Math.cos(ang);
+      const pt = { x: p[0], y: p[1] }; if (skipRail && skipRail(pt)) continue;
+      const r = ent(kAt(pt).xs); if (!r) continue; const [e, im] = r;
+      for (const off of [-6, 6]) { g.save(); g.translate(p[0] + nx * off, p[1] + ny * off); g.rotate(ang); g.drawImage(im, e.x, e.y, 1, e.h, -0.2, -e.h / R / 2, 0.45, e.h / R); g.restore(); }
+    }
+  }
+  function drawTrack(g, rows, at, live, level) {
+    const W = rows[0].length, H = rows.length;
+    let ty = -1; for (let y = 0; y < H && ty < 0; y++) for (let x = 0; x < W; x++) if (at(x, y) === '=' && at(x, y + 1) === '=') { ty = y; break; }
+    if (ty < 0) return;
+    let mainX = -1; for (let x = 0; x < W; x++) if (at(x, ty) === '|') { mainX = x; break; }
+    const cross = []; for (let x = 0; x < W; x++) if (at(x, ty) === 'x') cross.push(x);
+    const cx0 = cross.length ? cross[0] : -1, cx1 = cross.length ? cross[cross.length - 1] : -1;
+    let jx0 = W; for (let x = 0; x < W; x++) if (at(x, ty) === 'j') { jx0 = x; break; } if (jx0 === W) jx0 = mainX > 0 ? mainX - 2 : W - 8;
+    let bx0 = 0; for (let x = 0; x < W; x++) if (at(x, ty) === '=' || at(x, ty) === '$') { bx0 = x; break; }
+    let sidRow = -1, tx0 = W, tx1 = -1, depotE = -1;
+    for (let y = ty + 2; y < H && sidRow < 0; y++) for (let x = 1; x < W; x++) if (at(x, y) === '/' && at(x - 1, y) === 'N') { sidRow = y; depotE = x; break; }
+    if (sidRow > 0) for (let y = ty + 2; y < sidRow; y++) for (let x = 0; x < W; x++) if (at(x, y) === '/') { tx0 = Math.min(tx0, x); tx1 = Math.max(tx1, x); }
+    const def = id => { const o = (level.outside || []).find(e => e.id === id); return o ? o.tile : null; };
+    const branch = live ? KIND.live : KIND.old, ds = def('d_sleepers'), rot = ds ? [(ds[0] - 1) * T, (ds[0] + 3) * T] : null;
+    const branchC = ty * T + 16, sidC = (sidRow + 1) * T;
+    // main line: two tracks, full height except under the road bridge
+    if (mainX >= 0) for (let k = 0; k < 2; k++) {
+      const col = mainX + k * 2; let y = 0;
+      while (y < H) { if (at(col, y) === '%') { y++; continue; } let y1 = y; while (y1 + 1 < H && at(col, y1 + 1) !== '%') y1++; trackV(g, y * T, (y1 + 1) * T, col * T, KIND.main); y = y1 + 1; }
+    }
+    // branch running line (rotten sleepers at the worst spot), broken by the crossing deck
+    const segs = cx0 >= 0 ? [[bx0 * T, cx0 * T], [(cx1 + 1) * T, (jx0 - 4) * T]] : [[bx0 * T, (jx0 - 4) * T]];
+    for (const [a, b] of segs) {
+      if (rot && !live && a < rot[1] && b > rot[0]) { trackH(g, a, rot[0], ty * T, branch); trackH(g, rot[0], rot[1], ty * T, KIND.rot); trackH(g, rot[1], b, ty * T, branch); }
+      else trackH(g, a, b, ty * T, branch);
+    }
+    // crossing deck: timber (closed) or rubber (live) slices across the band
+    if (cx0 >= 0) { const d = ent(live ? 'xing_rubber_H' : 'xing_timber_H'); if (d) for (let x = cx0; x <= cx1; x++) { const [e, im] = d, c = e.cells[x % e.cells.length]; g.drawImage(im, e.x + c[0], e.y + c[1], e.w, e.h, x * T, ty * T, T, 2 * T); } }
+    // siding into the depot + the turnout
+    if (sidRow > 0 && tx1 >= 0) {
+      const b = ent(branch.bal); if (b) for (let x = depotE; x < tx0 - 2; x++) for (const yy of [sidRow, sidRow + 1]) { const [e, im] = b, c = e.cells[0]; g.drawImage(im, e.x + c[0], e.y + c[1], 48, 48, x * T, yy * T, T, T); }
+      trackH(g, depotE * T, (tx0 - 3) * T + 4, sidRow * T, branch);
+      curve(g, bez([(tx1 + 4) * T, branchC], [tx1 * T, branchC], [(tx0 + 1) * T, sidC], [(tx0 - 3) * T, sidC]), () => branch, p => p.y < ty * T + 27 && p.x > (tx1 + 1) * T);
+    }
+    // junction onto the main line (live beyond the limit of closed line)
+    const jEnd = mainX >= 0 ? mainX * T + 16 : 120 * T;
+    curve(g, bez([(jx0 - 5) * T, branchC], [(jx0 - 0.2) * T, branchC], [jEnd, (ty + 1.8) * T], [jEnd, (ty + 6) * T]), p => (p.x < (jx0 - 1) * T ? branch : KIND.live));
+  }
+
   HD.pass({
     name: 'terrain', room: 'outside', order: 10,
     run(sc, level, opts) {
@@ -41,6 +124,8 @@
           if (c === '=' && live) n = 'ballast_live'; else if (c === '=' && hash(x, y, 7) < 0.25) n = 'ballast_old_weedy';
           if ((c === ':' || c === '/' || c === 'z') && live) n = 'cess_new';
           if (c === '^' && at(x, y + 1) !== 'e') n = 'platform';
+          if (c === 'b' && (at(x, y - 1) === 'b' && at(x, y + 1) === 'b')) n = live ? 'ballast_live' : 'ballast_old';   // track band over the bridge
+          if (c === '|' && live === false) n = 'ballast_live';
           tile(g, n, x, y, 1);
         }
         for (let y = Y0; y < Y1; y++) for (let x = X0; x < X1; x++) {
@@ -66,19 +151,7 @@
             }
           }
         }
-        // closed line: horizontal track bands of '=' two rows deep
-        const sl = live ? ['sleeper_new_H'] : ['sleeper_rotten_H', 'sleeper_weathered_H'], rail = live ? 'rail_live_H' : 'rail_rust_H';
-        for (let y = Y0; y < Y1; y++) {
-          if (at(tx0, y) === undefined) continue;
-          let top = null; if (rows[y] && rows[y + 1]) top = y;
-          for (let x = X0; x < X1; x++) {
-            if (at(x, y) !== '=' || at(x, y + 1) !== '=' || at(x, y - 1) === '=') continue;
-            const cy = (y + 1) * T;   // band centre (world units)
-            for (let k = 0; k < 2; k++) { const sx = x * T + 4 + k * 8, v = Math.floor(hash(Math.round(sx), y, 19) * 6); sprite(g, sl[v % sl.length], v, sx, cy); }
-            const e = M[rail], im = e && HD.img('terrain', e.file);
-            if (im) for (const off of [29, 65]) g.drawImage(im, e.x, e.y, e.w, e.h, x * T, y * T + off / R, T, e.h / R);
-          }
-        }
+        drawTrack(g, rows, at, live, level);
       });
     }
   });

@@ -56,6 +56,13 @@
           const n = obj(treeFor(x, y), x * T + 8, y * T + 14); if (n) add.push(n);
         }
       }
+      // flower beds ('v'): planted up
+      const BED = ['shrub_rose', 'foxgloves', 'shrub_s', 'willowherb', 'shrub_rose', 'dandelions'];
+      for (let y = 0; y < rows.length; y++) for (let x = 0; x < rows[y].length; x++) {
+        if (at(x, y) !== 'v') continue;
+        const n = obj(BED[Math.floor(hash(x, y, 41) * BED.length)], x * T + 5 + hash(x, y, 43) * 6, y * T + 12 + hash(x, y, 47) * 3);
+        if (n) { n.fade = null; add.push(n); }
+      }
       // fingerposts: HD post with the right arms; the words show as a readable label when the player walks up
       const ARROW = { N: '↑', E: '→', S: '↓', W: '←' }, posts = level.fingerposts || [];
       const fpFor = dirs => ['NESW', 'NEW', 'NE', 'EW'].find(k => dirs.every(d => k.includes(d))) || 'NESW';
