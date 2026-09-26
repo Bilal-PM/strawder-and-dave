@@ -259,9 +259,10 @@ window.LS.TileArt = {
    - Cut the sprites out cleanly, then align them to the tile grid (sizes are multiples of the tile at your `res`).
    - Colour-match everything to the art bible.
    - Seams: ground chunks must tile, and roads, pavements and kerbs must join cleanly across chunks (align with `layout_guide.png`).
-4. **Pack:** run a build script to produce the atlas files (data URIs), with sizes logged against the budget.
-5. **Integrate:** build scenes from `LS.LEVEL` so every footprint, door, mat, gate and track row lands exactly where the map says.
-6. **Verify.** All of these must pass:
+4. **Journey shots at every stage:** the owner is sharing the development journey publicly. After the art bible, the vertical slice, each district or interior, and the final polish, run `node tools/journey/capture.js <NN-codex-stage>` (numbering on from milestone 11), file the keepers in `docs/journey/` and rebuild the post images with `python3 tools/journey/collage.py` (see `AGENTS.md`). Never delete or retouch earlier milestones.
+5. **Pack:** run a build script to produce the atlas files (data URIs), with sizes logged against the budget.
+6. **Integrate:** build scenes from `LS.LEVEL` so every footprint, door, mat, gate and track row lands exactly where the map says.
+7. **Verify.** All of these must pass:
    - `node tests/run.js`: smoke, playthrough, gating, reachability, save, layout, performance and screenshots.
    - `node --check` on your JS files.
    - No console errors over `file://`.

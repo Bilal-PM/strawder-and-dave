@@ -1,0 +1,143 @@
+[
+ {
+  "id": "01-first-prototype",
+  "commit": "c8e1f16",
+  "date": "23 Feb 2026",
+  "title": "The first prototype: a tiny office in a dark box",
+  "hero": "desktop-office.jpg",
+  "shots": [
+   "desktop-title.jpg",
+   "desktop-office.jpg",
+   "desktop-dialogue.jpg",
+   "mobile-office.jpg"
+  ]
+ },
+ {
+  "id": "02-warmer-office",
+  "commit": "32902ab",
+  "date": "24 Feb 2026",
+  "title": "Warmer colours, same small office",
+  "hero": "desktop-office.jpg",
+  "shots": [
+   "desktop-title.jpg",
+   "desktop-office.jpg",
+   "desktop-report.jpg",
+   "mobile-office.jpg"
+  ]
+ },
+ {
+  "id": "03-engine-trial",
+  "commit": "c68869d",
+  "date": "14 Jun 2026",
+  "title": "Tried a new engine and a ready-made art pack. Reverted the same day",
+  "short": "A new engine and art pack, reverted the same day",
+  "hero": "desktop-office.jpg",
+  "shots": [
+   "desktop-select.jpg",
+   "desktop-office.jpg",
+   "mobile-office.jpg"
+  ]
+ },
+ {
+  "id": "04-first-town",
+  "commit": "00e64af",
+  "date": "15 Jun 2026",
+  "title": "Stepping outside: a first town",
+  "hero": "desktop-town.jpg",
+  "shots": [
+   "desktop-town.jpg",
+   "mobile-town.jpg"
+  ]
+ },
+ {
+  "id": "05-trailer-and-town",
+  "commit": "b7e05c8",
+  "date": "16 Jun 2026",
+  "title": "An opening trailer and a busier town",
+  "hero": "desktop-town.jpg",
+  "shots": [
+   "desktop-trailer.jpg",
+   "desktop-town.jpg",
+   "mobile-town.jpg"
+  ]
+ },
+ {
+  "id": "06-judgment-engine",
+  "commit": "996cff6",
+  "date": "26 Sep 2026, 00:38",
+  "title": "The judgment engine: big calls under pressure",
+  "hero": "desktop-big-call.jpg",
+  "shots": [
+   "desktop-title.jpg",
+   "desktop-big-call.jpg",
+   "mobile-big-call.jpg"
+  ]
+ },
+ {
+  "id": "07-lineside-reboot",
+  "commit": "931e802",
+  "date": "26 Sep 2026, 01:05",
+  "title": "LINESIDE: a cinematic reboot",
+  "hero": "desktop-dialogue.jpg",
+  "shots": [
+   "desktop-title.jpg",
+   "desktop-dialogue.jpg",
+   "mobile-title.jpg"
+  ]
+ },
+ {
+  "id": "08-walkable-side-on",
+  "commit": "c8ecf85",
+  "date": "26 Sep 2026, 07:27",
+  "title": "A world you can walk, side-on",
+  "hero": "desktop-office.jpg",
+  "shots": [
+   "desktop-title.jpg",
+   "desktop-office.jpg",
+   "mobile-chapter.jpg"
+  ]
+ },
+ {
+  "id": "09-open-world",
+  "commit": "a92bcc3",
+  "date": "26 Sep 2026, 07:45",
+  "title": "Open world, top-down",
+  "hero": "desktop-site.jpg",
+  "shots": [
+   "desktop-title.jpg",
+   "desktop-site.jpg",
+   "mobile-site.jpg"
+  ]
+ },
+ {
+  "id": "10-chapter-1",
+  "commit": "cc1aad4",
+  "date": "26 Sep 2026, 08:42",
+  "title": "Chapter 1, \"Make the Case\": playable, but the world felt wrong",
+  "short": "Chapter 1: playable, but the world felt wrong",
+  "hero": "desktop-town.jpg",
+  "shots": [
+   "desktop-title.jpg",
+   "desktop-chapter.jpg",
+   "desktop-town.jpg",
+   "mobile-chapter.jpg"
+  ]
+ },
+ {
+  "id": "11-studio-rebuild",
+  "commit": "1de2b3c",
+  "date": "26 Sep 2026, 11:20",
+  "title": "Rebuilt properly: a specialist AI team, a validated map and a tile world",
+  "short": "Rebuilt properly, the way a studio would",
+  "hero": "desktop-forecourt.jpg",
+  "shots": [
+   "desktop-title.jpg",
+   "desktop-forecourt.jpg",
+   "desktop-beck-bridge.jpg",
+   "desktop-depot.jpg",
+   "desktop-village-hall.jpg",
+   "mobile-forecourt.jpg",
+   "mobile-beck-bridge.jpg"
+  ]
+ }
+]
