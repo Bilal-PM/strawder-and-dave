@@ -69,6 +69,7 @@
         const p = { x0: col * T, x1: (col + tw) * T, y0: row * T, y1: gy }; kill.push(p);
         if (e.layer === 'ground') { sc.paint(g => g.drawImage(im, col * T, row * T, e.w / R, e.h / R)); continue; }
         const o = { img: im, dx, dy, w: e.w / R, h: e.h / R, sortY: e.sortY_map ? e.sortY_map / R : gy, kind: 'hd_' + name, id };
+        if (e.lit) o.lit = HD.img(name, e.lit);
         if (e.fade) o.fade = { x: dx + e.fade.x / R, y: dy + e.fade.y / R, w: e.fade.w / R, h: e.fade.h / R + 16 };
         add.push(o);
         for (const l of e.lights || []) sc.lights.push({ x: dx + l[0] / R, y: dy + l[1] / R, r: l[2] / R });

@@ -76,28 +76,29 @@ class Fig:
         self.px = {}          # (x, y) -> [ramp, step, pid]
         self.flags = {}       # pid -> dict(shadow=bool casts shadow, sep=bool separation line, recv=bool)
         self.n = 0
+        self.oy = 0           # vertical offset applied to everything drawn (the body bob), so textures never shift
 
     # -- parts
     def part(self, shadow=True, sep=True, recv=True, sepk=1):
         self.n += 1; self.flags[self.n] = dict(shadow=shadow, sep=sep, recv=recv, sepk=sepk); return self.n
 
     def put(self, x, y, rp, i, pid):
-        x, y = int(x), int(y)
+        x, y = int(x), int(y) + self.oy
         if 0 <= x < self.w and 0 <= y < self.h:
             self.px[(x, y)] = [rp, max(0, min(len(RAMPS[rp]) - 1 if rp != OUT else 0, int(i))), pid]
 
     def get(self, x, y):
-        return self.px.get((int(x), int(y)))
+        return self.px.get((int(x), int(y) + self.oy))
 
     def has(self, x, y):
-        return (int(x), int(y)) in self.px
+        return (int(x), int(y) + self.oy) in self.px
 
     def erase(self, x, y):
-        self.px.pop((int(x), int(y)), None)
+        self.px.pop((int(x), int(y) + self.oy), None)
 
     def step(self, x, y, d, rp=None):
         """Shift the step of an existing pixel by d (darker +), optionally recolour to ramp rp."""
-        p = self.px.get((int(x), int(y)))
+        p = self.px.get((int(x), int(y) + self.oy))
         if p:
             if rp: p[0] = rp
             if p[0] != OUT: p[1] = max(0, min(len(RAMPS[p[0]]) - 1, p[1] + d))

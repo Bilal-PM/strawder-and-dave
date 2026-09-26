@@ -24,6 +24,7 @@
   HD.pass({
     name: 'props', room: 'outside', order: 30,
     run(sc, level) {
+      sc.lights = (sc.lights || []).filter(l => !l.lamp);
       const rows = level.rows, at = (x, y) => (rows[y] || '')[x] || '', add = [];
       // hedges and walls: 16-mask autotiles (N=1 E=2 S=4 W=8), two variants each
       for (let y = 0; y < rows.length; y++) for (let x = 0; x < rows[y].length; x++) {
@@ -76,7 +77,16 @@
         if (o.kind === 'fingerpost' && posts.length && nearPost(o)) continue;
         const gx = o.dx + (o.w || 0) / 2, gy = o.sortY;
         if (o.kind === 'tree') continue;
-        if (SWAP[o.kind]) { const n = obj(SWAP[o.kind], Math.round(gx), gy); if (n) { add.push(n); continue; } }
+        if (SWAP[o.kind]) {
+          const n = obj(SWAP[o.kind], Math.round(gx), gy);
+          if (n) {
+            if (o.kind === 'lamp') {   // lit head at night + a light source for the night grade
+              const le = M.lamp_post_lit, e = M.lamp_post; if (le) n.lit = HD.img('props', le.file);
+              const l = (e && e.light) || [e.w / 2, 12]; sc.lights.push({ x: n.dx + l[0] / R, y: n.dy + l[1] / R, r: 44 });
+            }
+            add.push(n); continue;
+          }
+        }
         keep.push(o);
       }
       sc.objects = keep.concat(add);

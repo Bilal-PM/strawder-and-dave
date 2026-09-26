@@ -18,25 +18,37 @@ AREAS = [a for a in (sys.argv[1:] or ['chars', 'terrain', 'rail', 'town', 'props
 def files_in(node, acc):
     if isinstance(node, dict):
         for k, v in node.items():
-            if k == 'file' and isinstance(v, str): acc.add(v)
+            if isinstance(v, str) and v.endswith(('.png', '.webp')): acc.add(v)   # file, lit, parts...
             else: files_in(v, acc)
     elif isinstance(node, list):
         for v in node: files_in(v, acc)
     return acc
 
 
+def previous():
+    # the last packed atlas, so an area whose generator is mid-rebuild keeps its last good art
+    try:
+        t = open(DEST).read(); return json.loads(t[t.index('LS.ATLAS_HD = ') + 14:].rstrip().rstrip(';'))
+    except Exception:
+        return {}
+
+
 def main():
-    atlas, total = {}, 0
+    atlas, total, prev = {}, 0, previous()
     for area in AREAS:
         mf = os.path.join(OUT, area, 'manifest.json')
         if not os.path.exists(mf): continue
         man = json.load(open(mf)); img = {}
         for f in sorted(files_in(man, set())):
             p = os.path.join(OUT, area, f)
-            if not os.path.exists(p): print(f'  ! {area}: missing {f}', file=sys.stderr); continue
+            if not os.path.exists(p): continue
             data = open(p, 'rb').read(); total += len(data)
             mime = 'image/webp' if f.endswith('.webp') else 'image/png'
             img[f] = f'data:{mime};base64,' + base64.b64encode(data).decode()
+        wanted = files_in(man, set())
+        if len(img) < len(wanted) and area in prev:
+            print(f'  ! {area}: {len(wanted) - len(img)} images missing (mid-rebuild?), keeping the previous {area} art', file=sys.stderr)
+            atlas[area] = prev[area]; continue
         atlas[area] = {'manifest': man, 'img': img}
         print(f'{area}: {len(img)} images')
     with open(DEST, 'w') as o:

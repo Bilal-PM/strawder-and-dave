@@ -8,7 +8,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE); sys.path.insert(0, os.path.join(HERE, '..', 'lib'))
 import fig  # noqa: F401  (extra ramps)
 from pix import sheet, preview, manifest, save
-from people import render, W, H
+from people import render, W, H, NFRAMES
 from cast import all_specs, ppe, ROOT
 
 OUT = os.path.join(ROOT, 'assets', 'hd', 'out', 'chars')
@@ -16,14 +16,14 @@ ROWS = ['down', 'up', 'left', 'right']
 
 
 def person_sheet(spec):
-    frames = [render(spec, v, i) for v in ROWS for i in range(5)]
-    return sheet(frames, 5, W, H), frames
+    frames = [render(spec, v, i) for v in ROWS for i in range(NFRAMES)]
+    return sheet(frames, NFRAMES, W, H), frames
 
 
 def main(only=None):
     os.makedirs(OUT, exist_ok=True)
     entries = {}
-    fronts, ppe_fronts, walks = [], [], []
+    fronts, ppe_fronts, walks, gifs = [], [], [], {}
     for cid, spec, look in all_specs():
         if only and cid not in only: continue
         for is_ppe in (False, True):
@@ -32,11 +32,13 @@ def main(only=None):
             key = cid + ('_ppe' if is_ppe else '')
             fn = key + '.png'
             im.save(os.path.join(OUT, fn), optimize=True)
-            entries[key] = dict(id=cid, file=fn, w=im.width, h=im.height, frame=[W, H], rows=ROWS, cols=5,
+            entries[key] = dict(id=cid, file=fn, w=im.width, h=im.height, frame=[W, H], rows=ROWS, cols=NFRAMES,
                                 anchor=[24, 93], look=look, ppe=is_ppe)
             (ppe_fronts if is_ppe else fronts).append((key, frames[0]))
-            if not is_ppe and cid in ('moira', 'gaz', 'jo', 'town_walker'):
-                walks += [(f'{cid}{i}', frames[r * 5 + i]) for r in (0, 2) for i in range(5)]
+            if not is_ppe and cid in ('moira', 'tom', 'jo'):
+                walks += [(f'{cid}{r}{i}', frames[r * NFRAMES + i]) for r in range(4) for i in range(1, NFRAMES)]
+            if cid in ('moira', 'tom') and not is_ppe:
+                gifs[cid] = frames
     if not only:
         import animals
         entries.update(animals.build(OUT))
@@ -45,8 +47,26 @@ def main(only=None):
     preview(ppe_fronts, os.path.join(OUT, 'preview_ppe.png'), scale=3, cols=9)
     if not only or 'moira' in only:
         moira_vs_reference()
-    if walks: preview(walks, os.path.join(OUT, 'preview_walk.png'), scale=3, cols=10)
+    if walks: preview(walks, os.path.join(OUT, 'preview_walk.png'), scale=3, cols=8)
+    if gifs: walk_gif(gifs)
     return entries
+
+
+def walk_gif(gifs, scale=3, ms=110):
+    """preview_walk.gif: each character walking in all four directions, at 3x, looping the 8 walk frames."""
+    from PIL import Image
+    ids = list(gifs)
+    cw, ch = W * scale + 8, H * scale + 8
+    out = []
+    for i in range(1, NFRAMES):
+        page = Image.new('RGB', (4 * cw + 8, len(ids) * ch + 8), (236, 230, 214))
+        for r, cid in enumerate(ids):
+            for d in range(4):
+                im = gifs[cid][d * NFRAMES + i].im
+                big = im.resize((W * scale, H * scale), Image.NEAREST)
+                page.paste(big, (8 + d * cw, 8 + r * ch), big)
+        out.append(page.convert('P', palette=Image.ADAPTIVE, colors=255))
+    out[0].save(os.path.join(OUT, 'preview_walk.gif'), save_all=True, append_images=out[1:], duration=ms, loop=0)
 
 
 def moira_vs_reference():

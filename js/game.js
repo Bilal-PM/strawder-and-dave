@@ -1173,7 +1173,11 @@
     const jend = () => { jid = null; world.stick = { x: 0, y: 0 }; knob.style.transform = ''; };
     joy.addEventListener('pointerdown', e => { e.preventDefault(); jid = e.pointerId; try { joy.setPointerCapture(jid); } catch (err) { } jmove(e); LS.audio.init(); });
     joy.addEventListener('pointermove', e => { if (e.pointerId === jid) jmove(e); });
-    joy.addEventListener('pointerup', jend); joy.addEventListener('pointercancel', jend);
+    joy.addEventListener('pointerup', jend); joy.addEventListener('pointercancel', jend); joy.addEventListener('lostpointercapture', jend);
+    // never let the stick stay held: any finger lift anywhere, leaving the page, or a hidden tab releases it
+    addEventListener('pointerup', e => { if (e.pointerId === jid) jend(); }); addEventListener('pointercancel', e => { if (e.pointerId === jid) jend(); });
+    addEventListener('touchend', e => { if (jid != null && !e.touches.length) jend(); }); addEventListener('blur', jend);
+    document.addEventListener('visibilitychange', () => { if (document.hidden) jend(); });
     // act on click (after the finger lifts), so the same tap can't also dismiss the dialogue it opens
     $('#padA').addEventListener('pointerdown', e => e.preventDefault());
     $('#padA').addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); world.use(); });

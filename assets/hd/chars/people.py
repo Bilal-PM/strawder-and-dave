@@ -23,21 +23,32 @@ def mx(x):
     return 2 * CX - 1 - x
 
 
-# ------------------------------------------------------------------ poses (bob is the 1px body bob)
-FRONT_POSE = [  # bob, left-foot dy, right-foot dy, left-arm swing, right-arm swing (+ = forward/down)
-    (0, 0, 0, 0, 0),
-    (0, 0, -1, -2, 2),
-    (-1, 0, -3, 0, 0),
-    (0, -1, 0, 2, -2),
-    (-1, -3, 0, 0, 0),
-]
-SIDE_POSE = [  # bob, near-foot dx, far-foot dx, near lift, far lift, near-arm swing (+ = forward)
-    (0, -2, 3, 0, 0, 0),
-    (0, -6, 6, 0, 0, -1),
-    (-1, 0, 0, 0, -3, 0),
-    (0, 6, -6, 0, 0, 1),
-    (-1, 0, 0, -3, 0, 0),
-]
+# ------------------------------------------------------------------ poses
+# Sheet columns: 0 = standing, 1-8 = walk: contact, down, passing, up, contact, down, passing, up.
+# The whole upper body (head, hair, torso) is drawn once per frame with only a vertical offset (the 1px bob on the
+# 'down' frames), so the head is pixel-identical across frames apart from that offset.
+NFRAMES = 9
+FOOT_DY = [0, 0, 0, 0, -1, -2, -3, -1]           # front view: a foot's lift through the cycle (0 = planted)
+SIDE_DX = [-7, -3, 0, 3, 7, 4, 0, -4]            # profile: a foot's position (- = forward) through the cycle
+SIDE_LIFT = [0, 0, 0, 0, -1, -2, -3, -1]
+BOB = [0, 1, 0, 0, 0, 1, 0, 0]
+
+
+def front_pose(frame):
+    """bob, left-foot dy, right-foot dy, left-arm swing, right-arm swing (+ = forward, the hand drops)."""
+    if frame == 0: return 0, 0, 0, 0, 0
+    i = frame - 1
+    c = math.cos(i * math.pi / 4)
+    return BOB[i], FOOT_DY[i], FOOT_DY[(i + 4) % 8], round(-2 * c), round(2 * c)
+
+
+def side_pose(frame):
+    """bob, near-foot dx, far-foot dx, near lift, far lift, near-arm swing (-1..1, + = forward)."""
+    if frame == 0: return 0, -2, 3, 0, 0, 0.0
+    i = frame - 1
+    j = (i + 4) % 8
+    return BOB[i], SIDE_DX[i], SIDE_DX[j], SIDE_LIFT[i], SIDE_LIFT[j], -math.cos(i * math.pi / 4)
+
 
 TOP_BOT = {'coat': 76, 'jacket': 68, 'suit': 68, 'cardigan': 68, 'tee': 65, 'hivis': 67, 'hoodie': 68,
            'wax': 71, 'overalls': 66, 'polo': 65, 'anorak': 70}
@@ -76,9 +87,10 @@ class Person:
         self.near = 'right' if view == 'left' else 'left'   # the character's side that faces us in profile
         self.f = Fig(W, H, lx=(-1 if view == 'right' else 1))
         if self.side:
-            self.b, self.nfx, self.ffx, self.nl, self.fl, self.swing = SIDE_POSE[frame]
+            self.bob, self.nfx, self.ffx, self.nl, self.fl, self.swing = side_pose(frame)
         else:
-            self.b, self.lfy, self.rfy, self.las, self.ras = FRONT_POSE[frame]
+            self.bob, self.lfy, self.rfy, self.las, self.ras = front_pose(frame)
+        self.b = 0
         ts = spec['topStyle']
         self.bot = TOP_BOT[ts] if ts != 'coat' else spec.get('hem', 76)
         self.bot += self.b
@@ -96,9 +108,13 @@ class Person:
     # ============================================================================ FRONT / BACK
     def draw_frontback(self):
         back = self.view == 'up'
+        f = self.f
+        f.oy = self.bob
         self.hair_behind_fb(back)
         if not back: self.hood_front()
+        f.oy = 0
         self.legs_fb(back)
+        f.oy = self.bob
         self.skirt_fb()
         self.torso_fb(back)
         if back: self.hood_back()
@@ -542,7 +558,7 @@ class Person:
             m = []
             for y in range(top, hand_y):
                 t = (y - top) / max(1, hand_y - top)
-                dx = round(sgn * t * 1.2)
+                dx = round(sgn * t * (1.2 - 0.6 * sw))       # a forward arm swings in across the body, a back arm out
                 if y == top: xs = range(xo + 1, xo + 5) if L else range(xo + 1, xo + 5)
                 else: xs = range(xo + dx, xo + dx + 6)
                 for x in xs: m.append((x, y))
@@ -569,7 +585,7 @@ class Person:
                 if ts == 'coat' and not back:
                     self.button(xo + (3 if L else 1), hand_y - 4, ap, small=True)
             # hand
-            hx = xo + round(sgn * 1.2)
+            hx = xo + round(sgn * (1.2 - 0.6 * sw))
             hp = f.part()
             hm = [(hx + 1, hand_y), (hx + 2, hand_y), (hx + 3, hand_y), (hx + 4, hand_y),
                   (hx + 1, hand_y + 1), (hx + 2, hand_y + 1), (hx + 3, hand_y + 1), (hx + 4, hand_y + 1),
@@ -600,7 +616,7 @@ class Person:
             f.put(hx + 2 + (2 if side == 'R' else -2), hy + 17, 'metal', 1, lp)
         if s.get('stick') and not right_hand:
             sp = f.part()
-            for y in range(hy - 1, FEET + 1):
+            for y in range(hy - 1, FEET + 1 - f.oy):
                 f.put(hx + 5 if side == 'R' else hx, y, 'wood_dark', 1 if y < hy + 3 else 2, sp)
             f.put(hx + 4 if side == 'R' else hx + 1, hy - 1, 'wood_dark', 1, sp)
             f.put(hx + 3 if side == 'R' else hx + 2, hy - 1, 'wood_dark', 2, sp)
@@ -720,12 +736,9 @@ class Person:
         my = ey + 9
         if not s.get('beard'):
             lp = sk + '_lip'
-            f.put(CX - 3, my - 1, lp, 2, fp); f.put(CX - 2, my, lp, 3, fp); f.put(CX - 1, my, lp, 3, fp)
-            f.put(CX, my, lp, 3, fp); f.put(CX + 1, my, lp, 3, fp); f.put(CX + 2, my - 1, lp, 2, fp)
-            f.put(CX - 1, my + 1, lp, 1, fp); f.put(CX, my + 1, lp, 1, fp)
-            if s.get('lipstick'):
-                for x in range(CX - 2, CX + 2): f.put(x, my, 'wine', 2, fp)
-                f.put(CX - 1, my + 1, 'wine', 1, fp); f.put(CX, my + 1, 'wine', 1, fp)
+            mc = 'wine' if s.get('lipstick') else lp
+            f.put(CX - 2, my - 1, lp, 2, fp); f.put(CX - 1, my, mc, 3 if mc == lp else 2, fp)
+            f.put(CX, my, mc, 3 if mc == lp else 2, fp); f.put(CX + 1, my - 1, lp, 2, fp)
         if s.get('age') == 'old':
             f.put(CX - 8, ey + 2, sk, 2, fp); f.put(CX - 8, ey + 3, sk, 2, fp)     # crow's feet
             f.put(CX + 7, ey + 2, sk, 3, fp); f.put(CX + 7, ey + 3, sk, 3, fp)
@@ -751,7 +764,7 @@ class Person:
         for x in range(CX - 7, CX + 7): m.append((x, 41 + b))
         for x in range(CX - 5, CX + 5): m.append((x, 42 + b))
         for x in range(CX - 3, CX + 3): m.append((x, 43 + b))
-        mouth = {(x, ey + 9) for x in range(CX - 2, CX + 2)} | {(x, ey + 10) for x in range(CX - 1, CX + 1)}
+        mouth = {(CX - 1, ey + 9), (CX, ey + 9)}
         m = [p for p in m if p not in mouth]
         f.paint(m, hr, bp, mode='sph', cx=CX - 2, rx=14, cy=ey + 4, ry=13, bias=0.02, lo=1, hi=4,
                 tex=lambda x, y: -0.16 if (hash01(x, y // 2, 5) > 0.7) else (0.06 if (x + y) % 5 == 0 else 0))
@@ -761,8 +774,7 @@ class Person:
         for x in range(CX - 3, CX + 3): f.put(x, ey + 8, hr, 2 if x < CX else 3, bp)
         f.put(CX - 5, ey + 8, hr, 2, bp); f.put(CX + 4, ey + 8, hr, 3, bp)
         lp = s['skin'] + '_lip'
-        for x in range(CX - 2, CX + 2): f.put(x, ey + 9, lp, 3, bp)
-        f.put(CX - 1, ey + 10, lp, 1, bp); f.put(CX, ey + 10, lp, 2, bp)
+        f.put(CX - 1, ey + 9, lp, 3, bp); f.put(CX, ey + 9, lp, 3, bp)
 
     def glasses_front(self):
         s, f, b = self.s, self.f, self.b
@@ -994,9 +1006,13 @@ class Person:
 
     # ============================================================================ PROFILE (faces LEFT)
     def draw_side(self):
+        f = self.f
+        f.oy = self.bob
         self.side_hair_behind()
         self.side_arm(False)
+        f.oy = 0
         self.side_legs()
+        f.oy = self.bob
         self.side_bag(far=True)
         self.side_torso()
         self.side_head()
@@ -1094,8 +1110,8 @@ class Person:
             span = {}
             for y in range(sk_top, sk_bot + 1):
                 t = (y - sk_top) / max(1, sk_bot - sk_top)
-                sway = (1 if self.frame in (1, 3) and y > sk_bot - 4 else 0)
-                span[y] = (round(CX - depth - 0.5 - t * 2.4) - sway, round(CX + depth - 1 + t * 2.2))
+                fw, bk = self.hem_sway(y, sk_bot, 9)
+                span[y] = (round(CX - depth - 0.5 - t * 2.4 - fw), round(CX + depth - 1 + t * 2.2 + bk))
             pid = f.part()
             f.paint(rows(span), s.get('skirt', 'charcoal'), pid, lo=1, hi=4,
                     tex=lambda x, y: (-0.22 if x % 4 == 0 else (0.06 if x % 4 == 1 else 0)))
@@ -1112,6 +1128,9 @@ class Person:
             if y == top: front += 3; backx -= 3
             elif y == top + 1: front += 1.5; backx -= 1.5
             elif y == top + 2: front += 0.5; backx -= 0.5
+            if ts == 'coat' or bot > 68:
+                fw, bk = self.hem_sway(y, bot, 10)
+                front -= fw; backx += bk
             span[y] = (round(front), round(backx))
         self.side_span = span
         pid = f.part()
@@ -1203,6 +1222,14 @@ class Person:
             for (x, y) in m:
                 if y == vb: f.step(x, y, 1)
 
+    def hem_sway(self, y, bot, rows_):
+        """Profile: the lower hem is pushed forward by the leading leg and trails behind the back one."""
+        t = (y - (bot - rows_)) / rows_
+        if t <= 0: return 0.0, 0.0
+        fwd = max(0, -min(self.nfx, self.ffx) - 2) * 0.6
+        bck = max(0, max(self.nfx, self.ffx) - 2) * 0.35
+        return t * t * fwd, t * t * bck
+
     def side_apron(self, top, span):
         f, b = self.f, self.b
         ap = f.part()
@@ -1220,7 +1247,7 @@ class Person:
         short = self.short_sleeves()
         sw = self.swing if near else -self.swing
         sx, sy = CX + 1, 43 + b
-        hx = sx - 5 * sw; hy = 64 + b - abs(sw)
+        hx = sx - round(5 * sw); hy = 64 + b - round(abs(sw))
         ap = f.part(sepk=3)
         m = []
         n = hy - sy
@@ -1256,7 +1283,7 @@ class Person:
             f.put(hx - 3, hy + 4, 'wood', 1, cp); f.put(hx - 3, hy + 3, 'wood', 0, cp); f.put(hx + 1, hy + 4, 'leaf', 1, cp)
         if s.get('stick') and not right_hand:
             sp2 = f.part()
-            for y in range(hy - 1, FEET + 1): f.put(hx - 3 - (y - hy) // 10, y, 'wood_dark', 1 if y < hy + 3 else 2, sp2)
+            for y in range(hy - 1, FEET + 1 - f.oy): f.put(hx - 3 - (y - hy) // 10, y, 'wood_dark', 1 if y < hy + 3 else 2, sp2)
         if s.get('leash') and right_hand:
             lp = f.part(shadow=False)
             for k in range(0, 14): f.put(hx - 3 - k // 3, hy + 3 + k, 'wine', 2, lp)
@@ -1306,16 +1333,24 @@ class Person:
         np_ = f.part()
         f.paint(rows({y: (CX - 3, CX + 3) for y in range(37 + b, 43 + b)}), sk, np_, bias=-0.3, lo=2, hi=3)
         hp = f.part()
-        m = set(ell(CX + 0.8, 27.6 + b, 13.2, 12.8))
-        m |= {(11, 31 + b), (10, 32 + b), (11, 32 + b), (10, 33 + b), (11, 33 + b)}   # nose
-        m -= {(11, 36 + b), (11, 37 + b), (12, 38 + b), (11, 38 + b), (12, 39 + b), (13, 39 + b), (12, 40 + b),
-              (13, 40 + b), (14, 40 + b), (11, 35 + b)}                          # the jaw curving under the chin
-        m |= {(11, 34 + b)}
+        # profile: an explicit face contour (forehead, a small nose bump, a flat mouth, a clear chin and jaw)
+        skull = set(ell(CX + 1.5, 27 + b, 12.6, 12.8))
+        front = {19: 14, 20: 13, 21: 13, 22: 12, 23: 12, 24: 12, 25: 12, 26: 12, 27: 12, 28: 12, 29: 12, 30: 12,
+                 31: 11, 32: 10, 33: 10, 34: 11, 35: 12, 36: 12, 37: 12, 38: 13, 39: 14, 40: 16}
+        right = {}
+        for (x, y) in skull: right[y] = max(right.get(y, -1), x)
+        m = set(p for p in skull if p[1] < 19 + b)
+        for yy, x0 in front.items():
+            y = yy + b
+            r = right.get(y, CX + 8)
+            for x in range(x0, r + 1): m.add((x, y))
+        jaw = lambda x: 40 if x <= CX - 2 else (39 if x <= CX + 2 else 38)
+        m = set(p for p in m if p[1] - b <= jaw(p[0]) or p[0] > CX + 6)
         self.face_mask = m
         f.paint(m, sk, hp, mode='sph', cx=CX - 3, rx=15, cy=25 + b, ry=16, bias=0.34, lo=1, hi=3,
                 th=(0.99, 0.52, 0.30, 0.12))
-        for (x, y) in m:                                       # jaw line and the shaded back of the head
-            if (x, y + 1) not in m and x > 14: f.step(x, y, 1)
+        for (x, y) in m:                                       # jaw line
+            if (x, y + 1) not in m and 14 < x < CX + 6: f.step(x, y, 1)
         ep = f.part(shadow=False)
         ear = [(x, y) for x in range(CX + 2, CX + 6) for y in range(27 + b, 34 + b)]
         ear = [p for p in ear if p not in {(CX + 2, 27 + b), (CX + 5, 27 + b), (CX + 5, 33 + b), (CX + 2, 33 + b)}]
@@ -1325,42 +1360,41 @@ class Person:
         if s.get('earrings'): f.put(CX + 3, 34 + b, 'gold', 1, ep)
         self.ear = set(ear)
         fp = f.part(shadow=False, sep=False)
-        ey = 28 + b; ex = 14
+        ey = 28 + b; ex = 15
         eye = s.get('eye', 'eye')
-        for x in (ex, ex + 1, ex + 2): f.put(x, ey, OUT, 0, fp)
-        f.put(ex + 3, ey - 1, OUT, 0, fp) if not s.get('glasses') else None
-        f.put(ex, ey + 1, eye, 3, fp); f.put(ex + 1, ey + 1, eye, 0, fp); f.put(ex + 2, ey + 1, sk, 1, fp)
-        f.put(ex, ey + 2, eye, 3, fp); f.put(ex + 1, ey + 2, eye, 4, fp)
-        f.put(ex, ey + 3, eye, 2, fp); f.put(ex + 1, ey + 3, eye, 1, fp)
+        for x in (ex - 1, ex, ex + 1): f.put(x, ey, OUT, 0, fp)
+        f.put(ex, ey + 1, eye, 0, fp); f.put(ex + 1, ey + 1, eye, 3, fp)
+        f.put(ex, ey + 2, eye, 4, fp); f.put(ex + 1, ey + 2, eye, 3, fp)
+        f.put(ex, ey + 3, eye, 1, fp); f.put(ex + 1, ey + 3, eye, 2, fp)
         br = s.get('brow', s['hair']); bi = s.get('brow_i', 3)
         by = ey - 3 if not s.get('glasses') else ey - 4
-        for k, x in enumerate(range(ex - 1, ex + 4)): f.put(x, by + (1 if k == 4 else 0), br, bi, fp)
-        f.put(ex + 2, ey + 6, sk + '_blush', 1, fp); f.put(ex + 3, ey + 6, sk + '_blush', 1, fp); f.put(ex + 4, ey + 6, sk + '_blush', 2, fp)
-        f.put(11, 31 + b, sk, 1, fp); f.put(10, 32 + b, sk, 0, fp); f.put(10, 33 + b, sk, 2, fp); f.put(11, 34 + b, sk, 3, fp); f.put(12, 34 + b, sk, 2, fp)
+        for k, x in enumerate(range(ex - 1, ex + 3)): f.put(x, by + (1 if k == 3 else 0), br, bi, fp)
+        f.put(ex + 2, ey + 6, sk + '_blush', 1, fp); f.put(ex + 3, ey + 6, sk + '_blush', 1, fp)
+        # nose: lit tip, shaded underside
+        f.put(11, 31 + b, sk, 1, fp); f.put(10, 32 + b, sk, 0, fp); f.put(10, 33 + b, sk, 1, fp)
+        f.put(11, 34 + b, sk, 2, fp); f.put(12, 34 + b, sk, 2, fp)
         if not s.get('beard'):
-            lp = sk + '_lip'
-            f.put(11, 35 + b, lp, 2, fp) if (11, 35 + b) in m else None
-            f.put(12, 35 + b, lp, 3, fp); f.put(13, 35 + b, lp, 3, fp); f.put(14, 34 + b, lp, 2, fp)
-            f.put(12, 36 + b, lp, 1, fp)
-        if s.get('age') == 'old': f.put(ex + 4, ey + 2, sk, 2, fp); f.put(ex + 4, ey + 3, sk, 2, fp)
+            f.put(13, 36 + b, sk, 3, fp); f.put(14, 36 + b, sk + '_lip', 2, fp)      # a small closed smile
+            f.put(15, 35 + b, sk, 2, fp)
+        f.put(13, 38 + b, sk, 1, fp)                                                     # chin catches the light
+        if s.get('age') == 'old': f.put(ex + 3, ey + 2, sk, 2, fp); f.put(ex + 3, ey + 3, sk, 2, fp)
         if s.get('beard'):
             bp = f.part(); hr = s.get('beard_ramp', s['hair'])
             style = s.get('beard')
             bm = []
             for (x, y) in m:
+                yy = y - b
                 if style == 'goatee':
-                    if y >= 35 + b and x < 17: bm.append((x, y))
+                    if yy >= 36 and x < 17: bm.append((x, y))
                     continue
-                if y >= 34 + b and x < CX + 3: bm.append((x, y))
-                elif y >= 31 + b and x >= 17 and x < CX + 3: bm.append((x, y))
-                elif CX - 1 <= x <= CX + 1 and 26 + b <= y: bm.append((x, y))     # sideburn
-            bm += [(x, 41 + b) for x in range(12, 20)] + [(x, 42 + b) for x in range(13, 18)]
-            bm = [p for p in bm if p not in {(11, 35 + b), (12, 35 + b), (13, 35 + b)}]
+                if yy >= 35 and x < CX + 3: bm.append((x, y))
+                elif yy >= 31 and 18 <= x < CX + 3: bm.append((x, y))
+                elif CX <= x <= CX + 1 and yy >= 26: bm.append((x, y))     # sideburn
+            bm += [(x, 41 + b) for x in range(13, 22)] + [(x, 42 + b) for x in range(14, 19)]
             f.paint(bm, hr, bp, mode='sph', cx=CX - 3, rx=13, cy=31 + b, ry=12, lo=1, hi=4,
-                    tex=lambda x, y: -0.16 if hash01(x, y // 2, 5) > 0.7 else 0)
-            for x in range(10, 16): f.put(x, 34 + b, hr, 2 if x < 13 else 3, bp)
-            f.put(11, 33 + b, hr, 2, bp)
-            f.put(11, 35 + b, sk + '_lip', 3, bp); f.put(12, 35 + b, sk + '_lip', 2, bp)
+                    tex=lambda x, y: -0.16 if hash01(x, (y - b) // 2, 5) > 0.7 else 0)
+            for x in range(11, 16): f.put(x, 35 + b, hr, 2 if x < 13 else 3, bp)            # moustache
+            f.put(13, 36 + b, hr, 4, bp); f.put(14, 36 + b, hr, 4, bp)                        # mouth line
         self.side_hair()
         if s.get('glasses'):
             gp = f.part(shadow=False, sep=False)

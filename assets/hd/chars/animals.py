@@ -79,12 +79,13 @@ def cat_sit(frame, flip):
 
 def cat_walk(frame, flip):
     f = Fig(*CAT, lx=-1 if flip else 1)
-    ph = frame * math.pi / 2
-    bob = [0, -1, 0, -1][frame]
+    ph = frame * math.pi / 3
+    bob = [0, 0, -1, 0, 0, -1][frame]
     lp = f.part()
     for (lx, off, far) in ((11, 0, True), (24, math.pi, True)):
         s = math.sin(ph + off) * 2
-        leg(f, lx, 18 + bob, 25, 'ginger', lp, dx=round(s), bias=-0.25)
+        up = 1 if math.cos(ph + off) > 0.4 else 0
+        leg(f, lx, 18 + bob, 25 - up, 'ginger', lp, dx=round(s), bias=-0.25)
     tp = f.part()
     tm = []
     for k in range(12):
@@ -98,8 +99,9 @@ def cat_walk(frame, flip):
     lp2 = f.part()
     for (lx, off) in ((13, math.pi), (26, 0)):
         s = math.sin(ph + off) * 2
-        leg(f, lx, 18 + bob, 25, 'ginger', lp2, dx=round(s), bias=0.06)
-        f.put(lx + round(s), 25, 'cream', 1, lp2); f.put(lx + 1 + round(s), 25, 'cream', 2, lp2)
+        up = 1 if math.cos(ph + off) > 0.4 else 0
+        leg(f, lx, 18 + bob, 25 - up, 'ginger', lp2, dx=round(s), bias=0.06)
+        f.put(lx + round(s), 25 - up, 'cream', 1, lp2); f.put(lx + 1 + round(s), 25 - up, 'cream', 2, lp2)
     cat_head(f, 9, 11 + bob)
     return finish(f, flip)
 
@@ -199,13 +201,14 @@ def fleece(x, y):
 
 def sheep_frame(kind, frame, flip):
     f = Fig(*SHEEP, lx=-1 if flip else 1)
-    bob = [0, -1, 0, -1][frame] if kind == 'walk' else 0
+    bob = [0, 0, -1, 0, 0, -1][frame] if kind == 'walk' else 0
     lp = f.part()
-    ph = frame * math.pi / 2
+    ph = frame * math.pi / 3
     for (lx, off) in ((18, math.pi), (40, 0)):
         s = round(math.sin(ph + off) * 2.5) if kind == 'walk' else 0
-        leg(f, lx, 30 + bob, 42, 'sheepface', lp, w=2, dx=s, bias=-0.05)
-        for x in range(lx + s, lx + s + 3): f.put(x, 43, 'sheepface', 3, lp)
+        up = 1 if kind == 'walk' and math.cos(ph + off) > 0.4 else 0
+        leg(f, lx, 30 + bob, 42 - up, 'sheepface', lp, w=2, dx=s, bias=-0.05)
+        for x in range(lx + s, lx + s + 3): f.put(x, 43 - up, 'sheepface', 3, lp)
     bp = f.part()
     body = set(ell(31, 22 + bob, 20.5, 12.5))
     for k in range(30):   # scalloped silhouette
@@ -218,8 +221,9 @@ def sheep_frame(kind, frame, flip):
     lp2 = f.part()
     for (lx, off) in ((21, 0), (43, math.pi)):
         s = round(math.sin(ph + off) * 2.5) if kind == 'walk' else 0
-        leg(f, lx, 31 + bob, 43, 'sheepface', lp2, w=2, dx=s, bias=0.25)
-        for x in range(lx + s, lx + s + 3): f.put(x, 43, 'sheepface', 4, lp2)
+        up = 1 if kind == 'walk' and math.cos(ph + off) > 0.4 else 0
+        leg(f, lx, 31 + bob, 43 - up, 'sheepface', lp2, w=2, dx=s, bias=0.25)
+        for x in range(lx + s, lx + s + 3): f.put(x, 43 - up, 'sheepface', 4, lp2)
         f.put(lx + s, 38, 'sheep', 2, lp2); f.put(lx + s + 1, 35, 'sheep', 3, lp2)   # white knee flash (Swaledale legs are speckled)
     # head: black face, white muzzle and eye rings, curled horns
     if kind == 'graze':
@@ -296,10 +300,10 @@ def pigeon_frame(kind, frame, flip):
 def build(out):
     entries = {}
     specs = [
-        ('cat', CAT, (18, 26), [('sit', cat_sit, 2), ('walk', cat_walk, 4), ('sleep', cat_sleep, 2)]),
+        ('cat', CAT, (18, 26), [('sit', cat_sit, 2), ('walk', cat_walk, 6), ('sleep', cat_sleep, 2)]),
         ('duck', DUCK, (12, 20), [('swim', duck_swim, 2), ('waddle', duck_waddle, 4)]),
         ('sheep', SHEEP, (30, 44), [('graze', lambda i, fl: sheep_frame('graze', i, fl), 2),
-                                    ('walk', lambda i, fl: sheep_frame('walk', i, fl), 4)]),
+                                    ('walk', lambda i, fl: sheep_frame('walk', i, fl), 6)]),
         ('pigeon', PIGEON, (11, 20), [('idle', lambda i, fl: pigeon_frame('idle', i, fl), 2),
                                       ('bob', lambda i, fl: pigeon_frame('bob', i, fl), 4)]),
     ]
