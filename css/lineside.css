@@ -563,3 +563,6 @@ body.modal #toast{top:calc(84px + env(safe-area-inset-top));bottom:auto}
   #tip{top:auto;bottom:calc(170px + env(safe-area-inset-bottom))}
 }
 .echoes .later{font-size:13px;color:var(--teal);margin-top:4px}
+#title{background:radial-gradient(ellipse at 50% 45%,rgba(8,6,16,.62) 0%,rgba(8,6,16,.35) 55%,rgba(8,6,16,.7) 100%)}
+#title .packline{opacity:.9;text-shadow:0 1px 8px rgba(0,0,0,.8)}
+#title .logo{text-shadow:0 6px 40px rgba(0,0,0,.6)}

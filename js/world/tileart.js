@@ -2145,7 +2145,7 @@ window.LS = window.LS || {};
         const n = x1 - x0 + 1;
         obj(S, ppeGate(n, vertical, false), x0 * T, y * T + 14 - 22, y * T + 14, null, { kind: 'ppe_gate', tiles: grp.map(x => [x, y]), imgOpen: ppeGate(n, vertical, true) });
         // pick the side of the gate where the plate hides the least walkable ground / defect stands
-        const stands = new Set((w.level.outside || []).filter(o => o.stand || o.kind === 'defect').map(o => (o.stand || o.tile).join(',')));
+        const stands = new Set(); (w.level.outside || []).forEach(o => { if (o.tile) stands.add(o.tile.join(',')); if (o.stand) stands.add(o.stand.join(',')); });
         const cost = (tx0) => { let n = 0; for (let yy = y - 1; yy <= y; yy++) for (let xx = tx0; xx < tx0 + 3; xx++) { if (w.walk(xx, yy)) n++; if (stands.has(xx + ',' + yy) || stands.has(xx + ',' + (yy - 1))) n += 10; } return n; };
         const right = (x1 + 1) * T + 1, left = x0 * T - 41;
         const signX = cost(x1 + 1) <= cost(x0 - 3) ? right : left;

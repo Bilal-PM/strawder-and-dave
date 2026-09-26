@@ -22,6 +22,25 @@ async function play(t, r, policy, vp, seed) {
         report: { on: document.querySelector('#report').classList.contains('on'), text: (document.querySelector('#report').innerText || '').length }
       };
     });
+    // The report's actions (expert runs): share card, CSV download, copy summary.
+    if (policy === 'expert') {
+      const share = await P.page.evaluate(() => { const b = document.querySelector('#rShare'); if (!b) return 'no #rShare'; __T.click(b); return 'ok'; });
+      if (share === 'ok') {
+        const img = await P.page.waitForFunction(() => { const i = document.querySelector('#share.on img'); return i && i.complete && i.naturalWidth > 0 ? [i.naturalWidth, i.naturalHeight] : null; }, null, { timeout: 10000 }).then(h => h.jsonValue(), () => null);
+        r.ok(img, '"Share my result" did not show a result card image');
+        if (img) r.log(`share card ${img[0]}×${img[1]}`);
+        await P.page.evaluate(() => { const c = document.querySelector('#sClose'); if (c) c.click(); });
+      } else r.fail(share);
+      const dl = await Promise.all([P.page.waitForEvent('download', { timeout: 8000 }).catch(() => null), P.page.evaluate(() => { const b = document.querySelector('#rCSV'); if (b) __T.click(b); return !!b; })]);
+      if (dl[1]) {
+        if (r.ok(dl[0], '"Download results (CSV)" started no download')) {
+          const f = await dl[0].path().catch(() => null), csv = f ? require('fs').readFileSync(f, 'utf8') : '';
+          r.ok(/\.csv$/i.test(dl[0].suggestedFilename()) && /player.*grade/i.test(csv.split('\n')[0] || '') && csv.split('\n').length > s.graded, `the CSV looks wrong (${dl[0].suggestedFilename()}, ${csv.split('\n').length} lines)`);
+        }
+      }
+      const copied = await P.page.evaluate(() => { const b = document.querySelector('#rCopy'); if (!b) return null; __T.click(b); return true; });
+      if (copied) r.ok(await P.page.waitForFunction(() => /cop/i.test(document.querySelector('#toast').textContent) && document.querySelector('#toast').classList.contains('on'), null, { timeout: 4000 }).then(() => true, () => false), '"Copy summary" gave no confirmation');
+    }
     // After the report: "What's next" opens and closes, and a reload offers no Continue for a finished chapter.
     const after = await P.page.evaluate(() => { const b = document.querySelector('#rNext'); if (!b) return 'no #rNext'; __T.click(b); return document.querySelector('#panel').classList.contains('on') ? 'ok' : 'panel did not open'; });
     if (after === 'ok') await P.page.evaluate(() => { const b = document.querySelector('#csBack'); if (b) b.click(); });

@@ -84,7 +84,7 @@ async function openPage(o) {
   o = Object.assign({ viewport: 'desktop', settings: FAST, gameSeed: null, policySeed: 1 }, o || {});
   const b = await getBrowser();
   const vp = VIEWPORTS[o.viewport]; if (!vp) throw new Error('unknown viewport ' + o.viewport);
-  const ctx = await b.newContext(Object.assign({ ignoreHTTPSErrors: true }, vp.ctx));
+  const ctx = await b.newContext(Object.assign({ ignoreHTTPSErrors: true, acceptDownloads: true }, vp.ctx));
   await ctx.route(FONT_RE, fontRoute);
   const cfg = { settings: o.settings, gameSeed: o.gameSeed, policySeed: o.policySeed };
   await ctx.addInitScript({ content: `window.__T_CFG=${JSON.stringify(cfg)};\n${INPAGE}` });
