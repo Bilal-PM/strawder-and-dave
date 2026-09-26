@@ -1,3 +1,27 @@
+# LLM Handoff
+
+> Last updated: 2026-09-26 · Branch `claude/lineside-overhaul`
+
+## Current state
+The project has been rebuilt as **LINESIDE**, a cinematic, story-driven judgment game (see `README.md` for product, design rationale, architecture and roadmap).
+
+- `index.html` + `css/` + `js/` — LINESIDE (the current game)
+- `classic.html` — previous prototype *Project Valley* (v10, pixel-art office sim), kept for comparison. Still uses `img/`.
+- `js/packs/kestrel-vale.js` — all story and decision content. **Edit content here, not in the engine.**
+
+## Key engine facts (js/game.js)
+- Flow is async/await: `run()` → `runChapter(i)` → `chapterCard` → due `ripple`s → intro `say`s → `talk`s → `doCall`s → `chapterEnd`. Then the epilogue ripples, Moira's finale, then `report()`.
+- One pending input at a time: `onAdvance` (Enter/Space/click) and `onKey` (number keys click `[data-k]`).
+- Scoring: `stats(live)` (decision quality 75% + Brier calibration 25%; `live` adds a small prior for the HUD), `profile()` (archetype from cumulative choice deltas `S.trade`).
+- Save: the whole `S` is saved to `localStorage.lineside_save` at each chapter start; Continue resumes at that chapter.
+- Scene: `LS.Scene#set({time, season, weather, build, train})` crossfades; layers are cached offscreen canvases, rebuilt on resize.
+- Settings in `localStorage.lineside_settings`: sound, reduced, large, instant.
+
+## Testing
+No build step. Headless Chromium via Playwright (`/opt/node22/lib/node_modules/playwright`) is used to play through desktop/mobile and screenshot every state. Google Fonts may fail in the sandbox (falls back to Georgia/system sans).
+
+---
+
 # Project Valley — LLM Handoff Document
 
 > Last updated: 2026-02-23
