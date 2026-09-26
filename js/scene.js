@@ -393,4 +393,5 @@ window.LS = window.LS || {};
     }
   }
   LS.Scene = Scene;
+  LS.art = { PAL, SEASON, rgb, mix, rgba, rng, pine };
 })();

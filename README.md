@@ -2,7 +2,7 @@
 
 > No scores on the buttons. No right answers on screen. Just the calls you make — and the ripples they send.
 
-LINESIDE is a cinematic, story-driven judgment trainer. The first scenario pack, **The Kestrel Vale Line**, puts the player in charge of reopening a closed Victorian railway through Harrowby, a valley town that has waited 39 years for a train. It takes about 20 minutes, runs in any browser (desktop, tablet, phone), and needs no install or login.
+LINESIDE is an explorable, story-driven judgment game: a side-on 2.5D world you walk around (in the spirit of *Stardew Valley* and *Dave the Diver*), painted in a layered atmospheric style (*Firewatch*, *Alto's Odyssey*). The first scenario pack, **The Kestrel Vale Line**, puts the player in charge of reopening a closed Victorian railway through Harrowby, a valley town that has waited 39 years for a train. It takes about 20 minutes, runs in any browser (desktop, tablet, phone), and needs no install or login.
 
 It is built to be the first title in an education product line (working name **Groundwork Studio**): one engine, many sector packs.
 
@@ -11,6 +11,20 @@ It is built to be the first title in an education product line (working name **G
 Open `index.html` in a browser, or serve the folder over HTTPS (GitHub Pages / Netlify). Serving over HTTPS lets phones use native sharing and puts the link on the share card.
 
 `classic.html` is the previous prototype (*Project Valley*), kept for comparison.
+
+## The world
+
+Walk the whole valley, left to right:
+
+- **Harrowby**: school, cottages, Pritchard's bakery, the Kestrel Arms, the **Village Hall** (enterable) and the church. Four townsfolk (Len the retired signalman, June the baker, Dev who needs the train for college, and Jess at the school gate) say different things each chapter and react when the project is going badly.
+- **The hill path and Harrowby Station**: boarded up and overgrown at the start, restored with a canopy, clock, flowers and bunting by opening day.
+- **The viaduct**: 11 arches over Kestrel Beck. It changes with the project: ivy and a broken parapet, then survey flags and an X on Pier 4, then scaffolding, a crane and the crew, then track and lamps, then a working train crossing it.
+- **The site compound**: your **site office** (enterable). Moira sits in the armchair, the planning wall opens the project board, and the kettle is a small morale boost. There's also the welfare cabin, materials and Tom's van.
+- **Kestrel Junction**: the live main line with passing trains, signals and the signal box.
+
+Each chapter changes the time of day, the season and the weather (dawn, day, dusk, overcast rain, night snow). **The loop:** your list (top left) and markers in the world show who to see. Gold diamonds mark conversations; an orange **!** marks the chapter's **Call**. Once everything is done, you close the week at your desk. **Optional exploring** rewards curiosity: townsfolk chats (+People), things to inspect, Moira's hints, and **eight hidden pages of Moira's 1986 notebook** that reveal her secret before she tells it.
+
+Controls: A/D or arrow keys to walk (Shift to hurry) and E to interact. You can also click or tap where you want to go, or tap a person. Phones get on-screen ◀ ▶ Ⓐ buttons.
 
 ## Why it builds judgment (first principles)
 
@@ -38,11 +52,14 @@ Judgment is choosing well **under uncertainty**, when **goods compete** and **co
 ```
 index.html              Shell: layers, HUD, fonts
 css/lineside.css        UI: editorial type (Fraunces + Inter), paper cards, responsive
-js/scene.js             Cinematic landscape renderer (Canvas 2D, layered parallax)
+js/world/world.js       The explorable world: terrain, parallax, viaduct build states, rooms, camera, input
+js/world/sprites.js     In-world illustration: characters (walk cycle, clothing, hats) and buildings
+js/scene.js             Palette/colour helpers (plus the older static landscape renderer)
 js/portraits.js         Flat-vector character portraits (SVG, 3 moods)
 js/audio.js             Generative ambient score + weather + UI sound (Web Audio)
 js/game.js              Engine: chapter flow, Calls, ripples, scoring, report, share, export
-js/packs/kestrel-vale.js  Scenario pack (pure data)
+js/packs/kestrel-vale.js        Scenario pack: story, cast, conversations, Calls (pure data)
+js/packs/kestrel-vale-world.js  World layer: who stands where each chapter, townsfolk, inspect text, notebook pages
 ```
 
 **Art direction.** Layered atmospheric landscape illustration: the proven look of *Firewatch* and *Alto's Odyssey*. Flat silhouettes, aerial perspective, strong time-of-day palettes, parallax, weather, film grain and vignette. The viaduct changes across the project: derelict and ivy-covered, surveyed, scaffolded with a crane, track laid, then open with trains. Characters use a flat editorial portrait style. All art is generated in code, so there are no asset licences to manage and the whole game is under 200 KB.

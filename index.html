@@ -17,10 +17,10 @@
 <link rel="stylesheet" href="css/lineside.css">
 </head>
 <body>
-<canvas id="scene" aria-hidden="true"></canvas>
+<canvas id="world" aria-label="The Kestrel Vale — walk around and explore"></canvas>
 
 <div id="hud" role="status">
-  <div class="hud-ch" id="hudCh"></div>
+  <div class="hud-left"><div class="hud-ch" id="hudCh"></div><ol class="obj" id="obj" aria-label="This week"></ol></div>
   <div class="hud-right"><div class="metrics" id="hudMetrics"></div><div class="jq" id="hudJQ"></div><button class="iconbtn" id="hudMenu" aria-label="Open project board"></button></div>
 </div>
 
@@ -34,6 +34,7 @@
   <section id="board" class="layer"></section>
   <section id="share" class="layer"></section>
 </main>
+<div id="pad" aria-hidden="true"><button id="padL" aria-label="Walk left">◀</button><button id="padR" aria-label="Walk right">▶</button><button id="padA" aria-label="Interact">Ⓐ</button></div>
 <div id="toast" role="status"></div>
 <div id="live" class="sr" aria-live="polite"></div>
 <noscript><p style="color:#fff;padding:20px">LINESIDE needs JavaScript to run.</p></noscript>
@@ -41,6 +42,9 @@
 <script src="js/packs/kestrel-vale.js"></script>
 <script src="js/portraits.js"></script>
 <script src="js/scene.js"></script>
+<script src="js/packs/kestrel-vale-world.js"></script>
+<script src="js/world/sprites.js"></script>
+<script src="js/world/world.js"></script>
 <script src="js/audio.js"></script>
 <script src="js/game.js"></script>
 </body>

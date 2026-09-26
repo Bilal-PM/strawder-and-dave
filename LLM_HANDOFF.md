@@ -8,9 +8,11 @@ The project has been rebuilt as **LINESIDE**, a cinematic, story-driven judgment
 - `index.html` + `css/` + `js/` — LINESIDE (the current game)
 - `classic.html` — previous prototype *Project Valley* (v10, pixel-art office sim), kept for comparison. Still uses `img/`.
 - `js/packs/kestrel-vale.js` — all story and decision content. **Edit content here, not in the engine.**
+- `js/packs/kestrel-vale-world.js` — world placements per chapter (cast positions, who holds which talk/Call), townsfolk lines, inspect text, Moira's notebook.
+- `js/world/world.js` — explorable world. Units: people ~74 tall; walk line y=0 on the deck/plateau, town at y=200. `LS.WORLD` exports geometry (DOORS, PIER4, terrain). Entities come from `setupWorld()` in game.js; the world calls `onInteract(entity)`.
 
 ## Key engine facts (js/game.js)
-- Flow is async/await: `run()` → `runChapter(i)` → `chapterCard` → due `ripple`s → intro `say`s → `talk`s → `doCall`s → `chapterEnd`. Then the epilogue ripples, Moira's finale, then `report()`.
+- Flow is async/await: `run()` → `runChapter(i)` → `setupWorld` → `chapterCard` → due `ripple`s → intro `say`s → `explore(i)` (player walks to people; talks, Calls, chats, inspections, notebook pages via `handle()`; resolves when they close the week at the desk) → `chapterEnd`. Then the epilogue ripples, Moira's finale, then `report()`.
 - One pending input at a time: `onAdvance` (Enter/Space/click) and `onKey` (number keys click `[data-k]`).
 - Scoring: `stats(live)` (decision quality 75% + Brier calibration 25%; `live` adds a small prior for the HUD), `profile()` (archetype from cumulative choice deltas `S.trade`).
 - Save: the whole `S` is saved to `localStorage.lineside_save` at each chapter start; Continue resumes at that chapter.

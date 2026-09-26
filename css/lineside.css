@@ -312,3 +312,30 @@ body.reduced *{animation-duration:.01ms!important;transition-duration:.01ms!impo
 #panel,#board,#share{z-index:40}
 #report{z-index:35}
 #talk{z-index:15}
+
+/* ---------- Explorable world ---------- */
+#world{position:fixed;inset:0;display:block;touch-action:none}
+.hud-left{display:flex;flex-direction:column;gap:10px;max-width:min(360px,60vw)}
+.obj{list-style:none;display:none;flex-direction:column;gap:6px;background:rgba(14,12,22,.5);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(247,241,231,.14);border-radius:14px;padding:10px 12px}
+body.exploring .obj{display:flex}
+.obj li{display:flex;gap:9px;align-items:flex-start;font-size:13px;line-height:1.35;opacity:.7}
+.obj li b{font-weight:650;display:block}
+.obj li small{display:block;font-size:11.5px;opacity:.7;margin-top:1px}
+.obj li .bx{flex:0 0 17px;height:17px;border-radius:5px;border:1.5px solid rgba(247,241,231,.5);display:flex;align-items:center;justify-content:center;font-size:11px;margin-top:1px}
+.obj li.done{opacity:.45}.obj li.done b{text-decoration:line-through}
+.obj li.done .bx{background:var(--sage);border-color:var(--sage)}
+.obj li.next{opacity:1}.obj li.next .bx{border-color:var(--gold);box-shadow:0 0 0 3px rgba(231,176,74,.25)}
+.obj li.memo{opacity:.8}.obj li.memo .bx{border:none}
+.dlg.note .eyebrow{margin-bottom:8px;color:var(--teal)}
+#pad{display:none}
+body.exploring #pad{display:block}
+@media (hover:hover) and (pointer:fine){body.exploring #pad{display:none}}
+#pad button{position:fixed;bottom:calc(22px + env(safe-area-inset-bottom));width:66px;height:66px;border-radius:50%;background:rgba(247,241,231,.16);border:1.5px solid rgba(247,241,231,.35);color:var(--paper);font-size:22px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:25;touch-action:none;user-select:none;-webkit-user-select:none}
+#padL{left:18px}#padR{left:96px}
+#padA{right:20px;width:78px!important;height:78px!important;background:var(--ember)!important;border-color:rgba(255,255,255,.4)!important;font-size:26px!important}
+#padL:active,#padR:active{background:rgba(247,241,231,.32)}
+@media (max-width:720px){
+  .hud-left{max-width:100%;width:100%}
+  .obj{padding:8px 10px;gap:4px}
+  .obj li:not(.next):not(.memo){display:none}
+}
