@@ -84,14 +84,15 @@
   // ---------- Input: one pending "advance" and one pending "choice" at a time ----------
   let onAdvance = null, onKey = null;
   document.addEventListener('keydown', e => {
-    if (e.target && e.target.tagName === 'INPUT') return;
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
     if ($('#board').classList.contains('on')) { if (e.key === 'Escape') closeBoard(); return; }
     if (/^[1-9]$/.test(e.key) && onKey) { const b = document.querySelector('[data-k="' + e.key + '"]'); if (b) { e.preventDefault(); b.click(); } return; }
     if ((e.key === 'Enter' || e.key === ' ') && onAdvance) { e.preventDefault(); onAdvance(); }
   });
   const live = t => { $('#live').textContent = t; };
-  function layer(id, html) { if (id === 'panel' || id === 'report') hide('talk'); const el = $('#' + id); if (html !== undefined) el.innerHTML = html; el.classList.add('on'); return el; }
-  const hide = id => $('#' + id).classList.remove('on');
+  const modalCheck = () => document.body.classList.toggle('modal', ['panel', 'talk', 'board', 'report', 'chapter'].some(i => $('#' + i).classList.contains('on')));
+  function layer(id, html) { if (id === 'panel' || id === 'report') hide('talk'); const el = $('#' + id); if (html !== undefined) el.innerHTML = html; el.classList.add('on'); modalCheck(); return el; }
+  const hide = id => { const el = $('#' + id); if (el.classList.contains('on') && world) world.ignoreTapUntil = performance.now() + 300; el.classList.remove('on'); modalCheck(); };
 
   // ---------- Ranks, JP and achievements ----------
   function rankOf(jp) { const R = PACK.ranks; let i = 0; while (i + 1 < R.length && jp >= R[i + 1].jp) i++; return { i, name: R[i].name, at: R[i].jp, next: R[i + 1] || null }; }
@@ -111,6 +112,7 @@
   }
   function showBadge(ic, eyebrow, name, desc) { achQ.push([ic, eyebrow, name, desc]); if (!achBusy) nextBadge(); }
   function nextBadge() {
+    if (achQ.length && $('#panel').classList.contains('on') && !$('#report').classList.contains('on')) { achBusy = true; setTimeout(nextBadge, 600); return; }
     const n = achQ.shift(); if (!n) { achBusy = false; return; } achBusy = true;
     const el = $('#ach'); el.innerHTML = `<div class="ic">${n[0]}</div><div><div class="eb">🔓 ${esc(n[1])}</div><div class="nm">${esc(n[2])}</div><div class="ds">${esc(n[3])}</div></div>`;
     el.classList.remove('on'); void el.offsetWidth; el.classList.add('on'); LS.audio.sfx('unlock'); live(`${n[1]}: ${n[2]}. ${n[3]}`);
@@ -124,13 +126,15 @@
     h.classList.add('on');
     $('#hudCh').innerHTML = `<div class="eyebrow">Chapter 1 · Week ${S.week} of 6 · ${MONTH[S.week]}</div><div class="t">${esc(PACK.chapters[0].title)}</div>`;
     const mh = $('#hudMetrics');
-    if (!mh.children.length) mh.innerHTML = METRICS.map(m => `<button class="metric" id="m_${m.k}" style="color:${m.color}" aria-label="${m.long}">${ICON[m.k]}<span class="v" style="color:var(--paper)"></span><span class="bar"><i style="background:${m.color}"></i></span></button>`).join('');
+    if (!mh.children.length) mh.innerHTML = METRICS.map(m => `<button class="metric" id="m_${m.k}" style="color:${m.color}" aria-label="${m.long}">${ICON[m.k]}<span class="lb">${m.label}</span><span class="v" style="color:var(--paper)"></span><span class="bar"><i style="background:${m.color}"></i></span></button>`).join('');
+    S.mSeen = S.mSeen || {};
     METRICS.forEach(m => {
       const el = $('#m_' + m.k), v = S.m[m.k];
       el.querySelector('.v').textContent = m.fmt(v); el.querySelector('.bar i').style.width = clamp(100 * (v - Math.min(0, m.lo)) / m.bar, 0, 100) + '%';
       el.classList.toggle('low', m.k === 'time' ? v < 2 : m.k === 'money' ? v < 150 : v < 30);
       el.title = `${m.long}: ${m.lfmt(v)}. ${m.desc}`; el.setAttribute('aria-label', `${m.long} ${m.lfmt(v)}`);
       el.onclick = () => openBoard('project');
+      el.classList.toggle('hidden', !S.mSeen[m.k] && !S.done.panel);
     });
     const r = rankOf(S.jp), jq = $('#hudJQ');
     jq.classList.add('on'); jq.innerHTML = `<b>⚖ ${S.jp}</b><span>JP · ${esc(r.name)}</span>`; jq.title = 'Judgment Points and career rank'; jq.onclick = () => openBoard('career');
@@ -140,10 +144,11 @@
     for (const [k, v] of Object.entries(e)) {
       const m = MK[k]; if (!m || !v) continue;
       S.m[k] = clamp(S.m[k] + v, m.lo, m.hi);
+      S.mSeen = S.mSeen || {}; if (!S.mSeen[k]) { S.mSeen[k] = 1; setTimeout(() => tip('metric_' + k, `${m.long}: ${m.desc}`), 400); }
       if (trade) S.trade[k] = (S.trade[k] || 0) + v * (k === 'money' ? 0.1 : k === 'time' ? 3 : 1);
       const el = $('#m_' + k);
       if (el) {
-        el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
+        el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump', 'flash'); clearTimeout(el._ft); el._ft = setTimeout(() => el.classList.remove('flash'), 2400);
         const d = document.createElement('span'); d.className = 'delta'; d.textContent = (v > 0 ? '+' : '−') + (k === 'money' ? '£' + Math.abs(v) + 'k' : k === 'time' ? Math.abs(v) + 'w' : Math.abs(v) + (k === 'town' ? '%' : '')); d.style.color = v > 0 ? '#9ff0bf' : '#ffb0a6';
         el.appendChild(d); setTimeout(() => d.remove(), 1700);
       }
@@ -216,9 +221,9 @@
   async function chapterCard() {
     hide('talk'); LS.audio.sfx('chapter');
     const ch = PACK.chapters[0];
-    layer('chapter', `<div><div class="n">Chapter One</div><div class="t">${esc(ch.title)}</div><div class="m">${esc(ch.phase)} · ${esc(ch.when)}</div><div class="rule"></div></div>`);
-    live(`Chapter 1: ${ch.title}`);
-    await new Promise(res => { const t = setTimeout(go, SET.reduced ? 1500 : 3600); function go() { clearTimeout(t); onAdvance = null; res(); } onAdvance = go; $('#chapter').onclick = go; });
+    layer('chapter', `<div><div class="n">Chapter One</div><div class="t">${esc(ch.title)}</div><div class="m">${esc(ch.phase)} · ${esc(ch.when)}</div><div class="rule"></div>${ch.objective ? `<p class="obj1">${esc(ch.objective)}</p>` : ''}<div class="go">Tap or press Enter to begin</div></div>`);
+    live(`Chapter 1: ${ch.title}. ${ch.objective || ''}`);
+    await new Promise(res => { function go() { onAdvance = null; res(); } setTimeout(() => { onAdvance = go; $('#chapter').onclick = go; }, 900); });
     hide('chapter');
   }
   function clickGo(el) {
@@ -354,7 +359,17 @@
     if (firstTime) {
       S.hotspots[h.id] = true; apply({ evidence: 3 }, true); gainJP(10, `Health check · ${h.title}`);
       toast(`Logged: ${h.title} · ${Object.keys(S.hotspots).length}/5`);
-      if (Object.keys(S.hotspots).length === C1.hotspots.length) { await say('gaz', C1.healthDone, 'smile', null, `<div class="chips"><span class="chip pos">Health check complete</span></div>`); S.done.health = true; }
+      if (Object.keys(S.hotspots).length === C1.hotspots.length) {
+        await say('gaz', C1.healthDone, 'smile', null, `<div class="chips"><span class="chip pos">Health check complete</span></div>`);
+        const HD = C1.healthDecision;
+        if (HD) {
+          const ci = await ask(HD.who || 'gaz', HD.q, HD.options.map(o => o.t), { shuffle: true, eyebrow: 'Your call' });
+          const o = HD.options[ci], jp = JP.talk[o.grade];
+          apply(o.e, true); record('talk', 'healthDecision', 'Marjorie: what first', o.grade); gainJP(jp, 'Health check · what first');
+          await say(HD.who || 'gaz', o.why, o.grade === 'best' ? 'smile' : o.grade === 'poor' ? 'concern' : 'neutral', null, `<div class="chips">${chips(o.e, jp)}</div>`);
+        }
+        S.done.health = true;
+      }
     }
   }
 
@@ -362,14 +377,14 @@
   function planBoard() {
     const PL = C1.plan, all = PL.lanes.flatMap(l => l.cards.map(c => Object.assign({ lane: l.id, color: l.color }, c)));
     const byId = Object.fromEntries(all.map(c => [c.id, c]));
-    let tray = shuffle(all.map(c => c.id)), placed = { train: [], track: [] }, checks = 0, firstCorrect = null, verdict = null;
+    let tray = shuffle(all.map(c => c.id)), placed = Object.fromEntries(PL.lanes.map(l => [l.id, []])), checks = 0, firstCorrect = null, verdict = null;
     const laneOf = id => PL.lanes.find(l => l.id === byId[id].lane);
     return new Promise(resolve => {
       const render = () => {
         const full = !tray.length;
         const laneHTML = l => {
           const tot = l.cards.reduce((a, c) => a + c.w, 0), p = placed[l.id];
-          return `<div class="lane ${l.color}"><h4>${l.id === 'train' ? '🚂' : '🛤️'} ${esc(l.label)} <small>${tot} weeks</small></h4><ol>${l.cards.map((_, i) => {
+          return `<div class="lane ${l.color}"><h4>${l.id === 'train' ? '🚂' : '🛤️'} ${esc(l.label)} <small>${l.cards.length} jobs</small></h4><ol>${l.cards.map((_, i) => {
             const id = p[i]; if (!id) return `<li class="slot empty"><span class="n">${i + 1}</span><span class="t">…</span></li>`;
             const c = byId[id], st = verdict ? (verdict[l.id][i] ? 'ok' : 'bad') : '';
             return `<li class="slot ${st}"><button data-rm="${id}" aria-label="Remove ${esc(c.t)}"><span class="n">${i + 1}</span><span class="t">${esc(c.t)}</span><span class="w">${c.w}w</span>${st === 'bad' ? `<span class="why">${esc(c.why)}</span>` : ''}</button></li>`;
@@ -388,7 +403,7 @@
           checks++;
           verdict = Object.fromEntries(PL.lanes.map(l => [l.id, l.cards.map((c, i) => placed[l.id][i] === c.id)]));
           const n = PL.lanes.reduce((a, l) => a + verdict[l.id].filter(Boolean).length, 0);
-          if (firstCorrect === null) { firstCorrect = n; const jp = Math.round(100 * n / all.length); gainJP(jp, 'Works plan · sequencing'); record('plan', 'sequence', 'Works plan: sequencing', n === all.length ? 'best' : n >= 6 ? 'ok' : 'poor', { n }); }
+          if (firstCorrect === null) { firstCorrect = n; const jp = Math.round(100 * n / all.length); gainJP(jp, 'Works plan · sequencing'); record('plan', 'sequence', 'Works plan: sequencing', n === all.length ? 'best' : n >= Math.ceil(all.length * 0.66) ? 'ok' : 'poor', { n }); }
           if (n === all.length) { LS.audio.sfx('good'); questions(); } else { LS.audio.sfx('bad'); render(); }
         };
       };
@@ -396,17 +411,18 @@
         const qg = [];
         for (const [qi, q] of PL.questions.entries()) {
           const order = shuffle(q.options.map((_, i) => i));
-          const tot = l => l.cards.reduce((a, c) => a + c.w, 0), [tr, tk] = PL.lanes, max = Math.max(tot(tr), tot(tk));
-          const gantt = `<div class="gantt"><div class="row"><span>🚂 ${esc(tr.label)}</span><i class="ember" style="width:${100 * tot(tr) / (max + 4)}%">${tot(tr)} wk</i></div><div class="row"><span>🛤️ ${esc(tk.label)}</span><i class="teal" style="width:${100 * tot(tk) / (max + 4)}%">${tot(tk)} wk</i></div><div class="row"><span>🧪 Test runs</span><i class="gold" style="margin-left:${100 * max / (max + 4)}%;width:${100 * 4 / (max + 4)}%">?</i></div></div>`;
-          const el = layer('panel', `<div class="center-wrap"><div class="card call plan"><div class="call-head"><span class="tag gold">Works plan · question ${qi + 1} of 2</span><span class="when">Project office<br>with Jo</span></div><div class="call-body">
-            <h2>${qi ? 'The critical path' : 'When can Marjorie run?'}</h2>${gantt}<p class="sit">${esc(q.q)}</p>
+          const tot = l => l.cards.reduce((a, c) => a + c.w, 0), max = Math.max(...PL.lanes.map(tot)), bg = PL.background || [];
+          const lo = Math.min(0, ...bg.map(b => b.from)), hi = Math.max(max + 4, ...bg.map(b => b.from + b.w)), span = hi - lo, pc = v => 100 * (v - lo) / span;
+          const gantt = `<div class="gantt">${PL.lanes.map(l => `<div class="row"><span>${l.id === 'train' ? '🚂' : '🛤️'} ${esc(l.label)}</span><i class="${l.color}" style="margin-left:${pc(0)}%;width:${100 * tot(l) / span}%">${tot(l)} wk</i></div>`).join('')}${bg.map(b => `<div class="row bgrow"><span>${esc(b.t)}</span><i class="grey" style="margin-left:${pc(b.from)}%;width:${100 * b.w / span}%"></i></div>`).join('')}<div class="axis"><span style="left:${pc(0)}%">start on site</span></div></div>`;
+          const el = layer('panel', `<div class="center-wrap"><div class="card call plan"><div class="call-head"><span class="tag gold">Works plan · question ${qi + 1} of ${PL.questions.length}</span><span class="when">Project office<br>with Jo</span></div><div class="call-body">
+            <h2>${q.title || (qi ? 'The critical path' : 'When can Marjorie run?')}</h2>${gantt}<p class="sit">${esc(q.q)}</p>
             ${order.map((i, n) => `<button class="opt" data-k="${n + 1}" data-c="${i}"><span class="l">${'ABC'[n]}</span><span><div class="t">${esc(q.options[i].t)}</div></span></button>`).join('')}</div></div></div>`);
           el.querySelector('.call').scrollTop = 0;
           const ci = await new Promise(res => { onKey = true; el.querySelectorAll('.opt').forEach(b => b.onclick = () => res(+b.dataset.c)); });
           onKey = null; LS.audio.sfx('select');
           const o = q.options[ci], jp = JP.planQ[o.grade]; qg.push(o.grade); record('planQ', 'q' + qi, qi ? 'Works plan: critical path' : 'Works plan: when to test', o.grade); gainJP(jp, 'Works plan · ' + (qi ? 'critical path' : 'test runs'));
           LS.audio.sfx(o.grade === 'best' ? 'good' : o.grade === 'poor' ? 'bad' : 'tap');
-          const el2 = layer('panel', `<div class="center-wrap"><div class="card call plan"><div class="call-head"><span class="tag ${o.grade === 'best' ? 'teal' : o.grade === 'poor' ? 'rose' : 'gold'}">Works plan · question ${qi + 1} of 2</span><span class="when">Project office<br>with Jo</span></div><div class="call-body">
+          const el2 = layer('panel', `<div class="center-wrap"><div class="card call plan"><div class="call-head"><span class="tag ${o.grade === 'best' ? 'teal' : o.grade === 'poor' ? 'rose' : 'gold'}">Works plan · question ${qi + 1} of ${PL.questions.length}</span><span class="when">Project office<br>with Jo</span></div><div class="call-body">
             <div class="verdict"><span class="stamp ${o.grade}">${GRADE[o.grade].toUpperCase()}</span><span class="your">You said: <b>${esc(o.t)}</b></span></div><div class="chips">${chips(null, jp)}</div>
             <div class="mentor"><div class="face">${face('jo', o.grade === 'best' ? 'smile' : 'neutral')}</div><div><div class="nm">Jo says</div><div class="say">“${esc(o.why)}”</div></div></div>
             <div class="cta"><button class="btn dark" data-go>Continue <span class="kbd" style="color:#fff">↵</span></button></div></div></div></div>`);
@@ -446,9 +462,10 @@
     const pl = S.plan || { first: 0, of: 9, q: [] };
     const cp = pl.q[1] === 'best';
     const rows = [
-      { k: 'track', nm: 'Track condition', tx: `${dBest} of 5 defects judged like an engineer`, s: (dBest + dOk * 0.5) / 5, w: 18 },
+      { k: 'safety', nm: 'Safety & approvals', tx: S.defects.crossing === 'best' ? 'Crossing treated as a top risk; council and safety regulator involved early' : 'No clear route yet to approval for the crossing', s: 0.5 * clamp((S.m.safety - 40) / 40, 0, 1) + 0.5 * GSCORE[S.defects.crossing || 'poor'], w: 10 },
+      { k: 'track', nm: 'Track condition', tx: `${dBest} of 5 defects judged like an engineer`, s: (dBest + dOk * 0.5) / 5, w: 14 },
       { k: 'train', nm: 'Marjorie', tx: 'Full health check with Gaz', s: Object.keys(S.hotspots).length / 5, w: 8 },
-      { k: 'plan', nm: 'Works plan', tx: `${pl.first}/${pl.of} in order first time · critical path ${cp ? 'identified' : 'unclear'}`, s: (pl.first / pl.of) * 0.55 + ((GSCORE[pl.q[0]] || 0) + (GSCORE[pl.q[1]] || 0)) * 0.225, w: 26 },
+      { k: 'plan', nm: 'Works plan', tx: `${pl.first}/${pl.of} in order first time · critical path ${cp ? 'identified' : 'unclear'}`, s: (pl.first / pl.of) * 0.55 + ((GSCORE[pl.q[0]] || 0) + (GSCORE[pl.q[1]] || 0)) * 0.225, w: 20 },
       { k: 'forecast', nm: 'Ridership forecast', tx: !f ? '—' : f.grade === 'best' ? 'Independently checked, shown as a range' : f.grade === 'ok' ? 'Halved “to be safe”, with no evidence' : 'The consultant’s headline number', s: f ? GSCORE[f.grade] : 0, w: 16 },
       { k: 'date', nm: 'Opening date', tx: !d ? '—' : d.grade === 'best' ? 'A range, narrowing at each stage' : d.grade === 'ok' ? 'No date yet' : 'A fixed date: the bank holiday', s: d ? (d.grade === 'best' ? 1 : d.grade === 'ok' ? 0.6 : 0.2) : 0, w: 10 },
       { k: 'town', nm: 'Community', tx: `${S.m.town}% town support`, s: clamp((S.m.town - 30) / 40, 0, 1), w: 12 }
@@ -465,7 +482,7 @@
     const el = layer('panel', `<div class="center-wrap"><div class="card call case"><div class="call-head"><span class="tag">Gate review</span><span class="when">Funding Panel<br>Harrowby Village Hall</span></div><div class="call-body">
       <h2>Your case</h2><p class="sit small">Everything you did over the last six weeks, on one page. This is what the panel sees.</p>
       <div class="caserows">${rows.map(r => `<div class="crow ${r.s >= 0.8 ? 'good' : r.s >= 0.45 ? 'mid' : 'bad'}"><span class="ic">${r.s >= 0.8 ? '✓' : r.s >= 0.45 ? '~' : '✗'}</span><span><b>${esc(r.nm)}</b><small>${esc(r.tx)}</small></span></div>`).join('')}</div>
-      <p class="hint">The panel has two questions for you.</p>
+      <p class="hint">The panel has ${PN.questions.length} questions for you.</p>
       <div class="cta"><button class="btn dark" data-go>Take questions <span class="kbd" style="color:#fff">↵</span></button></div></div></div></div>`);
     await clickGo(el);
     let qs = 0;
@@ -476,10 +493,11 @@
       await say(q.who, o.reply, o.grade === 'best' ? 'smile' : o.grade === 'poor' ? 'concern' : 'neutral', null, `<div class="chips">${chips(null, jp)}</div>`);
     }
     const evB = S.graded.filter(g => g.kind === 'event' && g.grade === 'best').length;
+    qs = qs * 2 / Math.max(2, PN.questions.length);
     const score = clamp(Math.round(rows.reduce((a, r) => a + r.s * r.w, 0) + qs + evB * 2), 0, 100);
     const key = score >= 75 ? 'approved' : score >= 50 ? 'conditions' : 'deferred', out = PN.outcomes[key];
     const weakest = rows.filter(r => r.w).sort((a, b) => a.s - b.s)[0];
-    const COND = { track: 'a specialist track survey', train: 'a full condition report on Marjorie', plan: 'a re-baselined works plan with the critical path shown', forecast: 'an independent check of the ridership forecast', date: 'a published date range instead of a single date', town: 'a community engagement plan' };
+    const COND = { safety: 'a safety and approvals plan, starting with the Crag Lane crossing', track: 'a specialist track survey', train: 'a full condition report on Marjorie', plan: 'a re-baselined works plan with the critical path shown', forecast: 'an independent check of the ridership forecast', date: 'a published date range instead of a single date', town: 'a community engagement plan' };
     S.panel = { score, outcome: key, weakest: weakest.k }; S.done.panel = true;
     apply(out.e, false); gainJP(out.jp, 'Funding Panel · ' + out.title);
     LS.audio.sfx('stamp'); setTimeout(() => LS.audio.sfx(key === 'approved' ? 'good' : key === 'deferred' ? 'bad' : 'tap'), 250);
@@ -520,7 +538,7 @@
     const max = Math.max(...vals), min = Math.min(...vals);
     const top = keys[vals.indexOf(max)], low = keys[vals.indexOf(min)];
     const a = (max - min < 8) ? ARCH.balanced : ARCH[top];
-    return { name: a[0], desc: a[1], low, blind: BLIND[low], lowLabel: MK[low].long };
+    return { name: a[0], desc: a[1], low, blind: min < 0 ? BLIND[low] : null, strength: MK[top].long, lowLabel: MK[low].long };
   }
 
   // ---------- Save ----------
@@ -537,16 +555,88 @@
     if (w !== S.week) { S.week = w; setScene(sceneFor(w)); world.ppe = !!S.ppe; hud(); toast(`Week ${w} of 6 · ${MONTH[w]}`); }
   }
   async function runChapter() {
-    world.chapter = 0; setScene(sceneFor(S.week)); setupWorld(); hud();
+    world.chapter = 0; await world.ready; setScene(sceneFor(S.week)); setupWorld(); hud();
     if (!S.introDone) {
       await chapterCard();
-      for (const [who, text] of C1.intro) await say(who, text, 'smile');
-      hide('talk'); S.introDone = true;
+      if (C1.coldOpen && C1.coldOpen.sunday) await coldOpen();
+      else { for (const [who, text] of (C1.intro || [])) await say(who, text, 'smile'); hide('talk'); }
+      S.introDone = true; S.exploreStart = Date.now();
     }
-    if (!S.tutorial) { S.tutorial = 1; await say('note', world.touch ? `Harrowby is yours to explore. Move with the joystick or tap where you want to go, and tap Ⓐ or tap a person to talk. Gold diamonds mark people to see, ? marks something to inspect, the orange ! is a Call, and blue i is an engineering note. Your list is top left. Some jobs have to wait for others, just like on a real project.` : `Harrowby is yours to explore. Walk with WASD or the arrow keys (Shift to hurry), or click where you want to go. Press E to talk or look. Gold diamonds mark people to see, ? marks something to inspect, the orange ! is a Call, and blue i is an engineering note. Your list is top left. Some jobs have to wait for others, just like on a real project.`, null, 'How to play'); hide('talk'); }
     save();
     await explore();
     await chapterEnd();
+  }
+
+  // ---------- Coach marks: explain each thing the first time it matters ----------
+  function tip(key, fallback) {
+    S.tips = S.tips || {}; if (S.tips[key]) return; const txt = (C1.tips && C1.tips[key]) || fallback; if (!txt) return;
+    S.tips[key] = 1; const el = $('#tip'); el.innerHTML = `<span class="tk">Tip</span>${esc(fill(txt))}`; el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
+    clearTimeout(tip.t); tip.t = setTimeout(() => el.classList.remove('on'), 5200);
+  }
+  const MOVE_TIP = () => world.touch ? 'Drag the joystick to walk, or tap where you want to go. Tap Ⓐ or tap a person to talk.' : 'Walk with WASD or the arrow keys, or click where you want to go. Press E to talk or look.';
+
+  // ---------- Cold open: a Sunday at dawn, the depot door open a crack ----------
+  async function coldOpen() {
+    const CO = C1.coldOpen, R = LS.WORLD.ROOMS, D = LS.WORLD.DOORS;
+    setScene({ time: 'dawn', season: 'spring', weather: 'clear', build: 0 });
+    const sp = LS.WORLD.tp(LS.LEVEL.spawn.tile[0], LS.LEVEL.spawn.tile[1]); world.place('outside', sp.x, sp.y, 'up');
+    const team = world.entities.filter(e => e.team || e.town); team.forEach(e => { e._h = e.hidden; e.hidden = true; });
+    const sd = world.entities.find(e => e.id === 'door_shed'); if (sd) sd.marker = null;
+    for (const [who, text] of CO.sunday) await say(who, text, 'neutral'); hide('talk');
+    // walk to the depot: the yard and apron are open this once (Moira's unlocked it)
+    const apronOk = (room, tx, ty) => room === 'outside' && (LS.LEVEL.rows[ty][tx] === 'a' || LS.LEVEL.rows[ty][tx] === '!' && ty === 34);
+    world.allow = apronOk; world.flags.openDepot = true;
+    const shedDoor = D.shed; world.objective = { room: 'shed', x: R.shed.enter.x, y: R.shed.enter.y, label: CO.objective || 'The depot', doorLabel: CO.objective || 'The depot' };
+    $('#obj').innerHTML = `<li class="next"><span class="bx"></span><span><b>${esc(CO.objective || 'Look inside the depot')}</b><small>Harrowby Depot, next to the station</small></span></li>`;
+    world.paused = false; pad(true); tip('move', MOVE_TIP());
+    await new Promise(res => { world.onEnterRoom = room => { if (room === 'shed') res(); }; world.onInteract = null; });
+    // the dark depot: three finds by torchlight
+    world.flags.dark = true; world.paused = true; pad(false);
+    const finds = CO.finds || [], spots = { sheet: [14, 7, 14, 7], flask: [27, 9, 27, 11], window: [5, 6, 5, 7] };
+    const fe = finds.map((f, i) => { const s = spots[f.id] || [8 + i * 6, 7, 8 + i * 6, 7], p = LS.WORLD.tp(s[0], s[1]), q = LS.WORLD.tp(s[2], s[3]); return { kind: 'find', id: 'co_' + f.id, room: 'shed', x: p.x, y: p.y, sx: q.x, sy: q.y, h: 16, prompt: f.label, marker: 'find', f }; });
+    const hidShed = world.entities.filter(e => e.room === 'shed' && e.kind !== 'find'); hidShed.forEach(e => { e._h2 = e.hidden; e.hidden = true; });
+    world.entities.push(...fe);
+    world.objective = { room: 'shed', x: fe[0] ? fe[0].x : 0, y: fe[0] ? fe[0].y : 0, label: 'Have a look round' };
+    world.paused = false; pad(true); tip('find');
+    await new Promise(res => {
+      world.onInteract = async e => {
+        if (e.kind !== 'find') return;
+        world.paused = true; pad(false);
+        await say('narrator', e.f.text); hide('talk');
+        e.marker = 'done'; e.prompt = null; e.found = true;
+        const left = fe.filter(x => !x.found);
+        if (!left.length) { res(); return; }
+        world.objective = { room: 'shed', x: left[0].x, y: left[0].y, label: 'Have a look round' };
+        world.paused = false; pad(true);
+      };
+    });
+    world.paused = true; pad(false); world.objective = null;
+    // Moira arrives
+    const moira = world.entities.find(e => e.id === 'moira');
+    const home = { room: moira.room, x: moira.x, y: moira.y };
+    Object.assign(moira, { room: 'shed', x: R.shed.enter.x, y: R.shed.enter.y + 2, hidden: false, face: 'up' });
+    LS.audio.sfx('door'); await wait(400);
+    for (const [who, text] of CO.meet || []) await say(who, text, who === 'moira' ? 'smile' : 'neutral');
+    if (CO.choice) { const ci = await ask(CO.choice.who || 'moira', CO.choice.q, CO.choice.options); S.flags.firstImpression = ci; }
+    for (const [who, text] of CO.advice || []) await say(who, text, 'smile');
+    hide('talk');
+    // Monday
+    world.fade = 1; world.flags.dark = false; world.allow = null; world.flags.openDepot = false;
+    fe.forEach(e => e.hidden = true); hidShed.forEach(e => e.hidden = e._h2);
+    Object.assign(moira, home); team.forEach(e => e.hidden = e._h);
+    setScene(sceneFor(1)); world.place('outside', sp.x, sp.y, 'up');
+    layer('chapter', `<div><div class="n">The next morning</div><div class="t">Monday</div><div class="m">Week 1 · March</div><div class="rule"></div></div>`); await wait(SET.reduced ? 600 : 1600); hide('chapter');
+    world.fade = 0; refreshWorld();
+    for (const [who, text] of CO.monday || []) await say(who, text, 'smile');
+    if (CO.promise) {
+      const P = CO.promise, ci = await ask(P.who, P.text, P.choices.map(c => c.t), { shuffle: true, eyebrow: 'Your first call' });
+      const o = P.choices[ci], jp = JP.talk[o.grade];
+      apply(o.e, true); record('talk', 'promise', 'The first promise', o.grade); gainJP(jp, 'The first promise');
+      if (o.ripple) S.ripples.push({ title: o.ripple.title, text: o.ripple.text, from: 'Your first morning', choice: o.t });
+      await say(P.who, o.reply, o.grade === 'best' ? 'smile' : 'neutral', null, `<div class="chips">${chips(o.e, jp)}</div>`);
+    }
+    for (const [who, text] of CO.after || []) await say(who, text, 'smile');
+    hide('talk');
   }
 
   // ---------- The open world ----------
@@ -555,63 +645,59 @@
   const avail = t => !S.done[t.id] && (t.needs || []).every(n => S.done[n]);
   const holderOf = id => WC().holders[id];
   const SHORT = { induction: 'induction', walk: 'track walk', health: 'health check', dropin: 'drop-in', plan: 'works plan', forecast: 'forecast Call', date: 'date Call' };
+  const DOOR_NAME = { office: 'Project office', hall: 'Village hall', shed: 'Harrowby Depot' };
   function setupWorld() {
-    const W = WD(), wc = W.c1;
-    const ents = [];
-    wc.cast.forEach(c => ents.push({ kind: 'npc', id: c.id, room: c.room, x: c.x, y: c.y, home: [c.x, c.y], look: cast(c.id).look, face: c.face || 'down', team: true }));
-    wc.panelCast.forEach(c => { if (c.id !== 'helen') ents.push({ kind: 'npc', id: c.id, room: c.room, x: c.x, y: c.y, look: cast(c.id).look, face: 'down', team: true, panel: true, hidden: true }); });
-    Object.entries(W.town).forEach(([id, t]) => ents.push({ kind: 'npc', id, room: 'outside', x: t.at[0], y: t.at[1], home: t.at, wander: t.wander, look: t.look, town: true, face: 'down' }));
-    // the drop-in audience, seated in the hall
-    const aud = [['len', 180, 262], ['june', 250, 262], ['jess', 470, 262], ['dev', 540, 312], ['c1', 300, 312], ['c2', 600, 262]];
-    const extra = [{ skin: '#e7bf9c', hair: '#c9c4c0', hairStyle: 'bun', top: '#7a2e3b', topStyle: 'cardigan' }, { skin: '#c28f6a', hair: '#231a16', hairStyle: 'short', top: '#34506e', topStyle: 'tee' }];
-    aud.forEach(([id, x, y], k) => ents.push({ kind: 'npc', id: 'aud_' + id, room: 'hall', x, y, look: W.town[id] ? W.town[id].look : extra[k % 2], face: 'up', audience: true, hidden: !!S.done.dropin }));
-    const prop = (id, room, x, y, label, extra) => ents.push(Object.assign({ kind: 'prop', id, room, x, y, label, h: 60 }, extra));
-    const D = LS.WORLD.DOORS, R = LS.WORLD.ROOMS;
-    prop('door_office', 'outside', D.office.x, D.office.y + 6, 'Enter the project office', { to: { room: 'office', x: 260, y: 296 }, h: 70 });
-    prop('door_shed', 'outside', D.shed.x, D.shed.y + 6, 'Enter the depot', { to: { room: 'shed', x: 450, y: 392 }, h: 60 });
-    prop('door_hall', 'outside', D.hall.x, D.hall.y + 6, 'Enter the village hall', { to: { room: 'hall', x: 380, y: 404 }, h: 70 });
-    prop('exit_office', 'office', 260, 318, 'Leave', { to: { room: 'outside', x: R.office.exitTo.x, y: R.office.exitTo.y }, h: 30 });
-    prop('exit_hall', 'hall', 380, 428, 'Leave', { to: { room: 'outside', x: R.hall.exitTo.x, y: R.hall.exitTo.y }, h: 30 });
-    prop('exit_shed', 'shed', 450, 418, 'Leave', { to: { room: 'outside', x: R.shed.exitTo.x, y: R.shed.exitTo.y }, h: 30 });
-    prop('noticeboard', 'outside', 925, 1402, 'Read the noticeboard', { h: 70 });
-    prop('station', 'outside', 1282, 1044, 'Look at the station', { h: 110 });
-    prop('depot', 'outside', 1520, 1086, 'Look at the depot', { h: 130 });
-    prop('buffer', 'outside', 1276, 916, 'The buffer stop', { h: 40 });
-    prop('signalbox', 'outside', 3160, 1030, 'Visit the signal box', { h: 110 });
-    prop('crag', 'outside', 2430, 350, 'Kestrel Crag viewpoint', { h: 40 });
-    prop('cottage', 'outside', 1586, 574, 'Beck Cottage', { h: 90 });
-    prop('packhorse', 'outside', LS.WORLD.riverX(2008) + 70, 2030, 'The packhorse bridge', { h: 40 });
-    prop('board', 'office', 300, 112, 'Project board', { h: 20 });
-    prop('lockers', 'office', 470, 112, 'PPE locker', { h: 20 });
-    prop('kettle', 'office', 70, 164, 'Make a brew', { h: 50 });
-    prop('urn', 'hall', 92, 176, 'Tea urn', { h: 60 });
-    prop('table', 'hall', 380, 176, 'The Funding Panel', { h: 50, hidden: true });
-    prop('workbench', 'shed', 850, 248, "Gaz's workbench", { h: 60 });
-    prop('cushions', 'shed', 120, 350, 'Seat cushions', { h: 40 });
-    const spots = wc.catSpots; S.flags.catSpot = S.flags.catSpot ?? Math.floor(Math.random() * spots.length);
-    const cs = spots[S.flags.catSpot]; ents.push({ kind: 'cat', id: 'cat', room: 'shed', x: cs[0], y: cs[1], h: 30 });
-    wc.notes.forEach(n => ents.push({ kind: 'note', id: n.id, room: 'outside', x: n.x, y: n.y, h: 50, n }));
-    if (!S.memo) ents.push({ kind: 'memo', id: 'memo', room: wc.memo.room, x: wc.memo.x, y: wc.memo.y, h: 26 });
-    C1.defects.forEach(d => ents.push({ kind: 'defect', id: 'd_' + d.id, room: 'outside', x: d.x, y: 902, h: 40, d }));
-    C1.hotspots.forEach(h => ents.push({ kind: 'hotspot', id: 'h_' + h.id, room: 'shed', x: h.x, y: 254, h: 130, hs: h }));
-    world.entities = ents; world.hallBanner = wc.hallBanner; world.ppe = !!S.ppe;
-    world.flags = { pigeonGone: !!S.flags.pigeonGone, planned: !!S.done.plan, panel: false };
+    const W = WD(), Lv = LS.LEVEL, tp = LS.WORLD.tp, ents = [];
+    const at = (t, s) => { const p = tp(t[0], t[1]), q = s ? tp(s[0], s[1]) : p; return { x: p.x, y: p.y, sx: q.x, sy: q.y }; };
+    const addE = (room, src, extra) => ents.push(Object.assign({ room }, at(src.tile, src.stand), extra));
+    const INSPECT = { station: 'Look at the station', buffer: 'The buffer stop', depot: 'Look at the depot', signalbox: 'Look at the signal box', crag: 'Kestrel Crag viewpoint', cottage: 'Beck Cottage', packhorse: 'The packhorse bridge', noticeboard: 'Read the noticeboard', busstop: 'The bus stop', war_memorial: 'The war memorial', site_board: 'Read the site board', postbox: 'The post box', board: 'Project board', lockers: 'PPE locker', kettle: 'Make a brew', urn: 'Tea urn', table: 'The Funding Panel', hall_noticeboard: 'Hall noticeboard', workbench: "Gaz's workbench", cushions: 'Seat cushions' };
+    const place = (room, list) => list.forEach(src => {
+      const id = src.id;
+      if (src.kind === 'npc') {
+        const cid = id === 'helen_panel' ? 'helen' : id, c = cast(cid);
+        if (id === 'helen_panel') return; // Helen walks to the hall herself for the panel
+        const e = { kind: 'npc', id: cid, look: c.look, face: src.face || 'down', home: null };
+        if (W.town[cid]) { e.town = true; if (src.wander) e.wander = src.wander; }
+        else { e.team = true; e.name = first(cid); if (src.panel) { e.panel = true; e.hidden = true; } }
+        addE(room, src, e); ents[ents.length - 1].home = { room, x: ents[ents.length - 1].x, y: ents[ents.length - 1].y };
+      } else if (src.kind === 'defect') { const d = C1.defects.find(d => 'd_' + d.id === id); if (d) addE(room, src, { kind: 'defect', id, d, h: 12 }); }
+      else if (src.kind === 'hotspot') { const h = C1.hotspots.find(h => 'h_' + h.id === id); if (h) addE(room, src, { kind: 'hotspot', id, hs: h, h: 34 }); }
+      else if (src.kind === 'note') { const n = WC().notes.find(n => n.id === id); if (n) addE(room, src, { kind: 'note', id, n, h: 16 }); }
+      else if (src.kind === 'memo') { if (!S.memo) addE(room, src, { kind: 'memo', id: 'memo', h: 8 }); }
+      else if (src.kind === 'prop' && INSPECT[id]) addE(room, src, { kind: 'prop', id, label: INSPECT[id], h: id === 'table' ? 18 : 20, hidden: id === 'table' });
+    });
+    place('outside', Lv.outside);
+    for (const [rid, R] of Object.entries(Lv.rooms)) place(rid, R.entities || []);
+    // doors (outside) and exits (inside), clearly labelled
+    for (const d of Object.values(LS.WORLD.DOORS)) ents.push({ kind: 'door', id: 'door_' + d.room, room: 'outside', x: d.doorX, y: d.doorY + 10, sx: d.x, sy: d.y, h: 26, door: d, prompt: `Enter ${DOOR_NAME[d.room].replace(/^Project/, 'the project').replace(/^Village/, 'the village')}` });
+    for (const [rid, R] of Object.entries(LS.WORLD.ROOMS)) ents.push({ kind: 'exit', id: 'exit_' + rid, room: rid, x: R.exitX, y: R.exitY, sx: R.exitX, sy: R.exitY - 8, h: 6, prompt: 'Leave' });
+    // the drop-in audience
+    (Lv.rooms.hall.audience_seats || []).forEach(([tx, ty], k) => { const id = ['len', 'june', 'jess', 'dev', 'len', 'june'][k] || 'len'; const p = tp(tx, ty); ents.push({ kind: 'npc', id: 'aud_' + k, room: 'hall', x: p.x, y: p.y, look: k < 4 ? W.town[id].look : { skin: k % 2 ? '#c28f6a' : '#e7bf9c', hair: k % 2 ? '#231a16' : '#c9c4c0', hairStyle: k % 2 ? 'short' : 'bun', top: k % 2 ? '#34506e' : '#7a2e3b', topStyle: k % 2 ? 'tee' : 'cardigan' }, face: 'up', audience: true, hidden: !!S.done.dropin }); });
+    // Sleeper the cat
+    const spots = Lv.rooms.shed.cat_spots || [[2, 11]]; S.flags.catSpot = S.flags.catSpot ?? Math.floor(Math.random() * spots.length);
+    const cs = tp(...spots[S.flags.catSpot % spots.length]); ents.push({ kind: 'cat', id: 'cat', room: 'shed', x: cs.x, y: cs.y, h: 10 });
+    world.entities = ents; world.hallBanner = WC().hallBanner; world.ppe = !!S.ppe;
+    world.flags = Object.assign(world.flags || {}, { pigeonGone: !!S.flags.pigeonGone, planned: !!S.done.plan, panel: false, drainCleared: false, dark: false, openDepot: false });
+    world.invalidate('office'); world.invalidate('hall');
     world.player.look = PACK.avatars[S.avatar]; world.attract = false; world.paused = true;
-    const sp = S.pos || wc.spawn; world.place(sp.room, sp.x, sp.y);
-    EX = { wc };
-    world.onBlocked = why => toast(W.blocked[why] || 'You can’t go that way.');
+    const sp = S.pos || { room: 'outside', ...tp(Lv.spawn.tile[0], Lv.spawn.tile[1]) }; world.place(sp.room, sp.x, sp.y, 'up');
+    EX = { };
+    world.onBlocked = why => { toast(W.blocked[why] || 'You can’t go that way.'); if (why === 'line_closed') tip('ppe_gate'); };
+    world.onDoorRefused = async d => { if (EX.busy) return; EX.busy = true; world.paused = true; pad(false); const r = (W.doorRefused && W.doorRefused[d.room]) || ['gaz', `(through the door) Hi-vis and boots in the depot, please! See Hannah in the project office for your induction.`]; await say(r[0], r[1]); hide('talk'); EX.busy = false; world.paused = false; pad(true); };
+    world.onFocus = f => { const b = $('#padA'); if (!b) return; if (!f) { b.classList.add('idle'); b.textContent = 'Ⓐ'; return; } b.classList.remove('idle'); b.textContent = (f.prompt || '').split(/[\s:·]/)[0].slice(0, 7) || 'Ⓐ'; if (f.kind === 'door') tip('door'); };
     refreshWorld();
   }
   // What should the player do next, and where is it?
   function currentTarget() {
-    const wc = WC();
+    const p = world.player;
+    const nearest = (list, room) => list.map(e => [e, e.room === world.room ? Math.hypot(e.x - p.x, e.y - p.y) : 1e6]).sort((a, b) => a[1] - b[1])[0];
     for (const t of C1.tasks) {
-      if (!avail(t)) continue;
-      if (t.id === 'walk' && S.flags.walkOn) { const d = C1.defects.find(d => !S.defects[d.id]); if (d) return { task: t, room: 'outside', x: d.x, y: 902, label: d.title }; }
-      if (t.id === 'health' && S.flags.healthOn) { const h = C1.hotspots.find(h => !S.hotspots[h.id]); if (h) return { task: t, room: 'shed', x: h.x, y: 254, label: h.label }; }
-      if (t.id === 'panel') return { task: t, room: 'hall', x: 380, y: 176, label: 'Funding Panel' };
+      if (!avail(t) || (S.track && S.track !== t.id && avail(task(S.track)))) continue;
+      if (t.id === 'walk' && S.flags.walkOn) { const n = nearest(world.entities.filter(e => e.kind === 'defect' && !S.defects[e.d.id])); if (n) return { task: t, room: n[0].room, x: n[0].x, y: n[0].y, sx: n[0].sx, sy: n[0].sy, label: n[0].d.title }; }
+      if (t.id === 'health' && S.flags.healthOn) { const n = nearest(world.entities.filter(e => e.kind === 'hotspot' && !S.hotspots[e.hs.id])); if (n) return { task: t, room: n[0].room, x: n[0].x, y: n[0].y, sx: n[0].sx, sy: n[0].sy, label: n[0].hs.label }; }
+      if (t.id === 'panel') { const tb = world.entities.find(e => e.id === 'table'); return { task: t, room: 'hall', x: tb.x, y: tb.y, sx: tb.sx, sy: tb.sy, label: 'Funding Panel' }; }
       const who = holderOf(t.id), c = world.entities.find(e => e.kind === 'npc' && e.id === who && !e.hidden);
-      if (c) return { task: t, room: c.room, x: c.x, y: c.y, label: first(who) };
+      if (c) return { task: t, room: c.room, x: c.x, y: c.y, sx: c.sx, sy: c.sy, label: first(who), npc: true };
     }
     return null;
   }
@@ -621,6 +707,7 @@
     world.ppe = !!S.ppe;
     for (const e of world.entities) {
       e.marker = null;
+      if (e.kind === 'door' || e.kind === 'exit' || e.kind === 'find') { if (e.kind === 'door' && e.door.needs === 'ppe' && !S.ppe) e.marker = 'lock'; continue; }
       if (e.kind === 'memo') { e.prompt = 'Pick up the loose page'; continue; }
       if (e.kind === 'note') { e.prompt = `Engineering note · ${e.n.title}`; if (!S.notes.includes(e.n.id)) e.marker = 'note'; continue; }
       if (e.kind === 'cat') { e.prompt = S.flags.cat ? 'Sleeper (asleep)' : 'Is that… a cat?'; continue; }
@@ -635,13 +722,14 @@
       if (e.audience) { e.prompt = null; continue; }
       if (e.panel) { e.hidden = !panelOn; e.prompt = `Talk to ${first(e.id)}`; continue; }
       if (e.team) {
-        if (e.id === 'helen') { const inHall = panelOn; e.room = inHall ? 'hall' : 'outside'; e.x = inHall ? 380 : e.home[0]; e.y = inHall ? 182 : e.home[1]; e.face = 'down'; }
+        if (e.id === 'helen') { const inHall = panelOn; if (inHall) Object.assign(e, { room: 'hall', ...LS.WORLD.tp(13, 3), sx: undefined, sy: undefined, face: 'down' }); else if (e.home && e.room !== e.home.room) Object.assign(e, e.home); }
+        if (e.id === 'tom') { const f = S.flags.walkOn && !S.done.walk; if (f && !e.follow) { e.follow = true; } if (!f && e.follow) e.follow = false; }
         const tid = Object.keys(WC().holders).find(k => WC().holders[k] === e.id && !S.done[k]);
         const t = tid && task(tid);
         if (e.id === 'helen' && panelOn) { e.prompt = 'Begin the Funding Panel'; e.marker = 'task'; }
         else if (t && avail(t)) {
           const inProg = (tid === 'walk' && S.flags.walkOn) || (tid === 'health' && S.flags.healthOn);
-          if (PACK.calls[tid]) { e.prompt = `The Call · ${PACK.calls[tid].title}`; e.marker = 'call'; }
+          if (PACK.calls[tid]) { e.prompt = `The Call · ${PACK.calls[tid].title}`; e.marker = 'call'; tip('call'); }
           else if (inProg) e.prompt = `Talk to ${first(e.id)}`;
           else { e.prompt = `Talk to ${first(e.id)}`; e.marker = 'task'; }
         } else e.prompt = e.id === 'moira' ? 'Ask Moira' : `Chat with ${first(e.id)}`;
@@ -649,22 +737,19 @@
       }
       if (e.town) e.prompt = `Chat with ${first(e.id)}`;
     }
-    world.objective = tgt ? { room: tgt.room, x: tgt.x, y: tgt.y, label: tgt.room !== world.room && world.room === 'outside' ? ({ office: 'Project office', hall: 'Village hall', shed: 'Depot' })[tgt.room] : tgt.label } : null;
-    // objective list
+    world.objective = tgt ? { room: tgt.room, x: tgt.x, y: tgt.y, sx: tgt.sx, sy: tgt.sy, npc: !!tgt.npc, label: tgt.label, doorLabel: `▼ ${DOOR_NAME[tgt.room] || 'Enter'}` } : null;
+    // objective list: NOW (one clear objective), then what else is open, then what's locked
     const nextId = tgt && tgt.task.id;
-    let doneN = 0, lockedN = 0, shownLocked = false;
+    const sub = t => { let s = t.where; if (t.id === 'walk' && S.flags.walkOn) s = `${Object.keys(S.defects).length}/5 defects judged · Tom's with you`; if (t.id === 'health' && S.flags.healthOn) s = `${Object.keys(S.hotspots).length}/5 checks done`; return s; };
+    const open = C1.tasks.filter(t => avail(t) && t.id !== nextId), locked = C1.tasks.filter(t => !S.done[t.id] && !avail(t)), doneN = C1.tasks.filter(t => S.done[t.id]).length;
     const items = [];
-    C1.tasks.forEach(t => {
-      const d = !!S.done[t.id], a = avail(t);
-      if (d) { doneN++; return; }
-      let sub = t.where;
-      if (t.id === 'walk' && S.flags.walkOn) sub = `${Object.keys(S.defects).length}/5 defects judged`;
-      if (t.id === 'health' && S.flags.healthOn) sub = `${Object.keys(S.hotspots).length}/5 checks done`;
-      if (!a) { lockedN++; if (shownLocked) return; shownLocked = true; sub = 'after the ' + t.needs.filter(n => !S.done[n]).map(n => SHORT[n]).join(', '); }
-      items.push(`<li class="${t.id === nextId ? 'next' : a ? '' : 'locked'}"><span class="bx">${a ? '' : '🔒'}</span><span><b>${esc(t.label)}</b><small>${esc(sub)}</small></span></li>`);
-    });
-    if (doneN || lockedN > 1) items.unshift(`<li class="sum"><span class="bx">✓</span><span><small>${doneN} of ${C1.tasks.length} done${lockedN > 1 ? ` · ${lockedN - 1} more unlock as you go` : ''}</small></span></li>`);
-    $('#obj').innerHTML = items.join('') + `<li class="memo"><span class="bx">✎</span><span><small>Notes ${S.notes.length}/${WC().notes.length} · Badges ${S.ach.length}/${PACK.achievements.length}</small></span></li>`;
+    if (tgt) items.push(`<li class="next"><span class="bx"></span><span><em>Now</em><b>${esc(tgt.task.label)}</b><small>${esc(sub(tgt.task))}</small></span></li>`);
+    open.forEach(t => items.push(`<li class="alt" data-track="${t.id}"><span class="bx"></span><span><b>${esc(t.label)}</b><small>${esc(sub(t))} · tap to track</small></span></li>`));
+    if (locked.length) items.push(`<li class="locked"><span class="bx">🔒</span><span><small>${locked.length} more unlock as you go${locked[0] ? ` · next: ${esc(locked[0].label.replace(/^The Call: /, ''))} (after the ${locked[0].needs.filter(n => !S.done[n]).map(n => SHORT[n]).join(', ')})` : ''}</small></span></li>`);
+    if (doneN) items.push(`<li class="sum"><span class="bx">✓</span><span><small>${doneN} of ${C1.tasks.length} done</small></span></li>`);
+    $('#obj').innerHTML = items.join('');
+    $('#obj').querySelectorAll('[data-track]').forEach(li => li.onclick = () => { S.track = li.dataset.track; LS.audio.sfx('tap'); refreshWorld(); });
+    if (tgt && tgt.npc) tip('person');
   }
   function pad(on) { document.body.classList.toggle('exploring', !!on); }
   function explore() {
@@ -672,11 +757,12 @@
     return new Promise(resolve => {
       world.onEnterRoom = () => { refreshWorld(); save(); };
       world.onInteract = async e => {
-        if (e.to && !(e.id === 'door_shed' && !S.ppe)) { world.enter(e.to.room, e.to.x, e.to.y); LS.audio.sfx('page'); return; }
         world.paused = true; pad(false);
+        const before = C1.tasks.filter(t => S.done[t.id]).length;
         try { await handle(e); } catch (err) { console.error(err); }
-        hide('talk'); hide('panel'); refreshWorld(); updateWeek(); refreshWorld();
-        if (!S.done.panel && !e.to) { try { await director(); } catch (err) { console.error(err); } hide('panel'); refreshWorld(); }
+        hide('talk'); hide('panel'); world.speaker = null; world.ignoreTapUntil = performance.now() + 300; refreshWorld(); updateWeek(); refreshWorld();
+        const after = C1.tasks.filter(t => S.done[t.id]).length;
+        if (!S.done.panel && after > before) { try { await director(); } catch (err) { console.error(err); } hide('panel'); refreshWorld(); }
         save();
         if (S.done.panel) { world.onInteract = null; resolve(); return; }
         world.paused = false; pad(true);
@@ -688,14 +774,15 @@
     gaz: `Not without hi-vis and boots, pal. The inspection pit's open. Hannah in the project office will sort you out.`,
     jo: () => C1.plan.notReady,
     steve: `No plan, no costs. No costs, no case. Jo first, then me.`,
-    helen: `Get Steve's numbers straight first. Then come and give me my poster date.`
+    helen: `Get Steve's numbers straight first. Then come and give me my poster date.`,
+    priya: `The drop-in's once you've walked the line. They'll ask about it, and "I haven't looked yet" won't wash.`
   };
   async function handle(e) {
     const W = WD(), wc = W.c1;
-    if (e.id === 'door_shed') { await say('gaz', `(through the door) Hi-vis and boots in the depot, please! See Hannah in the project office for your induction.`); return; }
+    world.speaker = null;
     if (e.kind === 'memo') {
       S.memo = true; e.hidden = true; LS.audio.sfx('good'); unlock('page');
-      await say('note', `“${wc.memoText}”`, null, 'A loose page, tucked under the gate'); return;
+      await say('note', `“${wc.memoText}”`, null, 'A loose page, under the washing line'); return;
     }
     if (e.kind === 'note') {
       const n = e.n; if (!S.notes.includes(n.id)) { S.notes.push(n.id); apply({ evidence: 2 }, true); LS.audio.sfx('select'); }
@@ -709,23 +796,25 @@
       else await say('note', `Sleeper is busy. Sleeping, mainly.`, null, 'Sleeper');
       return;
     }
-    if (e.kind === 'defect') { if (S.defects[e.d.id]) { await say('note', `Already in the defects list. ${e.d.options.find(o => o.grade === S.defects[e.d.id]).t}`, null, e.d.title); return; } await defectCard(e.d); return; }
+    if (e.kind === 'defect') { if (S.defects[e.d.id]) { await say('note', `Already in the defects list: ${e.d.options.find(o => o.grade === S.defects[e.d.id]).t}`, null, e.d.title); return; } await defectCard(e.d); return; }
     if (e.kind === 'hotspot') { await hotspot(e.hs); return; }
     if (e.kind === 'prop') {
       const I = W.inspect;
       if (e.id === 'kettle') {
-        if (!S.flags.kettle) { S.flags.kettle = true; apply({ team: 2 }, false); await say('note', `You make a round of tea. Steve wants his “builder's”. Jo wants hers “as a concept”. Nobody says thank you, and everybody notices.`, null, 'The kettle'); unlock('kettle'); }
+        if (!S.flags.kettle) { S.flags.kettle = true; apply({ team: 2 }, false); LS.audio.sfx('kettle'); await say('note', `You make a round of tea. Steve wants his “builder's”. Jo wants hers “as a concept”. Nobody says thank you, and everybody notices.`, null, 'The kettle'); unlock('kettle'); }
         else await say('note', `You've had three cups. Your hands are doing a little dance.`, null, 'The kettle');
         return;
       }
       if (e.id === 'lockers') { if (!S.ppe) await say('hannah', `Induction first, then kit. That's the rule, and I'm the rule.`); else await say('note', I.lockers, null, 'PPE locker'); return; }
       if (e.id === 'board') { await new Promise(res => { boardDone = res; openBoard('project'); }); return; }
       if (e.id === 'table') { if (avail(task('panel'))) await panelReview(); return; }
-      const txt = { noticeboard: () => I.noticeboard(S.m), station: () => I.station, depot: () => I.depot, signalbox: () => I.signalbox, cottage: () => I.cottage, packhorse: () => I.packhorse, crag: () => I.crag, buffer: () => I.buffer, urn: () => I.urn, workbench: () => I.workbench, cushions: () => I.cushions }[e.id];
-      if (txt) await say('note', txt(), null, e.label);
+      const txt = { noticeboard: () => I.noticeboard(S.m), station: () => I.station, depot: () => I.depot, signalbox: () => I.signalbox, cottage: () => I.cottage, packhorse: () => I.packhorse, crag: () => I.crag, buffer: () => I.buffer, urn: () => I.urn, workbench: () => I.workbench, cushions: () => I.cushions, busstop: () => I.busstop, war_memorial: () => I.war_memorial, site_board: () => I.site_board, postbox: () => I.postbox, hall_noticeboard: () => I.hall_noticeboard }[e.id];
+      const val = txt && txt();
+      await say('note', val || `Nothing out of the ordinary. Which, in Harrowby, is saying something.`, null, e.label);
       return;
     }
     if (e.kind !== 'npc') return;
+    world.speaker = e.id;
     if (e.panel || (e.id === 'helen' && avail(task('panel')))) { await panelReview(); return; }
     if (e.town) { await townChat(e.id); return; }
     if (e.id === 'moira') { const t = currentTarget(); await say('moira', W.hints[t ? t.task.id : 'done'] || W.hints.done); return; }
@@ -740,12 +829,12 @@
   async function runTask(id) {
     if (id === 'induction') {
       await talk(C1.talks.hannah_induction, 'hannah_induction');
-      S.done.induction = true; S.ppe = true; world.ppe = true; LS.audio.sfx('select'); toast('PPE on · the old trackbed and the depot are now open to you');
+      S.done.induction = true; S.ppe = true; world.ppe = true; LS.audio.sfx('select'); toast('PPE on · the site gate, the trackbed and the depot are open to you now');
       return;
     }
     if (id === 'walk') {
-      if (!S.flags.walkOn) { await talk(C1.talks.tom_walk, 'tom_walk'); S.flags.walkOn = true; toast('Five defects to find along the line · look for ?'); }
-      else await say('tom', `Water, wood, weeds, stone and people. You've got ${5 - Object.keys(S.defects).length} still to find. Follow the line east.`, 'smile');
+      if (!S.flags.walkOn) { await talk(C1.talks.tom_walk, 'tom_walk'); S.flags.walkOn = true; toast('Tom walks with you · five defects to judge along the line'); }
+      else await say('tom', `Water, wood, weeds, stone and people. You've got ${5 - Object.keys(S.defects).length} still to find. Follow the line east; I'm right behind you.`, 'smile');
       return;
     }
     if (id === 'health') {
@@ -756,7 +845,7 @@
     if (id === 'plan') {
       await say('jo', C1.plan.intro, 'smile');
       await planBoard(); hide('panel');
-      S.done.plan = true; world.flags.planned = true; apply({ evidence: 8, team: 3 }, true);
+      S.done.plan = true; world.flags.planned = true; world.invalidate('office'); apply({ evidence: 8, team: 3 }, true);
       if (S.plan.first === S.plan.of) unlock('order');
       await say('jo', C1.plan.done, 'smile');
       return;
@@ -772,28 +861,38 @@
   let boardDone = null;
 
   // ---------- The Director: surprises that react to the world ----------
-  // A seeded random stream per playthrough, so every run differs. Events are weighted by state
-  // (weather, town mood, earlier choices). Max 3 per chapter; at least 2 before the panel.
+  // A seeded random stream per playthrough, so every run differs. Events are weighted by state (weather, town mood,
+  // earlier choices). Paced like a good GM: only after a task is finished, never mid-activity, never in the first two
+  // minutes, at least 90 seconds apart; up to 3 per chapter, at least 2 before the panel.
   function rand() { S.seed = (S.seed + 0x6D2B79F5) | 0; let t = S.seed; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; }
   async function director() {
-    if (S.done.panel || S.events.length >= 3) return;
-    const doneN = C1.tasks.filter(t => S.done[t.id]).length;
-    if (doneN < 1 || S.events.length >= Math.min(3, 1 + Math.floor(doneN / 3))) return;
+    if (S.done.panel || S.events.length >= 3 || !C1.events) return;
+    if ((S.flags.walkOn && !S.done.walk) || (S.flags.healthOn && !S.done.health)) return;
+    const doneN = C1.tasks.filter(t => S.done[t.id]).length, now = Date.now();
     const force = avail(task('panel')) && S.events.length < 2;
-    if (!force && rand() > (S.events.length === 0 && doneN >= 3 ? 0.75 : 0.4)) return;
-    const pool = C1.events.filter(ev => !S.events.some(x => x.id === ev.id) && ev.after.every(a => S.done[a])).map(ev => [ev, ev.weight(S)]).filter(([, w]) => w > 0);
+    if (!force) {
+      if (now - (S.exploreStart || 0) < 120000 || now - (S.lastEventAt || 0) < 90000) return;
+      if (S.events.length >= Math.min(3, 1 + Math.floor(doneN / 3))) return;
+      if (rand() > (S.events.length === 0 && doneN >= 3 ? 0.8 : 0.5)) return;
+    }
+    const pool = C1.events.filter(ev => !S.events.some(x => x.id === ev.id) && (ev.after || []).every(a => S.done[a])).map(ev => [ev, ev.weight ? ev.weight(S) : 1]).filter(([, w]) => w > 0);
     if (!pool.length) return;
     let r = rand() * pool.reduce((a, [, w]) => a + w, 0), ev = pool[0][0];
     for (const [e, w] of pool) { if ((r -= w) <= 0) { ev = e; break; } }
+    S.lastEventAt = now;
     await runEvent(ev);
   }
   async function runEvent(ev) {
-    LS.audio.sfx('ripple'); toast(`📡 ${ev.channel} · something's come up`); await wait(700);
+    // telegraph it: a call comes in, you answer it
+    LS.audio.sfx(/radio/i.test(ev.channel) ? 'radio' : /phone/i.test(ev.channel) ? 'phone' : 'door');
+    const icon = /radio/i.test(ev.channel) ? '📻' : /phone/i.test(ev.channel) ? '📞' : '🚪';
+    const ring = layer('panel', `<div class="center-wrap"><div class="card ringing"><div class="ric">${icon}</div><div class="rwho"><div class="mini">${face(ev.who, 'concern')}</div><div><b>${esc(cast(ev.who).name)}</b><small>${esc(ev.channel)} · something's come up</small></div></div><div class="cta" style="justify-content:center"><button class="btn dark" data-go>Answer <span class="kbd" style="color:#fff">↵</span></button></div></div></div>`);
+    await clickGo(ring);
     const order = shuffle(ev.choices.map((_, i) => i));
     const hd = tag => `<div class="call-head"><span class="tag ${tag || 'rose'}">Out of the blue · ${esc(ev.channel)}</span><span class="when">Week ${S.week} of 6<br>A surprise from the Director</span></div>`;
     const el = layer('panel', `<div class="center-wrap"><div class="card call event">${hd()}<div class="call-body">
       <div class="from"><div class="mini">${face(ev.who, 'concern')}</div>${esc(cast(ev.who).name)} · ${esc(cast(ev.who).role)}</div>
-      <h2>${esc(ev.title)}</h2><p class="sit">${fill(ev.text)}</p><div class="cause">🎲 ${esc(ev.cause(S))}</div>
+      <h2>${esc(ev.title)}</h2><p class="sit">${fill(ev.text)}</p><div class="cause"><b>Why now:</b> ${esc(ev.cause ? ev.cause(S) : '')}</div>
       <div class="q">What do you do?</div>${order.map((i, n) => `<button class="opt" data-k="${n + 1}" data-c="${i}"><span class="l">${'ABC'[n]}</span><span><div class="t">${esc(ev.choices[i].t)}</div></span></button>`).join('')}
     </div></div></div>`);
     el.querySelector('.call').scrollTop = 0;
@@ -803,16 +902,18 @@
     apply(o.e, true); record('event', ev.id, ev.title, o.grade); gainJP(jp, 'Surprise · ' + ev.title);
     if (o.ripple) S.ripples.push({ title: o.ripple.title, text: o.ripple.text, from: ev.title, choice: o.t });
     let luck = null;
-    if (o.luck) { const hit = rand() < o.luck.p; luck = Object.assign({ hit }, hit ? o.luck.good : o.luck.bad); }
+    if (o.luck) { const hit = rand() < o.luck.p; luck = Object.assign({ hit, p: o.luck.p }, hit ? o.luck.good : o.luck.bad); }
     S.events.push({ id: ev.id, grade: o.grade, luck: luck ? luck.hit : null });
+    if (ev.id === 'storm' && luck && luck.hit) world.flags.drainCleared = false;
     LS.audio.sfx('stamp'); setTimeout(() => LS.audio.sfx(o.grade === 'best' ? 'good' : o.grade === 'poor' ? 'bad' : 'tap'), 250);
     const best = ev.choices.find(x => x.grade === 'best');
     const lucky = luck && ((luck.hit && o.grade !== 'best') || (!luck.hit && o.grade === 'best'));
+    const odds = luck ? Math.round(luck.p * 10) : 0;
     const el2 = layer('panel', `<div class="center-wrap"><div class="card call event">${hd(o.grade === 'best' ? 'teal' : o.grade === 'poor' ? 'rose' : 'gold')}<div class="call-body">
       <div class="verdict"><span class="stamp ${o.grade}">${GRADE[o.grade].toUpperCase()}</span><span class="your">You chose: <b>${esc(o.t)}</b></span></div>
       <div class="chips">${chips(o.e, jp)}</div>
       <div class="mentor"><div class="face">${face('moira', o.grade === 'best' ? 'smile' : o.grade === 'poor' ? 'concern' : 'neutral')}</div><div><div class="nm">Moira's take</div><div class="say">“${esc(o.why)}”</div>${o.grade !== 'best' ? `<div class="alt">My call: <b>${esc(best.t)}</b></div>` : ''}</div></div>
-      ${luck ? `<div class="luck ${luck.hit ? 'good' : 'bad'}"><div class="eyebrow">🎲 What happened next</div><p>${esc(luck.text)}</p><div class="chips">${chips(luck.e)}</div>${lucky ? `<small>${o.grade === 'best' ? 'A good decision with a bad outcome. That happens: your JP are for the decision, not the dice.' : 'A lucky outcome from a risky decision. Enjoy it, but don’t count on it next time: JP judge the decision, not the dice.'}</small>` : ''}</div>` : ''}
+      ${luck ? `<div class="luck ${luck.hit ? 'good' : 'bad'}"><div class="eyebrow">What happened next · this goes well about ${odds} times in 10</div><p>${esc(luck.text)}</p><div class="chips">${chips(luck.e)}</div>${lucky ? `<small>${o.grade === 'best' ? 'A good decision with a bad outcome. That happens, and your JP are for the decision, not the dice.' : 'A lucky outcome from a risky decision. Enjoy it, but don’t count on it: JP judge the decision, not the dice.'}</small>` : ''}</div>` : ''}
       ${o.ripple ? `<div class="pending">⏳ This will echo in Chapter 2…</div>` : ''}
       <div class="cta"><button class="btn dark" data-go>Back to work <span class="kbd" style="color:#fff">↵</span></button></div></div></div></div>`);
     el2.querySelector('.call').scrollTop = 0;
@@ -857,7 +958,7 @@
       <div class="hero"><div class="eyebrow" style="color:rgba(247,241,231,.7)">Chapter 1 complete · The Kestrel Vale Line</div><h1>Make the Case</h1><p>${esc(S.name)} spent six weeks looking at everything, then faced the Funding Panel.</p></div>
       <div class="card outcome"><span class="stamp ${key === 'approved' ? 'best' : key === 'deferred' ? 'poor' : 'ok'}">${out.stamp}</span><div><h2>${esc(out.title)}</h2><p>${esc(out.text)}</p><div class="meter"><i style="width:${S.panel.score}%"></i><span style="left:50%">50</span><span style="left:75%">75</span></div><small>Panel readiness ${S.panel.score}/100</small></div></div>
       <div class="card scorecard"><div class="ring"><svg viewBox="0 0 200 200"><circle cx="100" cy="100" r="88" stroke="#e8dcc8" stroke-width="14" fill="none"/><circle cx="100" cy="100" r="88" stroke="var(--ember)" stroke-width="14" fill="none" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C}" id="ringArc" style="transition:stroke-dashoffset 1.6s cubic-bezier(.2,.8,.2,1)"/></svg><div class="num"><b id="ringNum">0</b><span>Judgment</span></div></div>
-        <div class="arch"><div class="rank">${esc(r.name)} · ${S.jp} JP</div><div class="rankbar"><i style="width:${toNext}%"></i></div><small class="rnext">${r.next ? `${r.next.jp - S.jp} JP to ${esc(r.next.name)}` : 'Top rank'}</small><h2>${pf.name}</h2><p>${pf.desc}</p><div class="blind">Watch out for: ${pf.blind}</div></div></div>
+        <div class="arch"><div class="rank">${esc(r.name)} · ${S.jp} JP</div><div class="rankbar"><i style="width:${toNext}%"></i></div><small class="rnext">${r.next ? `${r.next.jp - S.jp} JP to ${esc(r.next.name)}` : 'Top rank'}</small><h2>${pf.name}</h2><p>${pf.desc}</p>${pf.blind ? `<div class="blind">Watch out for: ${pf.blind}</div>` : `<div class="blind good">Strength: ${esc(pf.strength)}</div>`}</div></div>
       <div class="rgrid">
         <div class="card rcard"><h3>The project dashboard</h3>${METRICS.map(m => { const d = S.m[m.k] - START[m.k]; return `<div class="mrow"><span class="nm">${m.long}</span><span class="tr"><i style="width:${clamp(100 * (S.m[m.k] - Math.min(0, m.lo)) / m.bar, 0, 100)}%;background:${m.color}"></i></span><span class="v">${m.fmt(S.m[m.k])}</span><span class="dv ${d > 0 ? 'pos' : d < 0 ? 'neg' : ''}">${d ? (d > 0 ? '+' : '−') + (m.k === 'money' ? '£' + Math.abs(d) + 'k' : Math.abs(d)) : '·'}</span></div>`; }).join('')}</div>
         <div class="card rcard"><h3>How you judged</h3><p>Judgment <b>${st.score}</b>: ${st.best} of ${st.n} decisions matched the expert call. ${calib}</p><p class="hint" style="margin-top:10px">Judgment Points reward the quality of each decision, never luck. The dashboard shows outcomes, and outcomes include luck.</p></div>
@@ -884,6 +985,7 @@
         <button class="btn ghost" id="rCSV">Download results (CSV)</button>
         <button class="btn ghost" id="rAgain">Replay Chapter 1</button>
       </div></div>`;
+    achQ.length = 0; $('#ach').classList.remove('on');
     const el = layer('report', html); el.scrollTop = 0;
     requestAnimationFrame(() => setTimeout(() => {
       $('#ringArc').style.strokeDashoffset = off;
@@ -916,8 +1018,8 @@
   function download(name, blob) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); }
   function exportCSV() {
     const st = stats(), pf = profile();
-    const rows = [['player', 'pack', 'chapter', 'kind', 'decision', 'grade', 'confidence']];
-    S.graded.forEach(x => rows.push([S.name, PACK.id, 1, x.kind, x.title, x.grade, x.conf == null ? '' : x.conf]));
+    const rows = [['player', 'pack', 'chapter', 'kind', 'decision', 'grade', 'confidence', 'luck']];
+    S.graded.forEach(x => { const ev = x.kind === 'event' ? S.events.find(e => e.id === x.id) : null; rows.push([S.name, PACK.id, 1, x.kind, x.title, x.grade, x.conf == null ? '' : x.conf, ev && ev.luck != null ? (ev.luck ? 'lucky' : 'unlucky') : '']); });
     rows.push([]); rows.push(['summary', 'jp', S.jp, 'rank', rankOf(S.jp).name, 'judgment', st.score, 'style', pf.name, 'panel', S.panel.outcome, 'readiness', S.panel.score]);
     rows.push(['dashboard', ...METRICS.map(m => m.long + '=' + m.lfmt(S.m[m.k]))]);
     rows.push(['achievements', ...S.ach]);
@@ -1064,6 +1166,12 @@
     $('#padA').addEventListener('pointerdown', e => { e.preventDefault(); world.use(); });
     applySet();
     $('#hudMenu').innerHTML = ICON.menu; $('#hudMenu').onclick = () => openBoard();
+    // keep the objective arrow clear of the HUD and the touch controls
+    setInterval(() => {
+      if (!world) return; const r = sel => { const el = $(sel); if (!el || !el.offsetParent) return null; return el.getBoundingClientRect(); };
+      const hl = r('#hud .hud-left'), hr = r('#hud .hud-right'), pd = document.body.classList.contains('exploring') && world.touch ? 150 : 0, mob = innerWidth <= 720;
+      world.safe = { t: Math.max(mob && hl ? hl.bottom : 0, hr ? hr.bottom : 0) + 6, l: !mob && hl ? hl.right + 6 : 0, r: 0, b: pd };
+    }, 500);
     document.addEventListener('pointerdown', () => LS.audio.init(), { once: true });
     title();
     LS.game = { S: () => S, stats, profile, report, card, PACK, world: () => world, refreshWorld, currentTarget, avail: id => avail(task(id)), rankOf };

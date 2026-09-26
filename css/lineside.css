@@ -528,3 +528,37 @@ button.metric{cursor:pointer}
 .use .ic{font-size:24px;display:block;margin-bottom:6px}
 .use b{font-size:15px}.use p{font-size:13.5px!important;margin-top:4px;line-height:1.5}
 @media (max-width:720px){.uses{grid-template-columns:1fr}}
+
+/* ---------- Tile world: HUD, coach marks, wayfinding ---------- */
+#world{image-rendering:pixelated}
+#tip{position:fixed;left:50%;top:calc(96px + env(safe-area-inset-top));transform:translate(-50%,-8px);z-index:30;max-width:min(520px,calc(100% - 28px));padding:10px 16px 10px 12px;border-radius:14px;background:rgba(24,20,37,.92);color:var(--paper);font-size:14px;line-height:1.45;box-shadow:0 10px 30px rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;display:flex;gap:10px;align-items:flex-start}
+#tip.on{opacity:1;transform:translate(-50%,0)}
+#tip .tk{flex:0 0 auto;font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;background:var(--gold);color:var(--ink);border-radius:6px;padding:3px 6px;margin-top:1px}
+body.modal #tip{opacity:0}
+body.modal #toast{top:calc(84px + env(safe-area-inset-top));bottom:auto}
+.metric .lb{font-size:11px;font-weight:700;opacity:.75;color:var(--paper)}
+.metric.hidden{display:none}
+.obj li em{display:block;font-style:normal;font-size:10px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:1px}
+.obj li.alt{opacity:.72;cursor:pointer}.obj li.alt:hover{opacity:1}
+.obj li.alt small{opacity:.65}
+#padA{font-size:14px!important;font-weight:800;letter-spacing:.02em}
+#padA.idle{background:rgba(247,241,231,.16)!important;opacity:.55}
+#chapter .obj1{max-width:560px;margin:18px auto 0;font-family:var(--serif);font-style:italic;font-size:calc(19px*var(--fs));line-height:1.5;opacity:.92;animation:rise .9s .7s both}
+#chapter .go{margin-top:26px;font-size:12px;letter-spacing:.2em;text-transform:uppercase;opacity:.65;animation:rise .9s 1s both}
+.ringing{width:min(420px,100%);padding:26px;text-align:center}
+.ringing .ric{font-size:42px;animation:ring 0.9s ease-in-out infinite}
+@keyframes ring{0%,100%{transform:rotate(0)}10%{transform:rotate(-14deg)}20%{transform:rotate(12deg)}30%{transform:rotate(-8deg)}40%{transform:rotate(0)}}
+.ringing .rwho{display:flex;gap:12px;align-items:center;justify-content:center;margin:12px 0 4px;text-align:left}
+.ringing .mini{width:48px;height:48px;border-radius:50%;overflow:hidden;background:var(--paper2)}.ringing .mini svg{width:100%;height:100%}
+.ringing b{display:block;font-size:16px}.ringing small{color:var(--muted);font-size:13px}
+.cause b{font-weight:800;margin-right:4px}
+.gantt .bgrow span{font-weight:600;color:var(--muted)}
+.gantt i.grey{background:repeating-linear-gradient(45deg,#c9c3b6 0 6px,#ddd7ca 6px 12px);height:14px}
+.gantt .axis{position:relative;height:14px;font-size:10px;color:var(--muted)}.gantt .axis span{position:absolute;transform:translateX(-50%);white-space:nowrap}
+.arch .blind.good{color:var(--best)}
+@media (max-width:720px){
+  body.exploring .metric:not(.flash){display:none}
+  body.exploring .metrics{min-height:0}
+  .metric .lb{display:none}
+  #tip{top:auto;bottom:calc(170px + env(safe-area-inset-bottom))}
+}
