@@ -2,15 +2,15 @@
 
 The quality bar is `docs/visual-brief/reference_character_detail.jpg`. That character is **Moira**, our station volunteer: grey bun, round glasses, olive hooded coat with brass buttons, satchel and boots. Every asset in the world must sit next to her without looking cheaper. The target is premium, cosy, AAA-indie pixel art: rich, readable, hand-crafted and warm, never dark or gloomy. The current 16px art is being replaced, not polished.
 
-## Scale
+## Scale (revised: bigger and more detailed)
 
 | | |
 |---|---|
-| Map tile | **32×32 art px**. The game draws HD scenes at `res: 2`: 1 map tile = 16 world units = 32 art px |
-| Person | **about 30 px wide × 60–64 px tall** (2 tiles tall), with a big-head cosy proportion like the reference. The head, including hair, is about 40% of the height |
-| Doors | 32–40 px wide, 48–56 px tall |
-| Buildings | Sized from their footprint in `js/world/level.js`. The south wall is at full height; the roof is seen from above |
-| Detail | Every surface has material detail: brick courses, slate rows, mortar, weathering, moss, rust streaks, wood grain, fabric folds, stitching, buttons |
+| Map tile | **48×48 art px**. The game draws HD scenes at `res: 3`: 1 map tile = 16 world units = 48 art px. On desktop each art pixel shows as 2 screen pixels, so a tile is 96 px on screen |
+| Person | **about 44 px wide × 90–94 px tall** (2 tiles tall), in a **48×96 frame**, feet at (24, 93). Big-head cosy proportions like the reference; the head, including hair, is about 40% of the height. Use the extra resolution for more detail than the reference: eyes with highlights, eyebrows, nose shading, hair strands, fabric folds, seams, stitching, button highlights |
+| Doors | 48–60 px wide, 72–84 px tall |
+| Buildings | Sized from their footprint in `js/world/level.js`, at 48 px per tile. The south wall is at full height; the roof is seen from above |
+| Detail | Every surface has material detail at this density: individual bricks with mortar and colour variation, slate rows with chipped edges, stone courses, moss, rust streaks, wood grain, leaves drawn as clusters |
 
 ## Light and shading
 

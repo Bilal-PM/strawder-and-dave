@@ -1,0 +1,306 @@
+{
+ "depot": {
+  "anchor": [
+   0,
+   328
+  ],
+  "door": [
+   51,
+   30
+  ],
+  "file": "depot.png",
+  "h": 328,
+  "lights": [
+   [
+    448,
+    254,
+    36
+   ],
+   [
+    448,
+    324,
+    20
+   ]
+  ],
+  "map_origin": [
+   42,
+   25
+  ],
+  "note": "east gable face = last 64 px (map cols 59-60); siding rows 27-28 run into the open doorway (siding_door, sprite px)",
+  "siding_door": [
+   852,
+   232,
+   24,
+   96
+  ],
+  "sign": {
+   "date_tablet": [
+    404,
+    232,
+    88,
+    12
+   ],
+   "ppe_plate": [
+    469,
+    276,
+    22,
+    16
+   ]
+  },
+  "tiles": [
+   19,
+   6
+  ],
+  "w": 912
+ },
+ "running_in_board_closed": {
+  "anchor": [
+   0,
+   54
+  ],
+  "file": "running_in_board_closed.png",
+  "h": 54,
+  "map_origin": [
+   28,
+   24
+  ],
+  "note": "free-standing on the platform back edge, row 24, cols 28-30; not blocking",
+  "sign": {
+   "face": [
+    3,
+    3,
+    90,
+    18
+   ]
+  },
+  "tiles": [
+   3,
+   1
+  ],
+  "w": 96
+ },
+ "running_in_board_live": {
+  "anchor": [
+   0,
+   54
+  ],
+  "file": "running_in_board_live.png",
+  "h": 54,
+  "map_origin": [
+   28,
+   24
+  ],
+  "note": "free-standing on the platform back edge, row 24, cols 28-30; not blocking",
+  "sign": {
+   "face": [
+    3,
+    3,
+    90,
+    18
+   ]
+  },
+  "tiles": [
+   3,
+   1
+  ],
+  "w": 96
+ },
+ "station_canopy_closed": {
+  "anchor": [
+   0,
+   90
+  ],
+  "columns": [
+   16,
+   80,
+   144,
+   208,
+   272,
+   336
+  ],
+  "fade": {
+   "h": 90,
+   "w": 384,
+   "x": 0,
+   "y": 0
+  },
+  "file": "station_canopy_closed.png",
+  "h": 90,
+  "lights": [],
+  "map_origin": [
+   13,
+   23
+  ],
+  "note": "object, bottom edge on map y=800 (top of row 25); not blocking; fade rect in sprite px",
+  "sortY_map": 799,
+  "tiles": [
+   12,
+   2
+  ],
+  "w": 384
+ },
+ "station_canopy_live": {
+  "anchor": [
+   0,
+   90
+  ],
+  "columns": [
+   16,
+   80,
+   144,
+   208,
+   272,
+   336
+  ],
+  "fade": {
+   "h": 90,
+   "w": 384,
+   "x": 0,
+   "y": 0
+  },
+  "file": "station_canopy_live.png",
+  "h": 90,
+  "lights": [
+   [
+    48,
+    66,
+    30
+   ],
+   [
+    304,
+    66,
+    30
+   ]
+  ],
+  "map_origin": [
+   13,
+   23
+  ],
+  "note": "object, bottom edge on map y=800 (top of row 25); not blocking; fade rect in sprite px",
+  "sortY_map": 799,
+  "tiles": [
+   12,
+   2
+  ],
+  "w": 384
+ },
+ "station_closed": {
+  "anchor": [
+   0,
+   216
+  ],
+  "door": [
+   18,
+   30
+  ],
+  "door_tiles": [
+   [
+    18,
+    30
+   ],
+   [
+    19,
+    30
+   ]
+  ],
+  "file": "station_closed.png",
+  "h": 216,
+  "lights": [
+   [
+    224,
+    156,
+    34
+   ]
+  ],
+  "map_origin": [
+   12,
+   25
+  ],
+  "sign": {
+   "fascia": [
+    176,
+    130,
+    96,
+    8
+   ],
+   "notice": [
+    227,
+    170,
+    16,
+    12
+   ]
+  },
+  "tiles": [
+   14,
+   6
+  ],
+  "w": 448
+ },
+ "station_live": {
+  "anchor": [
+   0,
+   216
+  ],
+  "door": [
+   18,
+   30
+  ],
+  "door_tiles": [
+   [
+    18,
+    30
+   ],
+   [
+    19,
+    30
+   ]
+  ],
+  "file": "station_live.png",
+  "h": 216,
+  "lights": [
+   [
+    224,
+    156,
+    34
+   ],
+   [
+    50,
+    160,
+    16
+   ],
+   [
+    116,
+    160,
+    16
+   ],
+   [
+    332,
+    160,
+    16
+   ],
+   [
+    398,
+    160,
+    16
+   ]
+  ],
+  "map_origin": [
+   12,
+   25
+  ],
+  "sign": {
+   "fascia": [
+    176,
+    130,
+    96,
+    8
+   ],
+   "notice": null
+  },
+  "tiles": [
+   14,
+   6
+  ],
+  "w": 448
+ }
+}

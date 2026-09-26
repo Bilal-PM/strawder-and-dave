@@ -88,7 +88,7 @@ SHADOW = (42, 29, 50, 90)  # contact / cast shadow (violet, translucent)
 LIGHT = (-0.55, -0.70, 0.46)  # light from the upper left (north-west), slightly in front: normalised below
 _l = math.sqrt(sum(c * c for c in LIGHT)); LIGHT = tuple(c / _l for c in LIGHT)
 
-TILE = 32  # art pixels per map tile (the game draws HD scenes at res 2: 16 world units = 32 art px)
+TILE = 48  # art pixels per map tile (the game draws HD scenes at res 3: 16 world units = 48 art px)
 
 
 def hexrgb(h, a=255):

@@ -1,16 +1,17 @@
-/* LINESIDE HD renderer: 32 art px per map tile (scene.res = 2), drawn from the HD atlas (js/world/atlas_hd.js, built
+/* LINESIDE HD renderer: 48 art px per map tile (scene.res = 3), drawn from the HD atlas (js/world/atlas_hd.js, built
  * by assets/hd/pack.py from the generators in assets/hd/<area>/). Wraps the 16px renderer (js/world/tileart.js) and
  * replaces it piece by piece: anything the HD atlas already covers is drawn in HD, everything else falls back to the
  * 16px art scaled up, so the game always works while the art is being made.
  *
- * Same contract as LS.TileArt (see tileart.js), plus `res: 2`. Add ?art=classic to the URL to see the 16px art.
+ * Same contract as LS.TileArt (see tileart.js), plus `res: 3`. Ground chunks are drawn lazily when they first come into view and the least recently used are dropped,
+ * so the full 6144x4032 art-px world never has to sit in memory (phones). Add ?art=classic to the URL to see the 16px art.
  */
 window.LS = window.LS || {};
 (function () {
   'use strict';
   const BASE = LS.TileArt, A = LS.ATLAS_HD;
   if (!BASE || !A || /[?&]art=classic\b/.test(location.search)) return;
-  const R = 2, T = 16, CHUNK = 512;          // art px per world unit; world units per tile; chunk size (world units)
+  const R = 3, T = 16, CHUNK = 256, KEEP = 28; // art px per world unit; world units per tile; chunk size (world units); chunks kept in memory
   const IMG = {};                             // 'area/file' -> HTMLImageElement
   const img = (area, file) => IMG[area + '/' + file];
   const cv = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
@@ -60,20 +61,26 @@ window.LS = window.LS || {};
   }
 
   /* ------------------------------------------------------------------ scenes */
-  // Upscale a 16px scene to res 2 (nearest-neighbour), then let the HD passes paint over it.
+  // Upscale a 16px scene to res 3 (nearest-neighbour) and let the HD passes paint over it. Chunks render on demand.
   function lift(sc0, room, level, opts) {
-    const w = sc0.w, h = sc0.h, chunks = [];
+    const w = sc0.w, h = sc0.h, r0 = sc0.res || 1, chunks = [], ops = [], built = [];
+    const sc = Object.assign({}, sc0, { res: R, chunks, ground: null, base: sc0 });
+    sc.objects = sc0.objects.map(o => Object.assign({}, o, { w: o.w || o.img.width / r0, h: o.h || o.img.height / r0 }));
+    // passes call sc.paint(fn): fn(g, chunk) draws in world units (g is pre-scaled), once per chunk as it is built
+    sc.paint = fn => ops.push(fn);
+    const render = c => {
+      const cvs = cv(c.w * R, c.h * R), g = G(cvs);
+      g.drawImage(sc0.ground, c.x * r0, c.y * r0, c.w * r0, c.h * r0, 0, 0, c.w * R, c.h * R);
+      for (const fn of ops) { g.save(); g.scale(R, R); g.translate(-c.x, -c.y); try { fn(g, c); } catch (e) { console.error('HD paint', e); } g.restore(); }
+      built.push(c); if (built.length > KEEP) { const old = built.shift(); old._img = null; }
+      return cvs;
+    };
     for (let y = 0; y < h; y += CHUNK) for (let x = 0; x < w; x += CHUNK) {
-      const cw = Math.min(CHUNK, w - x), ch = Math.min(CHUNK, h - y), c = cv(cw * R, ch * R), g = G(c);
-      g.drawImage(sc0.ground, x * (sc0.res || 1), y * (sc0.res || 1), cw * (sc0.res || 1), ch * (sc0.res || 1), 0, 0, cw * R, ch * R);
-      chunks.push({ img: c, g, x, y, w: cw, h: ch });
+      const c = { x, y, w: Math.min(CHUNK, w - x), h: Math.min(CHUNK, h - y), _img: null };
+      Object.defineProperty(c, 'img', { get() { if (!c._img) c._img = render(c); else { const i = built.indexOf(c); if (i >= 0 && i < built.length - 1) { built.splice(i, 1); built.push(c); } } return c._img; } });
+      chunks.push(c);
     }
-    const objects = sc0.objects.map(o => Object.assign({}, o, { w: o.w || o.img.width / (sc0.res || 1), h: o.h || o.img.height / (sc0.res || 1) }));
-    const sc = Object.assign({}, sc0, { res: R, chunks, objects, ground: null, base: sc0 });
-    // paint into every chunk a callback draws on: fn(g) with g translated so world units x R art px line up
-    sc.paint = fn => { for (const c of chunks) { c.g.save(); c.g.translate(-c.x * R, -c.y * R); fn(c.g, c); c.g.restore(); } };
     for (const p of HD.passes) if (p.room === room || p.room === '*') try { p.run(sc, level, opts || {}, HD); } catch (e) { console.error('HD pass', p.name, e); }
-    for (const c of chunks) delete c.g;
     return sc;
   }
   function buildOutside(level, opts) { return lift(BASE.buildOutside(level, opts), 'outside', level, opts); }
