@@ -83,6 +83,8 @@ window.LS = window.LS || {};
     fitScale() {
       let z = Math.max(2, Math.min(4, Math.floor(Math.min(innerWidth / (26 * T), innerHeight / (15 * T)))));
       if (this.room !== 'outside') { const R = ROOMS[this.room]; const zr = Math.floor(Math.min(innerWidth / (R.w + 24), (innerHeight - 40) / (R.h + 24))); z = Math.max(z, Math.min(5, zr)); }
+      // HD art (res 2: 32 art px per tile) must land on whole device pixels: zoom x dpr has to be even
+      if (this.art && this.art.res >= 2 && (z * (this.dpr || 1)) % 2) z = this.room === 'outside' && innerWidth / (22 * T) >= z + 1 ? z + 1 : Math.max(2, z - 1);
       this.S = z; this.vw = innerWidth / z; this.vh = innerHeight / z;
     }
 
