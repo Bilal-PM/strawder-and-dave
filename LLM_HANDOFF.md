@@ -200,3 +200,52 @@ The entire game is in one `<script>` block. Here's the section map with line num
 | `advanceWeek()` | ~1770 | Progresses timeline, triggers events |
 | `lightenColor(hex,amt)` | ~2087 | Utility: brighten hex color |
 | `darkenColor(hex,amt)` | ~2093 | Utility: darken hex color |
+
+---
+
+## v10 — Judgment Engine, Mobile, Social Share (2026-09-26)
+
+### Why (first principles)
+Judgment is choosing well under uncertainty when goods compete and consequences are delayed. You build it by
+**predicting → committing → seeing consequences → comparing with expert reasoning → spotting your patterns**.
+v10 restructures the game around that loop:
+
+| Principle | Mechanic |
+|---|---|
+| No gaming the numbers | Effect numbers are **hidden before** every choice (emails, meetings, Big Calls); shown after |
+| Decisions under uncertainty | **Big Calls**: 11 scenarios, each with *What you know / What you don't*, shuffled options |
+| Calibration | After choosing, rate confidence (50/70/90%). Scored with a Brier-style measure |
+| Delayed consequences | **Ripples**: choices plant consequences that land weeks later ("Back at T-28 you chose…") |
+| Decision ≠ outcome | Some ripples are probabilistic: poor calls can get lucky, good calls can get unlucky, and Dave says so |
+| Expert comparison | **Dave** (veteran PM) grades each call EXPERT / DEFENSIBLE / RISKY, explains why, and names a **principle** |
+| Reflection | End-screen **Judgment Report**: score, decision-style archetype, blind spot, calibration, lessons |
+
+### Key code (all in `index.html`)
+- `EVENTS` — the Big Calls. Fields: `week,title,text,known[],unknown[],principle{name,text}`, `choices[{t,desc,grade,e,why,ripple?}]`.
+  `ripple = {at:week, p?:prob, hit:{title,text,e,lesson?}, miss?:{…}}` — outcome is rolled when the call is made.
+- Round flow: `closeWeekTrans()` / `skipPhase()` / `beginGame()` → `startRoundSequence()` queues **due ripples → Big Call → report**, then `nextRoundStep()` → `startNewWeek()`. The T+8 Big Call runs before `showEndScreen()`.
+- Big Call UI: `showEvent` → `pickBigCall` → `commitBigCall` (reveal) → `closeBigCall`. Ripples: `showRipple` / `closeRipple`.
+- Scoring: `judgmentStats(live)`, `judgmentRank`, `decisionProfile` (archetype from cumulative `S.trade` deltas). HUD badge `#hJQ`.
+- New state (saved): `S.judgment[]`, `S.ripples[]`, `S.trade{}`, `S.goodRipples`, `S.quick`.
+- End: `showEndScreen` renders `#endScr`; `buildShareCard()` draws a 1080×1350 PNG; `openShareCard`, `shareCardNative` (Web Share API w/ file, falls back to download), `copyResult`.
+- Modes: **Quick Play** (`S.quick`) = 3 objectives per round, reports only at T-16 / T-0. **Full Project** = original objectives + monthly reports.
+
+### Mobile / responsive
+- `layout()` picks **desktop** (960×640 frame scaled to fit, up to 2× for crisp screen recording) or **compact** (phones / small windows): full-screen, canvas internal resolution follows the screen at an integer zoom, `IW/IH` are now `let`, use `VPW()` for visible world width.
+- Compact: two-row HUD, notepad becomes a slide-in drawer (`toggleTasks`), objective ticker (`#objTicker`, tap = open tasks / finish week), bottom-sheet dialogue, full-width modals.
+- Touch: virtual joystick (`#joy`, `JOY` state read in `updatePlayer`) + context Ⓐ button (`#actBtn`, shows TALK/USE). `syncBodyState()` toggles `body.ingame/.busy` so controls hide during modals.
+- Keyboard: `1-4` pick options in any modal or dialogue, `Enter` continues.
+
+### Smaller fixes
+- Track inspection no longer labels the right answer with ✅/❌; options are shuffled and Dave explains afterwards.
+- Locker room buttons (`.do`) now styled; locker dialogue no longer uses flex row layout.
+- Intro screens have a dark background (text was yellow-on-cream).
+- Title screen animated train; new pitch and mode buttons. OG/Twitter meta + mobile meta tags.
+
+## Demo on social media (60–90s recording)
+1. Serve it over HTTPS (e.g. GitHub Pages) so the share card shows the link and Web Share works on phones.
+2. Record on a phone in portrait for Reels/TikTok/Shorts (or desktop at 1080p: the frame scales up crisply).
+3. Suggested beats: title → **Quick Play** → first Big Call "Name the Date" (show *what you know / don't*) →
+   pick "firm date" + **Certain** → Dave calls it RISKY and explains → walk the office with the joystick →
+   a later **Ripple** ("The Date on the Posters") → end **Judgment Report** → **Share my result** card.
+4. Hook line: *"A game that grades your judgment, not your answers."*

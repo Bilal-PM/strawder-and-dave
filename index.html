@@ -2,7 +2,16 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Project Valley</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#2a1a0c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="description" content="Project Valley — a game about judgment. You're the PM on a railway upgrade. No right answers on screen, just calls and their ripples.">
+<meta property="og:title" content="Project Valley — a game about judgment">
+<meta property="og:description" content="Deliver a railway upgrade. Make the big calls. Find out what kind of decision-maker you really are.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<title>Project Valley — A Game About Judgment</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 *{margin:0;padding:0;box-sizing:border-box}
@@ -22,7 +31,7 @@ body{background:#3a2a18;color:#f0e6d3;font-family:'Press Start 2P',monospace;ove
 .btn.gld{border-color:#f7c948}.btn.gld:hover{background:linear-gradient(180deg,#f7c948,#c9a020);color:#3a2210}
 .btn.sm{font-size:8px;padding:8px 16px;min-width:auto}
 .btn:disabled{opacity:0.4;cursor:not-allowed;transform:none!important}
-#hud{position:absolute;top:0;left:0;right:220px;height:56px;background:linear-gradient(180deg,rgba(90,58,30,0.97),rgba(58,34,16,0.95));border-bottom:2px solid #7a5c3a;display:none;z-index:20;padding:0 8px;align-items:center;justify-content:space-between;font-size:10px}
+#hud{position:absolute;top:0;left:0;right:220px;height:56px;background:linear-gradient(180deg,#5a3a1e,#3a2210);border-bottom:2px solid #7a5c3a;display:none;z-index:20;padding:0 8px;align-items:center;justify-content:space-between;font-size:10px}
 #hud.on{display:flex}
 .hg{display:flex;align-items:center;gap:4px}
 .hi{display:flex;align-items:center;gap:2px}
@@ -98,6 +107,162 @@ body{background:#3a2a18;color:#f0e6d3;font-family:'Press Start 2P',monospace;ove
 .ach-toast .ach-label{font-size:7px;color:#c4a878;letter-spacing:2px}
 .ach-toast .ach-name{font-size:10px;color:#5a3a1e;margin-top:2px}
 .ach-toast .ach-desc{font-size:7px;color:#7a5a38;margin-top:2px;line-height:1.5}
+/* === v10: shared fixes === */
+#dlg .do{padding:6px 10px;margin:4px 0;background:#f7c948;border:2px solid #a07848;border-radius:4px;cursor:pointer;color:#3a2210;font-size:9px;font-family:'Press Start 2P',monospace;line-height:1.8}
+#introScr{background:linear-gradient(180deg,#2a1a0c,#3a2a18)}
+#introText{color:#e8d4b0!important}
+#gc{transform-origin:center center}
+#title .pitch{font-size:9px;color:#e8d4b0;line-height:2;text-align:center;max-width:520px;margin:0 16px 18px}
+#title .ctrl{font-size:7px;color:#a08868;margin-top:14px;text-align:center}
+#title .modeBtns{display:flex;flex-direction:column;align-items:center}
+#title .modeBtns small{display:block;font-size:7px;color:#c4a878;margin-top:6px;letter-spacing:1px}
+.btn.gld small{color:#f7e0a0}
+.jq{font-size:9px;color:#3a2210;background:#f7c948;border-radius:10px;padding:3px 7px;margin-right:6px;display:none;white-space:nowrap}
+.jq.on{display:inline-block}
+.hbtn{background:none;border:none;color:#c4a878;cursor:pointer;font-family:'Press Start 2P',monospace;font-size:9px;padding:4px}
+#tasksBtn{display:none}
+
+/* === BIG CALL (judgment) modal === */
+.modal.bigcall{width:660px;border-color:#f7c948;padding:0;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+.bc-head{background:linear-gradient(180deg,#5a3a1e,#3a2210);padding:12px 18px;display:flex;align-items:center;gap:10px}
+.bc-tag{font-size:7px;letter-spacing:2px;color:#3a2210;background:#f7c948;padding:4px 7px;border-radius:3px;white-space:nowrap}
+.bc-when{font-size:7px;color:#c4a878;letter-spacing:1px;margin-left:auto;text-align:right;line-height:1.6}
+.bc-body{padding:14px 18px 16px;max-height:calc(90vh - 60px);overflow-y:auto}
+.bc-title{font-size:14px;color:#3a2210;margin-bottom:10px;line-height:1.5}
+.bc-text{font-size:9px;line-height:2;color:#5a3a1e;margin-bottom:10px}
+.bc-kv{display:flex;gap:8px;margin-bottom:10px}
+.bc-kv>div{flex:1;background:rgba(255,255,255,.35);border:1px solid #c4a878;border-radius:6px;padding:8px}
+.bc-kv h4{font-size:7px;letter-spacing:1px;margin-bottom:4px;font-weight:normal}
+.bc-kv .k h4{color:#2a8a5a}.bc-kv .u h4{color:#c45040}
+.bc-kv li{font-size:8px;color:#5a3a1e;line-height:1.8;list-style:none}
+.bc-kv li:before{content:'\25B8 ';color:#a07848}
+.bc-q{font-size:8px;color:#7a5a38;margin:6px 0;letter-spacing:1px}
+.bc-opt{display:flex;gap:10px;align-items:flex-start;background:#f5ead0;border:2px solid #a07848;border-radius:6px;padding:10px 12px;margin:6px 0;cursor:pointer;transition:all .15s;font-family:'Press Start 2P',monospace;width:100%;text-align:left}
+.bc-opt:hover,.bc-opt:focus{border-color:#f7c948;background:#fffaf0;transform:translateX(3px);outline:none}
+.bc-opt .n{flex:0 0 22px;height:22px;border-radius:50%;background:#5a3a1e;color:#f7c948;font-size:9px;display:flex;align-items:center;justify-content:center}
+.bc-opt .t{font-size:9px;color:#3a2210;line-height:1.7}
+.bc-opt .d{font-size:7px;color:#7a5a38;line-height:1.7;margin-top:3px}
+.bc-opt.picked{border-color:#f7c948;background:#fff3c8}
+.bc-conf{display:flex;gap:8px;margin-top:8px}
+.bc-conf button{flex:1;font-family:'Press Start 2P',monospace;background:#e8d4b0;border:2px solid #a07848;border-radius:6px;padding:10px 6px;cursor:pointer;color:#3a2210;font-size:8px;line-height:1.8;transition:all .15s}
+.bc-conf button:hover{border-color:#f7c948;background:#fffaf0;transform:translateY(-2px)}
+.bc-conf button b{display:block;font-size:14px;color:#5a3a1e;font-weight:normal}
+.bc-chips{margin:6px 0 10px}
+.chip{display:inline-block;font-size:7px;padding:3px 6px;border-radius:3px;margin:2px 2px 2px 0;background:rgba(0,0,0,.06)}
+.chip.pos{color:#1f7a4c;background:rgba(74,202,138,.18)}.chip.neg{color:#b03050;background:rgba(224,85,119,.15)}
+.grade{display:inline-block;font-size:8px;letter-spacing:1px;padding:4px 8px;border-radius:3px;color:#fff}
+.grade.best{background:#2a8a5a}.grade.ok{background:#c9a020}.grade.poor{background:#c45040}.grade.none{background:#8a7a6a}
+.dave{display:flex;gap:10px;background:#3a2210;border-radius:8px;padding:10px 12px;margin:8px 0;color:#f0e6d3}
+.dave img{width:40px;height:60px;image-rendering:pixelated;flex:0 0 40px}
+.dave .who{font-size:7px;color:#f7c948;letter-spacing:1px;margin-bottom:5px}
+.dave .say{font-size:8px;line-height:1.9}
+.dave .alt{font-size:7px;line-height:1.8;color:#e8d4b0;margin-top:6px;border-top:1px dashed #7a5c3a;padding-top:6px}
+.principle{border:2px dashed #a07848;border-radius:8px;padding:10px 12px;margin:8px 0;background:rgba(247,201,72,.12)}
+.principle .pl{font-size:7px;color:#a07848;letter-spacing:2px}
+.principle .pn{font-size:10px;color:#3a2210;margin:5px 0;line-height:1.6}
+.principle .pt{font-size:8px;color:#5a3a1e;line-height:1.9}
+.calib{font-size:8px;line-height:1.9;color:#5a3a1e;background:rgba(91,142,245,.1);border-left:3px solid #5b8ef5;padding:6px 10px;margin:8px 0;border-radius:0 6px 6px 0}
+.pending{font-size:8px;color:#7a4a90;line-height:1.8;margin:6px 0}
+.bc-go{display:block;width:100%;margin-top:10px}
+.modal.ripple{border-color:#5b8ef5;width:560px}
+.modal.ripple h3{color:#4a6a90}
+.rp-from{font-size:7px;color:#7a5a38;line-height:1.8;background:rgba(0,0,0,.05);padding:6px 8px;border-radius:4px;margin-bottom:10px}
+.rp-title{font-size:12px;color:#3a2210;margin:6px 0 8px;line-height:1.5}
+.rp-good h3{color:#2a8a5a}.rp-bad h3{color:#c45040}
+
+/* === End screen === */
+#endScr{position:absolute;inset:0;z-index:38;display:none;overflow-y:auto;background:linear-gradient(180deg,#2a1a0c,#3a2a18 50%,#4a3a24);padding:24px 16px 40px;-webkit-overflow-scrolling:touch}
+#endScr.on{display:block}
+.end-wrap{max-width:600px;margin:0 auto;color:#f0e6d3}
+.end-wrap h2{font-size:18px;color:#f7c948;text-align:center;margin-bottom:6px}
+.end-sub{font-size:8px;color:#c4a878;text-align:center;margin-bottom:16px;line-height:1.8}
+.end-hero{display:flex;gap:14px;align-items:center;background:rgba(0,0,0,.25);border:2px solid #7a5c3a;border-radius:10px;padding:14px;margin-bottom:12px}
+.end-score{text-align:center;flex:0 0 130px}
+.end-score .big{font-size:44px;color:#f7c948;text-shadow:3px 3px 0 #2a1a0c}
+.end-score .lbl{font-size:7px;color:#c4a878;letter-spacing:2px;margin-top:6px}
+.end-score .rank{font-size:8px;color:#4aca8a;margin-top:6px;line-height:1.6}
+.end-arch .an{font-size:12px;color:#f7c948;margin-bottom:6px;line-height:1.5}
+.end-arch .ad{font-size:8px;line-height:1.9;color:#e8d4b0}
+.end-arch .ab{font-size:7px;line-height:1.8;color:#e88080;margin-top:6px}
+.end-card{background:rgba(0,0,0,.2);border-radius:8px;padding:12px;margin-bottom:12px}
+.end-card h4{font-size:7px;color:#c4a878;letter-spacing:2px;margin-bottom:8px;font-weight:normal}
+.end-row{display:flex;align-items:center;gap:8px;font-size:8px;margin:5px 0;line-height:1.6}
+.end-row .w{flex:0 0 38px;color:#c4a878}
+.end-row .tt{flex:1;color:#f0e6d3}
+.end-row .cf{flex:0 0 auto;font-size:7px;color:#a08868}
+.end-bar{display:flex;align-items:center;gap:6px;margin:4px 0;font-size:8px}
+.end-bar .bn{width:62px;text-align:right}
+.end-bar .bt{flex:1;height:10px;background:#3a2210;border:1px solid #5a3a1e;border-radius:3px;overflow:hidden}
+.end-bar .bt div{height:100%}
+.end-bar .bv{width:28px}
+.end-lesson{font-size:8px;line-height:1.9;margin:6px 0;color:#e8d4b0}
+.end-lesson b{color:#f7c948;font-weight:normal}
+.end-btns{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:10px}
+#shareModal{position:absolute;inset:0;z-index:60;background:rgba(20,10,5,.92);display:none;flex-direction:column;align-items:center;justify-content:center;padding:16px}
+#shareModal.on{display:flex}
+#shareModal img{max-width:100%;max-height:calc(100% - 90px);border:3px solid #7a5c3a;border-radius:6px;box-shadow:0 8px 30px rgba(0,0,0,.6)}
+#shareModal .sm-btns{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:12px}
+#toastMsg{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);background:#3a2210;color:#f7c948;border:2px solid #f7c948;border-radius:6px;padding:8px 14px;font-size:8px;z-index:70;display:none}
+
+/* === Touch controls === */
+#touchUI{display:none}
+body.touch.ingame:not(.busy) #touchUI{display:block}
+#joy{position:absolute;left:calc(18px + env(safe-area-inset-left));bottom:calc(18px + env(safe-area-inset-bottom));width:124px;height:124px;border-radius:50%;background:rgba(58,34,16,.35);border:3px solid rgba(247,201,72,.45);z-index:22;touch-action:none}
+#joyKnob{position:absolute;left:50%;top:50%;width:54px;height:54px;margin:-27px 0 0 -27px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#f7e0a0,#c9a020);border:3px solid #7a5c3a;box-shadow:0 3px 8px rgba(0,0,0,.4);pointer-events:none}
+#actBtn{position:absolute;right:calc(22px + env(safe-area-inset-right));bottom:calc(30px + env(safe-area-inset-bottom));width:84px;height:84px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#f09080,#c45040);border:4px solid #7a2a20;color:#fff;font-family:'Press Start 2P',monospace;font-size:10px;z-index:22;box-shadow:0 4px 10px rgba(0,0,0,.4);opacity:.45;touch-action:manipulation;line-height:1.4}
+#actBtn.live{opacity:1;animation:pulse 1.4s infinite}
+#objTicker{display:none;position:absolute;left:8px;right:8px;z-index:21;background:rgba(245,234,208,.95);border:2px solid #7a5c3a;border-radius:8px;padding:7px 10px;font-size:8px;color:#3a2210;line-height:1.6;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+#objTicker.done{background:linear-gradient(180deg,#f7c948,#e0b030);animation:pulse 1.6s infinite}
+#objTicker .oc{float:right;color:#7a5a38;margin-left:10px}
+
+/* === Compact layout (phones, small windows) === */
+body.compact{height:100%;display:block}
+body.compact #gc{width:100vw;border:none;border-radius:0;transform:none!important}
+body.compact #hud{right:0;height:auto;flex-wrap:wrap;padding:calc(4px + env(safe-area-inset-top)) 8px 4px;gap:3px 6px}
+body.compact #hud>.hg:first-child{flex:1}
+body.compact #hudMetrics{order:3;width:100%;justify-content:space-between;gap:2px}
+body.compact #hudMetrics .hl{display:none}
+body.compact .meter{width:26px;height:9px}
+body.compact .hpct{font-size:8px;min-width:18px}
+body.compact #tasksBtn{display:inline-block}
+body.compact.ingame:not(.busy) #objTicker{display:block}
+body.compact #notepad{width:min(300px,86vw);transform:translateX(105%);transition:transform .25s;display:block;box-shadow:-6px 0 20px rgba(0,0,0,.35);z-index:32;padding-top:calc(12px + env(safe-area-inset-top))}
+body.compact #notepad.open{transform:none}
+body.compact #notepad:not(.on){display:none}
+body.compact #dlg{left:6px;right:6px;bottom:calc(6px + env(safe-area-inset-bottom));max-height:62%;overflow-y:auto;padding:12px;-webkit-overflow-scrolling:touch}
+body.compact #dlg .dt{font-size:10px}
+body.compact #dlg .dc,body.compact #dlg .do{font-size:9px;padding:10px}
+body.compact #hint{bottom:calc(126px + env(safe-area-inset-bottom));font-size:8px;max-width:90vw;text-align:center}
+body.compact .modal{width:94vw!important;max-height:88%;padding:14px}
+body.compact .modal.bigcall,body.compact .modal.ripple{padding:0}
+body.compact .modal.ripple{padding:14px}
+body.compact .bc-body{max-height:calc(88vh - 56px);padding:12px}
+@media (orientation:portrait){body.compact .bc-kv{flex-direction:column;gap:6px}}
+body.compact .bc-title{font-size:12px}
+body.compact .bc-text,body.compact .bc-opt .t{font-size:9px}
+body.compact .bc-opt .d,body.compact .bc-kv li,body.compact .dave .say,body.compact .principle .pt{font-size:8px}
+body.compact #docsOverlay{padding:16px 12px}
+body.compact #dlg [style*="font-size:7px"],body.compact .modal [style*="font-size:7px"],body.compact #docsOverlay [style*="font-size:7px"]{font-size:8px!important}
+body.compact #docsOverlay [style*="width:calc(50% - 4px)"]{width:100%!important}
+body.compact .gantt-wrap{overflow-x:auto}
+body.compact #title h1{font-size:clamp(18px,7vw,36px)}
+body.compact #title .sub{font-size:8px;margin-bottom:16px}
+body.compact #title canvas{max-width:90vw}
+body.compact #charSel .chars{flex-wrap:wrap;justify-content:center;gap:8px}
+body.compact .scr{padding:16px}
+body.compact .ach-toast{width:min(300px,90vw)}
+body.compact .end-hero{flex-direction:column;text-align:center}
+body.compact .end-score{flex:none}
+body.compact #statsModal>div{margin:20px 12px!important}
+@media (orientation:landscape){
+  body.compact #dlg{max-height:78%;left:18%;right:18%}
+  body.compact #objTicker{right:auto;max-width:46%}
+  body.compact #hud{flex-wrap:nowrap}
+  body.compact #hud>.hg:first-child{flex:0 0 auto}
+  body.compact #hudMetrics{order:0;width:auto;flex:1;justify-content:center;gap:10px}
+  body.compact .bc-text{margin-bottom:6px}
+  body.compact .bc-opt{padding:8px 10px;margin:4px 0}
+}
 </style>
 </head>
 <body>
@@ -110,11 +275,15 @@ body{background:#3a2a18;color:#f0e6d3;font-family:'Press Start 2P',monospace;ove
 </div>
 <div id="title" class="scr">
   <h1>PROJECT VALLEY</h1>
-  <p class="sub">Build the Railway. Deliver the Project.</p>
-  <canvas id="titleArt" width="320" height="100" style="image-rendering:pixelated;margin-bottom:16px"></canvas>
-  <button class="btn gld" onclick="showCharSelect()">New Game</button>
-  <button class="btn sm" onclick="loadGame()" id="contBtn" style="display:none">Continue</button>
-  <p style="font-size:6px;color:#533a7b;margin-top:20px">Arrow Keys / WASD to move | SPACE to interact</p>
+  <p class="sub">A GAME ABOUT JUDGMENT</p>
+  <canvas id="titleArt" width="320" height="100" style="image-rendering:pixelated;margin-bottom:16px;width:320px;height:100px"></canvas>
+  <p class="pitch">You're the PM on a &pound;10M railway upgrade.<br>No scores on the buttons. No right answers on screen.<br>Just the calls you make &mdash; and the ripples they send.</p>
+  <div class="modeBtns">
+    <button class="btn gld" onclick="showCharSelect('quick')">Quick Play<small>~10 MIN &middot; ALL THE BIG CALLS</small></button>
+    <button class="btn sm" onclick="showCharSelect('full')">Full Project (~25 min)</button>
+    <button class="btn sm" onclick="loadGame()" id="contBtn" style="display:none">Continue</button>
+  </div>
+  <p class="ctrl" id="ctrlHint">WASD / Arrows to move &middot; SPACE to interact &middot; 1-4 to choose</p>
 </div>
 <div id="charSel" class="scr">
   <h2 style="font-size:14px;color:#f7c948;margin-bottom:4px">Choose Your Character</h2>
@@ -153,7 +322,9 @@ body{background:#3a2a18;color:#f0e6d3;font-family:'Press Start 2P',monospace;ove
     <div class="hi"><img src="img/icon/Team.png" alt=""><span class="hl">MOR</span><div class="meter"><div class="mf pur" id="mMor" style="width:70%"></div></div><span class="hpct" id="pMor" style="color:#c4a878">70</span></div>
   </div>
   <div class="hg">
+    <span class="jq" id="hJQ" title="Judgment score">&#9878; --</span>
     <span id="hStars" style="color:#f7c948;font-size:10px"></span>
+    <button class="hbtn" id="tasksBtn" onclick="toggleTasks()">&#9776;</button>
     <button style="background:none;border:none;color:#c4a878;cursor:pointer;font-family:'Press Start 2P',monospace;font-size:8px" onclick="toggleMusic()" id="musBtn">&#9835;</button>
     <button style="background:none;border:none;color:#5b8ef5;cursor:pointer;font-family:'Press Start 2P',monospace;font-size:10px" onclick="showHelp()">?</button>
   </div>
@@ -169,14 +340,53 @@ body{background:#3a2a18;color:#f0e6d3;font-family:'Press Start 2P',monospace;ove
 </div>
 <div id="docsOverlay"></div>
 <div id="statsModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:100;background:rgba(0,0,0,0.6);overflow-y:auto"></div>
-<div id="hint"></div>
+<div id="hint" onclick="handleInteract()"></div>
+<div id="objTicker" onclick="tickerTap()"></div>
+<div id="touchUI"><div id="joy"><div id="joyKnob"></div></div><button id="actBtn" onclick="handleInteract()">A</button></div>
+<div id="endScr"></div>
+<div id="shareModal"></div>
+<div id="toastMsg"></div>
 <div class="ach-toast" id="achToast"><div class="ach-icon"></div><div class="ach-info"><div class="ach-label">ACHIEVEMENT UNLOCKED</div><div class="ach-name"></div><div class="ach-desc"></div></div></div>
 </div>
 <script>
 // === PROJECT VALLEY — Complete Rebuilt Game Engine ===
 const CV=document.getElementById('cv'),CTX=CV.getContext('2d');
-const IW=480,IH=320,TS=16;
+let IW=480,IH=320;const TS=16;
 CTX.imageSmoothingEnabled=false;
+
+// === RESPONSIVE LAYOUT ===
+// Desktop: the classic 960x640 frame, scaled to fit (and up to 2x for crisp screen recording).
+// Compact (phones / small windows): full-screen, canvas resolution follows the screen,
+// notepad becomes a drawer and touch controls appear.
+const TOUCH=('ontouchstart' in window)||navigator.maxTouchPoints>0;
+let COMPACT=false;
+function layout(){
+  const w=window.innerWidth,h=window.innerHeight;
+  const gc=document.getElementById('gc');
+  const sc=Math.min(w/968,h/648);
+  COMPACT=sc<0.72||(TOUCH&&Math.min(w,h)<600);
+  document.body.classList.toggle('compact',COMPACT);
+  document.body.classList.toggle('touch',TOUCH);
+  if(COMPACT){
+    gc.style.transform='';
+    gc.style.height=h+'px';
+    // Integer zoom keeps the pixel art crisp
+    const z=Math.max(2,Math.min(3,Math.round(Math.min(w,h)/190)));
+    const nw=Math.round(w/z),nh=Math.round(h/z);
+    if(CV.width!==nw||CV.height!==nh){CV.width=nw;CV.height=nh;}
+  }else{
+    gc.style.height='';
+    gc.style.transform='scale('+Math.min(sc,2).toFixed(3)+')';
+    if(CV.width!==480||CV.height!==320){CV.width=480;CV.height=320;}
+    const np=document.getElementById('notepad');if(np)np.classList.remove('open');
+  }
+  IW=CV.width;IH=CV.height;
+  CTX.imageSmoothingEnabled=false;
+}
+function VPW(){return IW-(COMPACT?0:110);} // visible world width (notepad covers 110px on desktop)
+window.addEventListener('resize',layout);
+window.addEventListener('orientationchange',()=>setTimeout(layout,200));
+layout();
 
 // === ASSET LOADING ===
 const ASSETS={};
@@ -886,77 +1096,187 @@ const DLG={
   ]
 };
 
-// === CURVEBALL EVENTS ===
+// === BIG CALLS — the judgment engine ===
+// Each Big Call is a real dilemma: no numbers shown, partial information, and a
+// confidence prompt. Options are graded by a veteran (best / ok / poor) and some
+// plant RIPPLES: delayed consequences that land weeks later. Ripples with p<1 are
+// probabilistic, so a poor call can get lucky and a good call can get unlucky —
+// which is exactly how judgment has to be learned: judge the decision, not the dice.
 const EVENTS=[
-  {week:28,title:'Survey Shock',
-   text:'Ground surveys found unexpected utilities under the track. The design needs updating.',
+  {week:32,title:'Name the Date',
+   text:'The Sponsor wants to announce the opening date at tomorrow\'s press launch. Design hasn\'t started. "Just give me a date I can put on the posters."',
+   known:['Similar upgrades took 30–38 weeks','The Sponsor hates uncertainty'],
+   unknown:['Ground conditions','How many design changes are coming'],
+   principle:{name:'Forecast in ranges, not points',text:'Early estimates are uncertain by nature. Commit to a range and narrow it as you learn. A single date announced too early becomes the anchor everyone judges you against.'},
    choices:[
-     {t:'Redesign immediately.',desc:'Costs money but gets it right.',e:{budget:-4,quality:4,schedule:-2}},
-     {t:'Delay to assess options.',desc:'Take time to find the best solution.',e:{schedule:-4,quality:3}},
-     {t:'Proceed with caution.',desc:'Risky \u2014 could cause problems later.',e:{schedule:2,quality:-3,safety:-2}}
+     {t:'Give a firm date — confidence sells',desc:'Pick the target date and back it publicly.',grade:'poor',e:{morale:2,schedule:1},
+      why:'You\'ve anchored the whole world to a number you can\'t know yet. When it slips — and early dates usually do — it\'s your slip, in public.',
+      ripple:{at:4,p:0.85,hit:{title:'The Date on the Posters',text:'The date you announced is on every poster in town. Testing is two weeks late — a normal wobble, but now it\'s a headline.',e:{morale:-5,schedule:-4}},
+        miss:{title:'Right on the Day',text:'Testing landed exactly on your announced date.',lesson:'Lucky. Most projects this size drift two to six weeks. Judge the decision, not the dice.'}}},
+     {t:'Give a range: a target date and a "P80" date',desc:'Explain what would move it, and when it will firm up.',grade:'best',e:{quality:2,morale:1,schedule:-1},
+      why:'Honest and useful. The Sponsor gets something to plan around, and you\'ve taught them to expect the estimate to narrow as you learn.',
+      ripple:{at:4,hit:{title:'Inside the Envelope',text:'Testing is two weeks late — but inside the range you gave. The Sponsor shrugs: "You told us this could happen."',e:{morale:3,schedule:2}}}},
+     {t:'Refuse — no date until design is done',desc:'Don\'t commit to anything too early.',grade:'ok',e:{schedule:-2,morale:-2},
+      why:'Safe for you, but a project with no date has no urgency and a nervous Sponsor. You can commit to a range without committing to a point.'}
    ]},
-  {week:24,title:'Scope Surprise',
-   text:'Your client wants to add a pedestrian crossing to the project. "It\'ll only take a few weeks extra," they say.',
+  {week:28,title:'Something Under the Track',
+   text:'A radar survey shows an unidentified object 1.2m under Track B — right where the new piles go. The utility records date from 1962 and are marked "indicative only".',
+   known:['Trial holes: 2 weeks, £40k','Piling starts at T-12'],
+   unknown:['Is it a live cable, a pipe — or nothing?','Who owns it'],
+   principle:{name:'Buy information while it\'s cheap',text:'Uncertainty costs least to resolve early. A survey has a small, known price. A surprise in construction has a large, unknown one.'},
    choices:[
-     {t:'Accept it \u2014 keep the client happy.',desc:'More scope means more work and cost.',e:{schedule:-5,budget:-4,morale:2}},
-     {t:'Push back firmly.',desc:'Protect your plan, but may upset the client.',e:{schedule:2,budget:2,morale:-2}},
-     {t:'Negotiate a trade-off.',desc:'Swap some scope to fit it in. Smart PM move.',e:{schedule:-1,budget:-1,quality:2,morale:1}}
+     {t:'Dig trial holes and find out what it is',desc:'Pay now for certainty.',grade:'best',e:{budget:-2,schedule:-2,quality:2,safety:2},
+      why:'£40k to turn an unknown into a known while changes are still cheap on paper. Best money you\'ll spend on this job.',
+      ripple:{at:12,hit:{title:'No Surprises',text:'Piling at Track B started on time. The trial holes found a live 11kV cable — the design moved it 3m on paper instead of the rig finding it in the ground.',e:{schedule:4,safety:3}}}},
+     {t:'Redesign the foundations around it, whatever it is',desc:'Avoid the area entirely.',grade:'ok',e:{budget:-4,schedule:-1,quality:1},
+      why:'Safe, but you paid for the big fix without knowing if you needed it. Sometimes the cheapest option is to find out first.',
+      ripple:{at:12,hit:{title:'The Expensive Detour',text:'The redesigned foundations needed longer piles and extra steel. It worked — but the object turned out to be an abandoned pipe.',e:{budget:-3}}}},
+     {t:'Crack on — the rig operator will spot anything',desc:'Keep the design programme moving.',grade:'poor',e:{schedule:2},
+      why:'Hoping the problem is small isn\'t a plan. Cable strikes are among the most common serious incidents on UK sites — and entirely predictable.',
+      ripple:{at:12,p:0.7,hit:{title:'Cable Strike',text:'The piling rig at Track B struck a live 11kV cable. Nobody was hurt — just. Site shut for a fortnight while the investigation runs.',e:{safety:-10,schedule:-6,budget:-4}},
+        miss:{title:'Nothing There',text:'The rig hit nothing. The object was an old, dead pipe.',lesson:'You got away with it. A 30% chance of luck isn\'t a strategy.'}}}
    ]},
-  {week:20,title:'Team Trouble',
-   text:'Sarah and Mike disagree about the design approach. The tension is affecting the team.',
+  {week:24,title:'While You\'re At It…',
+   text:'At the steering group, the Sponsor asks for a step-free ramp to the new footbridge. "It\'s only a small addition — can you just absorb it?" The room goes quiet and looks at you.',
+   known:['The ramp is genuinely a good idea','There is no extra budget'],
+   unknown:['Real cost — Sarah guesses 6–10 weeks of work','Whether planning consent is needed'],
+   principle:{name:'Never absorb scope — price it',text:'Every change has a cost, even good ones. Welcome the idea, assess its impact, and let the budget holder decide. Scope creep happens one "small" yes at a time.'},
    choices:[
-     {t:'Back Sarah\'s approach.',desc:'Better design quality, Mike may feel sidelined.',e:{quality:4,morale:-2,schedule:-1}},
-     {t:'Back Mike\'s approach.',desc:'Faster to build, design might suffer.',e:{quality:-3,schedule:3,morale:-1}},
-     {t:'Mediate and find middle ground.',desc:'Takes time but brings the team together.',e:{morale:4,schedule:-2,quality:1}}
+     {t:'Say yes — it\'s right for passengers',desc:'Keep the Sponsor onside and find a way.',grade:'poor',e:{morale:2,schedule:-2,budget:-2},
+      why:'Good cause, bad process. Unpriced scope is how projects quietly go bust — and saying yes in the room means you now own the overrun.',
+      ripple:{at:8,hit:{title:'The "Small" Ramp',text:'The ramp you absorbed needed new foundations, a drainage diversion and planning consent. It has eaten your contingency.',e:{budget:-6,schedule:-4}}}},
+     {t:'Say no — it\'s out of scope',desc:'Protect the baseline you were given.',grade:'ok',e:{schedule:1,morale:-3},
+      why:'You protected the plan but embarrassed the Sponsor in their own meeting. You can hold the line without slamming the door.',
+      ripple:{at:4,hit:{title:'A Long Memory',text:'The Sponsor hasn\'t forgotten the steering group. Approvals you need for handover are sitting unsigned in their inbox.',e:{schedule:-3,morale:-2}}}},
+     {t:'"Great idea — I\'ll bring you the cost and time impact"',desc:'Raise a formal change request for them to decide.',grade:'best',e:{quality:2,schedule:-1},
+      why:'Textbook. You welcomed the idea, priced it, and handed the decision back to the person who owns the money. That\'s change control.',
+      ripple:{at:8,hit:{title:'A Change With Its Own Budget',text:'Your change request was approved — with £300k and 3 extra weeks attached. The ramp is being built without touching your contingency.',e:{budget:3,morale:2}}}}
    ]},
-  {week:16,title:'Budget Alert',
-   text:'Finance says you\'re trending 10% over budget. Management wants a plan.',
+  {week:20,title:'Two Experts, One Decision',
+   text:'Sarah (Design) wants a precast platform: fast to install, but it needs a big crane and a weekend closure. Mike (Site) wants to cast it in place: flexible, but slow and weather-dependent. Both are adamant. Both are good.',
+   known:['Either approach can work','Closures must be booked 12 weeks ahead'],
+   unknown:['Winter weather','Crane availability'],
+   principle:{name:'Decide on criteria, not personalities',text:'When experts disagree, agree how you\'ll judge before you judge. Shared criteria turn a fight about who is right into a decision about what is best.'},
    choices:[
-     {t:'Cut scope to save money.',desc:'Reduces what you deliver but gets costs down.',e:{quality:-4,budget:5}},
-     {t:'Ask for more funding.',desc:'Risky \u2014 they might say no.',e:{budget:3,morale:1}},
-     {t:'Find efficiencies.',desc:'Smarter working, small savings add up.',e:{budget:3,quality:1}}
+     {t:'Back Sarah — she\'s the design authority',desc:'Design leads the design.',grade:'ok',e:{quality:2,morale:-2},
+      why:'Defensible, but decided by job title rather than evidence. Mike now feels overruled on something he has to build.'},
+     {t:'Back Mike — he has to build it',desc:'The builder knows buildability.',grade:'ok',e:{schedule:-1,morale:-1,quality:-1},
+      why:'Also defensible — and also decided by who, not what. Sarah will remember it at the next design review.'},
+     {t:'Get both to score the options against agreed criteria',desc:'Safety, closures, cost, risk — on one page. Then decide.',grade:'best',e:{morale:3,quality:2,schedule:-1},
+      why:'You made it about the problem, not the people. Whatever the answer, both of them understand why — and they\'ll back it.',
+      ripple:{at:8,hit:{title:'The Team That Fixes Itself',text:'Since the options workshop, Sarah and Mike sort out design–site clashes themselves. Three issues resolved this month without you.',e:{morale:4,quality:2}}}},
+     {t:'Let them sort it out between themselves',desc:'They\'re professionals.',grade:'poor',e:{schedule:-2},
+      why:'A standoff between two experts is exactly when a leader is needed. Avoiding the call doesn\'t avoid the conflict — it just delays the decision.',
+      ripple:{at:12,hit:{title:'Still Arguing',text:'The platform argument never got settled. Two weeks lost, and Sarah and Mike now communicate by email only.',e:{morale:-5,schedule:-3,quality:-2}}}}
    ]},
-  {week:12,title:'Supplier Problem',
-   text:'Your key materials supplier has gone into administration. Materials delivery is at risk.',
+  {week:16,title:'The Cheapest Bid',
+   text:'Tenders are in. Contractor A is 18% cheaper than anyone else — and has had two safety prosecutions in the last three years. Contractor B is mid-priced with a clean record and strong references.',
+   known:['18% is a £1.1M saving','Your budget is under pressure'],
+   unknown:['Why A is so cheap','Whether A has changed its ways'],
+   principle:{name:'Price is what you pay; value is what you get',text:'An abnormally low bid is a warning, not a gift. Past behaviour is the best predictor of future behaviour — weigh track record alongside price.'},
    choices:[
-     {t:'Find alternative supplier urgently.',desc:'Costs more but keeps things moving.',e:{budget:-5,schedule:2,quality:1}},
-     {t:'Wait and hope they recover.',desc:'Big gamble \u2014 could work out or be a disaster.',e:{schedule:-3,budget:-2}},
-     {t:'Redesign for different materials.',desc:'Expensive and slow but improves long-term quality.',e:{schedule:-4,budget:-3,quality:4}}
+     {t:'Award to A — that saving is too big to ignore',desc:'Take the money and manage them hard.',grade:'poor',e:{budget:5},
+      why:'When a bid is far below everyone else\'s, ask what they\'ve left out. Low bids are often won back later through claims — and cut corners.',
+      ripple:{at:4,p:0.8,hit:{title:'The Real Price',text:'Contractor A\'s "unforeseen works" claims have eaten the whole saving, and an enforcement notice has stopped work for three days.',e:{budget:-7,safety:-5,quality:-4}},
+        miss:{title:'They Delivered',text:'Contractor A performed — this time. The saving held.',lesson:'You bet £1M of risk against the evidence and won. Don\'t let a good outcome teach you a bad habit.'}}},
+     {t:'Award to B on a quality-and-price score',desc:'Pay more for a proven track record.',grade:'best',e:{budget:-2,safety:3,quality:2},
+      why:'You bought value, not price. A clean record and good references are the best predictor you have of how a contractor will behave.',
+      ripple:{at:4,hit:{title:'Quietly Excellent',text:'Contractor B finished the platform work early and flagged two design issues before they became problems.',e:{quality:4,schedule:2}}}},
+     {t:'Award to A, but add a full-time supervisor',desc:'Take the saving, watch them closely.',grade:'ok',e:{budget:3,safety:-1},
+      why:'A compromise that treats the symptom. Supervision helps, but you\'re paying to watch a risk you chose to take.',
+      ripple:{at:4,hit:{title:'Paying to Watch',text:'The extra supervision caught a lot — but it cost money, and Contractor A has still lodged two claims.',e:{budget:-3,quality:-1}}}}
    ]},
-  {week:8,title:'Safety Scare',
-   text:'A near-miss incident on site \u2014 worker nearly hit by equipment. No one hurt, but it\'s serious.',
+  {week:12,title:'Friday, 4pm',
+   text:'Your 52-hour weekend closure starts tonight. 400 people are booked. Then Sarah calls: the signalling checks aren\'t fully complete. She puts the chance of an overrun at "1 in 5 — maybe worse". An overrun cancels Monday\'s commuter trains.',
+   known:['Rebooking a closure takes 3 months','Overruns carry heavy fines'],
+   unknown:['Whether the unchecked items matter','How good Sarah\'s estimate is'],
+   principle:{name:'Ignore sunk costs; shape the risk',text:'Past effort is spent either way — decide on what\'s at stake from here. And most decisions aren\'t go/no-go: look for the option that keeps the upside and caps the downside.'},
    choices:[
-     {t:'Stop all work for safety review.',desc:'The right thing to do. Costs time.',e:{schedule:-4,safety:6,morale:3}},
-     {t:'Review procedures but continue work.',desc:'Balanced approach \u2014 address the issue.',e:{safety:3,morale:1}},
-     {t:'Brief the team and move on.',desc:'Risky. The next near-miss might not be a miss.',e:{safety:-4,schedule:2,morale:-2}}
+     {t:'Go as planned — we\'ve prepared for months',desc:'Trust the team to make it work.',grade:'poor',e:{schedule:2},
+      why:'Months of planning is a sunk cost — it\'s spent whether you go or not. The only question is what\'s at stake from here. That\'s a big bet with Monday\'s commuters.',
+      ripple:{at:8,p:0.45,hit:{title:'Monday Morning',text:'The closure overran by five hours. 30,000 commuters stranded. You\'re the lead story on the local news.',e:{schedule:-6,morale:-4,budget:-5}},
+        miss:{title:'Forty Minutes to Spare',text:'The closure finished with 40 minutes in hand. Phew.',lesson:'"It worked" isn\'t the same as "it was a good call". You rolled the dice with 30,000 commuters.'}}},
+     {t:'Go — but drop the unchecked signalling work and prepare a tested fallback',desc:'Deliver what\'s certain; defer the rest.',grade:'best',e:{schedule:-1,quality:2,safety:2},
+      why:'You didn\'t treat it as all-or-nothing. You shaped the risk: bank the safe work, defer the uncertain bit, and keep a way back.',
+      ripple:{at:8,p:0.3,hit:{title:'Good Call, Bad Dice',text:'Even with the reduced scope, an engineering train broke down on the way in. You handed back 20 minutes late — the fallback plan kept it that small.',e:{schedule:-1},lesson:'A good decision can still have a bad outcome. Don\'t let one unlucky result teach you the wrong lesson.'},
+        miss:{title:'Banked',text:'The reduced closure finished on time. The deferred signalling work slotted into a night shift two weeks later.',e:{schedule:2}}}},
+     {t:'Cancel and rebook',desc:'Don\'t start what you might not finish.',grade:'ok',e:{schedule:-5,safety:2},
+      why:'Safe, but expensive: three months lost for a risk you could have shaped. Cancelling is a real option — just not the only one.'}
    ]},
-  {week:4,title:'Weather Warning',
-   text:'Major storms forecast during your planned construction window.',
+  {week:8,title:'Nobody Got Hurt',
+   text:'A track worker stepped onto an open line without protection. A lookout\'s shout saved him — the train passed 4 seconds later. The supervisor asks you to keep it off the books: "No harm done. Reporting it will just slow us down."',
+   known:['You\'re two weeks behind','The crew is tired from night shifts'],
+   unknown:['Why he stepped out','Whether it\'s happened before'],
+   principle:{name:'Near misses are free lessons',text:'Safety isn\'t one metric among five — it\'s a precondition. Serious accidents are almost always preceded by near misses someone chose not to report.'},
    choices:[
-     {t:'Delay work by 2 weeks.',desc:'Safe but costly in time.',e:{schedule:-5,safety:4}},
-     {t:'Proceed with extra precautions.',desc:'Extra cost, some risk remains.',e:{budget:-3,safety:1}},
-     {t:'Reschedule to night shifts.',desc:'Costs more, tires the team, but protects schedule.',e:{budget:-3,morale:-3,schedule:2}}
+     {t:'Stop the job, report it, find the root cause',desc:'Whatever the programme cost.',grade:'best',e:{schedule:-3,safety:6,morale:1},
+      why:'Right call, no hesitation. The investigation found fatigue from back-to-back night shifts. That\'s fixable — now.',
+      ripple:{at:0,hit:{title:'People Speak Up',text:'Since you stopped the job, near-miss reports have tripled. Two more hazards were fixed before anyone got hurt.',e:{safety:4,morale:3}}}},
+     {t:'Toolbox talk tomorrow, then carry on',desc:'Remind everyone of the rules.',grade:'ok',e:{safety:2},
+      why:'Better than nothing, but a reminder assumes the worker was the problem. Without asking why it happened, the cause is still out there.'},
+     {t:'Keep it quiet — no harm done',desc:'Protect the programme and the supervisor.',grade:'poor',e:{schedule:1,morale:-1},
+      why:'This is the one you never trade. Burying near misses teaches everyone that reporting gets punished — so the next one goes unreported too.',
+      ripple:{at:0,p:0.6,hit:{title:'The Next One Wasn\'t a Miss',text:'A worker was seriously injured on the same stretch of line. The investigation found the earlier near miss was never reported. The regulator is on site.',e:{safety:-15,morale:-8,schedule:-5}},
+        miss:{title:'Silence',text:'Nothing else happened. But the crew learned that near misses get buried — and the fatigue behind it is still there.',e:{safety:-3},lesson:'No harm this time isn\'t the same as no risk.'}}}
    ]},
-  {week:0,title:'Quality Question',
-   text:'Inspections found some work doesn\'t meet specification. Not safety-critical, but below standard.',
+  {week:4,title:'Green, Amber or Red?',
+   text:'Testing is three weeks behind. The board report is due tomorrow and the Sponsor has made it clear they "don\'t like surprises — or red". Your team thinks they can claw back two of the three weeks.',
+   known:['Three weeks behind today','The board meets monthly'],
+   unknown:['Whether the recovery plan works','How the board will react'],
+   principle:{name:'Bad news early is good news',text:'Report reality, not hope. Early bad news gives others time to help. Late bad news destroys trust — and arrives with interest.'},
    choices:[
-     {t:'Rip it out and redo properly.',desc:'Expensive and slow, but right.',e:{schedule:-4,budget:-4,quality:6}},
-     {t:'Apply for a concession.',desc:'Ask to accept lower standard. Risky.',e:{quality:-2}},
-     {t:'Patch and monitor.',desc:'Quick fix, but may not last.',e:{budget:-1,quality:1}}
+     {t:'Amber: the real dates, plus a recovery plan',desc:'Say what\'s true and what you\'re doing about it.',grade:'best',e:{quality:2},
+      why:'Honest, specific, and it comes with a plan. Boards can help with problems they know about. They can\'t help with the ones they don\'t.',
+      ripple:{at:0,hit:{title:'Trust Pays',text:'Because the board saw the slip early, they approved weekend testing shifts. Two of the three weeks are recovered.',e:{schedule:4,morale:2}}}},
+     {t:'Green — we\'ll recover it anyway',desc:'No point alarming anyone yet.',grade:'poor',e:{morale:1},
+      why:'A "watermelon" report — green outside, red inside. Bad news doesn\'t improve with age.',
+      ripple:{at:0,p:0.8,hit:{title:'Watermelon',text:'The "green" report didn\'t survive handover week. The slip is now obvious, and the Sponsor double-checks everything you say.',e:{schedule:-5,morale:-5}},
+        miss:{title:'Clawed Back',text:'The team recovered the time. Nobody ever found out.',lesson:'Getting away with it reinforces the wrong habit. Next time you might not recover it.'}}},
+     {t:'Red, and ask for a three-week extension',desc:'Flag it and hand it upward.',grade:'ok',e:{schedule:-2,morale:-1},
+      why:'Honest, but it hands the problem up with no plan attached. Leaders bring options, not just bad news.'}
    ]},
-  {week:-4,title:'Snag List Growing',
-   text:'47 snags found since handover. The maintenance team is reporting new issues daily. Some are minor cosmetic items, others affect operations.',
+  {week:0,title:'Opening Day?',
+   text:'The ribbon-cutting is booked for Monday. The operator won\'t accept the railway: 12 minor defects are open and the as-built drawings are incomplete. The Sponsor tells you to "get them to sign".',
+   known:['No defect is safety-critical','The opening is public and political'],
+   unknown:['How long the drawings will take','The operator\'s appetite for risk'],
+   principle:{name:'Done means safe, agreed and documented',text:'Handover is a relationship, not a deadline. Agree what "complete" means with the people who\'ll live with the asset for the next 40 years.'},
    choices:[
-     {t:'Mobilize a dedicated snag team.',desc:'Costs money but shows commitment to quality.',e:{budget:-4,quality:5,morale:2}},
-     {t:'Prioritize \u2014 fix critical only.',desc:'Pragmatic but some items may linger.',e:{quality:2,schedule:2,morale:-1}},
-     {t:'Dispute non-genuine snags.',desc:'Push back on items that aren\'t defects.',e:{budget:2,quality:-1,morale:-2}}
+     {t:'Open on time with a signed, dated defects list',desc:'Agree handover conditions with the operator.',grade:'best',e:{schedule:2,quality:2,morale:2},
+      why:'Done doesn\'t mean perfect — it means safe, agreed and documented. The operator gets certainty, the Sponsor gets their date.',
+      ripple:{at:-4,hit:{title:'A Clean Handover',text:'All 12 agreed defects were closed on schedule. The operator has asked for you on their next project.',e:{quality:3,morale:3}}}},
+     {t:'Delay opening until every defect is closed',desc:'Hand over a perfect railway.',grade:'ok',e:{schedule:-6,quality:3},
+      why:'Principled, but you\'ve paid for a public delay over defects nobody thinks are dangerous. Perfection has a cost too.'},
+     {t:'Lean on the operator until they sign',desc:'Use the Sponsor\'s weight.',grade:'poor',e:{schedule:3,quality:-3,morale:-2},
+      why:'You got your ribbon — and an operator who won\'t trust anything you hand them. They run this railway for 40 years; you leave in eight weeks.',
+      ripple:{at:-4,hit:{title:'Handed Over, Not Taken Over',text:'The operator is logging every defect as a formal dispute. Your team is stuck on site answering queries.',e:{quality:-5,morale:-3,budget:-3}}}}
+   ]},
+  {week:-4,title:'The £1.2M Claim',
+   text:'The main contractor has submitted a £1.2M claim for delays. Your records show some of it is fair — design information was late — but a lot of it looks inflated.',
+   known:['Some delays were your fault','Disputes can drag on for years'],
+   unknown:['Which items they\'d drop','How good their records are'],
+   principle:{name:'Be fair, be firm, keep records',text:'Own what\'s yours and challenge what isn\'t. Good contemporaneous records win arguments before they start.'},
+   choices:[
+     {t:'Reject it all — make them prove every line',desc:'Protect the budget.',grade:'poor',e:{budget:2,morale:-2},
+      why:'Fighting the valid parts costs more in fees and goodwill than it saves. You\'ll probably pay them anyway — plus lawyers.',
+      ripple:{at:-8,hit:{title:'Adjudication',text:'The claim went to adjudication. You lost on the valid items, and paid costs on top.',e:{budget:-5,morale:-2}}}},
+     {t:'Pay it and close out',desc:'Move on quickly.',grade:'poor',e:{budget:-6,morale:1},
+      why:'Fast, but you paid for the inflated parts too — and taught this contractor that padding claims works.'},
+     {t:'Test each item against the records; pay what\'s valid',desc:'Challenge the rest with evidence.',grade:'best',e:{budget:-2,quality:2},
+      why:'Fair and firm. Your records do the arguing for you. Own your share of the delay — and nothing more.',
+      ripple:{at:-8,hit:{title:'Settled',text:'The contractor accepted £520k against their £1.2M claim. The relationship is intact.',e:{budget:3,morale:2}}}}
    ]},
   {week:-8,title:'Lessons Learned',
-   text:'Final project review meeting. The whole team gathers to reflect on what went well and what could improve for next time.',
+   text:'The project is closing. The whole team gathers for the lessons-learned session. Everyone is tired — and some of the mistakes were yours.',
+   known:['The next project starts in two weeks','Most lessons logs are never read again'],
+   unknown:['What the team really thinks'],
+   principle:{name:'Safety to speak makes learning possible',text:'People only share what they feel safe to share. Leaders set that tone by owning their own mistakes first.'},
    choices:[
-     {t:'Open and honest review.',desc:'Some uncomfortable truths but valuable learning.',e:{quality:5,morale:3}},
-     {t:'Focus on the positives.',desc:'Good for morale but misses learning opportunities.',e:{morale:4,quality:-1}},
-     {t:'Structured workshop with actions.',desc:'Formal approach \u2014 turns lessons into real improvements.',e:{quality:4,morale:2,schedule:-1}}
+     {t:'Go first: name your own mistakes, then open the floor',desc:'Lead by example.',grade:'best',e:{quality:4,morale:4},
+      why:'When the leader owns their mistakes first, everyone else feels safe to be honest. That\'s how lessons actually get learned.'},
+     {t:'Keep it upbeat — celebrate the wins',desc:'The team has earned it.',grade:'ok',e:{morale:3},
+      why:'Celebration matters, but a review with no hard truths just repeats the same mistakes on the next job.'},
+     {t:'Send a template for everyone to fill in',desc:'Efficient and documented.',grade:'poor',e:{morale:-1},
+      why:'A form captures what people are willing to write down. The useful lessons are the ones they\'d only say out loud.'}
    ]}
 ];
 
@@ -1216,7 +1536,19 @@ function toggleMusic(){
 document.addEventListener('keydown',e=>{
   if(document.activeElement&&document.activeElement.tagName==='INPUT')return;
   S.keys[e.key]=true;
-  if(e.key===' '||e.key==='Enter'){e.preventDefault();handleInteract();}
+  // Number keys pick options in any open decision modal (great for fast demos)
+  if(/^[1-4]$/.test(e.key)){
+    const m=document.querySelector('.modal.on:not(.no-click)');
+    const b=m&&m.querySelector('[data-k="'+e.key+'"]');
+    if(b){e.preventDefault();b.click();return;}
+    const d=document.getElementById('dlg');
+    if(S.dlgOpen&&d){const opts=d.querySelectorAll('.dc,.do');const o=opts[+e.key-1];if(o){e.preventDefault();o.click();return;}}
+  }
+  if(e.key===' '||e.key==='Enter'){
+    const m=document.querySelector('.modal.on:not(.no-click)');
+    if(m&&e.key==='Enter'){const b=m.querySelector('.bc-go');if(b){e.preventDefault();b.click();return;}}
+    e.preventDefault();handleInteract();
+  }
   if(e.key==='Escape'){closeAllModals();}
 });
 document.addEventListener('keyup',e=>{
@@ -1232,6 +1564,28 @@ document.addEventListener('DOMContentLoaded',()=>{
     nameInput.addEventListener('keyup',e=>{e.stopPropagation();});
   }
 });
+
+// === TOUCH JOYSTICK ===
+const JOY={active:false,x:0,y:0,id:null};
+(function initJoystick(){
+  const base=document.getElementById('joy'),knob=document.getElementById('joyKnob');
+  if(!base)return;
+  const R=50;
+  function move(ev){
+    const r=base.getBoundingClientRect();
+    let dx=ev.clientX-(r.left+r.width/2),dy=ev.clientY-(r.top+r.height/2);
+    const d=Math.hypot(dx,dy);
+    if(d>R){dx=dx/d*R;dy=dy/d*R;}
+    JOY.x=dx/R;JOY.y=dy/R;
+    knob.style.transform='translate('+dx+'px,'+dy+'px)';
+  }
+  function end(){JOY.active=false;JOY.x=0;JOY.y=0;JOY.id=null;knob.style.transform='';}
+  base.addEventListener('pointerdown',ev=>{ev.preventDefault();JOY.active=true;JOY.id=ev.pointerId;try{base.setPointerCapture(ev.pointerId);}catch(e){}move(ev);if(!audioCtx)initAudio();});
+  base.addEventListener('pointermove',ev=>{if(JOY.active&&ev.pointerId===JOY.id)move(ev);});
+  base.addEventListener('pointerup',end);base.addEventListener('pointercancel',end);
+})();
+// Prevent iOS double-tap zoom / page scroll on the game surface
+document.addEventListener('touchmove',e=>{if(e.target===CV||e.target.closest&&e.target.closest('#touchUI'))e.preventDefault();},{passive:false});
 
 // === COLLISION ===
 function isSolid(mx,my){
@@ -1257,14 +1611,15 @@ function updateCamera(){
   const mw=(S.map==='office'?OFFICE_W:SITE_W)*TS;
   const mh=(S.map==='office'?OFFICE_H:SITE_H)*TS;
   // 220px CSS notepad at 2x scale = 110px internal
-  const vpw=IW-110;
+  const vpw=VPW();
   const vph=IH;
   const tx=S.px+8-vpw/2;
   const ty=S.py+12-vph/2;
   S.camX+=(tx-S.camX)*0.08;
   S.camY+=(ty-S.camY)*0.08;
-  S.camX=Math.max(0,Math.min(mw-vpw,S.camX));
-  S.camY=Math.max(0,Math.min(mh-vph,S.camY));
+  // Clamp to the map; if the map is smaller than the view (tall phones), centre it
+  S.camX=mw<=vpw?(mw-vpw)/2:Math.max(0,Math.min(mw-vpw,S.camX));
+  S.camY=mh<=vph?(mh-vph)/2:Math.max(0,Math.min(mh-vph,S.camY));
 }
 
 // === MOVEMENT (Bug 5 fix: clamp to map bounds) ===
@@ -1278,11 +1633,16 @@ function updatePlayer(dt){
   if(S.keys['ArrowRight']||S.keys['d']||S.keys['D'])dx=1;
   if(S.keys['ArrowUp']||S.keys['w']||S.keys['W'])dy=-1;
   if(S.keys['ArrowDown']||S.keys['s']||S.keys['S'])dy=1;
+  let spd=SPEED;
+  if(JOY.active&&(Math.abs(JOY.x)>0.18||Math.abs(JOY.y)>0.18)){
+    dx=JOY.x;dy=JOY.y;
+    spd=SPEED*Math.min(1,0.45+Math.hypot(JOY.x,JOY.y));
+  }
   
   if(dx!==0||dy!==0){
     const len=Math.sqrt(dx*dx+dy*dy);
     dx/=len;dy/=len;
-    const nx=S.px+dx*SPEED,ny=S.py+dy*SPEED;
+    const nx=S.px+dx*spd,ny=S.py+dy*spd;
     if(canMove(nx,S.py))S.px=nx;
     if(canMove(S.px,ny))S.py=ny;
     // Bug 5: Clamp to map bounds
@@ -1413,9 +1773,17 @@ function checkProximity(){
   
   if(found&&!S.dlgOpen&&!S.eventOpen&&!S.docsOpen){
     hint.style.display='block';
-    hint.textContent=found.type==='zone'?found.data.hint:('Press SPACE \u2014 Talk to '+found.data.name);
+    let ht=found.type==='zone'?found.data.hint:('Press SPACE \u2014 Talk to '+found.data.name);
+    if(TOUCH)ht=ht.replace('Press SPACE','Tap \u24B6');
+    hint.textContent=ht;
   } else {
     hint.style.display='none';
+  }
+  const ab=document.getElementById('actBtn');
+  if(ab){
+    const lbl=found?(found.type==='npc'?'TALK':'USE'):'A';
+    if(ab.textContent!==lbl)ab.textContent=lbl;
+    ab.classList.toggle('live',!!found);
   }
 }
 
@@ -1767,7 +2135,7 @@ function closeDlg(){
 
 function showLockerRoom(){
   const el=document.getElementById('dlg');
-  el.className='dlg-box';el.style.display='flex';
+  el.className='on';el.style.display='block';
   S.dlgOpen=true;
   if(S.ppeEquipped){
     el.innerHTML='<div class="dn">Locker Room</div>'+
@@ -1933,8 +2301,7 @@ function showDeskEmails(){
 
   if(email.choices){
     email.choices.forEach((c,i)=>{
-      const efx=Object.entries(c.e||{}).map(([k,v])=>'<span style="color:'+(v>0?'#4aca8a':'#e05577')+'">'+k+' '+(v>0?'+':'')+v+'</span>').join(' ');
-      html+='<div class="dc" onclick="chooseDeskEmail('+i+')">'+c.t+(efx?' <span style="font-size:7px">['+efx+']</span>':'')+'</div>';
+      html+='<div class="dc" onclick="chooseDeskEmail('+i+')">'+c.t+'</div>';
     });
   }
   html+='<div class="dc" onclick="closeDlg()">Close inbox</div>';
@@ -1949,7 +2316,14 @@ function chooseDeskEmail(ci){
   applyEffects(c.e||{});
   playSFX('paper');
   updateHUD();
-  closeDlg();
+  showOutcome('\u2709\uFE0F Reply sent','You replied: "'+c.t+'"',c.e);
+}
+
+// Shared "what happened" panel shown after small decisions
+function showOutcome(title,text,e){
+  const el=document.getElementById('dlg');
+  el.innerHTML='<div class="dn">'+title+'</div><div class="dt">'+text+'</div><div class="bc-chips">'+fxChips(e)+'</div><div class="dc" onclick="closeDlg()">Continue</div>';
+  el.className='on';el.style.display='block';S.dlgOpen=true;
 }
 
 // Meeting Room — pick from 3 agenda items with trade-offs
@@ -1978,14 +2352,12 @@ function showMeetingRoom(){
 
   const el=document.getElementById('dlg');
   let html='<div class="dn">\uD83D\uDCCB Meeting Room \u2014 Set the Agenda</div>';
-  html+='<div class="dt" style="font-size:8px;color:#7a5a38;margin-bottom:6px">Choose one agenda item for this meeting. Each has trade-offs.</div>';
+  html+='<div class="dt" style="font-size:8px;color:#7a5a38;margin-bottom:6px">You have one hour. What matters most right now? Every choice costs something.</div>';
 
   agendas.forEach((a,i)=>{
-    const efx=Object.entries(a.e||{}).map(([k,v])=>'<span style="color:'+(v>0?'#4aca8a':'#e05577')+'">'+k+' '+(v>0?'+':'')+v+'</span>').join(' ');
     html+='<div class="dc" onclick="chooseMeetingAgenda('+agendaIdx+','+i+')">';
     html+='<div style="color:#5a3a1e;font-size:9px">'+a.t+'</div>';
     html+='<div style="color:#7a5a38;font-size:7px;margin-top:2px">'+a.desc+'</div>';
-    html+='<div style="font-size:7px;margin-top:2px">['+efx+']</div>';
     html+='</div>';
   });
   html+='<div class="dc" onclick="closeDlg()">Skip meeting</div>';
@@ -1998,7 +2370,7 @@ function chooseMeetingAgenda(poolIdx,ai){
   S.metrics.morale=Math.min(100,S.metrics.morale+1); // meetings always give +1 morale
   playSFX('positive');
   updateHUD();
-  closeDlg();
+  showOutcome('\uD83D\uDCCB Meeting held',agenda.t+' \u2014 the hour is spent. Whatever you didn\'t discuss is still out there.',agenda.e);
 }
 
 // Break Room — overheard conversations with phase-specific hints
@@ -2048,21 +2420,21 @@ function showBreakRoom(){
 // Track Inspection — identify issues for quality/safety
 const TRACK_ISSUES=[
   {issue:'Loose rail fastening on the down line',correct:'Flag for immediate repair',wrong:'Note for next inspection',
-   good:{safety:2,quality:2},bad:{safety:-2}},
+   good:{safety:2,quality:2},why:'Loose fastenings let rails move under load. That\'s how derailments start.',bad:{safety:-2}},
   {issue:'Ballast level slightly low in section 3',correct:'Schedule ballast top-up',wrong:'Within tolerance — skip',
-   good:{quality:2},bad:{quality:-2}},
+   good:{quality:2},why:'Low ballast lets the track settle unevenly. Cheap to fix now, expensive later.',bad:{quality:-2}},
   {issue:'Drainage channel partially blocked',correct:'Clear debris and log it',wrong:'It\'ll clear itself in rain',
-   good:{safety:1,quality:1},bad:{safety:-1,quality:-1}},
+   good:{safety:1,quality:1},why:'Blocked drains turn a wet week into a washed-out formation.',bad:{safety:-1,quality:-1}},
   {issue:'Signalling cable exposed near crossing',correct:'Report to signals team urgently',wrong:'Cover with temporary protection',
-   good:{safety:3},bad:{safety:-2}},
+   good:{safety:3},why:'Temporary covers hide the problem from the people who can fix it. Tell the signals team.',bad:{safety:-2}},
   {issue:'Weld joint looks rough on Track A',correct:'Request NDT testing',wrong:'It looks solid enough',
-   good:{quality:3,safety:1},bad:{quality:-2}},
+   good:{quality:3,safety:1},why:'You can\'t see inside a weld. Non-destructive testing is cheap insurance.',bad:{quality:-2}},
   {issue:'Workers not wearing hi-vis in active zone',correct:'Stop and brief immediately',wrong:'Remind them at end of shift',
-   good:{safety:3,morale:-1},bad:{safety:-3}},
+   good:{safety:3,morale:-1},why:'An active line waits for no one. Stop it now, not at end of shift.',bad:{safety:-3}},
   {issue:'Track gauge measurement slightly off-spec',correct:'Re-measure and adjust',wrong:'Within tolerance band',
-   good:{quality:2},bad:{quality:-1}},
+   good:{quality:2},why:'Tolerance bands exist for a reason, but "slightly off" on gauge gets measured twice.',bad:{quality:-1}},
   {issue:'Water pooling near formation level',correct:'Investigate drainage design',wrong:'Seasonal — will dry out',
-   good:{quality:2,schedule:-1},bad:{quality:-2}}
+   good:{quality:2,schedule:-1},why:'Standing water at formation level is a design problem, not a weather problem.',bad:{quality:-2}}
 ];
 
 function showTrackInspection(trackId){
@@ -2072,13 +2444,14 @@ function showTrackInspection(trackId){
 
   const el=document.getElementById('dlg');
   let html='<div class="dn">\uD83D\uDD0D Track Inspection \u2014 '+trackId.replace('_',' ').toUpperCase()+'</div>';
-  html+='<div class="dt" style="font-size:8px;color:#7a5a38;margin-bottom:6px">You walk the track and spot some issues. Choose the right response for each:</div>';
+  html+='<div class="dt" style="font-size:8px;color:#7a5a38;margin-bottom:6px">You walk the track and spot some issues. What do you do about each one?</div>';
 
   issues.forEach((iss,i)=>{
     html+='<div style="background:#e8d4b0;border:1px solid #a07848;border-radius:4px;padding:6px;margin:6px 0">';
     html+='<div style="font-size:8px;color:#5a3a1e;margin-bottom:4px">\u26A0\uFE0F '+iss.issue+'</div>';
-    html+='<div class="dc" style="margin:2px 0;padding:4px 8px" onclick="resolveTrackIssue(this,'+i+',true)">\u2705 '+iss.correct+'</div>';
-    html+='<div class="dc" style="margin:2px 0;padding:4px 8px" onclick="resolveTrackIssue(this,'+i+',false)">\u274C '+iss.wrong+'</div>';
+    const opts=[[iss.correct,true],[iss.wrong,false]];
+    if(Math.random()<0.5)opts.reverse();
+    opts.forEach(([t,ok])=>{html+='<div class="dc" style="margin:2px 0;padding:4px 8px" onclick="resolveTrackIssue(this,'+i+','+ok+')">'+t+'</div>';});
     html+='</div>';
   });
   html+='<div class="dc" onclick="closeDlg()" style="margin-top:8px">Finish inspection</div>';
@@ -2098,6 +2471,10 @@ function resolveTrackIssue(btn,issueIdx,correct){
   const parent=btn.parentElement;
   parent.querySelectorAll('.dc').forEach(b=>{b.style.pointerEvents='none';b.style.opacity='0.5';});
 
+  const note=document.createElement('div');
+  note.style.cssText='font-size:7px;line-height:1.8;margin-top:4px;color:'+(correct?'#1f7a4c':'#b03050');
+  note.textContent=(correct?'\u2713 Good call. ':'\u2717 Dave: ')+(iss.why||'');
+  parent.appendChild(note);
   if(correct){
     applyEffects(iss.good);
     parent.style.borderColor='#4aca8a';
@@ -2158,11 +2535,13 @@ function checkWeekComplete(){
 }
 
 // === METRICS ===
-function applyEffects(e){
+function applyEffects(e,noTrade){
   if(!e)return;
   let anyPos=false,anyNeg=false;
+  if(!S.trade)S.trade={};
   for(const[k,v] of Object.entries(e)){
     if(S.metrics[k]!==undefined){
+      if(!noTrade)S.trade[k]=(S.trade[k]||0)+v;
       S.metrics[k]=Math.max(0,Math.min(100,S.metrics[k]+v));
       if(v>0)anyPos=true;if(v<0)anyNeg=true;
     }
@@ -2204,7 +2583,8 @@ function updateHUD(){
 function updateNotepad(){
   const np=document.getElementById('notepad');
   if(!np)return;
-  let html='<h3>WEEK '+weekLabel(S.week)+'</h3>';
+  let html=COMPACT?'<button class="btn sm" style="float:right;min-width:auto;padding:6px 10px;margin:0" onclick="toggleTasks(false)">\u2715</button>':'';
+  html+='<h3>WEEK '+weekLabel(S.week)+'</h3>';
   html+='<div class="sep">\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501</div>';
   html+='<div style="color:#7a5a38;margin-bottom:6px;font-size:9px">Phase: '+getPhase(S.week)+'</div>';
   
@@ -2214,10 +2594,10 @@ function updateNotepad(){
   });
   
   if(S.weekObjMet){
-    html+='<div style="margin-top:8px"><button class="btn sm gld" onclick="advanceWeek()" style="font-size:7px;padding:6px 10px;min-width:auto">Week Complete \u2192</button></div>';
+    html+='<div style="margin-top:8px"><button class="btn sm gld" onclick="toggleTasks(false);advanceWeek()" style="font-size:7px;padding:6px 10px;min-width:auto">Week Complete \u2192</button></div>';
   }
   // Skip Phase button — always visible
-  html+='<div style="margin-top:6px"><button class="btn sm" onclick="skipPhase()" style="font-size:7px;padding:5px 8px;min-width:auto;opacity:0.7">Skip This Phase \u2192</button></div>';
+  html+='<div style="margin-top:6px"><button class="btn sm" onclick="toggleTasks(false);skipPhase()" style="font-size:7px;padding:5px 8px;min-width:auto;opacity:0.7" title="Let the team handle it. Things drift when nobody is steering.">Delegate &amp; skip \u2192</button></div>';
   
   const milestones=[{w:28,t:'Feasibility Complete'},{w:24,t:'Early Design Done'},{w:20,t:'Detailed Design Approved'},
     {w:16,t:'Contracts Awarded'},{w:12,t:'Construction Starts!'},{w:8,t:'Construction Midpoint'},
@@ -2254,8 +2634,35 @@ function updateNotepad(){
   }
 
   html+='<div style="margin-top:8px;text-align:center"><button onclick="showStatsModal()" style="background:#5a3a1e;color:#f0e6d3;border:1px solid #7a5c3a;border-radius:4px;padding:4px 10px;font-size:8px;cursor:pointer;font-family:monospace">View Stats</button></div>';
-  html+='<div class="tip">TIP: Walk to people and press SPACE to talk!</div>';
+  html+='<div class="tip">TIP: '+(TOUCH?'Walk up to people and tap \u24B6 to talk!':'Walk to people and press SPACE to talk!')+'</div>';
   np.innerHTML=html;
+  updateTicker();
+}
+
+// Compact-mode objective ticker + tasks drawer
+function updateTicker(){
+  const t=document.getElementById('objTicker');if(!t)return;
+  const done=S.objectives.filter(o=>S.completedObj.includes(o.type+'_'+o.target+'_'+S.week)).length;
+  const next=S.objectives.find(o=>!S.completedObj.includes(o.type+'_'+o.target+'_'+S.week));
+  if(S.weekObjMet){
+    t.className='done';
+    t.innerHTML='\u2713 All tasks done \u2014 tap to finish '+weekLabel(S.week)+' \u25B6';
+  }else{
+    t.className='';
+    t.innerHTML='<span class="oc">'+done+'/'+S.objectives.length+' \u2630</span>\u25B8 '+(next?next.text:'Explore');
+  }
+  const hud=document.getElementById('hud');
+  t.style.top=(hud&&hud.offsetHeight?hud.offsetHeight+6:62)+'px';
+}
+function tickerTap(){
+  if(S.weekObjMet){advanceWeek();return;}
+  toggleTasks(true);
+}
+function toggleTasks(force){
+  const np=document.getElementById('notepad');
+  const open=force===undefined?!np.classList.contains('open'):force;
+  np.classList.toggle('open',open);
+  playSFX('paper');
 }
 
 
@@ -2284,8 +2691,7 @@ function skipPhase(){
   EVENTS.forEach(ev=>{
     if(ev.week<=S.week&&ev.week>nextWeek&&!S.eventsDone.includes(ev.week)){
       const rci=Math.floor(Math.random()*ev.choices.length);
-      applyEffects(ev.choices[rci].e);
-      S.eventsDone.push(ev.week);
+      resolveBigCall(ev,rci,null,true);
     }
   });
 
@@ -2312,12 +2718,8 @@ function skipPhase(){
   setTimeout(()=>{
     el.className='skip-trans';
     // Check for game end
-    if(S.week<=-8){showEndScreen();return;}
-    // Check for report
-    if(REPORT_WEEKS.includes(S.week)){showReport();return;}
-    startNewWeek();
     updateHUD();
-    saveGame();
+    startRoundSequence();
   },2500);
 }
 
@@ -2392,27 +2794,15 @@ function closeWeekTrans(){
   document.getElementById('weekTrans').className='scr';
   S.weekTransOpen=false;
   
-  // Check if game is over (after T+8)
-  if(S.week<=-8){
-    showEndScreen();return;
-  }
-  
-  // Check for curveball event
-  const ev=EVENTS.find(e=>e.week===S.week&&!S.eventsDone.includes(e.week));
-  if(ev){
-    showEvent(ev);return;
-  }
-  
-  // Check for monthly report
-  if(REPORT_WEEKS.includes(S.week)){
-    showReport();return;
-  }
-  
-  startNewWeek();
+  startRoundSequence();
 }
 
+function objectivesFor(w){
+  const o=getObjectives(w);
+  return S.quick?o.slice(0,3):o;
+}
 function startNewWeek(){
-  S.objectives=getObjectives(S.week);
+  S.objectives=objectivesFor(S.week);
   S.completedObj=S.completedObj.filter(c=>!c.endsWith('_'+S.week));
   S.weekObjMet=false;
   unlockPMKnowledge(getPhaseIdx(S.week));
@@ -2421,38 +2811,261 @@ function startNewWeek(){
   updateHUD();
 }
 
-// === CURVEBALL EVENTS (Bug 8 fix: defensive desc check, Bug 9 fix: delay pointer events) ===
+// === ROUND SEQUENCER ===
+// Start of every 4-week round: due ripples -> Big Call -> report -> objectives.
+let ROUND_Q=[];
+function isReportWeek(w){return S.quick?(w===16||w===0):REPORT_WEEKS.includes(w);}
+function startRoundSequence(){
+  ROUND_Q=[];
+  updateHUD();updateJQ();
+  dueRipples().forEach(r=>ROUND_Q.push(()=>showRipple(r)));
+  const ev=EVENTS.find(e=>e.week===S.week&&!S.eventsDone.includes(e.week));
+  if(ev)ROUND_Q.push(()=>showEvent(ev));
+  if(S.week<=-8)ROUND_Q.push(()=>showEndScreen());
+  else if(isReportWeek(S.week))ROUND_Q.push(()=>showReport());
+  nextRoundStep();
+}
+function nextRoundStep(){
+  const f=ROUND_Q.shift();
+  if(f){f();return;}
+  startNewWeek();
+  saveGame();
+}
+
+// === JUDGMENT SCORING ===
+const GRADE_SCORE={best:1,ok:0.5,poor:0};
+const GRADE_LABEL={best:'EXPERT CALL',ok:'DEFENSIBLE',poor:'RISKY CALL'};
+const CONF_LEVELS=[
+  {v:0.5,label:'Coin flip',icon:'🪙',pct:'50%'},
+  {v:0.7,label:'Fairly sure',icon:'👍',pct:'70%'},
+  {v:0.9,label:'Certain',icon:'🎯',pct:'90%'}
+];
+// live=true blends in a small neutral prior so the running HUD score isn't wild after one call
+function judgmentStats(live){
+  const j=S.judgment||[];
+  if(!j.length)return null;
+  const pw=live?2:0;
+  const dec=(j.reduce((a,x)=>a+GRADE_SCORE[x.grade],0)+0.5*pw)/(j.length+pw);
+  const rated=j.filter(x=>x.conf!=null);
+  const brier=(rated.length+pw)?(rated.reduce((a,x)=>a+Math.pow(x.conf-GRADE_SCORE[x.grade],2),0)+0.04*pw)/(rated.length+pw):0.25;
+  const score=Math.round(100*(0.75*dec+0.25*(1-brier/0.81)));
+  const certain=rated.filter(x=>x.conf>=0.9);
+  const over=rated.filter(x=>x.conf>=0.9&&x.grade==='poor').length;
+  const under=rated.filter(x=>x.conf<=0.5&&x.grade==='best').length;
+  return {score,dec,brier,n:j.length,best:j.filter(x=>x.grade==='best').length,
+    certainN:certain.length,certainRight:certain.filter(x=>x.grade==='best').length,over,under};
+}
+function judgmentRank(score){
+  if(score>=85)return 'Seasoned Judgment';
+  if(score>=70)return 'Sound Judgment';
+  if(score>=50)return 'Developing Judgment';
+  return 'Learning the Hard Way';
+}
+function updateJQ(){
+  const el=document.getElementById('hJQ');if(!el)return;
+  const st=judgmentStats(true);
+  if(!st){el.className='jq';return;}
+  el.className='jq on';
+  el.innerHTML='⚖ '+st.score;
+}
+
+// === DAVE — the veteran mentor ===
+const DAVE_CFG={name:'Dave',hair:C.hairGray,hairStyle:'short',skin:C.skinB,shirt:C.hiVisOrange,pants:C.pantsDk,eye:'#3a3020',hat:C.hardHatWhite};
+let _daveURL=null;
+function daveImg(){
+  if(!_daveURL){
+    const c=document.createElement('canvas');c.width=32;c.height=48;
+    const x=c.getContext('2d');x.imageSmoothingEnabled=false;x.scale(2,2);
+    try{drawCharProcedural(x,DAVE_CFG,0,0,0,0);}catch(e){}
+    _daveURL=c.toDataURL();
+  }
+  return '<img src="'+_daveURL+'" alt="Dave">';
+}
+
+function fxChips(e){
+  const names={schedule:'Schedule',budget:'Budget',safety:'Safety',quality:'Quality',morale:'Morale'};
+  const parts=Object.entries(e||{}).filter(([k,v])=>names[k]&&v).map(([k,v])=>'<span class="chip '+(v>0?'pos':'neg')+'">'+(v>0?'+':'')+v+' '+names[k]+'</span>');
+  return parts.length?parts.join(''):'<span class="chip">No immediate change</span>';
+}
+
+// === BIG CALL MODAL ===
+let _bc=null;
 function showEvent(ev){
   playSFX('alert');
   S.eventOpen=true;
+  _bc={ev,ci:null};
   const el=document.getElementById('eventModal');
-  let html='<h3>\u26A0\uFE0F '+ev.title+'</h3>';
-  html+='<p>'+ev.text+'</p>';
-  ev.choices.forEach((c,i)=>{
-    html+='<div class="ch" onclick="chooseEvent('+ev.week+','+i+')">';
-    html+='<div style="color:#f7c948;font-size:9px;margin-bottom:4px">'+c.t+'</div>';
-    html+='<div style="color:#7a5a38;font-size:8px">'+(c.desc||'')+'</div>';
-    html+='</div>';
+  const order=ev.choices.map((c,i)=>i);
+  // Shuffle once so the "right" answer isn't always in the same slot
+  for(let i=order.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[order[i],order[j]]=[order[j],order[i]];}
+  _bc.order=order;
+  let html=bcHead(ev)+'<div class="bc-body">';
+  html+='<div class="bc-title">'+ev.title+'</div>';
+  html+='<div class="bc-text">'+ev.text+'</div>';
+  html+='<div class="bc-kv"><div class="k"><h4>WHAT YOU KNOW</h4><ul>'+ev.known.map(k=>'<li>'+k+'</li>').join('')+'</ul></div>';
+  html+='<div class="u"><h4>WHAT YOU DON\'T</h4><ul>'+ev.unknown.map(k=>'<li>'+k+'</li>').join('')+'</ul></div></div>';
+  html+='<div class="bc-q">WHAT\'S YOUR CALL?</div>';
+  order.forEach((ci,n)=>{
+    const c=ev.choices[ci];
+    html+='<button class="bc-opt" data-k="'+(n+1)+'" onclick="pickBigCall('+ci+')"><span class="n">'+(n+1)+'</span><span><div class="t">'+c.t+'</div><div class="d">'+(c.desc||'')+'</div></span></button>';
   });
+  html+='</div>';
   el.innerHTML=html;
-  el.className='modal on no-click';
-  // Bug 9: Disable clicks for 500ms
-  setTimeout(()=>{el.className='modal on';},500);
+  el.className='modal bigcall on no-click';
+  el.scrollTop=0;
+  setTimeout(()=>{if(el.classList.contains('on'))el.classList.remove('no-click');},500);
+}
+function bcHead(ev){
+  const n=EVENTS.indexOf(ev)+1;
+  return '<div class="bc-head"><span class="bc-tag">BIG CALL '+n+'/'+EVENTS.length+'</span><span class="bc-when">'+weekLabel(ev.week)+'<br>'+getPhase(ev.week).toUpperCase()+'</span></div>';
+}
+function pickBigCall(ci){
+  if(!_bc)return;
+  _bc.ci=ci;
+  playSFX('interact');
+  const ev=_bc.ev,c=ev.choices[ci];
+  const el=document.getElementById('eventModal');
+  let html=bcHead(ev)+'<div class="bc-body">';
+  html+='<div class="bc-title">'+ev.title+'</div>';
+  html+='<div class="bc-opt picked" style="cursor:default"><span class="n">✓</span><span><div class="t">'+c.t+'</div></span></div>';
+  html+='<div class="bc-q" style="margin-top:12px">HOW SURE ARE YOU THAT\'S THE RIGHT CALL?</div>';
+  html+='<div class="bc-conf">';
+  CONF_LEVELS.forEach((cl,i)=>{
+    html+='<button data-k="'+(i+1)+'" onclick="commitBigCall('+i+')"><b>'+cl.icon+'</b>'+cl.label+'<br><span style="color:#7a5a38">'+cl.pct+'</span></button>';
+  });
+  html+='</div>';
+  html+='<div style="font-size:7px;color:#7a5a38;margin-top:10px;line-height:1.8">Good judgment isn\'t just picking well — it\'s knowing how sure to be.</div>';
+  html+='<button class="btn sm" style="margin-top:8px" onclick="showEvent(_bc.ev)">← Change my mind</button>';
+  html+='</div>';
+  el.innerHTML=html;el.scrollTop=0;
 }
 
-function chooseEvent(week,ci){
-  const ev=EVENTS.find(e=>e.week===week);
-  if(!ev)return;
-  const choice=ev.choices[ci];
-  applyEffects(choice.e);
-  S.eventsDone.push(week);
+// Record a Big Call, apply immediate effects and plant any ripple
+function resolveBigCall(ev,ci,conf,delegated){
+  const c=ev.choices[ci];
+  applyEffects(c.e);
+  S.eventsDone.push(ev.week);
+  if(!S.judgment)S.judgment=[];
+  S.judgment.push({week:ev.week,title:ev.title,ci,grade:c.grade,conf:conf,delegated:!!delegated,principle:ev.principle.name});
+  if(c.ripple){
+    const r=c.ripple;
+    const hit=Math.random()<(r.p==null?1:r.p);
+    const out=hit?r.hit:r.miss;
+    if(out){
+      if(!S.ripples)S.ripples=[];
+      S.ripples.push({at:r.at,fromWeek:ev.week,fromTitle:ev.title,choice:c.t,grade:c.grade,out:out,fired:false});
+    }
+  }
+  updateJQ();
+}
+
+function commitBigCall(li){
+  if(!_bc||_bc.ci==null)return;
+  const ev=_bc.ev,ci=_bc.ci,c=ev.choices[ci],conf=CONF_LEVELS[li].v;
+  resolveBigCall(ev,ci,conf,false);
+  // Juice
+  if(c.grade==='best'){triggerFlash('#4aca8a',250);playSFX('celebration');}
+  else if(c.grade==='poor'){triggerShake(2,250);}
+  if(c.grade==='best'&&conf>=0.9)unlockAchievement('sharp_call');
+  if(c.grade==='poor'&&conf<=0.5)unlockAchievement('humble');
+
+  const best=ev.choices.find(x=>x.grade==='best');
+  const el=document.getElementById('eventModal');
+  let html=bcHead(ev)+'<div class="bc-body">';
+  html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap"><span class="grade '+c.grade+'">'+GRADE_LABEL[c.grade]+'</span><span style="font-size:8px;color:#5a3a1e">'+c.t+'</span></div>';
+  html+='<div class="bc-q">IMMEDIATE IMPACT</div><div class="bc-chips">'+fxChips(c.e)+'</div>';
+  html+='<div class="dave">'+daveImg()+'<div><div class="who">DAVE · 30 YEARS ON THE RAILWAY</div><div class="say">"'+c.why+'"</div>';
+  if(c.grade!=='best'&&best)html+='<div class="alt">My call: <b style="color:#f7c948;font-weight:normal">'+best.t+'</b> — '+best.why+'</div>';
+  html+='</div></div>';
+  html+='<div class="principle"><div class="pl">PRINCIPLE</div><div class="pn">'+ev.principle.name+'</div><div class="pt">'+ev.principle.text+'</div></div>';
+  html+='<div class="calib">'+calibrationLine(conf,c.grade)+'</div>';
+  if(c.ripple)html+='<div class="pending">⏳ This decision has consequences that haven\'t landed yet…</div>';
+  html+='<button class="btn gld bc-go" data-k="1" onclick="closeBigCall()">Continue</button>';
+  html+='</div>';
+  el.innerHTML=html;el.scrollTop=0;
+  saveGame();
+}
+function calibrationLine(conf,grade){
+  if(conf>=0.9){
+    if(grade==='best')return '🎯 You were certain — and right. That\'s calibrated confidence.';
+    if(grade==='ok')return '⚠ You were certain, but there was a stronger option. Certainty is a feeling, not evidence.';
+    return '⚠ Overconfident. You were certain about a risky call. Before you commit, ask: "What would have to be true for this to go wrong?"';
+  }
+  if(conf<=0.5){
+    if(grade==='best')return '🪙 You doubted yourself — but your instinct was sound. Trust it a little more.';
+    if(grade==='poor')return '✓ Good self-awareness: you sensed it was shaky. When unsure, look for the option that buys information or caps the downside.';
+    return '✓ Honest uncertainty on a genuinely hard call.';
+  }
+  if(grade==='best')return '✓ Fairly sure, and right. Well calibrated.';
+  if(grade==='ok')return '✓ Reasonable confidence for a defensible call.';
+  return '⚠ You were fairly sure. Next time, look for what you\'re not seeing.';
+}
+function closeBigCall(){
   document.getElementById('eventModal').className='modal';
   S.eventOpen=false;
-  
-  if(REPORT_WEEKS.includes(S.week)){
-    showReport();return;
-  }
-  startNewWeek();
+  _bc=null;
+  updateHUD();
+  nextRoundStep();
+}
+
+// === RIPPLES — delayed consequences ===
+function dueRipples(){
+  return (S.ripples||[]).filter(r=>!r.fired&&S.week<=r.at);
+}
+function showRipple(r){
+  r.fired=true;
+  S.eventOpen=true;
+  const o=r.out;
+  const e=o.e||{};
+  const net=Object.values(e).reduce((a,b)=>a+b,0);
+  const good=net>0,bad=net<0;
+  applyEffects(e,true);
+  if(bad){triggerShake(3,350);triggerFlash('#e05577',200);playSFX('alert');}
+  else if(good){triggerFlash('#4aca8a',200);playSFX('celebration');}
+  if(good){S.goodRipples=(S.goodRipples||0)+1;if(S.goodRipples>=3)unlockAchievement('good_ripples');}
+  const el=document.getElementById('eventModal');
+  let html='<div class="'+(good?'rp-good':bad?'rp-bad':'')+'"><h3>🌊 RIPPLE EFFECT</h3>';
+  html+='<div class="rp-from">Back at '+weekLabel(r.fromWeek)+' — <b>'+r.fromTitle+'</b> — you chose:<br>"'+r.choice+'"</div>';
+  html+='<div class="rp-title">'+o.title+'</div>';
+  html+='<p>'+o.text+'</p>';
+  html+='<div class="bc-chips">'+fxChips(e)+'</div>';
+  if(o.lesson)html+='<div class="dave">'+daveImg()+'<div><div class="who">DAVE</div><div class="say">"'+o.lesson+'"</div></div></div>';
+  html+='<button class="btn gld bc-go" data-k="1" onclick="closeRipple()">Continue</button></div>';
+  el.innerHTML=html;
+  el.className='modal ripple on no-click';el.scrollTop=0;
+  setTimeout(()=>{if(el.classList.contains('on'))el.classList.remove('no-click');},500);
+}
+function closeRipple(){
+  document.getElementById('eventModal').className='modal';
+  S.eventOpen=false;
+  updateHUD();
+  nextRoundStep();
+}
+
+// === DECISION PROFILE ===
+const ARCHETYPES={
+  safety:{name:'The Guardian',desc:'You never gamble with people. Nobody goes home hurt on your watch — and your crews know it.'},
+  quality:{name:'The Craftsperson',desc:'Build it once, build it right. You\'d rather be late than be wrong.'},
+  schedule:{name:'The Sprinter',desc:'You hit dates. Momentum is your superpower — deadlines fear you.'},
+  budget:{name:'The Treasurer',desc:'Every pound has a job. Sponsors sleep well with you holding the purse.'},
+  morale:{name:'The Captain',desc:'You lead people, not plans. Your team would follow you onto the next job.'},
+  balanced:{name:'The Steady Hand',desc:'You weigh every side and rarely over-rotate. Hard to rattle, hard to fool.'}
+};
+const BLINDSPOT={
+  safety:'Safety — the one trade-off you can\'t take back.',
+  quality:'Quality — shortcuts come back as rework.',
+  schedule:'Schedule — time lost is rarely recovered.',
+  budget:'Budget — small leaks sink big projects.',
+  morale:'Morale — watch the human cost of your wins.'
+};
+function decisionProfile(){
+  const t=S.trade||{};
+  const keys=['safety','quality','schedule','budget','morale'];
+  const vals=keys.map(k=>t[k]||0);
+  const max=Math.max(...vals),min=Math.min(...vals);
+  const top=keys[vals.indexOf(max)],low=keys[vals.indexOf(min)];
+  const arch=(max-min<8)?ARCHETYPES.balanced:ARCHETYPES[top];
+  return {arch,top,low,blind:BLINDSPOT[low]};
 }
 
 // === MONTHLY REPORT ===
@@ -2489,7 +3102,7 @@ function showReport(){
   if(m.schedule>=60&&m.budget>=60&&m.safety>=60&&m.quality>=60&&m.morale>=60)
     html+='<div style="font-size:7px;color:#4aca8a">\u2022 All metrics healthy \u2014 keep it up!</div>';
   
-  html+='<div style="text-align:center;margin-top:12px"><button class="btn sm gld" onclick="closeReport()">Continue</button></div>';
+  html+='<div style="text-align:center;margin-top:12px"><button class="btn sm gld" data-k="1" onclick="closeReport()">Continue</button></div>';
   el.innerHTML=html;
   el.className='modal report on';
 }
@@ -2497,7 +3110,7 @@ function showReport(){
 function closeReport(){
   document.getElementById('reportModal').className='modal report';
   S.eventOpen=false;
-  startNewWeek();
+  nextRoundStep();
 }
 
 // === DOCUMENTS OVERLAY ===
@@ -2507,7 +3120,7 @@ function showDocsOverlay(){
   let html='<h2><img src="img/icon/Document.png" style="width:16px;height:16px;vertical-align:middle"> Project Documents</h2>';
   
   // Gantt-style timeline
-  html+='<div style="margin:12px 0;padding:12px;background:#d4be98;border:1px solid #a07848;border-radius:6px">';
+  html+='<div class="gantt-wrap" style="margin:12px 0;padding:12px;background:#d4be98;border:1px solid #a07848;border-radius:6px">';
   html+='<div style="font-size:10px;color:#5a3a1e;margin-bottom:8px">Project Timeline</div>';
   
   const phaseColors=['#4aca8a','#5b8ef5','#5b8ef5','#f7c948','#e88030','#e05577','#e05577','#b08fd8','#8a7fad','#533a7b'];
@@ -2579,9 +3192,22 @@ function showDocsOverlay(){
   });
   html+='</div>';
   
+  // Judgment Journal — principles from Big Calls you've made
+  const jr=S.judgment||[];
+  if(jr.length){
+    html+='<div style="margin-top:16px;font-size:10px;color:#5a3a1e;margin-bottom:8px">\u2696 Judgment Journal ('+jr.length+'/'+EVENTS.length+' calls)</div>';
+    jr.forEach(j=>{
+      const ev=EVENTS.find(e=>e.week===j.week);if(!ev)return;
+      html+='<div style="background:#e8d4b0;border:1px solid #a07848;border-radius:6px;padding:8px;margin:4px 0">';
+      html+='<div style="font-size:8px;color:#5a3a1e"><span class="grade '+j.grade+'" style="font-size:6px;padding:2px 5px">'+GRADE_LABEL[j.grade]+'</span> '+weekLabel(j.week)+' \u2014 '+ev.title+'</div>';
+      html+='<div style="font-size:8px;color:#3a2210;margin-top:5px">\uD83D\uDCDC '+ev.principle.name+'</div>';
+      html+='<div style="font-size:7px;color:#7a5a38;line-height:1.7;margin-top:3px">'+ev.principle.text+'</div></div>';
+    });
+  }
+
   // PM Knowledge Log
   if(S.pmKnowledge.length>0){
-    html+='<div style="margin-top:16px;font-size:10px;color:#5a3a1e;margin-bottom:8px">\uD83C\uDF93 PM Knowledge Log ('+S.pmKnowledge.length+'/'+PM_KNOWLEDGE.length+')</div>';
+    html+='<div style="margin-top:16px;font-size:10px;color:#5a3a1e;margin-bottom:8px">\uD83C\uDF93 PM Knowledge Log ('+PM_KNOWLEDGE.filter(k=>S.pmKnowledge.includes(k.id)).length+'/'+PM_KNOWLEDGE.length+')</div>';
     html+='<div style="display:flex;flex-wrap:wrap;gap:8px">';
     PM_KNOWLEDGE.forEach(k=>{
       const unlocked=S.pmKnowledge.includes(k.id);
@@ -2623,117 +3249,200 @@ function closeDocsOverlay(){
   S.docsOpen=false;
 }
 
-// === END SCREEN ===
+// === END SCREEN — the Judgment Report ===
+const METRIC_META=[
+  {k:'schedule',n:'Schedule',c:'#4aca8a'},{k:'budget',n:'Budget',c:'#f7c948'},
+  {k:'safety',n:'Safety',c:'#e05577'},{k:'quality',n:'Quality',c:'#5b8ef5'},
+  {k:'morale',n:'Morale',c:'#c4a878'}
+];
+function endSummary(){
+  const st=judgmentStats()||{score:0,n:0,best:0,certainN:0,certainRight:0,over:0,under:0};
+  const prof=decisionProfile();
+  const j=S.judgment||[];
+  const missed=j.filter(x=>x.grade!=='best').map(x=>EVENTS.find(e=>e.week===x.week)).filter(Boolean);
+  const nailed=j.filter(x=>x.grade==='best').map(x=>EVENTS.find(e=>e.week===x.week)).filter(Boolean);
+  const lesson=(missed[0]||nailed[0]||EVENTS[1]).principle;
+  let calib;
+  if(!st.certainN)calib='You were never "certain". Careful \u2014 just make sure caution isn\'t becoming indecision.';
+  else calib='Of the '+st.certainN+' call'+(st.certainN>1?'s':'')+' you were "certain" about, '+st.certainRight+' matched the expert call.';
+  if(st.over>=2)calib+=' You were certain about '+st.over+' risky calls \u2014 watch for overconfidence.';
+  else if(st.under>=2)calib+=' You doubted '+st.under+' expert calls \u2014 your instincts are better than you think.';
+  return {st,prof,missed,nailed,lesson,calib,rank:judgmentRank(st.score)};
+}
 function showEndScreen(){
   S.screen='end';
-  unlockAchievement('grip_master');
-  checkAchievements();
+  S.eventOpen=false;
+  if(!S.achievements.includes('grip_master'))S.achievements.push('grip_master'); // silent: no toast over the report
+  stopBGM();
+  playSFX('celebration');
+  ['hud','notepad','dlg','hint','objTicker'].forEach(id=>{const e=document.getElementById(id);if(e){e.className='';if(id==='hud'||id==='dlg'||id==='hint')e.style.display='none';}});
+  document.body.classList.remove('ingame');
 
-  const el=document.getElementById('weekTrans');
   const m=S.metrics;
-  const avg=Math.floor((m.schedule+m.budget+m.safety+m.quality+m.morale)/5);
-  const rating=getPMRating();
-  const titles=['In Trouble','Struggling PM','Competent PM','Strong PM','Outstanding PM'];
+  const E=endSummary(),st=E.st;
+  const j=S.judgment||[];
+  let html='<div class="end-wrap">';
+  html+='<h2>PROJECT CLOSED</h2>';
+  html+='<div class="end-sub">'+S.playerName+' delivered the railway upgrade.<br>Here\'s what your decisions say about you.</div>';
 
-  // PM certification based on performance
-  let cert,certColor;
-  if(avg>=85){cert='Master Project Manager';certColor='#f7c948';}
-  else if(avg>=70){cert='Senior Project Manager';certColor='#4aca8a';}
-  else if(avg>=55){cert='Project Manager';certColor='#5b8ef5';}
-  else{cert='Certificate of Participation';certColor='#c4a878';}
+  html+='<div class="end-hero"><div class="end-score"><div class="big">'+st.score+'</div><div class="lbl">JUDGMENT / 100</div><div class="rank">'+E.rank+'</div></div>';
+  html+='<div class="end-arch"><div style="font-size:7px;color:#c4a878;letter-spacing:2px;margin-bottom:6px">YOUR DECISION STYLE</div><div class="an">'+E.prof.arch.name+'</div><div class="ad">'+E.prof.arch.desc+'</div><div class="ab">Blind spot: '+E.prof.blind+'</div></div></div>';
 
-  // Generate story narrative
-  let story='';
-  if(m.safety>=80)story+=S.playerName+' prioritised safety throughout, earning the trust of the workforce. ';
-  else if(m.safety<50)story+='Safety took a back seat under '+S.playerName+'\'s watch, drawing scrutiny from regulators. ';
-  if(m.budget>=80)story+='The budget was managed with discipline, coming in on target. ';
-  else if(m.budget<50)story+='Costs spiralled beyond forecasts, leaving the sponsor concerned. ';
-  if(m.morale>=80)story+='The team stayed motivated and cohesive, a credit to strong leadership. ';
-  else if(m.morale<50)story+='Team morale suffered, with several members considering their options. ';
-  if(m.schedule>=80)story+='Milestones were hit on time, keeping the programme on track. ';
-  else if(m.schedule<50)story+='The programme slipped repeatedly, pushing delivery further out. ';
-  if(m.quality>=80)story+='Quality standards were consistently met, producing a railway to be proud of.';
-  else if(m.quality<50)story+='Quality issues plagued the build, requiring costly rework.';
-  if(!story)story=S.playerName+' delivered the project with a mixed bag of results — some wins, some lessons learned.';
+  html+='<div class="end-card"><h4>CALIBRATION</h4><div class="end-lesson">'+E.calib+'</div><div class="end-lesson">Expert calls: <b>'+st.best+' of '+st.n+'</b> · PM rating <b>'+getStarText()+'</b></div></div>';
 
-  let html='<div style="max-width:520px;margin:0 auto;text-align:center">';
-  html+='<h2 style="font-size:20px;color:#f7c948;margin-bottom:4px">PROJECT COMPLETE!</h2>';
-  html+='<p style="font-size:8px;color:#c4a878;margin-bottom:12px">The railway is open and running!</p>';
-  html+='<div style="font-size:16px;color:#f7c948;margin:6px 0">'+getStarText()+'</div>';
-  html+='<p style="font-size:12px;color:#f0e6d3;margin:4px 0">'+titles[rating-1]+'</p>';
-
-  // Certification badge
-  html+='<div style="display:inline-block;margin:10px auto;padding:6px 16px;border:2px solid '+certColor+';border-radius:6px;background:rgba(0,0,0,0.2)">';
-  html+='<div style="font-size:7px;color:#c4a878;letter-spacing:2px">CERTIFICATION</div>';
-  html+='<div style="font-size:9px;color:'+certColor+';margin-top:2px">\uD83C\uDF93 '+cert+'</div>';
-  html+='</div>';
-
-  // Metric bar charts
-  html+='<div style="text-align:left;margin:12px 0">';
-  const metricData=[
-    {n:'Schedule',v:m.schedule,c:'#4aca8a'},{n:'Budget',v:m.budget,c:'#f7c948'},
-    {n:'Safety',v:m.safety,c:'#e05577'},{n:'Quality',v:m.quality,c:'#5b8ef5'},
-    {n:'Morale',v:m.morale,c:'#c4a878'}
-  ];
-  metricData.forEach(mt=>{
-    html+='<div style="display:flex;align-items:center;gap:6px;margin:4px 0;font-size:8px">';
-    html+='<span style="width:55px;color:'+mt.c+';text-align:right">'+mt.n+'</span>';
-    html+='<div style="flex:1;height:10px;background:#3a2210;border:1px solid #5a3a1e;border-radius:3px;overflow:hidden">';
-    html+='<div style="width:'+mt.v+'%;height:100%;background:'+mt.c+';border-radius:2px"></div></div>';
-    html+='<span style="width:30px;color:'+mt.c+'">'+mt.v+'%</span>';
-    html+='</div>';
+  html+='<div class="end-card"><h4>YOUR BIG CALLS</h4>';
+  j.forEach(x=>{
+    const cl=CONF_LEVELS.find(c=>c.v===x.conf);
+    html+='<div class="end-row"><span class="w">'+weekLabel(x.week)+'</span><span class="tt">'+x.title+'</span><span class="cf">'+(x.delegated?'delegated':(cl?cl.icon:''))+'</span><span class="grade '+x.grade+'" style="font-size:6px;padding:3px 5px">'+GRADE_LABEL[x.grade]+'</span></div>';
   });
-  html+='<div style="text-align:center;font-size:9px;color:#f7c948;margin-top:4px">Average: '+avg+'%</div>';
   html+='</div>';
 
-  // Story narrative
-  html+='<div style="text-align:left;margin:10px 0;padding:8px 12px;background:rgba(0,0,0,0.15);border-radius:6px;border-left:3px solid #f7c948">';
-  html+='<div style="font-size:7px;color:#c4a878;margin-bottom:4px;letter-spacing:1px">YOUR STORY</div>';
-  html+='<p style="font-size:8px;color:#f0e6d3;line-height:1.8;margin:0">'+story+'</p>';
-  html+='</div>';
-
-  // NPC relationship summary
-  html+='<div style="text-align:left;margin:10px 0">';
-  html+='<div style="font-size:8px;color:#c4a878;margin-bottom:6px">TEAM RELATIONSHIPS</div>';
-  html+='<div style="display:flex;flex-wrap:wrap;gap:6px">';
-  NPCS.forEach(n=>{
-    const rel=S.relationships[n.id];
-    if(rel){
-      const hearts=rel.hearts;
-      const filled='\u2665'.repeat(hearts);
-      const empty='\u2661'.repeat(5-hearts);
-      let verdict='';
-      if(hearts>=4)verdict='Trusted ally';
-      else if(hearts>=2)verdict='Good rapport';
-      else if(hearts>=1)verdict='Getting there';
-      else verdict='Distant';
-      html+='<div style="flex:1;min-width:80px;padding:4px 6px;background:rgba(0,0,0,0.1);border-radius:4px;font-size:7px">';
-      html+='<div style="color:#f0e6d3">'+n.name+'</div>';
-      html+='<div style="color:#e05577">'+filled+'<span style="color:#5a3a1e">'+empty+'</span></div>';
-      html+='<div style="color:#7a5a38">'+verdict+'</div>';
-      html+='</div>';
-    }
+  html+='<div class="end-card"><h4>THE PROJECT</h4>';
+  METRIC_META.forEach(mt=>{
+    html+='<div class="end-bar"><span class="bn" style="color:'+mt.c+'">'+mt.n+'</span><div class="bt"><div style="width:'+m[mt.k]+'%;background:'+mt.c+'"></div></div><span class="bv" style="color:'+mt.c+'">'+m[mt.k]+'</span></div>';
   });
-  html+='</div></div>';
-
-  // Achievements
-  html+='<div style="text-align:left;margin:10px 0">';
-  html+='<div style="font-size:8px;color:#c4a878;margin-bottom:4px">ACHIEVEMENTS: '+S.achievements.length+'/'+ACHIEVEMENTS.length+'</div>';
-  html+='<div style="display:flex;flex-wrap:wrap;gap:4px">';
-  ACHIEVEMENTS.forEach(a=>{
-    const got=S.achievements.includes(a.id);
-    html+='<span style="font-size:16px;opacity:'+(got?'1':'0.2')+'" title="'+(got?a.name:'Locked')+'">'+ a.icon+'</span>';
-  });
-  html+='</div></div>';
-
-  html+='<button class="btn gld" onclick="location.reload()" style="margin-top:10px">Play Again</button>';
   html+='</div>';
 
-  document.getElementById('wtTitle').innerHTML=html;
-  document.getElementById('wtText').textContent='';
-  document.getElementById('wtChanges').textContent='';
-  document.querySelector('#weekTrans .btn').style.display='none';
-  el.className='scr on';
+  html+='<div class="end-card"><h4>TAKE THESE TO YOUR NEXT PROJECT</h4>';
+  const lessons=(E.missed.length?E.missed:E.nailed).slice(0,3);
+  lessons.forEach(ev=>{html+='<div class="end-lesson"><b>📜 '+ev.principle.name+'</b><br>'+ev.principle.text+'</div>';});
+  html+='</div>';
+
+  html+='<div class="end-btns"><button class="btn gld" onclick="openShareCard()">📸 Share my result</button><button class="btn sm" onclick="copyResult()">Copy text</button><button class="btn sm" onclick="playAgain()">Play again</button></div>';
+  html+='<div style="font-size:7px;color:#a08868;text-align:center;margin-top:14px;line-height:1.8">Achievements: '+ACHIEVEMENTS.map(a=>'<span style="opacity:'+(S.achievements.includes(a.id)?1:0.25)+'">'+a.icon+'</span>').join(' ')+'</div>';
+  html+='</div>';
+  const el=document.getElementById('endScr');
+  el.innerHTML=html;el.className='on';el.scrollTop=0;
+  try{localStorage.removeItem('projectValley_save');}catch(e){}
+}
+function playAgain(){try{localStorage.removeItem('projectValley_save');}catch(e){}location.reload();}
+
+function shareURL(){
+  return /^https?:/.test(location.protocol)?location.origin+location.pathname:'';
+}
+function resultText(){
+  const E=endSummary();
+  const url=shareURL();
+  return '🚆 Project Valley — a game about judgment\n'+
+    'I delivered a £10M railway upgrade as '+E.prof.arch.name+'.\n'+
+    '⚖ Judgment: '+E.st.score+'/100 ('+E.rank+')\n'+
+    '🎯 Expert calls: '+E.st.best+'/'+E.st.n+' · '+getStarText()+'\n'+
+    'Biggest lesson: "'+E.lesson.name+'"\n'+
+    'Can you make better calls?'+(url?' '+url:'');
+}
+function toast(msg){
+  const t=document.getElementById('toastMsg');
+  t.textContent=msg;t.style.display='block';
+  clearTimeout(toast._t);toast._t=setTimeout(()=>{t.style.display='none';},2200);
+}
+function copyResult(){
+  const txt=resultText();
+  const done=()=>toast('Copied — paste it anywhere!');
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(done,()=>fallbackCopy(txt,done));
+  else fallbackCopy(txt,done);
+}
+function fallbackCopy(txt,done){
+  const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();
+  try{document.execCommand('copy');done();}catch(e){toast('Copy failed');}
+  ta.remove();
+}
+
+// Word-wrap helper for canvas text
+function wrapText(ctx,text,x,y,maxW,lh){
+  const words=text.split(' ');let line='';
+  for(const w of words){
+    const test=line?line+' '+w:w;
+    if(ctx.measureText(test).width>maxW&&line){ctx.fillText(line,x,y);line=w;y+=lh;}
+    else line=test;
+  }
+  if(line)ctx.fillText(line,x,y);
+  return y+lh;
+}
+async function buildShareCard(){
+  try{await document.fonts.load('20px "Press Start 2P"');}catch(e){}
+  const F='"Press Start 2P", monospace';
+  const W=1080,H=1350;
+  const c=document.createElement('canvas');c.width=W;c.height=H;
+  const x=c.getContext('2d');x.imageSmoothingEnabled=false;
+  const E=endSummary(),st=E.st,m=S.metrics;
+  // Background + frame
+  const g=x.createLinearGradient(0,0,0,H);g.addColorStop(0,'#1e1208');g.addColorStop(0.5,'#3a2a18');g.addColorStop(1,'#4a3a24');
+  x.fillStyle=g;x.fillRect(0,0,W,H);
+  x.strokeStyle='#7a5c3a';x.lineWidth=14;x.strokeRect(22,22,W-44,H-44);
+  x.strokeStyle='#f7c948';x.lineWidth=3;x.strokeRect(40,40,W-80,H-80);
+  x.textAlign='center';
+  x.fillStyle='#f7c948';x.font='56px '+F;x.fillText('PROJECT VALLEY',W/2,130);
+  x.fillStyle='#c4a878';x.font='20px '+F;x.fillText('A GAME ABOUT JUDGMENT',W/2,172);
+  // Pixel scene
+  const ta=document.getElementById('titleArt');
+  drawTitleArt(4300);
+  x.drawImage(ta,0,0,320,100,90,200,900,281);
+  drawTitleArt(performance.now());
+  // Player sprite standing on the platform
+  const pc=document.createElement('canvas');pc.width=16;pc.height=24;
+  const px=pc.getContext('2d');px.imageSmoothingEnabled=false;
+  try{const cfg=CHARS[S.playerChar];cfg._ppe=true;drawCharProcedural(px,cfg,0,0,0,0);cfg._ppe=false;}catch(e){}
+  x.drawImage(pc,0,0,16,24,880,283,96,144);
+  // Score block
+  x.fillStyle='rgba(0,0,0,0.35)';x.fillRect(90,510,900,300);
+  x.strokeStyle='#7a5c3a';x.lineWidth=4;x.strokeRect(90,510,900,300);
+  x.textAlign='center';
+  x.fillStyle='#f7c948';x.font=(st.score>=100?'110px ':'130px ')+F;x.fillText(String(st.score),300,700);
+  x.fillStyle='#c4a878';x.font='18px '+F;x.fillText('JUDGMENT / 100',300,750);
+  x.fillStyle='#4aca8a';x.font='16px '+F;x.fillText(E.rank.toUpperCase(),300,782);
+  x.textAlign='left';
+  x.fillStyle='#c4a878';x.font='16px '+F;x.fillText('DECISION STYLE',520,570);
+  x.fillStyle='#f7c948';x.font='26px '+F;const ay=wrapText(x,E.prof.arch.name,520,618,440,36);
+  x.fillStyle='#e8d4b0';x.font='15px '+F;
+  const ny=wrapText(x,E.prof.arch.desc,520,ay+18,440,28);
+  x.fillStyle='#e88080';x.font='14px '+F;wrapText(x,'Blind spot: '+E.prof.low.charAt(0).toUpperCase()+E.prof.low.slice(1),520,Math.min(ny+10,790),440,26);
+  // Metrics
+  let y=870;
+  METRIC_META.forEach(mt=>{
+    x.fillStyle=mt.c;x.font='18px '+F;x.textAlign='right';x.fillText(mt.n,290,y+20);
+    x.fillStyle='#2a1a0c';x.fillRect(310,y,560,26);
+    x.fillStyle=mt.c;x.fillRect(310,y,Math.round(560*m[mt.k]/100),26);
+    x.strokeStyle='#5a3a1e';x.lineWidth=2;x.strokeRect(310,y,560,26);
+    x.textAlign='left';x.fillText(String(m[mt.k]),890,y+20);
+    y+=44;
+  });
+  // Stats line + lesson
+  x.textAlign='center';
+  x.fillStyle='#f0e6d3';x.font='18px '+F;
+  x.fillText('Expert calls '+st.best+'/'+st.n,W/2-90,1115);
+  x.fillStyle='#f7c948';x.font='34px "Segoe UI Symbol","Apple Symbols",sans-serif';x.fillText(getStarText(),W/2+190,1117);
+  x.fillStyle='#c4a878';x.font='15px '+F;x.fillText('BIGGEST LESSON',W/2,1165);
+  x.fillStyle='#f7c948';x.font='20px '+F;wrapText(x,'"'+E.lesson.name+'"',W/2,1202,860,32);
+  x.fillStyle='#e8d4b0';x.font='18px '+F;x.fillText('Can you make better calls?',W/2,1272);
+  const url=shareURL();
+  if(url){x.fillStyle='#a08868';x.font='12px '+F;x.fillText(url.replace(/^https?:\/\//,'').slice(0,70),W/2,1302);}
+  return c;
+}
+async function openShareCard(){
+  playSFX('interact');
+  const c=await buildShareCard();
+  const url=c.toDataURL('image/png');
+  const el=document.getElementById('shareModal');
+  el.innerHTML='<img src="'+url+'" alt="Your Project Valley result card"><div class="sm-btns">'+
+    '<button class="btn gld sm" onclick="shareCardNative()">Share</button>'+
+    '<a class="btn sm" style="text-decoration:none;display:inline-block" href="'+url+'" download="project-valley-result.png">Download</a>'+
+    '<button class="btn sm" onclick="copyResult()">Copy text</button>'+
+    '<button class="btn sm" onclick="document.getElementById(\'shareModal\').className=\'\'">Close</button></div>';
+  el.className='on';
+  el._canvas=c;
+}
+function shareCardNative(){
+  const el=document.getElementById('shareModal');const c=el._canvas;if(!c)return;
+  c.toBlob(async b=>{
+    const file=new File([b],'project-valley-result.png',{type:'image/png'});
+    const data={title:'Project Valley',text:resultText(),files:[file]};
+    try{
+      if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share(data);return;}
+      if(navigator.share){await navigator.share({title:data.title,text:data.text,url:shareURL()||undefined});return;}
+    }catch(e){if(e&&e.name==='AbortError')return;}
+    const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='project-valley-result.png';a.click();
+    toast('Image saved — post it with your result text!');
+  },'image/png');
 }
 
 function showStatsModal(){
@@ -2770,7 +3479,7 @@ function showStatsModal(){
   });
   html+='</div>';
   // PM Knowledge
-  html+='<div style="font-size:10px;font-weight:bold;margin:12px 0 6px">PM Knowledge ('+S.pmKnowledge.length+'/'+PM_KNOWLEDGE.length+')</div>';
+  html+='<div style="font-size:10px;font-weight:bold;margin:12px 0 6px">PM Knowledge ('+PM_KNOWLEDGE.filter(k=>S.pmKnowledge.includes(k.id)).length+'/'+PM_KNOWLEDGE.length+')</div>';
   html+='<div style="display:flex;flex-wrap:wrap;gap:6px">';
   PM_KNOWLEDGE.forEach(k=>{
     const u=S.pmKnowledge.includes(k.id);
@@ -2796,9 +3505,10 @@ function showHelp(){
   const helpEl=document.getElementById('helpText');
   helpEl.innerHTML=S.playerName+', you have 32 weeks (T-32 to T-0) to deliver a railway upgrade project, then 8 weeks of post-delivery close-out.<br><br>'+
   weekLabel(S.week)+' means '+(S.week>0?S.week+' weeks until delivery':Math.abs(S.week)+' weeks after delivery')+'.<br><br>'+
-  'Walk around with Arrow Keys or WASD. Press SPACE to talk to people and interact with things.<br><br>'+
+  (TOUCH?'Move with the joystick. Tap \u24B6 to talk to people and use things. Tap the task bar to see your to-do list.<br><br>':'Walk around with Arrow Keys or WASD. Press SPACE to talk to people and interact with things. Number keys 1-4 pick options.<br><br>')+
   'Keep your 5 metrics healthy: Schedule, Budget, Safety, Quality, and Team Morale.<br><br>'+
-  'Make smart decisions when curveball events hit. Good luck, '+S.playerName+'!';
+  '<b>BIG CALLS</b> are where judgment counts: choose, rate your confidence, then hear Dave\'s take. Your \u2696 Judgment score rewards good calls AND honest confidence.<br><br>'+
+  'Watch for <b>RIPPLES</b> \u2014 past decisions coming back. Good luck, '+S.playerName+'!';
   document.getElementById('helpModal').className='modal on';
   S.eventOpen=true;
 }
@@ -2818,7 +3528,10 @@ const ACHIEVEMENTS=[
   {id:'boots_on_ground',name:'Boots on Ground',desc:'Visit the site 3 times',icon:'\uD83D\uDC77'},
   {id:'outstanding_pm',name:'Outstanding PM',desc:'Reach a 5-star PM rating',icon:'\u2B50'},
   {id:'grip_master',name:'Lifecycle Champion',desc:'Complete all phases from Kick-Off to Close-Out',icon:'\uD83C\uDF93'},
-  {id:'perfect_week',name:'Perfect Week',desc:'Complete all objectives with all metrics above 70%',icon:'\uD83C\uDFC6'}
+  {id:'perfect_week',name:'Perfect Week',desc:'Complete all objectives with all metrics above 70%',icon:'\uD83C\uDFC6'},
+  {id:'sharp_call',name:'Sharp Call',desc:'Make an expert call \u2014 and be certain of it',icon:'\uD83C\uDFAF'},
+  {id:'humble',name:'Know What You Don\'t Know',desc:'Flag low confidence on a risky call',icon:'\uD83E\uDD14'},
+  {id:'good_ripples',name:'Ripple Maker',desc:'Have 3 past decisions pay off',icon:'\uD83C\uDF0A'}
 ];
 
 const PM_KNOWLEDGE=[
@@ -2983,7 +3696,7 @@ function spawnAmbientParticles(dt){
   if(S.map==='office'){
     // Golden dust motes near windows (top of office)
     spawnParticle({
-      x:S.camX+Math.random()*(IW-110),
+      x:S.camX+Math.random()*VPW(),
       y:S.camY+Math.random()*60,
       vx:(Math.random()-0.5)*0.1,vy:0.15+Math.random()*0.1,
       life:3000+Math.random()*2000,size:1+Math.random(),
@@ -2994,7 +3707,7 @@ function spawnAmbientParticles(dt){
     // Leaves and seeds on site
     if(Math.random()<0.5){
       spawnParticle({
-        x:S.camX+Math.random()*(IW-110),
+        x:S.camX+Math.random()*VPW(),
         y:S.camY-10,
         vx:0.2+Math.random()*0.3,vy:0.3+Math.random()*0.2,
         life:4000+Math.random()*3000,size:2,
@@ -3003,7 +3716,7 @@ function spawnAmbientParticles(dt){
       });
     }else{
       spawnParticle({
-        x:S.camX+Math.random()*(IW-110),
+        x:S.camX+Math.random()*VPW(),
         y:S.camY+Math.random()*IH,
         vx:(Math.random()-0.5)*0.08,vy:-0.1-Math.random()*0.1,
         life:5000+Math.random()*3000,size:1,
@@ -3876,54 +4589,61 @@ function render(){
 }
 
 
-// === TITLE SCREEN ART ===
-function drawTitleArt(){
+// === TITLE SCREEN ART (animated) ===
+const _TA={stars:[],windows:[],t0:0};
+(function(){
+  let seed=7;const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647;};
+  for(let i=0;i<34;i++)_TA.stars.push({x:rnd()*320,y:rnd()*45,a:0.3+rnd()*0.7,tw:rnd()*6});
+  for(let i=0;i<10;i++)_TA.windows.push(rnd()>0.3);
+})();
+function drawTitleArt(ts){
   const tc=document.getElementById('titleArt');
   if(!tc)return;
   const tx=tc.getContext('2d');
   tx.imageSmoothingEnabled=false;
-  const w=320,h=100;
+  const w=320,h=100,t=(ts||0)/1000;
   tx.fillStyle='#1a2040';tx.fillRect(0,0,w,h);
   tx.fillStyle='#2a3060';tx.fillRect(0,40,w,60);
-  for(let i=0;i<30;i++){
-    tx.fillStyle='rgba(255,255,200,'+(0.3+Math.random()*0.7)+')';
-    tx.fillRect(Math.random()*w,Math.random()*45,1,1);
-  }
+  _TA.stars.forEach(st=>{
+    tx.fillStyle='rgba(255,255,200,'+(st.a*(0.6+0.4*Math.sin(t*2+st.tw)))+')';
+    tx.fillRect(Math.floor(st.x),Math.floor(st.y),1,1);
+  });
   tx.fillStyle='#1a3828';
   tx.beginPath();tx.moveTo(0,70);
   for(let x=0;x<=w;x+=20){tx.lineTo(x,60+Math.sin(x/40)*10);}
   tx.lineTo(w,h);tx.lineTo(0,h);tx.fill();
   tx.fillStyle='#2a4838';tx.fillRect(0,75,w,25);
   tx.fillStyle='#7a6850';tx.fillRect(0,78,w,12);
-  tx.fillStyle='#8a8890';tx.fillRect(0,80,w,2);tx.fillRect(0,86,w,2);
   for(let x=10;x<w;x+=12){tx.fillStyle='#5a4830';tx.fillRect(x,78,6,12);}
-  const trainX=80;
-  tx.fillStyle='#4060a0';tx.fillRect(trainX,64,50,14);
-  tx.fillStyle='#5080c0';tx.fillRect(trainX+2,66,46,10);
-  tx.fillStyle='#88c8f0';tx.fillRect(trainX+5,67,8,5);tx.fillRect(trainX+16,67,8,5);tx.fillRect(trainX+27,67,8,5);
-  tx.fillStyle='#e05577';tx.fillRect(trainX,69,3,5);
-  tx.fillStyle='#f7c948';tx.fillRect(trainX+47,69,3,5);
-  tx.fillStyle='#303030';
-  tx.fillRect(trainX+8,78,4,3);tx.fillRect(trainX+22,78,4,3);tx.fillRect(trainX+38,78,4,3);
+  tx.fillStyle='#8a8890';tx.fillRect(0,80,w,2);tx.fillRect(0,86,w,2);
+  // Station
   tx.fillStyle='#4a4565';tx.fillRect(220,48,60,30);
   tx.fillStyle='#5a5575';tx.fillRect(222,50,56,26);
-  for(let wx=226;wx<275;wx+=12){
-    for(let wy=52;wy<72;wy+=10){
-      tx.fillStyle=(Math.random()>0.3)?'#f7c948':'#88c8f0';
-      tx.fillRect(wx,wy,8,6);
-    }
-  }
+  let wi=0;
+  for(let wx=226;wx<275;wx+=12){for(let wy=52;wy<72;wy+=10){tx.fillStyle=_TA.windows[wi++%10]?'#f7c948':'#88c8f0';tx.fillRect(wx,wy,8,6);}}
   tx.fillStyle='#6a5830';tx.fillRect(245,68,10,10);
-  tx.fillStyle='#f0e6d3';
-  tx.beginPath();tx.arc(50,25,12,0,Math.PI*2);tx.fill();
-  tx.fillStyle='#d0c6b3';
-  tx.beginPath();tx.arc(47,23,3,0,Math.PI*2);tx.fill();
+  // Train glides through
+  const trainX=Math.floor(((t*28)%(w+120))-80);
+  tx.fillStyle='rgba(247,201,72,0.18)';tx.fillRect(trainX+50,66,26,10);
+  for(let c=0;c<2;c++){
+    const cx=trainX-c*54;
+    tx.fillStyle='#4060a0';tx.fillRect(cx,64,50,14);
+    tx.fillStyle='#5080c0';tx.fillRect(cx+2,66,46,10);
+    tx.fillStyle='#88c8f0';tx.fillRect(cx+5,67,8,5);tx.fillRect(cx+16,67,8,5);tx.fillRect(cx+27,67,8,5);
+    tx.fillStyle='#303030';tx.fillRect(cx+8,78,4,3);tx.fillRect(cx+22,78,4,3);tx.fillRect(cx+38,78,4,3);
+  }
+  tx.fillStyle='#e05577';tx.fillRect(trainX-54,69,3,5);
+  tx.fillStyle='#f7c948';tx.fillRect(trainX+47,69,3,5);
+  // Moon
+  tx.fillStyle='#f0e6d3';tx.beginPath();tx.arc(50,25,12,0,Math.PI*2);tx.fill();
+  tx.fillStyle='#d0c6b3';tx.beginPath();tx.arc(47,23,3,0,Math.PI*2);tx.fill();
   tx.beginPath();tx.arc(54,28,2,0,Math.PI*2);tx.fill();
 }
 
 // === CHARACTER SELECT ===
-function showCharSelect(){
+function showCharSelect(mode){
   if(!audioCtx)initAudio();
+  S.quick=mode!=='full';
   document.getElementById('title').className='scr';
   document.getElementById('charSel').className='scr on';
   S.screen='charSelect';
@@ -3996,7 +4716,8 @@ function getIntroSteps(){
     {title:'Welcome, '+S.playerName+'!',text:'You\'ve just been appointed to deliver a major railway upgrade project. Your mission: get it done on time, on budget, and safely.\n\nNo pressure!'},
     {title:'How It Works',text:'In this game, we count DOWN to delivery day.\n\nT-32 means 32 weeks until the railway opens. Each week, you\'ll manage your team, make decisions, and handle whatever gets thrown at you.\n\nAfter delivery (T-0), you\'ll manage handover and close-out until T+8.'},
     {title:'Your Team',text:S.playerName+', you have 5 team members, each an expert:\n\n- Sarah (Design Lead) \u2014 Engineering drawings\n- Mike (Site Manager) \u2014 Construction work\n- Emma (Safety Lead) \u2014 Keeping everyone safe\n- James (Commercial Mgr) \u2014 Money & contracts\n- Priya (Comms Lead) \u2014 Stakeholder comms'},
-    {title:'Your Goal',text:'Keep 5 key metrics healthy:\n\n- Schedule \u2014 Are you on time?\n- Budget \u2014 Are you on budget?\n- Safety \u2014 Is everyone safe?\n- Quality \u2014 Is the work good?\n- Morale \u2014 Is the team happy?\n\nGet to project close-out with the best scores possible. Good luck, '+S.playerName+'!'}
+    {title:'Big Calls',text:'Every month you\'ll face a BIG CALL.\n\nNo scores on the buttons. Just the situation, what you know \u2014 and what you don\'t.\n\nPick your call, then say how sure you are. Some decisions RIPPLE: they come back weeks later, for better or worse.\n\nDave, a veteran with 30 years on the railway, will tell you how he\'d have called it.'},
+    {title:'Your Goal',text:'Keep 5 key metrics healthy:\n\n- Schedule \u2014 Are you on time?\n- Budget \u2014 Are you on budget?\n- Safety \u2014 Is everyone safe?\n- Quality \u2014 Is the work good?\n- Morale \u2014 Is the team happy?\n\nAt the end you\'ll get your JUDGMENT SCORE and find out what kind of decision-maker you really are. Good luck, '+S.playerName+'!'}
   ];
 }
 
@@ -4026,11 +4747,12 @@ function beginGame(){
   S.map='office';
   S.px=7*TS;S.py=14*TS;
   S.camX=S.px-IW/2;S.camY=S.py-IH/2;
-  S.objectives=getObjectives(32);
+  S.objectives=objectivesFor(32);
   S.completedObj=[];
   S.eventsDone=[];
   S.dlgCooldowns={};
   S.metrics={schedule:70,budget:70,safety:70,quality:70,morale:70};
+  S.judgment=[];S.ripples=[];S.trade={};S.goodRipples=0;
   // Bug 4: clear keys
   S.keys={};
   
@@ -4050,6 +4772,8 @@ function beginGame(){
   updateHUD();
   updateNotepad();
   if(S.musicOn)startBGM();
+  // Round one opens with the first Big Call
+  setTimeout(startRoundSequence,900);
 }
 
 // === SAVE/LOAD ===
@@ -4063,7 +4787,9 @@ function saveGame(){
     achievements:[...S.achievements],
     pmKnowledge:[...S.pmKnowledge],
     siteVisits:_siteVisits,
-    ppeEquipped:S.ppeEquipped
+    ppeEquipped:S.ppeEquipped,
+    judgment:S.judgment||[],ripples:S.ripples||[],trade:S.trade||{},
+    goodRipples:S.goodRipples||0,quick:!!S.quick
   };
   try{localStorage.setItem('projectValley_save',JSON.stringify(data));}catch(e){}
 }
@@ -4085,6 +4811,8 @@ function loadGame(){
     if(data.pmKnowledge)S.pmKnowledge=data.pmKnowledge;
     if(data.siteVisits)_siteVisits=data.siteVisits;
     if(data.ppeEquipped)S.ppeEquipped=data.ppeEquipped;
+    S.judgment=data.judgment||[];S.ripples=data.ripples||[];S.trade=data.trade||{};
+    S.goodRipples=data.goodRipples||0;S.quick=!!data.quick;
   }catch(e){return;}
   
   // Bug 4: clear keys
@@ -4092,7 +4820,7 @@ function loadGame(){
   
   document.getElementById('title').className='scr';
   S.screen='game';
-  S.objectives=getObjectives(S.week);
+  S.objectives=objectivesFor(S.week);
   
   // Init NPC positions
   NPCS.forEach(n=>{
@@ -4108,7 +4836,26 @@ function loadGame(){
   updateHUD();
   updateNotepad();
   S.camX=S.px-IW/2;S.camY=S.py-IH/2;
+  updateJQ();
   if(S.musicOn)startBGM();
+  // Resume a round that was saved before its Big Call / ripples were handled
+  const pendingEv=EVENTS.find(e=>e.week===S.week&&!S.eventsDone.includes(e.week));
+  if(pendingEv||dueRipples().length||S.week<=-8)setTimeout(startRoundSequence,700);
+}
+
+// Keep body classes in sync so CSS can show/hide touch UI and ticker
+let _bodyState='';
+function syncBodyState(){
+  const ingame=S.screen==='game';
+  const busy=S.dlgOpen||S.eventOpen||S.docsOpen||S.statsOpen||S.weekTransOpen||TRANS.active||
+    document.getElementById('skipTrans').classList.contains('on')||
+    (COMPACT&&document.getElementById('notepad').classList.contains('open'));
+  const st=(ingame?'g':'')+(busy?'b':'');
+  if(st===_bodyState)return;
+  _bodyState=st;
+  document.body.classList.toggle('ingame',ingame);
+  document.body.classList.toggle('busy',!!busy);
+  if(busy){JOY.active=false;JOY.x=0;JOY.y=0;}
 }
 
 // === GAME LOOP ===
@@ -4128,6 +4875,8 @@ function gameLoop(ts){
   flashTimer+=dt;
 
   render();
+  syncBodyState();
+  if(S.screen==='title'||S.screen==='loading')drawTitleArt(ts);
 
   requestAnimationFrame(gameLoop);
 }
@@ -4147,8 +4896,9 @@ async function init(){
     document.getElementById('contBtn').style.display='inline-block';
   }
   
-  // Draw title art
-  drawTitleArt();
+  // Draw title art (animated in the game loop)
+  drawTitleArt(0);
+  if(TOUCH)document.getElementById('ctrlHint').textContent='Joystick to move \u00B7 \u24B6 to interact \u00B7 tap buttons to choose';
   
   // Start game loop
   requestAnimationFrame(gameLoop);
