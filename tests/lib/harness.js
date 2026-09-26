@@ -68,20 +68,24 @@ async function openPage(o) {
   const cfg = { settings: o.settings, gameSeed: o.gameSeed, policySeed: o.policySeed };
   await ctx.addInitScript({ content: `window.__T_CFG=${JSON.stringify(cfg)};\n${INPAGE}` });
   const page = await ctx.newPage();
-  const errors = [], warnings = [];
+  const errors = [], warnings = [], missing = [];
+  const LOCAL_MISSING = /^file:|ERR_FILE_NOT_FOUND/;
   page.on('pageerror', e => errors.push(`page error: ${e.message}${e.stack ? '\n    ' + e.stack.split('\n').slice(1, 4).map(s => s.trim()).join('\n    ') : ''}`));
   page.on('console', m => {
     const loc = (m.location && m.location()) || {}, url = loc.url || '';
     if (FONT_RE.test(url) || /fonts\.(googleapis|gstatic)\.com/.test(m.text())) return;   // sandbox font failures are expected
+    if (m.type() === 'error' && /ERR_FILE_NOT_FOUND|404/.test(m.text()) && /^file:/.test(url)) return;   // counted once, as a missing file
     if (m.type() === 'error') errors.push(`console.error: ${m.text()}${url ? ` (${url.replace(/^file:\/\/.*?\/strawder-and-dave\//, '')}:${loc.lineNumber})` : ''}`);
     else if (m.type() === 'warning') warnings.push(m.text());
   });
-  page.on('requestfailed', r => { if (!FONT_RE.test(r.url())) errors.push(`request failed: ${r.url()} ${(r.failure() || {}).errorText || ''}`); });
+  // A missing local file (e.g. a script index.html references but nobody has committed yet) is its own kind of problem:
+  // the smoke suite fails on it; other suites note it and carry on, so one missing file doesn't fail every check.
+  page.on('requestfailed', r => { if (FONT_RE.test(r.url())) return; const t = (r.failure() || {}).errorText || ''; if (/^file:/.test(r.url()) && /FILE_NOT_FOUND/.test(t)) { const base = opts.url.replace(/[^/]*$/, ''), f = r.url().startsWith(base) ? r.url().slice(base.length) : r.url(); if (!missing.includes(f)) missing.push(f); return; } errors.push(`request failed: ${r.url()} ${t}`); });
   page.on('response', r => { if (r.status() >= 400 && !FONT_RE.test(r.url())) errors.push(`HTTP ${r.status()}: ${r.url()}`); });
   page.on('crash', () => errors.push('page crashed'));
   page.setDefaultTimeout(20000);
   page.__errors = errors;
-  return { ctx, page, errors, warnings, viewport: o.viewport, close: () => ctx.close().catch(() => { }) };
+  return { ctx, page, errors, warnings, missing, viewport: o.viewport, close: () => ctx.close().catch(() => { }) };
 }
 
 class BootError extends Error { }
@@ -97,6 +101,9 @@ async function load(page) {
     if (Date.now() - t0 > 30000) throw new BootError('the title screen never appeared (30s)');
   }
 }
+
+// Free roam: the player can walk, the game accepts interactions, and the intro / cold open is over.
+const FREE_ROAM = "st.k==='explore' && !!T.W().onInteract && T.S().introDone !== false";
 
 class DriveError extends Error { constructor(msg, dump) { super(msg); this.dump = dump; } }
 
@@ -114,6 +121,7 @@ async function drive(page, o) {
     if (o.onScreen) { const st = await page.evaluate(() => __T.state()); await o.onScreen(st); }
     const r = await page.evaluate(([p, s]) => __T.step(p, s), [o.policy, o.stop]);
     if (r.stop) return { steps, ms: Date.now() - t0, st: r.st };
+    if (r.needCal) { await page.evaluate(() => __T.calibrate()); continue; }
     if (r.err) throw new DriveError(r.err, await dump(page));
     if (o.trace) o.trace.push(`${r.k}${r.act ? ': ' + r.act : ''}`);
     // An explore step that keeps choosing the same thing without the game moving on means we're stuck.
@@ -122,10 +130,12 @@ async function drive(page, o) {
       if (key === lastKey) { if (++sameKey >= 8) throw new DriveError(`stuck: interacting with ${r.key} again and again without progress (target ${r.target})`, await dump(page)); }
       else { lastKey = key; sameKey = 0; }
     }
-    try { await page.waitForFunction(s => __T.sig() !== s, r.sigBefore, { timeout: 6000, polling: 'raf' }); stalls = 0; }
+    // The chapter card ignores taps for a moment, so re-tap it quickly; everything else gets 6s to react.
+    const quick = r.k === 'chapter';
+    try { await page.waitForFunction(s => __T.sig() !== s, r.sigBefore, { timeout: quick ? 1200 : 6000, polling: 'raf' }); stalls = 0; }
     catch (e) {
       if (/closed|crash/i.test(String(e))) throw e;
-      if (++stalls >= 6) throw new DriveError(`stuck: the screen stopped changing (state ${r.k}${r.act ? ', last action ' + r.act : ''})`, await dump(page));
+      if (++stalls >= (quick ? 15 : 6)) throw new DriveError(`stuck: the screen stopped changing (state ${r.k}${r.act ? ', last action ' + r.act : ''})`, await dump(page));
     }
   }
 }
@@ -139,7 +149,7 @@ async function newGame(page, o) {
   await page.fill('#pname', o.name || 'Tester');
   await page.evaluate(() => __T.click(document.querySelector('#sGo')));
   await page.evaluate(() => document.activeElement && document.activeElement.blur && document.activeElement.blur());
-  await drive(page, { policy: o.policy || 'expert', stop: "st.k==='explore'", timeoutMs: 60000 });
+  await drive(page, { policy: o.policy || 'expert', stop: FREE_ROAM, timeoutMs: 90000 });
   return page.evaluate(() => { const w = __T.W(); return { room: w.room, x: w.player.x, y: w.player.y }; });
 }
 
@@ -149,10 +159,11 @@ async function gotoRoom(page, room, o) {
   for (let i = 0; i < 6; i++) {
     const cur = await page.evaluate(() => __T.W().room);
     if (cur === room) return true;
-    const r = await page.evaluate(to => { const w = __T.W(), d = __T.doorTowards(w.room, to); if (!d) return { err: `no door path from ${w.room} to ${to}` }; __T.interact(d); return { id: d.id, hop: d.to.room }; }, room);
+    const r = await page.evaluate(to => { const w = __T.W(), d = __T.doorTowards(w.room, to); if (!d) return { err: `no door path from ${w.room} to ${to}` }; __T.interact(d); return { id: d.id, hop: __T.doorDest(d).room }; }, room);
     if (r.err) throw new Error(r.err);
-    // wait for this door's fade to finish, or for something else (a refusal dialogue) to happen
-    await page.waitForFunction(to => { const w = __T.W(); return (w.room === to && !w.fadeDir) || __T.layersOn().length > 0; }, r.hop, { timeout: 8000 });
+    // wait for this door's fade to finish, for something else (a refusal dialogue) to happen, or for the game to say nothing happened
+    await page.waitForFunction(([to, id]) => { const w = __T.W(); return (w.room === to && !w.fadeDir) || __T.layersOn().length > 0 || __T.lastNoop === id; }, [r.hop, r.id], { timeout: 8000 });
+    if (await page.evaluate(id => __T.lastNoop === id && (__T.lastNoop = null, true), r.id)) { if (o.allowRefusal) return false; throw new Error(`the door ${r.id} did nothing when used`); }
     const st = await page.evaluate(() => __T.state());
     if (st.k !== 'explore' && st.k !== 'fade') { if (o.allowRefusal) return false; await drive(page, { stop: "st.k==='explore'", timeoutMs: 30000 }); }
     await page.waitForFunction(() => !__T.W().fadeDir, null, { timeout: 8000 });
@@ -172,4 +183,4 @@ async function settle(page, timeout) {
 
 const fmtErrors = errs => errs.slice(0, 6).map(e => '  ' + e.split('\n').join('\n  ')).join('\n') + (errs.length > 6 ? `\n  …and ${errs.length - 6} more` : '');
 
-module.exports = { chromium, ROOT, OUT, GAME_URL, VIEWPORTS, FAST, opts, getBrowser, closeBrowser, openPage, load, drive, until, newGame, gotoRoom, settle, dump, DriveError, BootError, fmtErrors };
+module.exports = { FREE_ROAM, chromium, ROOT, OUT, GAME_URL, VIEWPORTS, FAST, opts, getBrowser, closeBrowser, openPage, load, drive, until, newGame, gotoRoom, settle, dump, DriveError, BootError, fmtErrors };

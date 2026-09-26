@@ -26,7 +26,11 @@ const strip = S => { const c = Object.assign({}, S); for (const k of IGNORE) del
 async function reloadAndContinue(page, r, before) {
   await H.load(page);
   const t = await page.evaluate(() => { const b = document.querySelector('#tCont'); return b ? { vis: __T.visibleEl(b), text: b.textContent.trim() } : null; });
-  if (!r.ok(t && t.vis, 'after reload the title has no visible Continue button (#tCont)')) return false;
+  if (!t || !t.vis) {
+    const why = await page.evaluate(() => ({ title: (document.querySelector('#title').innerText || '').replace(/\s+/g, ' ').slice(0, 160), saved: (() => { try { const s = JSON.parse(localStorage.getItem('lineside_v2')); return s ? Object.keys(s.done || {}) : null; } catch (e) { return 'unreadable'; } })() }));
+    r.fail(`after reload the title has no visible Continue button (#tCont). Title: "${why.title}"; saved game in localStorage: ${JSON.stringify(why.saved)}`);
+    return false;
+  }
   r.ok(!before || new RegExp('\\b' + before.S.week + '\\b').test(t.text), `Continue says "${t.text}" but the save is in week ${before && before.S.week}`);
   const mark = await page.evaluate(() => __T.layerLog.length);
   await page.evaluate(() => __T.click(document.querySelector('#tCont')));
@@ -86,6 +90,9 @@ module.exports = {
         await H.newGame(P.page);
         // get to a multi-question activity (the one after the walk and the health check), then answer one question
         await H.until(P.page, "T.S().done.walk && T.S().done.health && st.k==='explore'", { timeoutMs: 120000 });
+        // walk into the room of the next activity first: entering a room saves, so that's the state a reload returns to
+        const room = await P.page.evaluate(() => { const t = __T.objective(); return t && t.room; });
+        if (room) await H.gotoRoom(P.page, room);
         const a = await snap(P.page);
         const task = a.target, base = a.S.graded.filter(g => g.kind !== 'event').length;
         await H.until(P.page, `T.S().graded.filter(g => g.kind !== 'event').length > ${base} && st.k !== 'explore' && !T.S().done[${JSON.stringify(task)}]`, { timeoutMs: 60000 });
@@ -106,8 +113,10 @@ module.exports = {
       const P = await H.openPage({ viewport: 'desktop', policySeed: t.seed + 2, gameSeed: t.seed + 2 });
       try {
         await H.newGame(P.page);
-        // Surprises pop up right after an activity ends (the Director guarantees at least two before the panel).
-        await H.drive(P.page, { stop: "(st.k==='opt' || st.k==='go') && /Out of the blue/i.test(st.tag || '')", timeoutMs: 240000 });
+        // The Director always throws a surprise once the panel unlocks, straight after the last activity. The
+        // 'expert-lastok' policy answers that last activity 'defensibly', so it doesn't unlock an achievement (which
+        // would save as a side effect) and the scenario is the same every run. Stop as soon as the surprise shows.
+        await H.drive(P.page, { policy: 'expert-lastok', stop: "__T.layersOn().includes('panel') && /Out of the blue|something's come up/i.test(document.querySelector('#panel').innerText) && !T.S().done[T.tasks().reduce((a, t) => (t.needs || []).length > ((a && a.needs) || []).length ? t : a, null).id]", timeoutMs: 240000 });
         const mem = await snap(P.page);
         const newlyDone = Object.keys(mem.S.done).filter(k => mem.S.done[k]);
         await H.load(P.page);

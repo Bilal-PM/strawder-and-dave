@@ -33,9 +33,9 @@ module.exports = {
             const tg = LS.game.currentTarget(); let first = null;
             if (tg) { if (tg.room === o) { const e = __T.targetEntity(tg); first = e && e.id; } else { const d = __T.doorTowards(o, tg.room); first = d && d.id; } }
             // points each room's exit drops you at
-            const exits = w.entities.filter(e => e.to && e.to.room === o).map(e => ({ id: e.id, x: e.to.x, y: e.to.y }));
+            const exits = w.entities.filter(e => { const t = __T.doorDest(e); return t && t.room === o && e.room !== o; }).map(e => { const t = __T.doorDest(e); return { id: e.id, room: e.room, x: t.x, y: t.y }; });
             const g = __T.bfs({ room: o, ppe, step, x: w.player.x, y: w.player.y, W: M.W, H: M.H });
-            const ex = exits.map(e => ({ id: e.id, free: !__T.standWith(e.x, e.y, ppe), reached: g.near ? g.near({ x: e.x, y: e.y }, step * 2).length > 0 : false }));
+            const ex = exits.map(e => ({ id: e.id, room: e.room, free: !__T.standWith(e.x, e.y, ppe), reached: g.near ? g.near({ x: e.x, y: e.y }, step * 2).length > 0 : false }));
             return { vis, first, firstTask: tg && tg.task.id, exits: ex, spawn: [Math.round(w.player.x), Math.round(w.player.y)] };
           }, [outdoor, ppe, STEP_OUT]);
           if (!r.ok(!res.vis.startBlocked, `the spawn point ${res.spawn} is not free ground (${res.vis.startBlocked})`)) return;
@@ -49,12 +49,18 @@ module.exports = {
           } else {
             const firstUn = un.find(i => i.id === res.first);
             r.ok(!firstUn, `the first objective (${res.firstTask}) is out of reach without PPE: ${firstUn && fmt(firstUn)}`);
-            for (const i of un.filter(i => i.id !== res.first)) r.warn(`unreachable without PPE: ${fmt(i)} "${i.prompt}"`);
+            for (const i of un.filter(i => i.id !== res.first)) r.log(`reachable only with PPE: ${fmt(i)} "${i.prompt}"`);
           }
-          for (const e of res.exits) { r.ok(e.free, `the ${e.id} exit drops the player on blocked ground`); r.ok(e.reached, `the ${e.id} exit drops the player somewhere cut off from the spawn`); }
+          // Each room's exit must land the player on free ground they could have walked to. Without PPE this only
+          // applies to rooms whose door is itself reachable without PPE.
+          for (const e of res.exits) {
+            const door = items.find(i => i.to === e.room);
+            if (!ppe && door && !door.reachable) { r.log(`${e.id}: its room is PPE-only, so its landing point is only checked with PPE`); continue; }
+            r.ok(e.free, `the ${e.id} exit drops the player on blocked ground`); r.ok(e.reached, `the ${e.id} exit drops the player somewhere cut off from the spawn`);
+          }
           for (const i of shadow) r.warn(`${fmt(i)} "${i.prompt}" is reachable but never the nearest thing to interact with (always shadowed)`);
           r.ok(P.errors.length === 0, 'JS errors:\n' + H.fmtErrors(P.errors));
-          r.note(`${items.length - un.length}/${items.length} entities reachable${un.length ? ' · unreachable: ' + un.map(i => i.kind + ':' + i.id).join(', ') : ''}${ppe ? ' (incl. task entities hidden at start)' : ''}`);
+          r.note(`${items.length - un.length}/${items.length} entities reachable${un.length ? (ppe ? ' · unreachable: ' : ' · PPE-only: ') + un.map(i => i.kind + ':' + i.id).join(', ') : ''}${ppe ? ' (incl. task entities hidden at start)' : ''}`);
         });
       }
 
@@ -63,11 +69,12 @@ module.exports = {
         const rooms = await P.page.evaluate(step => {
           const w = __T.W(), R = LS.WORLD.ROOMS, out = [];
           for (const [id, rm] of Object.entries(R)) {
-            const doors = w.entities.filter(e => e.to && e.to.room === id);
+            const doors = w.entities.filter(e => { const t = __T.doorDest(e); return t && t.room === id; });
             if (!doors.length) { out.push({ id, noDoor: true }); continue; }
             for (const d of doors) {
-              const res = __T.reach({ room: id, ppe: true, step, x: d.to.x, y: d.to.y, W: rm.w, H: rm.h, includeHidden: true });
-              out.push({ id, door: d.id, entry: [d.to.x, d.to.y], res });
+              const to = __T.doorDest(d);
+              const res = __T.reach({ room: id, ppe: true, step, x: to.x, y: to.y, W: rm.w, H: rm.h, includeHidden: true });
+              out.push({ id, door: d.id, entry: [Math.round(to.x), Math.round(to.y)], res });
             }
           }
           return out;

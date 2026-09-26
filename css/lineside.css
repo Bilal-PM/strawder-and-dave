@@ -562,3 +562,4 @@ body.modal #toast{top:calc(84px + env(safe-area-inset-top));bottom:auto}
   .metric .lb{display:none}
   #tip{top:auto;bottom:calc(170px + env(safe-area-inset-bottom))}
 }
+.echoes .later{font-size:13px;color:var(--teal);margin-top:4px}

@@ -37,6 +37,7 @@ module.exports = {
           r.ok(s.canvas.w > 0 && s.canvas.h > 0 && s.canvas.contrast > 30, `the world canvas looks blank (${JSON.stringify(s.canvas)})`);
           r.ok(s.sw <= s.vw + 1, `title page scrolls horizontally (${s.sw} > ${s.vw})`);
           r.ok(P.errors.length === 0, 'JS errors:\n' + H.fmtErrors(P.errors));
+          r.ok(P.missing.length === 0, `files referenced by the page are missing: ${P.missing.join(', ')}`);
           r.note(`${s.buttons.length} buttons: ${s.buttons.map(b => b.t).join(' | ').slice(0, 80)}`);
         } finally { await P.close(); }
       });
@@ -74,8 +75,9 @@ module.exports = {
           const w = G.world(); for (const k of ['entities', 'room', 'player', 'paused', 'fadeDir', 'ppe']) need(k in w, 'world.' + k);
           for (const k of ['canStand', 'onInteract', 'fitScale', 'snapCam']) need(typeof w[k] === 'function', `world.${k}()`);
           need(w.player && typeof w.player.x === 'number' && typeof w.player.y === 'number', 'world.player{x,y}');
-          const kinds = new Set(['npc', 'prop', 'defect', 'hotspot', 'note', 'memo', 'cat']);
-          const bad = w.entities.filter(e => !kinds.has(e.kind) || typeof e.x !== 'number' || typeof e.y !== 'number' || !e.room || !e.id);
+          const kinds = new Set(['npc', 'prop', 'defect', 'hotspot', 'note', 'memo', 'cat']), extra = new Set(['door', 'exit', 'find']);
+          const bad = w.entities.filter(e => !(kinds.has(e.kind) || extra.has(e.kind)) || typeof e.x !== 'number' || typeof e.y !== 'number' || !e.room || !e.id);
+          const extraKinds = [...new Set(w.entities.filter(e => extra.has(e.kind)).map(e => e.kind))];
           need(Array.isArray(w.entities) && w.entities.length > 0, 'world.entities is a non-empty array');
           need(!bad.length, 'entities with unknown kind or missing id/room/x/y: ' + bad.slice(0, 5).map(e => e.kind + ':' + e.id).join(', '));
           need(typeof w.canStand(w.player.x, w.player.y) !== 'undefined', 'world.canStand returns a value');
@@ -86,11 +88,15 @@ module.exports = {
           for (const k of ['tasks', 'talks', 'defects', 'plan', 'dropin', 'panel', 'events']) need(P && P.c1 && P.c1[k], 'pack.c1.' + k);
           need(P && P.calls, 'pack.calls');
           for (const id of ['title', 'setup', 'chapter', 'talk', 'panel', 'report', 'board']) need(document.getElementById(id), '#' + id);
-          const doors = w.entities.filter(e => e.to && e.to.room); need(doors.length > 0, 'at least one door entity with .to');
-          for (const rm of Object.keys(W.ROOMS || {})) need(doors.some(d => d.to.room === rm), `a door into room "${rm}"`);
-          return { missing: out, entities: w.entities.length, kinds: [...new Set(w.entities.map(e => e.kind))].join(','), rooms: Object.keys(W.ROOMS).join(','), tasks: P.c1.tasks.length };
+          // doors: the brief promised {to:{room,x,y}}; the tile world uses kind:'door' {door:{room}} and kind:'exit'
+          const withTo = w.entities.filter(e => e.to && e.to.room), doors = w.entities.filter(e => __T.doorDest(e));
+          need(doors.length > 0, 'at least one door entity');
+          for (const rm of Object.keys(W.ROOMS || {})) need(doors.some(d => __T.doorDest(d).room === rm), `a door into room "${rm}"`);
+          const form = withTo.length ? 'e.to' : doors.some(d => d.kind === 'door') ? "kind:'door' (e.door.room) / kind:'exit', no e.to" : '?';
+          return { missing: out, entities: w.entities.length, kinds: [...new Set(w.entities.map(e => e.kind))].join(','), rooms: Object.keys(W.ROOMS).join(','), tasks: P.c1.tasks.length, form, extraKinds };
         });
         for (const m of c.missing) r.fail('missing or wrong: ' + m);
+        if (c.extraKinds.length) r.warn(`entity kinds outside the documented list: ${c.extraKinds.join(', ')}; doors are described as ${c.form}. The suite copes with both, but the API doc should say so.`);
         r.ok(P.errors.length === 0, 'JS errors:\n' + H.fmtErrors(P.errors));
         r.note(`${c.entities} entities (${c.kinds}) · rooms ${c.rooms} · ${c.tasks} tasks`);
       } finally { await P.close(); }

@@ -32,25 +32,27 @@ The chapter structure mirrors a real project lifecycle and gate process (feasibi
 **Flow and gating** (`PACK.c1.tasks`):
 
 ```
-induction ─┬─> track walk ──┐
-           └─> health check ┴─> works plan ─> forecast Call ─> date Call ─┐
-drop-in (any time) ───────────────────────────────────────────────────────┴─> Funding Panel
+cold open (Sunday) ─> Monday: Helen's first question
+induction ─┬─> track walk ──┬───────────────────────────────> drop-in ─────┐
+           └─> health check ┴─> works plan ─> forecast Call ─> date Call ─┴─> Funding Panel
 ```
 
-- **Induction** (Hannah) gives you PPE, which opens the trackbed and the depot. The collision grid enforces it.
+- **Cold open** (`c1.coldOpen`): Sunday at dawn, the depot door open a crack, three torch-lit finds (Marjorie under a dust sheet, a warm flask, one clean cab window), then Moira: "That's my tea." An ungraded first impression, her advice ("Look before you promise"), then Monday on the platform with Helen and the first graded judgment: "So… can we open by next summer?"
+- **Induction** (Hannah) gives you PPE, which opens "on or near the line" (within 3 m of the rails, including the depot siding) and the depot. On the line you work under Tom's safe system of work. Beyond the junction stop board is the live main line, which stays closed. The collision grid enforces it; the level crossing is always public.
 - **Track walk** (Tom): five defects on the line, each judged with three graded options.
-- **Health check** (Gaz): five areas of Marjorie, with fun follow-ups (the horn, Kevin the pigeon) and a hint that someone has been secretly maintaining her.
-- **Works plan** (Jo): order two lanes of cards by dependency, then answer two questions on test-run timing and the critical path (track: 20 weeks against Marjorie's 16, so Marjorie has 4 weeks of float).
-- **Drop-in** (Priya and Cllr Brian): three resident questions. Honest answers build support; over-promises create **echoes** for Chapter 2.
+- **Health check** (Gaz): five areas of Marjorie (including possible asbestos, an air horn with an empty tank, structural rust and accessibility), with fun follow-ups (the horn, Kevin the pigeon), a hint that someone has been secretly maintaining her, and then one decision (`c1.healthDecision`): what to do first the week the money lands.
+- **Works plan** (Jo): order two lanes of cards by dependency, then answer two questions on test-run timing and the critical path. Counting from the start on site (programme week 9): the track takes 28 weeks against Marjorie's 20, so Marjorie has 8 weeks of float. Grey rows (`plan.background`) show what isn't on the board: designs, approvals and the junction booking before, and 10 weeks of test runs, driver training, trial running and sign-off after.
+- **Drop-in** (Priya and Cllr Brian), after the track walk: four resident questions (the mug, the crossing, lorries, night working). Honest answers build support; over-promises create **echoes** for Chapter 2.
 - **Calls**: *The Ridership Forecast* (independent check and a range) and *Name the Date* (a range, narrowed at each stage), each with a confidence rating.
-- **Funding Panel**: your case on one page (track, train, plan, forecast, date, community), two panel questions, then a readiness score out of 100: **≥75 Approved** (plus £100k risk allowance), **50–74 Approved with conditions** (naming your weakest area), **<50 Deferred** (−4 weeks of float). The outcome carries into Chapter 2.
+- **Funding Panel**: your case on one page (track, train, plan, forecast, date, community, safety and approvals), three panel questions (contingency, the biggest risk to the date, and where the train goes and who runs it), then a readiness score out of 100: **≥75 Approved to proceed** (the £4.8M released stage by stage, plus £100k of funder's risk allowance), **50–74 Approved with conditions** (naming your weakest area), **<50 Deferred** (−4 weeks of float). The outcome carries into Chapter 2.
 - **Time passes**: six weeks with changing light and weather as tasks complete.
 
 **Scoring**
 
 | Decision | JP (best / ok / poor) |
 |---|---|
-| First conversation with each lead | 20 / 10 / 0 |
+| First conversation with each lead, and Helen's first question | 20 / 10 / 0 |
+| The health-check decision | 20 / 10 / 0 |
 | Each track defect | 30 / 15 / 0 |
 | Each health-check area | 10 (for being thorough) |
 | Works-plan sequence (first attempt) | up to 100, in proportion to cards placed correctly |
@@ -62,11 +64,11 @@ drop-in (any time) ────────────────────�
 
 Ranks: Graduate PM (0) → Assistant PM (200) → Project Manager (500) → Senior PM (800) → Programme Director (1600). Excellent play in Chapter 1 reaches Senior PM; Programme Director needs the whole game.
 
-**Achievements (13)**: Kettle's On, Peep Peep, Pigeon Whisperer, Where's Sleeper?, Eagle Eye, Order Order!, Biscuit Diplomacy, Measure Twice, Home on the Range, Local, Anorak, First Page, Green Light. They persist across playthroughs; hints show for locked ones.
+**Achievements (13)**: Kettle's On, Peep Peep, Pigeon Whisperer, Where's Sleeper?, Eagle Eye, Order, Order!, Biscuit Diplomacy, Measure Twice, Home on the Range, Local Knowledge, Anorak, First Page, Green Light. They persist across playthroughs; hints show for locked ones.
 
 ## The Director (unpredictability)
 
-A small, rule-based "AI director" (in `game.js`, with data in `PACK.c1.events`) throws up to three surprises per chapter, drawn from a seeded random stream so every playthrough differs. Each event has a `weight(S)` that reacts to the world: a wet week makes the flood event likely, low town support makes rumours likely, a weak level-crossing judgment makes trespass likely, thin evidence makes cost holes likely. Events are graded decisions (JP 40/20/0); some carry `luck`, where the dice decide the outcome. The game then points out when a good decision got an unlucky result, or the other way round, because JP judge the decision, not the dice.
+A small, rule-based "AI director" (in `game.js`, with data in `PACK.c1.events`) throws up to three surprises per chapter, drawn from a seeded random stream so every playthrough differs. Chapter 1 has nine events: the flood warning, the Gazette rumour, trespassers on the bridge, bargain wheelsets with no paperwork, an unpriced £60k, the main-line junction booking deadline, bats in Beck Bridge, a farmer's forgotten crossing, and scope creep from the sponsor. Each event has a `weight(S)` that reacts to the world: a wet week makes the flood event likely, low town support makes rumours likely, a weak level-crossing judgment makes trespass and the junction deadline likely, and thin evidence makes cost holes likely. Only the farmer's call can come straight after the induction, so the first surprise varies. Money and float follow the plan: only critical-path work (track, crossing, junction) costs weeks; delays on Marjorie's lane cost money, because she has float. Events are graded decisions (JP 40/20/0); some carry `luck`, where the dice decide the outcome. The game then points out when a good decision got an unlucky result, or the other way round, because JP judge the decision, not the dice.
 
 Why rules rather than a language model in the browser: a local model is a 1–4 GB download, runs slowly on phones and school laptops, can say things that are wrong about safety, and can't be graded consistently. A cloud-hosted AI coach for free-text debriefs is a possible later add-on, but it needs a server and content guardrails.
 

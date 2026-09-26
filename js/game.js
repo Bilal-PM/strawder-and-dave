@@ -277,7 +277,7 @@
     apply(c.e, true);
     S.judgment.push({ id: call.id, title: call.title, ci, choice: c.t, grade: c.grade, conf, secs: call._secs || 0, principle: call.principle.name });
     record('call', call.id, call.title, c.grade, { conf });
-    if (c.ripple) S.ripples.push({ title: c.ripple.title, text: c.ripple.text, from: call.title, choice: c.t });
+    if (c.ripple) S.ripples.push({ title: c.ripple.title, text: c.ripple.text, later: c.ripple.later, from: call.title, choice: c.t });
     S.done[call.task] = true;
     const base = JP.call[c.grade], bonus = CAL[conf][c.grade];
     gainJP(base + bonus, `The Call · ${call.title}`);
@@ -445,7 +445,7 @@
       const ci = await ask(q.who, q.text, q.choices.map(c => c.t), { shuffle: true, eyebrow: 'Question from the floor' });
       const o = q.choices[ci], jp = JP.dropin[o.grade];
       apply(o.e, true); grades.push(o.grade); record('dropin', q.who, `Drop-in: ${first(q.who)}'s question`, o.grade); gainJP(jp, `Drop-in · ${first(q.who)}`);
-      if (o.ripple) S.ripples.push({ title: o.ripple.title, text: o.ripple.text, from: 'The drop-in', choice: o.t });
+      if (o.ripple) S.ripples.push({ title: o.ripple.title, text: o.ripple.text, later: o.ripple.later, from: 'The drop-in', choice: o.t });
       await say(q.who, o.reply, o.grade === 'best' ? 'smile' : o.grade === 'poor' ? 'smile' : 'concern', null, `<div class="chips">${chips(o.e, jp)}</div>${o.ripple ? `<div class="pending">⏳ That will be remembered…</div>` : ''}`);
     }
     S.dropin = grades; S.done.dropin = true;
@@ -588,7 +588,7 @@
     world.allow = apronOk; world.flags.openDepot = true;
     const shedDoor = D.shed; world.objective = { room: 'shed', x: R.shed.enter.x, y: R.shed.enter.y, label: CO.objective || 'The depot', doorLabel: CO.objective || 'The depot' };
     $('#obj').innerHTML = `<li class="next"><span class="bx"></span><span><b>${esc(CO.objective || 'Look inside the depot')}</b><small>Harrowby Depot, next to the station</small></span></li>`;
-    world.paused = false; pad(true); tip('move', MOVE_TIP());
+    world.paused = false; pad(true); tip(world.touch ? 'move_touch' : 'move_desktop', MOVE_TIP());
     await new Promise(res => { world.onEnterRoom = room => { if (room === 'shed') res(); }; world.onInteract = null; });
     // the dark depot: three finds by torchlight
     world.flags.dark = true; world.paused = true; pad(false);
@@ -597,6 +597,7 @@
     const hidShed = world.entities.filter(e => e.room === 'shed' && e.kind !== 'find'); hidShed.forEach(e => { e._h2 = e.hidden; e.hidden = true; });
     world.entities.push(...fe);
     world.objective = { room: 'shed', x: fe[0] ? fe[0].x : 0, y: fe[0] ? fe[0].y : 0, label: 'Have a look round' };
+    $('#obj').innerHTML = `<li class="next"><span class="bx"></span><span><em>Now</em><b>Have a look round</b><small>${fe.length} things catch your torch</small></span></li>`;
     world.paused = false; pad(true); tip('find');
     await new Promise(res => {
       world.onInteract = async e => {
@@ -632,7 +633,7 @@
       const P = CO.promise, ci = await ask(P.who, P.text, P.choices.map(c => c.t), { shuffle: true, eyebrow: 'Your first call' });
       const o = P.choices[ci], jp = JP.talk[o.grade];
       apply(o.e, true); record('talk', 'promise', 'The first promise', o.grade); gainJP(jp, 'The first promise');
-      if (o.ripple) S.ripples.push({ title: o.ripple.title, text: o.ripple.text, from: 'Your first morning', choice: o.t });
+      if (o.ripple) S.ripples.push({ title: o.ripple.title, text: o.ripple.text, later: o.ripple.later, from: 'Your first morning', choice: o.t });
       await say(P.who, o.reply, o.grade === 'best' ? 'smile' : 'neutral', null, `<div class="chips">${chips(o.e, jp)}</div>`);
     }
     for (const [who, text] of CO.after || []) await say(who, text, 'smile');
@@ -900,7 +901,7 @@
     onKey = null; LS.audio.sfx('select');
     const o = ev.choices[ci], jp = JP.event[o.grade];
     apply(o.e, true); record('event', ev.id, ev.title, o.grade); gainJP(jp, 'Surprise · ' + ev.title);
-    if (o.ripple) S.ripples.push({ title: o.ripple.title, text: o.ripple.text, from: ev.title, choice: o.t });
+    if (o.ripple) S.ripples.push({ title: o.ripple.title, text: o.ripple.text, later: o.ripple.later, from: ev.title, choice: o.t });
     let luck = null;
     if (o.luck) { const hit = rand() < o.luck.p; luck = Object.assign({ hit, p: o.luck.p }, hit ? o.luck.good : o.luck.bad); }
     S.events.push({ id: ev.id, grade: o.grade, luck: luck ? luck.hit : null });
@@ -969,7 +970,7 @@
         ${drow('Surprises from the Director', byKind('event'))}${drow('The Funding Panel’s questions', byKind('panelQ'))}</div>
       <div class="card rcard" style="margin-bottom:16px"><h3>Achievements · ${S.ach.length} of ${PACK.achievements.length} this run</h3><div class="badges">${PACK.achievements.map(a => `<div class="badge ${S.ach.includes(a.id) ? 'on' : ACHG[a.id] ? 'old' : ''}"><span class="ic">${S.ach.includes(a.id) || ACHG[a.id] ? a.ic : '🔒'}</span><b>${esc(a.name)}</b><small>${esc(S.ach.includes(a.id) || ACHG[a.id] ? a.desc : a.hint)}</small></div>`).join('')}</div></div>
       <div class="card rcard" style="margin-bottom:16px"><h3>Take these to your next project</h3>${lessons().map(([n, t]) => `<div class="lesson"><div class="pn">${esc(n)}</div><p>${esc(t)}</p></div>`).join('')}</div>
-      ${S.ripples.length ? `<div class="card rcard echoes" style="margin-bottom:16px"><h3>⏳ Echoes: these will come back in Chapter 2</h3>${S.ripples.map(r => `<div class="lesson"><div class="pn">${esc(r.title)}</div><p>From ${esc(r.from)}: “${esc(r.choice)}”</p></div>`).join('')}</div>` : ''}
+      ${S.ripples.length ? `<div class="card rcard echoes" style="margin-bottom:16px"><h3>⏳ Echoes: these will come back in Chapter 2</h3>${S.ripples.map(r => `<div class="lesson"><div class="pn">${esc(r.title)}</div><p>From ${esc(r.from)}: “${esc(r.choice)}”</p>${r.later ? `<p class="later">Coming in Chapter 2: ${esc(r.later)}</p>` : ''}</div>`).join('')}</div>` : ''}
       <div class="card finale"><div class="face">${face('moira', 'smile')}</div><div><div class="eyebrow" style="color:var(--gold)">Moira Kell</div><p style="margin-top:8px">“${fill(C1.end[key])}”</p>${S.memo ? `<p>“${fill(C1.end.secret)}”</p>` : `<p class="dim">(Somebody in this valley keeps a log. You didn't find it this time.)</p>`}</div></div>
       <details class="card rcard" style="margin-bottom:16px"><summary style="cursor:pointer;font-weight:700">For facilitators: discussion guide</summary><ol class="discuss" style="margin-top:12px">
         <li><b>Look before you promise.</b> What did the track walk and the health check tell you that no report could?</li>

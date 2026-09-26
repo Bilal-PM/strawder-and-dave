@@ -18,7 +18,7 @@ async function play(t, r, policy, vp, seed) {
         events: S.events.map(e => `${e.id}:${e.grade}${e.luck == null ? '' : e.luck ? ':lucky' : ':unlucky'}`),
         graded: S.graded.length, grades: g, notBest: S.graded.filter(x => x.grade !== 'best').map(x => `${x.kind}:${x.id}=${x.grade}`),
         notDone: tasks.filter(x => !S.done[x.id]).map(x => x.id), doneOrder: __T.doneOrder.slice(),
-        violations: __T.violations.slice(), covered: __T.covered.slice(), unknown: [...new Set(__T.unknownChoices)], asyncErrors: __T.asyncErrors.slice(), notes: [...new Set(__T.notes)],
+        interact: __T.INTERACT, violations: __T.violations.slice(), covered: __T.covered.slice(), unknown: [...new Set(__T.unknownChoices)], asyncErrors: __T.asyncErrors.slice(), notes: [...new Set(__T.notes)],
         report: { on: document.querySelector('#report').classList.contains('on'), text: (document.querySelector('#report').innerText || '').length }
       };
     });
@@ -46,6 +46,8 @@ async function play(t, r, policy, vp, seed) {
     if (s.covered.length) r.warn(`${s.covered.length} click target(s) were covered by another element: ` + s.covered.slice(0, 3).map(c => `${c.target} under ${c.by}`).join('; '));
     for (const n of s.notes) r.log(n);
     r.log(`task order: ${s.doneOrder.join(' → ')}`);
+    r.log(`interaction reach ${JSON.stringify(s.interact)}`);
+    if (P.missing.length) r.log(`missing files (see smoke): ${P.missing.join(', ')}`);
     r.log(`dashboard: ${JSON.stringify(s.m)} · grades ${JSON.stringify(s.grades)} · achievements ${s.ach.join(', ')}`);
     r.note(`${s.panel ? s.panel.outcome : '?'} ${s.panel ? s.panel.score : '?'}/100 · ${s.jp} JP ${s.rank} · ${s.graded} decisions · ${s.ach.length} badges · surprises ${s.events.join(' ') || 'none'} · ${d.steps} steps · seed ${seed}`);
   } finally { await P.close(); }

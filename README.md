@@ -27,15 +27,17 @@ Controls: WASD or the arrow keys (Shift to hurry), or click or tap where you wan
 
 ## Chapter 1: Make the Case
 
-Six in-game weeks, from March to April. You arrive, then:
+Six in-game weeks, from March to April. It opens the Sunday before you start: at dawn the depot door is open a crack, and by torchlight you find a railcar under a dust sheet, a flask that's still warm, and one cab window someone has wiped clean. Then Moira says "That's my tea." On Monday Helen asks your first real question ("So… can we open by next summer?"), and then:
 
-1. **Site induction** with Hannah (safety) at the project office, which gets you your PPE. Without it you can't walk on the closed line or enter the depot.
-2. **Walk the line** with Tom, judging five real defects: rotten sleepers, a blocked drain (with a duck in it), Beck Bridge, vegetation (with nesting-season rules) and the dead Crag Lane level crossing.
-3. **Marjorie's health check** with Gaz in the depot: cab and electrics (the horn goes *peep*), bogies and wheelsets, brakes, engines (someone has secretly been maintaining her) and the body (with Kevin the pigeon in residence).
-4. **The works plan** with Jo: put both workstreams in dependency order (strip down → bogies → brakes → engines & electrics → static tests; ecology → drainage → relay → level crossing), then work out when test runs can start and which workstream is the **critical path**.
-5. **The drop-in** at the village hall with Priya and Cllr Brian: three questions from the town. Honest answers build support; over-promises feel good now and **echo into Chapter 2**.
+1. **Site induction** with Hannah (safety) at the project office, which gets you your PPE. Without it you can't go "on or near the line" (within 3 m of the rails) or enter the depot, and even with it you walk the line under Tom's safe system of work. The live main line beyond the junction stop board is off limits.
+2. **Walk the line** with Tom, judging five real defects: rotten sleepers, a blocked drain (with a duck in it), Beck Bridge (scour you can't see), vegetation (with nesting-season rules) and the dead Crag Lane level crossing.
+3. **Marjorie's health check** with Gaz in the depot: cab and electrics (possible asbestos, and the air horn goes *peep*), bogies and wheelsets, brakes, engines (someone has secretly been maintaining her) and the body (structural rust, slam doors, and Kevin the pigeon in residence). Then one decision: what to do first the week the money lands.
+4. **The works plan** with Jo: put both workstreams in dependency order (asbestos survey & strip down → bogies & wheelsets, with body repairs alongside → brakes → engines & rewire → static tests; ecology & clearance → drainage & Beck Bridge repairs → relay, tamp & stress → level crossing & junction), then work out when test runs can start and which workstream is the **critical path**. Grey rows show the slow work that isn't on the board: designs, approvals and the junction booking before, and test runs, driver training, trial running and sign-off after.
+5. **The drop-in** at the village hall with Priya and Cllr Brian, once you've walked the line: four questions from the town. Honest answers build support; over-promises feel good now and **echo into Chapter 2**.
 6. **Two Calls**: *The Ridership Forecast* (optimism bias) with Steve, and *Name the Date* (ranges, not points) with Helen.
-7. **The Funding Panel**, a gate review. Everything you did is laid out as "your case", the panel asks two questions, and your readiness score decides the outcome: **Approved**, **Approved with conditions** or **Deferred**. That outcome carries into Chapter 2.
+7. **The Funding Panel**, a gate review. Everything you did is laid out as "your case", the panel asks three questions (including where the train goes and who will run it), and your readiness score decides the outcome: **Approved**, **Approved with conditions** or **Deferred**. That outcome carries into Chapter 2.
+
+Along the way the Director throws in surprises (a flood warning, a newspaper rumour, trespassers, a bargain with no paperwork, a hole in the budget, a deadline for the main-line junction weekend, bats in the bridge, a farmer's forgotten crossing, and scope creep), each graded on the decision, not the dice.
 
 The world obeys engineering logic: the closed line needs PPE, the depot needs PPE, and some tasks unlock only after others (you can't plan work you haven't seen).
 
@@ -43,7 +45,7 @@ The world obeys engineering logic: the closed line needs PPE, the depot needs PP
 
 - **The project dashboard, in real units**: schedule float (weeks), contingency (£k), safety culture, evidence, team morale and town support (%). Outcomes move it, and outcomes include luck.
 - **Judgment Points (JP) and a career rank** (Graduate PM → Assistant PM → Project Manager → Senior PM → Programme Director). JP reward the quality of each decision (expert-graded) and, on the Calls, **calibration**: confidence that matches the quality of your call earns a bonus, and being certain about a weak call costs you. Luck never earns JP.
-- **13 achievements** that unlock in fun ways: *Kettle's On*, *Peep Peep*, *Pigeon Whisperer*, *Where's Sleeper?* (the depot cat), *Eagle Eye*, *Order, Order!*, *Biscuit Diplomacy*, *Measure Twice*, *Home on the Range*, *Local*, *Anorak*, *First Page* and *Green Light*.
+- **13 achievements** that unlock in fun ways: *Kettle's On*, *Peep Peep*, *Pigeon Whisperer*, *Where's Sleeper?* (the depot cat), *Eagle Eye*, *Order, Order!*, *Biscuit Diplomacy*, *Measure Twice*, *Home on the Range*, *Local Knowledge*, *Anorak*, *First Page* and *Green Light*.
 
 ### The cast
 
@@ -100,7 +102,7 @@ docs/DESIGN.md                  The full six-chapter design
 
 ### Pack data (Chapter 1)
 
-`PACK.c1` holds the chapter: `intro`, `tasks[]` (with `needs` for dependency gating), `talks`, `defects[]` (each with graded options), `hotspots[]` (Marjorie's health check, with optional fun follow-ups), `plan` (lanes of cards in their correct order, plus critical-path questions), `dropin`, `panel` (questions and the three outcomes) and `end`. `PACK.calls` holds the Calls (`known`, `unknown`, `principle`, `discuss`, graded `choices` with effects `e`, an optional `ripple` echo and `ach`). `PACK.achievements` and `PACK.ranks` drive progression.
+`PACK.c1` holds the chapter: `coldOpen` (the Sunday torch scene, Moira, Monday and Helen's first graded question), `tips` (one-line coach marks), `tasks[]` (with `needs` for dependency gating), `talks`, `defects[]` (each with graded options), `hotspots[]` (Marjorie's health check, with optional fun follow-ups) and `healthDecision`, `plan` (lanes of cards in their correct order, grey `background` rows, plus critical-path questions), `dropin`, `panel` (questions and the three outcomes), `events` (the Director's surprises, with `weight(S)`, `cause(S)` and optional `luck`) and `end`. `PACK.calls` holds the Calls (`known`, `unknown`, `principle`, `discuss`, `atWork`, graded `choices` with effects `e`, an optional `ripple` echo and `ach`). `PACK.chapters[]` carries each chapter's `objective`; `PACK.achievements` and `PACK.ranks` drive progression; `PACK.glossary`, `PACK.outcomes` and `PACK.selfCheck` support learning. Graded items carry an `lo` tag for their learning outcome. Every graded set has exactly one `best`, and the expert option must not give itself away by length (it is the longest in 9 of 30 sets).
 
 ## Engine choice: do we need Godot?
 

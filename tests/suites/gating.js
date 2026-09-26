@@ -64,34 +64,39 @@ module.exports = {
       const P = await H.openPage({ viewport: 'desktop', policySeed: t.seed });
       try {
         await H.newGame(P.page);
-        const info = await P.page.evaluate(() => { const dep = __T.depotRoom(), d = __T.doors().find(d => d.to.room === dep); return { dep, door: d && { id: d.id, room: d.room } }; });
+        const info = await P.page.evaluate(() => { const dep = __T.depotRoom(), d = __T.doors().find(d => __T.doorDest(d).room === dep); return { dep, door: d && { id: d.id, room: d.room } }; });
         if (!r.ok(info.dep && info.door, `could not find the depot room (${info.dep}) or its door`)) return;
-        const tryDoor = async () => {
+        // (a) can a player without PPE even get within reach of the door?
+        const reach = await P.page.evaluate(([id, room]) => {
+          const M = LS.WORLD.MAP, w = __T.W(), rs = __T.reach({ room, ppe: false, step: 4, x: w.player.x, y: w.player.y, W: M.W, H: M.H });
+          const it = rs.items.find(i => i.id === id); return it ? it.reachable : null;
+        }, [info.door.id, info.door.room]);
+        r.log(`without PPE the depot door is ${reach ? 'within reach on foot' : 'out of reach on foot (the ground in front of it needs PPE)'}`);
+        // (b) stand at the door and press E (real key). The game rate-limits refusals to one per 2.5s from page load,
+        //     so wait until that has passed.
+        const useDoor = async () => {
           await H.gotoRoom(P.page, info.door.room);
-          const sp = await P.page.evaluate(id => { const d = __T.W().entities.find(e => e.id === id); const s = __T.spotNear(d); if (s) __T.teleport(s.x, s.y); return s; }, info.door.id);
-          const f0 = await P.page.evaluate(() => __T.frames);
-          await P.page.waitForFunction(f => __T.frames > f + 2, f0, { polling: 'raf' });
+          await P.page.evaluate(id => { const d = __T.W().entities.find(e => e.id === id); const s = __T.spotNear(d); if (s) __T.teleport(s.x, s.y); }, info.door.id);
+          await P.page.waitForFunction(id => { const w = __T.W(); return w.focus && w.focus.id === id; }, info.door.id, { timeout: 3000, polling: 'raf' }).catch(() => { });
+          const focused = await P.page.evaluate(id => { const f = __T.W().focus; return !!f && f.id === id; }, info.door.id);
+          await P.page.waitForFunction(() => performance.now() > 3000);
           await blur(P.page);
-          const before = await P.page.evaluate(() => __T.layerLog.length);
-          await P.page.keyboard.press('e');   // the real "interact" key
-          let how = 'key E';
-          const moved = await P.page.waitForFunction(dep => { const w = __T.W(); return w.fadeDir || w.room === dep || __T.layersOn().length > 0; }, info.dep, { timeout: 2000, polling: 'raf' }).then(() => true, () => false);
-          if (!moved) { how = 'onInteract (E did nothing from the nearest free spot)'; await P.page.evaluate(id => __T.interact(__T.W().entities.find(e => e.id === id)), info.door.id); }
-          await P.page.waitForFunction(dep => { const w = __T.W(); return (w.room === dep && !w.fadeDir) || __T.layersOn().length > 0; }, info.dep, { timeout: 6000, polling: 'raf' }).catch(() => { });
-          const s = await P.page.evaluate(n => ({ room: __T.W().room, layers: __T.layersOn(), talk: (document.querySelector('#talk').innerText || '').replace(/\s+/g, ' ').slice(0, 120), log: __T.layerLog.slice(n) }), before);
-          return { how, sp, s };
+          await P.page.keyboard.press('e');
+          await P.page.waitForFunction(dep => { const w = __T.W(); return (w.room === dep && !w.fadeDir) || __T.layersOn().length > 0; }, info.dep, { timeout: 4000, polling: 'raf' }).catch(() => { });
+          return Object.assign({ focused }, await P.page.evaluate(() => ({ room: __T.W().room, layers: __T.layersOn(), talk: (document.querySelector('#talk').innerText || '').replace(/\s+/g, ' ').slice(0, 120) })));
         };
-        const a = await tryDoor();
-        r.ok(a.s.room !== info.dep, `without PPE the player got into the depot (${a.s.room})`);
-        r.ok(a.s.layers.includes('talk'), 'without PPE the door gave no explanation (no dialogue)');
-        if (a.how !== 'key E') r.warn(`depot door: ${a.how}`);
-        await H.until(P.page, "st.k==='explore'", { timeoutMs: 20000 });
+        const a = await useDoor();
+        r.ok(a.focused, 'standing at the depot door, it never became the thing E interacts with');
+        r.ok(a.room !== info.dep, `without PPE, pressing E at the depot door let the player in`);
+        r.ok(a.layers.includes('talk'), 'without PPE, pressing E at the depot door gave no explanation (no dialogue)');
+        if (a.layers.length) await H.until(P.page, "st.k==='explore'", { timeoutMs: 20000 });
         r.ok(await P.page.evaluate(dep => __T.W().room !== dep, info.dep), 'after the refusal the player ended up in the depot anyway');
+        // (c) with PPE, the same door lets you in
         await getPpe(P.page);
-        const b = await tryDoor();
-        r.ok(b.s.room === info.dep, `with PPE the depot door did not let the player in (still in ${b.s.room}; layers ${b.s.layers})`);
+        const b = await useDoor();
+        r.ok(b.room === info.dep, `with PPE the depot door did not let the player in (still in ${b.room}; layers ${b.layers})`);
         r.ok(P.errors.length === 0, 'JS errors:\n' + H.fmtErrors(P.errors));
-        r.note(`no PPE: "${a.s.talk.slice(0, 70)}…"; with PPE: entered ${b.s.room}`);
+        r.note(`no PPE: ${reach ? 'reachable, ' : 'can\'t reach it on foot; '}E at the door → "${a.talk.slice(0, 50)}…"; with PPE: entered ${b.room}`);
       } finally { await P.close(); }
     });
 

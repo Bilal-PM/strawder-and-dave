@@ -63,7 +63,7 @@ const results = [];
 const withTimeout = (p, ms, what) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error(`${what} timed out after ${Math.round(ms / 1000)}s`)), ms))]);
 
 async function check(suite, name, viewport, fn) {
-  if (H.opts.grep && !(`${suite} ${name} ${viewport || ''}`).toLowerCase().includes(H.opts.grep)) return null;
+  if (H.opts.grep && suite !== 'preflight' && !(`${suite} ${name} ${viewport || ''}`).toLowerCase().includes(H.opts.grep)) return null;
   const r = new Result(), t0 = Date.now();
   if (process.stdout.isTTY) process.stdout.write(`  … ${suite} · ${name}${viewport ? ' · ' + viewport : ''}`);
   try { await withTimeout(Promise.resolve(fn(r)), CHECK_TIMEOUT, 'check'); }

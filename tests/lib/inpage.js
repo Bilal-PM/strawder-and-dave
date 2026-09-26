@@ -150,16 +150,20 @@
   T.btnText = b => { const t = b.querySelector('.t'); if (t) return norm(t.textContent); const sp = b.querySelectorAll('span'); return norm((sp.length ? sp[sp.length - 1] : b).textContent); };
   T.gradeOf = txt => { const g = T.gradeTable().m.get(norm(txt)); return g === 'ambiguous' ? null : g || null; };
   const RANK = { best: 3, ok: 2, poor: 1 };
+  // 'expert-lastok': expert everywhere, except that on the last task before the final one (the panel) it gives the
+  // defensible ('ok') answer. Used to make a specific save scenario happen every time.
+  T.lastPhase = () => { const S = T.S(), ts = T.tasks(), fin = ts.reduce((a, t) => ((t.needs || []).length > ((a && a.needs) || []).length ? t : a), null), rem = ts.filter(t => !S.done[t.id]); return rem.length === 2 && rem.includes(fin); };
   T.pick = (btns, policy) => {
     if (!btns.length) throw new Error('no options to pick from');
     if (policy === 'random') return btns[Math.floor(T.rnd() * btns.length)];
+    if (policy === 'expert-lastok' && T.lastPhase()) { const ok = btns.find(b => T.gradeOf(T.btnText(b)) === 'ok'); if (ok) return ok; }
     let best = btns[0], bs = -1;
     for (const b of btns) {
       const tx = T.btnText(b), g = T.gradeOf(tx);
       const s = g ? RANK[g] : T.gradeTable().pref.has(tx) ? 2.5 : 0;
-      if (!g && !T.gradeTable().pref.has(tx)) T.unknownChoices.push(tx.slice(0, 80));
       if (s > bs) { bs = s; best = b; }
     }
+    if (bs === 0) T.unknownChoices.push(btns.map(b => T.btnText(b).slice(0, 40)).join(' / '));
     return best;
   };
 
@@ -184,19 +188,31 @@
   };
 
   // ---------- The world: doors, targets, standing spots ----------
-  T.INTERACT = { r: 58, yScale: 1.3 };   // the world's "near enough to interact" test: hypot(dx, dy*1.3) < 58
-  const idist = (e, x, y) => Math.hypot(e.x - x, (e.y - y) * T.INTERACT.yScale);
+  // How close the player must stand to interact. Calibrated at runtime by T.calibrate() (probing world.focus);
+  // this default is only used until then. anchor 'stand' = the entity's stand point (sx,sy) if it has one.
+  T.INTERACT = { r: 20, yScale: 1.2, anchor: 'stand', calibrated: false };
+  T.anchor = e => T.INTERACT.anchor === 'pos' ? { x: e.x, y: e.y } : { x: e.sx ?? e.x, y: e.sy ?? e.y };
+  const idist = (e, x, y) => { const a = T.anchor(e); return Math.hypot(a.x - x, (a.y - y) * T.INTERACT.yScale); };
   T.idist = idist;
   T.free = (x, y) => !T.W().canStand(x, y);
   T.prompted = room => T.W().entities.filter(e => e.room === room && !e.hidden && e.prompt);
-  T.doors = () => T.W().entities.filter(e => e.to && e.to.room && !e.hidden);
+  // Where does a door/exit entity lead? Supports {to:{room,x,y}} and the tile world's kind:'door' / kind:'exit'.
+  T.doorDest = e => {
+    if (!e) return null;
+    if (e.to && e.to.room) return { room: e.to.room, x: e.to.x, y: e.to.y };
+    const R = LS.WORLD.ROOMS || {};
+    if (e.kind === 'door' && e.door && e.door.room) { const rm = R[e.door.room] || {}; const en = rm.enter || {}; return { room: e.door.room, x: en.x, y: en.y }; }
+    if (e.kind === 'exit' && R[e.room]) { const x = R[e.room].exitTo || {}; return { room: T._outdoor || 'outside', x: x.x, y: x.y }; }
+    return null;
+  };
+  T.doors = () => T.W().entities.filter(e => !e.hidden && T.doorDest(e));
   // Shortest chain of doors from one room to another; returns the first door to use.
   T.doorTowards = (from, to) => {
     if (from === to) return null;
     const doors = T.doors(), prev = { [from]: null }, q = [from];
     while (q.length) {
       const r = q.shift();
-      for (const d of doors.filter(d => d.room === r)) if (!(d.to.room in prev)) { prev[d.to.room] = d; q.push(d.to.room); }
+      for (const d of doors.filter(d => d.room === r)) { const dest = T.doorDest(d).room; if (!(dest in prev)) { prev[dest] = d; q.push(dest); } }
     }
     if (!(to in prev)) return null;
     let d = prev[to]; while (d && d.room !== from) d = prev[d.room];
@@ -212,27 +228,78 @@
     o = o || {};
     const w = T.W(), room = e.room, others = T.prompted(room).filter(x => x !== e);
     if (w.room !== room) throw new Error(`spotNear: player is in ${w.room}, ${e.id} is in ${room}`);
-    let best = null, bs = Infinity; const R = T.INTERACT.r - 4;
-    for (let dy = -44; dy <= 44; dy += 4) for (let dx = -56; dx <= 56; dx += 4) {
-      const x = e.x + dx, y = e.y + dy, d = idist(e, x, y); if (d >= R) continue;
+    const a = T.anchor(e), R = T.INTERACT.r * 0.85, st = Math.max(1, Math.round(R / 8));
+    let best = null, bs = Infinity;
+    for (let dy = -R; dy <= R; dy += st) for (let dx = -R; dx <= R; dx += st) {
+      const x = a.x + dx, y = a.y + dy, d = idist(e, x, y); if (d >= R) continue;
       if (!T.free(x, y)) continue;
-      const nearest = others.every(q => idist(q, x, y) > d);
-      const s = (nearest ? 0 : 1000) + d + (dy < 0 ? 12 : 0);
+      const nearest = others.every(q => idist(q, x, y) > d + 0.5);
+      const s = (nearest ? 0 : 1000) + d;
       if (s < bs) { bs = s; best = { x, y, nearest }; }
     }
     return best;
   };
-  T.teleport = (x, y) => { const w = T.W(); w.player.x = x; w.player.y = y; if ('target' in w.player) w.player.target = null; if (w.snapCam) w.snapCam(); };
-  T.interact = e => {
+  T.teleport = (x, y) => { const w = T.W(); w.player.x = x; w.player.y = y; for (const k of ['target', 'path', 'use']) if (k in w.player) w.player[k] = null; if (w.snapCam) w.snapCam(); };
+  // Interact the way a player does: stand within reach, wait until the game focuses the entity, press E.
+  // Falls back to a direct call (and notes it) if the entity never becomes the focus.
+  T.direct = e => {
+    const w = T.W();
+    if (e.kind === 'door' && w.tryDoor && e.door) return w.tryDoor(e.door);
+    if (e.kind === 'exit' && w.exitRoom) return w.exitRoom();
+    if (e.to && w.onInteract) { const r = w.onInteract(e); if (r && r.catch) r.catch(err => T.asyncErrors.push(String((err && err.stack) || err))); return; }
+    if (!w.onInteract) { T.notes.push(`nothing handles interactions right now (world.onInteract is null) for ${e.kind}:${e.id}`); return; }
+    const r = w.onInteract(e); if (r && r.catch) r.catch(err => T.asyncErrors.push(String((err && err.stack) || err)));
+  };
+  T.pressE = () => { for (const type of ['keydown', 'keyup']) window.dispatchEvent(new KeyboardEvent(type, { key: 'e', code: 'KeyE', bubbles: true })); };
+  T.interact = (e, o) => {
+    o = o || {};
     const w = T.W(), sp = T.spotNear(e);
     if (sp) T.teleport(sp.x, sp.y); else T.notes.push(`no free standing spot within reach of ${e.kind}:${e.id}`);
-    const r = w.onInteract(e);
-    if (r && r.catch) r.catch(err => T.asyncErrors.push(String((err && err.stack) || err)));
+    if (o.direct || !('focus' in w)) { T.direct(e); return sp; }
+    let n = 0;
+    const go = () => {
+      if (w.paused || w.fadeDir) return;                      // something else took over
+      if (w.focus === e) {
+        T.pressE();
+        const room = w.room, m0 = T.mut; let k = 0;
+        const watch = () => { if (w.paused || w.fadeDir || w.room !== room || T.mut !== m0) return; if (++k > 30) { T.notes.push(`pressed E at ${e.kind}:${e.id} and nothing happened`); T.lastNoop = e.id; return; } requestAnimationFrame(watch); };
+        requestAnimationFrame(watch); return;
+      }
+      if (++n > 10) { T.notes.push(`${e.kind}:${e.id} never became the interaction focus from ${sp ? Math.round(sp.x) + ',' + Math.round(sp.y) : 'its position'} (focus: ${w.focus ? w.focus.kind + ':' + w.focus.id : 'none'}); used a direct call`); T.direct(e); return; }
+      requestAnimationFrame(go);
+    };
+    requestAnimationFrame(go);
     return sp;
+  };
+  // Measure the interaction radius by probing world.focus around an isolated entity.
+  T.calibrate = async () => {
+    const w = T.W(); if (!('focus' in w) || w.paused) return T.INTERACT;
+    const list = T.prompted(w.room);
+    const frame = () => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+    const keep = { x: w.player.x, y: w.player.y, face: w.player.face };
+    const tryAnchor = async (e, anchor) => {
+      const a = anchor === 'pos' ? { x: e.x, y: e.y } : { x: e.sx ?? e.x, y: e.sy ?? e.y };
+      const probe = async (dx, dy) => { w.player.x = a.x + dx; w.player.y = a.y + dy; for (const k of ['target', 'path', 'use']) if (k in w.player) w.player[k] = null; await frame(); return w.focus === e; };
+      if (!(await probe(0, 0))) return null;
+      const along = async (ux, uy) => { let lo = 0, hi = 160; if (await probe(ux * hi, uy * hi)) return hi; while (hi - lo > 0.5) { const m = (lo + hi) / 2; if (await probe(ux * m, uy * m)) lo = m; else hi = m; } return lo; };
+      const rx = await along(1, 0), ry = await along(0, 1);
+      return rx && ry ? { r: Math.floor(rx), yScale: +(rx / ry).toFixed(3), anchor, calibrated: true, via: e.kind + ':' + e.id } : null;
+    };
+    try {
+      const iso = list.filter(e => list.every(q => q === e || Math.hypot((q.sx ?? q.x) - (e.sx ?? e.x), (q.sy ?? q.y) - (e.sy ?? e.y)) > 200));
+      for (const e of iso.slice(0, 3)) { const c = (await tryAnchor(e, 'stand')) || (await tryAnchor(e, 'pos')); if (c) { T.INTERACT = c; break; } }
+    } finally { w.player.x = keep.x; w.player.y = keep.y; if (w.snapCam) w.snapCam(); }
+    return T.INTERACT;
+  };
+  // What the player is being pointed at: the on-screen objective if the world has one, else currentTarget().
+  T.objective = () => {
+    const w = T.W(), o = w.objective, tg = LS.game.currentTarget();
+    if (o && o.room) return { room: o.room, x: o.x, y: o.y, sx: o.sx, sy: o.sy, label: o.label, task: tg && tg.room === o.room && Math.hypot(tg.x - o.x, tg.y - o.y) < 2 ? tg.task : null, fromWorld: true };
+    return tg;
   };
   T.targetEntity = tg => {
     const w = T.W(); let best = null, bd = 40;
-    for (const e of w.entities) { if (e.room !== tg.room || e.hidden || !e.prompt || e.to) continue; const d = Math.hypot(e.x - tg.x, e.y - tg.y) - (e.kind === 'prop' ? 0.5 : 0); if (d < bd) { bd = d; best = e; } }
+    for (const e of w.entities) { if (e.room !== tg.room || e.hidden || !e.prompt || T.doorDest(e)) continue; const d = Math.hypot(e.x - tg.x, e.y - tg.y) - (e.kind === 'prop' ? 0.5 : 0); if (d < bd) { bd = d; best = e; } }
     return best;
   };
 
@@ -255,32 +322,33 @@
     r.err = 'works plan: tray empty, nothing marked wrong, and the check button is disabled';
   };
   T.exploreStep = (policy, r) => {
-    const w = T.W(), tg = LS.game.currentTarget();
-    if (tg) T.checkTarget(tg);
-    if (policy === 'random') {
+    const w = T.W(), ct = LS.game.currentTarget(), tg = T.objective();
+    if (ct) T.checkTarget(ct);
+    if (policy === 'random' && w.onInteract) {
       const menu = $('#hudMenu');
       if (T.boardBudget > 0 && T.rnd() < 0.05 && T.rendered(menu)) { T.boardBudget--; T.click(menu); r.act = 'random: open the project board'; return; }
       if (T.randBudget > 0 && T.rnd() < 0.3) {
         const list = T.prompted(w.room);
-        if (list.length) { T.randBudget--; const e = list[Math.floor(T.rnd() * list.length)]; T.interact(e); r.act = `random: ${e.kind}:${e.id}`; return; }
+        if (list.length) { T.randBudget--; const e = list[Math.floor(T.rnd() * list.length)]; T.interact(e); r.act = `random: ${e.kind}:${e.id}`; r.key = 'rand:' + e.id + ':' + T.randBudget; return; }
       }
     }
-    if (!tg) { r.err = 'exploring, but currentTarget() is null and the chapter has not ended'; return; }
-    r.target = tg.task.id;
+    if (!tg) { r.err = 'exploring, but there is no objective (currentTarget() is null) and the chapter has not ended'; return; }
+    r.target = tg.task ? tg.task.id : tg.label;
     if (tg.room !== w.room) {
       const d = T.doorTowards(w.room, tg.room);
-      if (!d) { r.err = `no door path from "${w.room}" to "${tg.room}" (target ${tg.task.id})`; return; }
-      T.interact(d); r.act = `door ${d.id}: ${w.room} → ${d.to.room}`; r.key = 'door:' + d.id; return;
+      if (!d) { r.err = `no door path from "${w.room}" to "${tg.room}" (objective ${r.target})`; return; }
+      T.interact(d); r.act = `door ${d.id}: ${w.room} → ${T.doorDest(d).room}`; r.key = 'door:' + d.id; return;
     }
     const e = T.targetEntity(tg);
     if (!e) {
       const hid = w.entities.find(x => x.room === tg.room && Math.hypot(x.x - tg.x, x.y - tg.y) < 40);
-      r.err = `nothing to interact with at the target for "${tg.task.id}" (${tg.label}) in ${tg.room}` + (hid ? ` (found ${hid.kind}:${hid.id}, hidden=${!!hid.hidden}, prompt=${JSON.stringify(hid.prompt)})` : ''); return;
+      r.err = `nothing to interact with at the objective "${r.target}" (${tg.label}) in ${tg.room}` + (hid ? ` (found ${hid.kind}:${hid.id}, hidden=${!!hid.hidden}, prompt=${JSON.stringify(hid.prompt)})` : ''); return;
     }
-    T.interact(e); r.act = `task ${tg.task.id}: ${e.kind}:${e.id}`; r.key = 'ent:' + e.id;
+    T.interact(e); r.act = `${tg.task ? 'task ' + tg.task.id : 'objective'}: ${e.kind}:${e.id}`; r.key = 'ent:' + e.id;
   };
   T.step = (policy, stopExpr) => {
     const st = T.state(), r = { k: st.k, st, sigBefore: T.sig() };
+    if (st.k === 'explore' && !T.INTERACT.calibrated && !T._calTried && 'focus' in T.W()) { T._calTried = true; r.needCal = true; return r; }
     if (stopExpr) { let stop = false; try { stop = !!(new Function('st', 'T', 'return (' + stopExpr + ')'))(st, T); } catch (e) { r.err = 'bad stop expression: ' + e.message; return r; } if (stop) { r.stop = true; return r; } }
     T.checkDone();
     try {
@@ -337,7 +405,7 @@
       }
       const has = (x, y) => { const i = Math.round((x - x0) / step) - i0, j = Math.round((y - y0) / step) - j0; return i >= 0 && j >= 0 && i < gw && j < gh && seen[j * gw + i] === 1; };
       // every reached point within reach of (ex, ey)
-      const near = (e, R) => { const out = []; const ri = Math.ceil(R / step) + 1, rj = Math.ceil(R / T.INTERACT.yScale / step) + 1; const ci = Math.round((e.x - x0) / step), cj = Math.round((e.y - y0) / step);
+      const near = (e, R) => { const out = []; const ri = Math.ceil(R / step) + 1, rj = Math.ceil(R / T.INTERACT.yScale / step) + 1; const an = T.anchor(e), ci = Math.round((an.x - x0) / step), cj = Math.round((an.y - y0) / step);
         for (let dj = -rj; dj <= rj; dj++) for (let di = -ri; di <= ri; di++) { const i = ci + di - i0, j = cj + dj - j0; if (i < 0 || j < 0 || i >= gw || j >= gh || seen[j * gw + i] !== 1) continue; const x = x0 + (ci + di) * step, y = y0 + (cj + dj) * step; const d = idist(e, x, y); if (d < R) out.push([x, y, d]); } return out; };
       return { n: qt, has, near, step };
     } finally { w.room = keepRoom; w.ppe = keepPpe; }
@@ -358,7 +426,7 @@
           const others = visible.filter(x => x !== e);
           const focusable = pts.some(([x, y, d]) => others.every(q => idist(q, x, y) > d));
           const closest = pts.length ? Math.round(Math.min(...pts.map(p => p[2]))) : null;
-          return { kind: e.kind, id: e.id, x: Math.round(e.x), y: Math.round(e.y), hidden: !!e.hidden, prompt: String(e.prompt).slice(0, 50), reachable: pts.length > 0, focusable, closest, to: e.to ? e.to.room : null };
+          return { kind: e.kind, id: e.id, x: Math.round(e.x), y: Math.round(e.y), hidden: !!e.hidden, prompt: String(e.prompt).slice(0, 50), reachable: pts.length > 0, focusable, closest, to: T.doorDest(e) ? T.doorDest(e).room : null };
         })
       };
     } finally { w.room = keepRoom; w.ppe = keepPpe; }
@@ -397,7 +465,7 @@
     return { frames: t.pts.length, intrusions: t.intrusions.slice(0, 5), nIntrusions: t.intrusions.length, toasts: t.toasts, minY: Math.min(...ys), maxY: Math.max(...ys), minX: Math.min(...xs), maxX: Math.max(...xs), end: t.pts[t.pts.length - 1] }; };
   // true once the player hasn't moved for n frames (after at least n+5 frames of tracking)
   T.stalled = n => { const p = T.trk && T.trk.pts; if (!p || p.length < n + 5) return false; const l = p.slice(-n); return l.every(q => Math.abs(q[0] - l[0][0]) < 0.01 && Math.abs(q[1] - l[0][1]) < 0.01); };
-  T.outdoorRoom = () => { const d = T.doors().find(d => T.isIndoor(d.to.room) && !T.isIndoor(d.room)); return d ? d.room : T.W().room; };
+  T.outdoorRoom = () => { const d = T.W().entities.find(d => !T.isIndoor(d.room) && T.doorDest(d) && T.isIndoor(T.doorDest(d).room)); return (T._outdoor = d ? d.room : (T._outdoor || 'outside')); };
 
   // The closed line and its crossings, worked out from world.canStand alone.
   T.lineInfo = (room, step) => {

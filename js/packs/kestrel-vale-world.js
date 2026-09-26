@@ -2,7 +2,8 @@
  * Where people stand, what the town says (it changes as support grows), what you can inspect,
  * engineering notes, Moira's hints and the page of a very private log.
  *
- * Map reference (world units, see js/world/world.js): Harrowby high street y≈1335 (x 40–1300) ·
+ * Placement: the engine now takes every position from js/world/level.js. The coordinates below are legacy
+ * and kept only for older builds. Map reference (world units, see js/world/world.js): Harrowby high street y≈1335 (x 40–1300) ·
  * station 1170–1374 · depot 1410–1670 · project office 1420–1615 (door 1568) · Beck Bridge 1725–1865 ·
  * old trackbed y 880–922 from x 1300 to the junction at 3250 · Crag Lane level crossing x 2585–2625 ·
  * Kestrel Junction signal box 3120 · Moira's cottage 1570,560 (north).
@@ -38,22 +39,28 @@
       panelCast: [{ id: 'sue', room: 'hall', x: 312, y: 186 }, { id: 'helen', room: 'hall', x: 380, y: 182 }, { id: 'raj', room: 'hall', x: 448, y: 186 }],
       notes: [
         { id: 'n_ppe', x: 1392, y: 962, title: 'A closed line is still a railway',
-          text: `On the real UK railway nobody goes “on or near the line” without a safety briefing and PPE. It doesn't matter if trains haven't run for years: old rail can shift, sleepers give way underfoot, and the Crag Lane crossing still gets cars. The hi-vis is the least interesting thing you'll wear and the most important.` },
+          text: `On a real railway, nobody goes “on or near the line” (on the track, or within 3 metres of the nearest rail) without track safety training, the right PPE, and a safe system of work that someone in charge has planned and briefed. A closed line is no exception: old rail can shift, sleepers give way underfoot, machines may be moving, and the Crag Lane crossing still gets cars. The orange hi-vis is the least interesting thing you'll wear, and the most important.` },
         { id: 'n_bridge', x: 1716, y: 866, title: 'Bridges: look under, not just at',
           text: `On a working railway, bridges get a visual exam every year and a detailed hands-on one every six. Beck Bridge hasn't had either since 2009. The worrying part of an old bridge is often underwater: “scour” is fast water eating away the ground round a pier, where nobody can see it.` },
         { id: 'n_junction', x: 3150, y: 1046, title: 'The main line never stops',
-          text: `Kestrel Junction joins our branch to the main line. The national infrastructure manager runs it, and it never stops for us. Any work near it needs their permission, their planning and a “possession” (a booked closure) arranged months ahead. You need them on side long before you need them on site.` }
+          text: `Kestrel Junction joins our branch to the main line. The national infrastructure manager runs it, and it never stops for us. Even standing near it needs track safety training and a safe system of work, because trains are running. Any work on it needs their permission, their planning and a “possession” (the line closed to normal trains and handed to the engineers for a set time), booked many months ahead. You need them on side long before you need them on site.` }
       ],
       memo: { room: 'outside', x: 1624, y: 598 },
-      memoText: `MARJORIE: LOG. First Sunday of the month, as ever. Turned both engines over by hand. Topped up the oil and wiped the cab windows. Told her the news: there's talk of reopening. She didn't say much. She never does. — M.K.`,
+      memoText: `MARJORIE · LOG · ENTRY 204. First Sunday, as ever. Turned both engines over by hand. Topped up the oil. Wiped the cab window. Told her the news: there's talk of reopening. She didn't say much. She never does. The new one turned up early and caught me with my flask. Early's a good sign. — M.K.`,
       catSpots: [[70, 334], [842, 250], [720, 392]],
       hallBanner: 'DROP-IN · KESTREL VALE LINE · THURSDAY 7PM',
       panelBanner: 'FUNDING PANEL · PLEASE USE THE GOOD CUPS'
     },
 
     blocked: {
-      line_closed: `The old line is closed and unsafe: rotten sleepers and loose rail. Get your induction and PPE from Hannah at the project office first.`,
+      line_closed: `Within 3 metres of the rails is “on or near the line”. Induction and PPE from Hannah first, then out with Tom under his safe system of work.`,
+      junction_live: `Beyond the stop board is the live main line. Being there needs track safety training, a safe system of work and the national infrastructure manager’s say-so. Not today.`,
       track_live: `Live railway. Cross at the level crossing.`
+    },
+
+    // What's said when you try a door you're not ready for: [who, text]
+    doorRefused: {
+      shed: ['gaz', `(through the door) Not without your kit, pal. There's an inspection pit in here, and Hannah does spot checks. She's in the project office.`]
     },
 
     // Moira won't give you answers. She tells you what to think about, based on what's next.
@@ -73,7 +80,7 @@
     idle: {
       helen: [`The Authority is watching this one closely, {name}. So is my mum. She lives in Harrowby.`, `I've already written “historic day” in my speech. I just need the day.`],
       jo: [`Sticky notes are a planning methodology. Don't let anyone tell you otherwise.`, `If you see my coffee, tell it I miss it.`],
-      tom: [`Mind your footing on the sleepers, boss. The soft ones don't warn you.`, `The lads are asking if you'll be at the Kestrel Arms on Friday.`],
+      tom: [`Stay in the cess, boss. Sleepers are slippery when they're sound, and worse when they're not.`, `The crew are asking if you'll be at the Kestrel Arms on Friday. It's quiz night. We need someone who knows things.`],
       hannah: [`Hard hat on the trackbed, please. Yes, even you.`, `I'd rather be annoying now than right at an inquiry later.`],
       steve: [`Every pound has a job. Most of them are overworked.`, `I've costed your tea breaks. I'm joking. Mostly.`],
       priya: [`Half the village has my mobile number now. It's fine. It's fine.`, `June at the bakery is our best comms channel. Don't tell anyone.`],
@@ -85,7 +92,7 @@
     // The town's attitude changes with Town support: [below 50%, 50% and above]
     townLines: {
       len: [`Signalled this line thirty-one year. They closed it “temporarily” in 2009. I've been temporarily retired ever since.`,
-            `Heard you were straight with folk at the hall. Makes a change. I've still got my signalling cap, if you ever need it.`],
+            `Folk are talking about you. Mostly kindly. When Marjorie was the only train, we worked it with a staff: one train, one staff. Cheapest signalling there is. I've still got my cap.`],
       june: [`I bake sixty loaves on a Saturday and sell forty. The rest go to the ducks. The ducks are thriving. Harrowby isn't.`,
              `If the trains come back, I'm doing a Marjorie bun. Iced, with a little face. Don't tell anyone, it's a secret.`],
       dev: [`I want to do engineering at college in the city. That's two buses and an hour and a half each way. Or I could just… not.`,
@@ -98,9 +105,9 @@
       station: `Harrowby station. The sign on the gate reads: “Station temporarily closed. We apologise for any inconvenience.” It's dated 2009. The inconvenience has been considerable.`,
       noticeboard: m => m.town >= 50
         ? `Parish noticeboard. “Lost: one cat (ginger, answers to nothing).” “Yoga, Tuesdays.” Someone has crossed out the “AGAIN?” on the railway poster and written “FINALLY?”. Progress.`
-        : `Parish noticeboard. “Lost: one cat (ginger, answers to nothing).” “Yoga, Tuesdays.” And a poster for the railway drop-in, with “AGAIN?” written across it in biro.`,
+        : `Parish noticeboard. “Lost: one cat (ginger, answers to nothing).” “Yoga, Tuesdays.” And a poster for the railway drop-in, with “AGAIN?” written across it in blue pen.`,
       depot: `Harrowby Depot, built 1911. Brick, draughty, and home to exactly one train and one cat.`,
-      signalbox: `Kestrel Junction signal box, still working for the main line. The signaller waves. You wave back. It's the most British thing that'll happen to you all week.`,
+      signalbox: `Kestrel Junction signal box, still working the main line. It's safety-critical: visitors need an appointment and a reason, and you have neither. The signaller waves. You wave back. Most British thing all week.`,
       cottage: `Beck Cottage, Moira's place. There's a railway lamp by the door, polished to within an inch of its life, and a pair of oily overalls on the washing line.`,
       packhorse: `The old packhorse bridge. It's carried people over the beck for three hundred years without once asking for funding.`,
       crag: `Kestrel Crag. From up here you can trace the whole line: station, depot, Beck Bridge, the crossing, the junction. Three miles that used to hold a valley together.`,
@@ -109,7 +116,15 @@
       board: `The project board: tasks, risks and a drawing of Marjorie that Jo swears she didn't do.`,
       urn: `The village hall tea urn. It has been on since 1987.`,
       workbench: `Gaz's workbench. A radio, a torque wrench, a mug that says WORLD'S OKAYEST FITTER, and a well-thumbed 1961 maintenance manual.`,
-      cushions: `A pile of old seat cushions from Marjorie's saloon. They smell faintly of 1970s holidays.`
+      cushions: `A pile of old seat cushions from Marjorie's saloon. They smell faintly of 1970s holidays.`,
+      busstop: `The 41: Skelby, Harrowby, Kestrelford. Twice a day, if it's feeling generous. Someone has written “ha” next to the timetable.`,
+      war_memorial: `The war memorial. The names have been cleaned recently, and there's a wreath at its foot. Harrowby looks after what matters to it.`,
+      site_board: `“Kestrel Vale Line reopening · Project compound · All visitors report to the site office · PPE beyond this point.” Someone has added “at last?” in pencil.`,
+      postbox: `The Crag Lane postbox. It's why the car is parked across the rails. Last collection 9am, and the crossing gets forgotten at 8.58.`,
+      hall_noticeboard: `The hall noticeboard: a whist drive, the minutes of the 1998 bypass consultation, and a sign-up sheet for the drop-in. Forty names. Some have brought a plus-one.`,
+      car: `A hatchback parked across the rails while its driver posts a letter. Round here, people have forgotten this is a railway.`,
+      washing_line: `A pair of oily overalls on Moira's washing line. Station masters don't usually get oily. Interesting.`,
+      trap: `Trap points on the depot siding: a short set of points that steers a runaway wagon off the rails before it reaches the running line. Crude, clever and very railway.`
     }
   };
 })();

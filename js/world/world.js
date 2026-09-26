@@ -98,7 +98,7 @@ window.LS = window.LS || {};
     lineState() { return (this.cfg && this.cfg.build >= 5) ? 'live' : 'closed'; }
     buildCollision() {
       const live = this.lineState() === 'live', g = new Uint8Array(COLS * ROWS);
-      for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) { const c = L.rows[y][x]; g[y * COLS + x] = PUB.has(c) ? 0 : PPE.has(c) ? (live && c !== '!' && c !== 'a' ? 3 : 2) : 1; }
+      for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) { const c = L.rows[y][x]; g[y * COLS + x] = PUB.has(c) ? 0 : PPE.has(c) ? (live && c !== '!' && c !== 'a' ? 3 : 2) : (c === 'j' || c === '|') ? 4 : 1; }
       for (const e of L.outside) if (e.blocks) { const [w, h] = e.size || [1, 1]; for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) g[(e.tile[1] + j) * COLS + e.tile[0] + i] = 1; }
       this.grid = { outside: { g, cols: COLS, rows: ROWS } };
       for (const [id, R] of Object.entries(ROOMS)) {
@@ -112,6 +112,7 @@ window.LS = window.LS || {};
       const tx = Math.floor(x / T), ty = Math.floor(y / T), v = this.cell(this.room, tx, ty);
       if (v === 2) return this.ppe || (this.allow && this.allow(this.room, tx, ty)) ? 0 : 'line_closed';
       if (v === 3) return 'track_live';
+      if (v === 4) return 'junction_live';
       return v ? 1 : 0;
     }
     canStand(x, y) { for (const [dx, dy] of [[-5, -3], [5, -3], [-5, 2], [5, 2]]) { const b = this.blockedAt(x + dx, y + dy); if (b) return b; } return 0; }
