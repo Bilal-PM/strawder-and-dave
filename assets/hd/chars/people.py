@@ -1,7 +1,8 @@
 """LINESIDE HD people: part generators and the four-view walking renderer (48 x 96 frames, feet at (24, 93)).
 
 render(spec, view, frame) -> pix.Canvas 48x96.
-view: 'down' (front), 'up' (back), 'left', 'right'. frame 0 = standing, 1-4 = walk cycle.
+view: 'down' (front), 'up' (back), 'left', 'right', or a seated row 'sit_down' / 'sit_up'.
+frame: the sheet column (anim.py): 0 = standing, 1-12 = the walk cycle, 13-16 = idle; seated rows use 0-2.
 A spec is a plain dict (see cast.py): ramps for skin / hair / clothes plus style switches.
 
 Everything is painted as parts on a fig.Fig (ramp + step per pixel), back to front, then finished (occlusion,
@@ -9,13 +10,14 @@ separation lines, outline). Right-facing frames are painted as left-facing with 
 with asymmetric details (satchel side, hair parting, ponytail) placed for the side that faces the viewer.
 """
 import math
-from fig import Fig, OUT, ell, rows, line
+from fig import Fig, OUT, ell, rows, line, poly, lum, tone
 from pix import RAMPS, hash01
 
-W, H = 48, 96
+W, H = 48, 102
+PAD = 4            # headroom: the figure is drawn 4 rows down the frame so a bun or a bob-up never clips the top
 CX = 24            # the body's centre line runs between columns 23 and 24
 SH_Y = 41          # top row of the shoulders
-FEET = 93          # the sole row; the anchor is (24, 93)
+FEET = 93          # the sole row in figure space; in the frame it is FEET + PAD, the anchor is (24, 97)
 
 
 def mx(x):
@@ -24,30 +26,10 @@ def mx(x):
 
 
 # ------------------------------------------------------------------ poses
-# Sheet columns: 0 = standing, 1-8 = walk: contact, down, passing, up, contact, down, passing, up.
-# The whole upper body (head, hair, torso) is drawn once per frame with only a vertical offset (the 1px bob on the
-# 'down' frames), so the head is pixel-identical across frames apart from that offset.
-NFRAMES = 9
-FOOT_DY = [0, 0, 0, 0, -1, -2, -3, -1]           # front view: a foot's lift through the cycle (0 = planted)
-SIDE_DX = [-7, -3, 0, 3, 7, 4, 0, -4]            # profile: a foot's position (- = forward) through the cycle
-SIDE_LIFT = [0, 0, 0, 0, -1, -2, -3, -1]
-BOB = [0, 1, 0, 0, 0, 1, 0, 0]
-
-
-def front_pose(frame):
-    """bob, left-foot dy, right-foot dy, left-arm swing, right-arm swing (+ = forward, the hand drops)."""
-    if frame == 0: return 0, 0, 0, 0, 0
-    i = frame - 1
-    c = math.cos(i * math.pi / 4)
-    return BOB[i], FOOT_DY[i], FOOT_DY[(i + 4) % 8], round(-2 * c), round(2 * c)
-
-
-def side_pose(frame):
-    """bob, near-foot dx, far-foot dx, near lift, far lift, near-arm swing (-1..1, + = forward)."""
-    if frame == 0: return 0, -2, 3, 0, 0, 0.0
-    i = frame - 1
-    j = (i + 4) % 8
-    return BOB[i], SIDE_DX[i], SIDE_DX[j], SIDE_LIFT[i], SIDE_LIFT[j], -math.cos(i * math.pi / 4)
+# The motion model lives in anim.py (Pose): 13 sheet columns (0 stand, 1-8 walk, 9-12 idle). The head, hair and
+# torso are painted once per frame with only a vertical offset (bob / breath), so the face never shimmers.
+from anim import Pose, NCOLS, NW, NI, SIT_COLS, paint_limb, capsule, ik, rot
+NFRAMES = NCOLS
 
 
 TOP_BOT = {'coat': 76, 'jacket': 68, 'suit': 68, 'cardigan': 68, 'tee': 65, 'hivis': 67, 'hoodie': 68,
@@ -81,19 +63,17 @@ def face_step(dx, yy, mask, x, y):
 
 
 class Person:
-    def __init__(self, spec, view, frame):
+    def __init__(self, spec, view, frame, row=None):
         self.s = spec; self.view = view; self.frame = frame
         self.side = view in ('left', 'right')
         self.near = 'right' if view == 'left' else 'left'   # the character's side that faces us in profile
-        self.f = Fig(W, H, lx=(-1 if view == 'right' else 1))
-        if self.side:
-            self.bob, self.nfx, self.ffx, self.nl, self.fl, self.swing = side_pose(frame)
-        else:
-            self.bob, self.lfy, self.rfy, self.las, self.ras = front_pose(frame)
-        self.b = 0
+        self.f = Fig(W, H, lx=(-1 if view == 'right' else 1), base=PAD)
+        self.P = P = Pose(view, frame, stride=spec.get('stride', 1.0), row=row)
+        self.sit = P.sit
+        self.bob = P.bob
+        self.b = P.breath                 # the upper body (head, shoulders, arms) rises 1px on the in-breath
         ts = spec['topStyle']
         self.bot = TOP_BOT[ts] if ts != 'coat' else spec.get('hem', 76)
-        self.bot += self.b
         self.top = SH_Y + self.b
         self.hair_mask = set()
 
@@ -106,112 +86,233 @@ class Person:
         return self.s['topStyle'] in ('tee', 'polo') or self.s.get('short_sleeves')
 
     # ============================================================================ FRONT / BACK
-    def draw_frontback(self):
-        back = self.view == 'up'
-        f = self.f
-        f.oy = self.bob
+    SIT = 15      # seated: the upper body drops this far (the seat is about knee height, 16 px above the soles)
+
+    def draw_sit(self, back):
+        """Seated on a chair, seen from the front (sit_down) or from behind (sit_up). The torso stops at the seat,
+        the thighs lie on it towards the viewer, the shins hang down to the floor. Feet stay on the anchor."""
+        s, f, P = self.s, self.f, self.P
+        self.bot = min(self.bot, 66)
+        if not back:
+            f.oy = 0
+            self.sit_shins()
+        f.oy = self.SIT
         self.hair_behind_fb(back)
         if not back: self.hood_front()
-        f.oy = 0
-        self.legs_fb(back)
-        f.oy = self.bob
-        self.skirt_fb()
+        self.arms_fb(back, behind=True)
         self.torso_fb(back)
         if back: self.hood_back()
-        self.arms_fb(back)
+        if not back:
+            f.oy = 0
+            self.sit_lap()
+            f.oy = self.SIT
+        self.arms_fb(back, behind=False)
         self.bag_fb(back)
         self.head_fb(back)
         self.hat_fb(back)
+        f.oy = 0
+
+    def sit_shins(self):
+        s, f = self.s, self.f
+        lw = s.get('legwear', 'trousers'); lr = s.get('legs', 'charcoal'); ft = s.get('feet', 'boots')
+        fr = s.get('feet_ramp', 'leather')
+        lrp = lr if lw != 'skirt' else s.get('tights', lr)
+        for side in ('L', 'R'):
+            L = side == 'L'
+            cx = 19 if L else 29
+            fh = self.FOOT_H.get(ft, 11)
+            ankle_y = FEET - fh + 3
+            pid = f.part()
+            rp = s['skin'] if lw == 'shorts' else lrp
+            paint_limb(f, [(cx, 84), (cx, ankle_y)], [3.8, 3.4], rp, pid, bias=(0.06 if L else -0.06), lo=1, hi=4)
+            if lw == 'trousers':
+                for x in range(cx - 3, cx + 4): f.step(x, ankle_y, 1)
+            self.foot_fb(cx - 5, 9, FEET, fh, ft, fr, side, False, 0, 0, 0.0)
+
+    def sit_lap(self):
+        """The thighs on the seat, foreshortened towards us: a shallow block from the hips to two rounded knees.
+        A coat or a skirt drapes over them to the knee."""
+        s, f = self.s, self.f
+        ts = s['topStyle']; lw = s.get('legwear', 'trousers')
+        if ts == 'coat': rp = s['top']
+        elif lw == 'skirt': rp = s.get('skirt', 'charcoal')
+        else: rp = s.get('legs', 'charcoal')
+        y0, y1 = 80, 86
+        m = []
+        for y in range(y0, y1 + 1):
+            for x in range(CX - 12, CX + 12):
+                kx = (x + 0.5 - (CX - 5.5)) if x < CX else (x + 0.5 - (CX + 5.5))
+                if y == y1 and abs(kx) > 3.5: continue                          # two rounded knees
+                if y == y1 - 1 and abs(kx) > 4.8: continue
+                if y == y0 and (x < CX - 11 or x > CX + 10): continue
+                m.append((x, y))
+        pid = f.part()
+        f.paint(m, rp, pid, mode='cyl', cx=CX, rx=13, bias=0.0, lo=1, hi=4, tilt=-0.45,
+                tex=(lambda x, y: (-0.22 if x % 4 == 0 else 0)) if (lw == 'skirt' and ts != 'coat') else None)
+        for y in range(y0 + 1, y1 + 1): f.step(CX - 1, y, 1); f.step(CX, y, 2)   # the gap between the knees
+        for x in range(CX - 11, CX + 11): f.step(x, y0, 1)                           # under the torso
+        for x in (CX - 7, CX - 6, CX - 5, CX + 4, CX + 5, CX + 6): f.step(x, y1 - 2, -1)   # lit kneecaps
+        for (x, y) in m:                                                                     # the knee's underside
+            if (x, y + 1) not in m: f.step(x, y, 1)
+        sp = f.part(shadow=False)
+        for x in range(CX - 10, CX + 10):                                                    # its shadow on the shins
+            p = f.get(x, y1 + 1)
+            if p and p[2] != pid: f.step(x, y1 + 1, 1)
+
+    def draw_frontback(self):
+        back = self.view == 'up'
+        f, P = self.f, self.P
+        if self.sit: return self.draw_sit(back)
+        up = P.sway                                # the upper body rides over the planted leg
+        f.oy = self.bob; f.ox = up + P.lag_x
+        self.hair_behind_fb(back)
+        f.ox = up
+        if not back: self.hood_front()
+        f.oy = 0; f.ox = 0
+        self.legs_fb(back)
+        f.oy = self.bob; f.ox = up
+        self.skirt_fb()
+        self.arms_fb(back, behind=True)           # an arm swinging away passes behind the body
+        self.torso_fb(back)
+        if back: self.hood_back()
+        self.arms_fb(back, behind=False)
+        f.oy = self.bob + P.lag_bob; f.ox = P.hang_x   # the satchel trails the body: a damped swing
+        self.bag_fb(back)
+        f.oy = self.bob; f.ox = up
+        self.head_fb(back)
+        self.hat_fb(back)
+        f.ox = 0
 
     # ---- long hair hanging behind the shoulders
     def hair_behind_fb(self, back):
         s, f, b = self.s, self.f, self.b
         if s['hairStyle'] != 'long' or back: return
         hr = s['hair']; pid = f.part(sep=False)
+        lag = self.P.lag_bob
         m = []
-        for y in range(30 + b, 56 + b):
+        for y in range(30 + b, 56 + b + lag):
             for x in range(9, 39):
                 inner = abs(x + 0.5 - CX) < 10
                 if inner and y > 36 + b: continue
-                if y > 52 + b and abs(x + 0.5 - CX) > 14 - (y - 52 - b): continue
+                if y > 52 + b + lag and abs(x + 0.5 - CX) > 14 - (y - 52 - b - lag): continue
                 m.append((x, y))
         f.paint(m, hr, pid, bias=-0.14, lo=2, hi=4, tex=lambda x, y: strands(x, y, CX, -12 + b, 14, 3))
 
-    # ---- legs and feet
-    def legs_fb(self, back):
-        s, f, b = self.s, self.f, self.b
+    # ---- legs and feet: each leg steps along its own stride (the leading foot drops lower on screen and reads
+    # 1px bigger, the trailing foot rises and shortens), the hips carry the weight over the stance leg
+    FOOT_H = {'boots': 11, 'shoes': 5, 'trainers': 6, 'wellies': 16}
+
+    def legs_fb(self, back, hip_y=None, seated=False):
+        s, f, P = self.s, self.f, self.P
         lw = s.get('legwear', 'trousers'); lr = s.get('legs', 'charcoal'); ft = s.get('feet', 'boots')
         fr = s.get('feet_ramp', 'leather')
-        for side, dy in (('L', self.lfy), ('R', self.rfy)):
-            x0 = 14 if side == 'L' else 25          # footwear's left column (9 wide)
-            legtop = 64 + b
-            if lw == 'shorts':
-                lb = 74 + b
-            else:
-                lb = 88 + dy
-            lx0 = x0 + 1 if side == 'L' else x0
-            lx1 = lx0 + 7
+        hip_y = (62 + self.bob) if hip_y is None else hip_y
+        order = sorted(('L', 'R'), key=lambda sd: P.leg[sd]['near'])        # the far leg first
+        for side in order:
+            lg = P.leg[side]
+            k = 0.55 + 0.45 * min(1.0, P.stride)            # older folk take shorter, lower steps
+            near, lift, toe, bend = lg['near'] * k, lg['lift'] * k, lg['toe'], lg.get('bend', 0.0)
+            L = side == 'L'
+            inward = 1 if L else -1
+            grow = 1 if near > 0.55 else (-1 if near < -0.55 else 0)
+            cx = (19 if L else 29)
+            # the stepping foot: ahead of the body it lands lower on screen (towards us) and a pixel bigger; behind
+            # it rises and shortens. The swinging foot lifts 3-4 px, the knee bends and drifts a pixel inward.
+            gy = FEET + int(round(1.8 * near))
+            base = gy - int(round(lift))
+            fh0 = self.FOOT_H.get(ft, 11)
+            fh = fh0 + (1 if grow > 0 else 0) - (1 if (toe and not back) else 0)
+            if lift >= 1.5 and not back and ft in ('boots', 'wellies'): fh -= 1        # toe dropped: foreshortened
+            ankle_y = base - fh + 3
+            hx = cx + P.hip_sway
+            kx = cx + inward * (1 if bend > 0.6 else 0)
             lrp = lr if lw != 'skirt' else s.get('tights', lr)
-            m = rows({y: (lx0, lx1) for y in range(legtop, lb + 1)})
-            pid = f.paint(m, lrp, f.part(), bias=0.06 if side == 'L' else -0.06, lo=1, hi=4)
+            depth_bias = 0.05 * near - (0.03 if lift else 0)
+            far = 1 if near < -0.55 else 0                                  # the leg stepping away: a step darker
+            r = 4.0 + 0.25 * grow
+            pid = f.part()
+            knee_y = hip_y + (ankle_y - hip_y) * (0.46 if not bend else 0.46 + 0.06 * bend)
+            m = paint_limb(f, [(hx, hip_y), (kx, knee_y), (cx, ankle_y)], [r, r - 0.1, r - 0.45],
+                           lrp, pid, bias=(0.06 if L else -0.06) + depth_bias, lo=1, hi=4, far=far)
+            knee_y = int(round(knee_y))
+            xs = sorted(set(x for x, y in m))
+            x0, x1 = xs[0], xs[-1]
             if lw == 'trousers':
-                for y in range(legtop + 8, lb - 1): f.step(lx0 + 3, y, 1)            # crease
-                for y in range(legtop + 8, lb - 1): f.step(lx0 + 2, y, -1)
-                for x in range(lx0, lx1 + 1): f.step(x, lb, 1)                     # break over the shoe
+                for y in range(knee_y + 2, ankle_y + 1): f.step(x0 + 3, y, 1)          # crease
+                for y in range(knee_y + 2, ankle_y + 1): f.step(x0 + 2, y, -1)
+                if bend > 0.3:
+                    if not back:                                                 # knee pushes towards us: lit cap
+                        for x in range(x0 + 2, x1 - 1): f.step(x, knee_y - 1, -1)
+                        for x in range(x0 + 1, x1): f.step(x, knee_y + 1, 1)
+                        f.step(x0 + 2, knee_y, -1)
+                    else:                                                        # the crease behind the knee
+                        for x in range(x0 + 1, x1): f.step(x, knee_y, 1)
+                        for x in range(x0 + 2, x1 - 1): f.step(x, knee_y + 1, 1)
+                for x in range(x0, x1 + 1): f.step(x, ankle_y, 1)                        # break over the shoe
             if lw == 'shorts':
-                for x in range(lx0, lx1 + 1): f.step(x, lb, 1)
-                sm = rows({y: (lx0 + 1, lx1 - 1) for y in range(lb + 1, 88 + dy)})
-                f.paint(sm, s['skin'], f.part(), bias=0.1, lo=1, hi=3)
-                sk = rows({y: (lx0 + 1, lx1 - 1) for y in range(83 + dy, 87 + dy)})
+                lb = 74
+                for (x, y) in m:
+                    if y > lb: f.erase(x, y)
+                for x in range(x0, x1 + 1): f.step(x, lb, 1)
+                sm = rows({y: (x0 + 1, x1 - 1) for y in range(lb + 1, ankle_y + 1)})
+                f.paint(sm, s['skin'], f.part(), bias=0.1 + depth_bias - 0.1 * far, lo=1, hi=3)
+                sk = rows({y: (x0 + 1, x1 - 1) for y in range(ankle_y - 4, ankle_y + 1)})
                 f.paint(sk, s.get('socks', 'white'), f.part(), lo=1, hi=3)
-            self.foot_fb(x0, dy, ft, fr, side, back)
+            fw = 9 + grow
+            fx0 = cx - 5 - (grow if L else 0)
+            self.foot_fb(fx0, fw, base, fh, ft, fr, side, back, lift, toe, depth_bias - 0.08 * far)
 
-    def foot_fb(self, x0, dy, ft, fr, side, back):
+    def foot_fb(self, x0, fw, base, fh, ft, fr, side, back, lift, toe, bias):
         f, s = self.f, self.s
         L = side == 'L'
-        base = FEET + dy
+        x1 = x0 + fw - 1
+        top = base - fh + 1
+        lace = x0 + fw // 2 - (0 if L else -0)
         if ft == 'wellies':
-            m = rows({y: (x0 + (0 if y > base - 5 else 1), x0 + (8 if y > base - 5 else 7)) for y in range(base - 15, base + 1)})
-            pid = f.paint(m, s.get('welly', 'welly'), f.part(), lo=1, hi=4, bias=0.05)
-            for x in range(x0 + 1, x0 + 8): f.step(x, base - 15, -1); f.step(x, base - 14, 1)
-            for x in range(x0, x0 + 9): f.put(x, base, 'sole', 2, pid)
-            f.put(x0 + (2 if L else 6), base - 3, s.get('welly', 'welly'), 0, pid)
-            return
-        if ft == 'trainers':
-            m = rows({y: (x0, x0 + 8) for y in range(base - 5, base + 1)})
-            m = [p for p in m if not (p[1] == base - 5 and p[0] in (x0, x0 + 8))]
-            pid = f.paint(m, 'trainer', f.part(), lo=1, hi=3)
-            for x in range(x0, x0 + 9): f.put(x, base, 'sole', 1, pid); f.put(x, base - 1, 'trainer', 3, pid)
+            m = rows({y: (x0 + (0 if y > base - 5 else 1), x1 - (0 if y > base - 5 else 1)) for y in range(top, base + 1)})
+            pid = f.paint(m, s.get('welly', 'welly'), f.part(), lo=1, hi=4, bias=0.05 + bias)
+            for x in range(x0 + 1, x1): f.step(x, top, -1); f.step(x, top + 1, 1)
+            for x in range(x0, x1 + 1): f.put(x, base, 'sole', 2, pid)
+            f.put(x0 + (2 if L else fw - 3), base - 3, s.get('welly', 'welly'), 0, pid)
+        elif ft == 'trainers':
+            m = rows({y: (x0, x1) for y in range(top, base + 1)})
+            m = [p for p in m if not (p[1] == top and p[0] in (x0, x1))]
+            pid = f.paint(m, 'trainer', f.part(), lo=1, hi=3, bias=bias)
+            for x in range(x0, x1 + 1): f.put(x, base, 'sole', 1, pid); f.put(x, base - 1, 'trainer', 3, pid)
             if not back:
-                for x in range(x0 + 2, x0 + 7): f.put(x, base - 3, s.get('accent', 'paint_red'), 1 if x < x0 + 4 else 2, pid)
-                f.put(x0 + 4, base - 5, 'trainer', 3, pid)
-            return
-        if ft == 'shoes':
-            m = rows({base - 4: (x0 + 1, x0 + 7), base - 3: (x0, x0 + 8), base - 2: (x0, x0 + 8), base - 1: (x0, x0 + 8)})
-            pid = f.paint(m, fr, f.part(), lo=1, hi=4, mode='sph')
+                for x in range(x0 + 2, x1 - 1): f.put(x, base - 3, s.get('accent', 'paint_red'), 1 if x < x0 + 4 else 2, pid)
+                f.put(x0 + fw // 2, top, 'trainer', 3, pid)
+        elif ft == 'shoes':
+            m = rows({top: (x0 + 1, x1 - 1), **{y: (x0, x1) for y in range(top + 1, base)}})
+            pid = f.paint(m, fr, f.part(), lo=1, hi=4, mode='sph', bias=bias)
             if not back:
-                f.put(x0 + (2 if L else 5), base - 3, fr, 0, pid); f.put(x0 + (3 if L else 6), base - 3, fr, 1, pid)
-            for x in range(x0, x0 + 9): f.put(x, base, 'sole', 2, pid)
-            return
-        # boots: shaft, laced front, lit toe cap, welted sole
-        y0 = base - 10
-        spans = {}
-        for y in range(y0, base + 1):
-            spans[y] = (x0 + 1, x0 + 7) if y < y0 + 5 else (x0, x0 + 8)
-        m = rows(spans)
-        m = [p for p in m if not (p[1] == base - 1 and p[0] in (x0, x0 + 8))]
-        pid = f.paint(m, fr, f.part(), lo=1, hi=4, bias=0.02)
-        for x in range(x0 + 1, x0 + 8): f.step(x, y0, -1); f.step(x, y0 + 1, 1)     # rolled collar
-        if not back:
-            for (dx_, dy_) in ((3, 2), (4, 3), (3, 4), (4, 5)):
-                f.put(x0 + dx_ + (0 if L else 1), y0 + dy_, 'gold', 2 if dy_ % 2 == 0 else 3, pid)   # laces
-            for dy_ in (2, 3, 4, 5): f.step(x0 + (2 if L else 6), y0 + dy_, 1)                     # tongue edge
-            tx = x0 + (2 if L else 5)
-            f.put(tx, y0 + 7, fr, 0, pid); f.put(tx + 1, y0 + 7, fr, 1, pid); f.put(tx, y0 + 8, fr, 1, pid)
+                f.put(x0 + (2 if L else fw - 4), top + 1, fr, 0, pid); f.put(x0 + (3 if L else fw - 3), top + 1, fr, 1, pid)
+            for x in range(x0, x1 + 1): f.put(x, base, 'sole', 2, pid)
         else:
-            for x in range(x0 + 1, x0 + 8): f.step(x, y0 + 6, 1)                          # heel counter
-            f.put(x0 + 3, y0 + 1, fr, 3, pid); f.put(x0 + 4, y0 + 1, fr, 3, pid)            # pull tab
-        for x in range(x0, x0 + 9): f.put(x, base, 'sole', 2, pid); f.put(x, base - 1, fr, 3, pid)
+            # boots: shaft, laced front, lit toe cap, welted sole
+            spans = {}
+            for y in range(top, base + 1):
+                spans[y] = (x0 + 1, x1 - 1) if y < top + fh // 2 else (x0, x1)
+            m = rows(spans)
+            m = [p for p in m if not (p[1] == base - 1 and p[0] in (x0, x1))]
+            pid = f.paint(m, fr, f.part(), lo=1, hi=4, bias=0.02 + bias)
+            for x in range(x0 + 1, x1): f.step(x, top, -1); f.step(x, top + 1, 1)     # rolled collar
+            if not back:
+                lx = x0 + 3 + (0 if L else 1)
+                for k, dy_ in enumerate(range(2, fh - 5)):
+                    f.put(lx + (k % 2), top + dy_, 'gold', 2 if dy_ % 2 == 0 else 3, pid)   # laces
+                    f.step(x0 + (2 if L else fw - 3), top + dy_, 1)                           # tongue edge
+                tx = x0 + (2 if L else fw - 4)
+                f.put(tx, base - 3, fr, 0, pid); f.put(tx + 1, base - 3, fr, 1, pid); f.put(tx, base - 2, fr, 1, pid)
+            else:
+                for x in range(x0 + 1, x1): f.step(x, base - 4, 1)                        # heel counter
+                f.put(x0 + 3, top + 1, fr, 3, pid); f.put(x0 + 4, top + 1, fr, 3, pid)      # pull tab
+            for x in range(x0, x1 + 1): f.put(x, base, 'sole', 2, pid); f.put(x, base - 1, fr, 3, pid)
+        if back and (lift or toe):
+            # walking away, the lifting foot shows its sole and heel to the viewer
+            for x in range(x0 + 1, x1):
+                f.put(x, base, 'sole', 1, pid); f.put(x, base - 1, 'sole', 2, pid)
+            f.put(x0 + 2, base - 1, 'sole', 0, pid)
 
     # ---- skirt (under the coat hem)
     def skirt_fb(self):
@@ -250,7 +351,12 @@ class Person:
             if y == top: w = sh - 5
             elif y == top + 1: w = sh - 2.5
             elif y == top + 2: w = sh - 1.2
-            span[y] = (round(CX - w), round(CX + w - 1))
+            a0, a1 = round(CX - w), round(CX + w - 1)
+            if bot - y < 4 and bot - top > 24:       # a long hem flares out over the leading knee, a frame late
+                fl_ = self.P.hem_flare
+                if fl_ > 0.5: a0 -= 1
+                elif fl_ < -0.5: a1 += 1
+            span[y] = (a0, a1)
         self.torso_span = span
         pid = f.part()
         f.paint(rows(span), tr, pid, bias=0.05 + s.get('top_bias', 0), lo=1, hi=4, tex=lambda x, y: self.fold_tex(x, y, top, bot, ts))
@@ -428,7 +534,7 @@ class Person:
         f, b = self.f, self.b
         ap = f.part()
         m = []
-        for y in range(top + 7, 80 + b):
+        for y in range(top + 7, (80 if not self.sit else 67) + b):
             w = 8 if y > top + 14 else 6
             for x in range(CX - w, CX + w): m.append((x, y))
         f.paint(m, 'apron', ap, lo=1, hi=3, tex=lambda x, y: (-0.2 if (x - CX) % 5 == 2 and y > top + 20 else 0))
@@ -541,60 +647,66 @@ class Person:
         for y in range(40 + b, 50 + b): f.step(CX, y, 1)         # the hood's centre seam
         for (x, y) in [(CX - 3, 48 + b), (CX - 2, 49 + b), (CX + 2, 48 + b), (CX + 1, 49 + b)]: f.step(x, y, 1)
 
-    # ---- arms and hands
-    def arms_fb(self, back):
-        s, f, b = self.s, self.f, self.b
+    # ---- arms and hands: upper arm + forearm with a soft elbow. An arm swinging towards the viewer drops its hand
+    # lower on screen, tucks it in towards the body and reads a pixel bigger; one swinging away rises, narrows, darkens
+    def arms_fb(self, back, behind=False):
+        s, f, b, P = self.s, self.f, self.b, self.P
         sh = s.get('sh', 12); ts = s['topStyle']
         sleeve = self.sleeve_ramp()
         short = self.short_sleeves()
-        vested = s.get('vest') or ts == 'hivis'
-        for side, sw in (('L', self.las), ('R', self.ras)):
-            if back: sw = -sw
+        for side in ('L', 'R'):
             L = side == 'L'
-            sgn = -1 if L else 1
-            xo = CX - sh - 3 if L else CX + sh - 3          # arm's left column (6 wide)
-            top = 42 + b
-            hand_y = 64 + b + sw
-            m = []
-            for y in range(top, hand_y):
-                t = (y - top) / max(1, hand_y - top)
-                dx = round(sgn * t * (1.2 - 0.6 * sw))       # a forward arm swings in across the body, a back arm out
-                if y == top: xs = range(xo + 1, xo + 5) if L else range(xo + 1, xo + 5)
-                else: xs = range(xo + dx, xo + dx + 6)
-                for x in xs: m.append((x, y))
+            sgn = -1 if L else 1                      # outward
+            a = P.arm[side]
+            na = a if not back else -a                 # + = the hand comes towards the viewer
+            if (na < -0.3) != behind: continue
+            cxa = (CX - sh) if L else (CX + sh)        # arm centre line (6 wide)
+            # the leading shoulder rolls forward and down; the shoulder over the planted leg dips a pixel
+            top = 42 + b + (1 if na > 0.5 else 0) + P.sh_drop[side]
+            sho = (cxa + sgn * 0.2, top + 2)
+            # the elbow bends as the forearm swings: forwards it comes in and down towards us, back it rises
+            elb = (cxa + sgn * (0.9 + 0.9 * max(0, na) - 0.3 * max(0, -na)), top + 11 + 0.8 * max(0, na) - 1.2 * max(0, -na))
+            wy = 63 + b + (round(5.2 * na) if na >= 0 else round(4.0 * na)) + P.sh_drop[side]
+            wx = cxa + sgn * (1.0 - 3.6 * max(0, na) + 0.6 * max(0, -na))
+            wri = (wx, wy)
             ap = f.part(sepk=3)
+            dim = -0.1 if na < -0.3 else (0.04 if na > 0.3 else 0)
+            bias = (0.08 if L else -0.02) + dim
             if short:
-                cut = top + 8
-                f.paint([p for p in m if p[1] <= cut], sleeve, ap, lo=1, hi=4, bias=0.08 if L else -0.02)
-                for x in range(xo - 1, xo + 8): f.step(x, cut, 1)
+                m = paint_limb(f, [sho, elb, wri], [3.1, 2.9, 2.5], sleeve, ap, bias=bias, lo=1, hi=4,
+                               clip=lambda x, y, t: y <= top + 8)
+                for (x, y) in m:
+                    if y == top + 8: f.step(x, y, 1)
                 sp = f.part(sepk=1)
-                f.paint([(x + (1 if L else 0), y) for (x, y) in m if y > cut and x < xo + 5 + round(sgn * 1.2)],
-                        s['skin'], sp, lo=1, hi=3, bias=0.18 if L else 0.05)
+                paint_limb(f, [(elb[0], top + 8), elb, wri], [2.3, 2.3, 2.1], s['skin'], sp, bias=bias + 0.14, lo=1, hi=3,
+                           clip=lambda x, y, t: y > top + 8)
             else:
-                f.paint(m, sleeve, ap, lo=1, hi=4, bias=(0.08 if L else -0.02) + (s.get('top_bias', 0) if sleeve == s['top'] else 0))
+                m = paint_limb(f, [sho, elb, wri], [3.2, 2.9, 2.6], sleeve, ap,
+                               bias=bias + (s.get('top_bias', 0) if sleeve == s['top'] else 0), lo=1, hi=4)
                 cuff = s.get('cuff')
-                for x in range(xo - 2, xo + 8):
-                    p = f.get(x, hand_y - 3)
-                    if p and p[2] == ap:
-                        f.step(x, hand_y - 3, 1)
-                        if ts in ('cardigan', 'hoodie') or cuff:
-                            f.step(x, hand_y - 2, -1 + (x % 2)); f.step(x, hand_y - 1, x % 2)
-                ey = top + 11                                           # elbow creases
-                f.step(xo + (3 if L else 2), ey, 1); f.step(xo + (4 if L else 1), ey + 1, 1)
-                f.step(xo + (3 if L else 2), ey + 3, 1)
+                for (x, y) in m:
+                    if y == wy - 2:
+                        f.step(x, y, 1)
+                        if ts in ('cardigan', 'hoodie') or cuff: f.step(x, y + 1, -1 + (x % 2))
+                # elbow: a crease on the inside of the bend, deeper when the forearm swings forward
+                ex, ey_ = int(round(elb[0])), int(round(elb[1]))
+                inner = -sgn
+                f.step(ex + inner, ey_, 1); f.step(ex + inner, ey_ + 1, 1 if abs(na) > 0.3 else 0)
+                f.step(ex - inner, ey_ - 1, -1)
                 if ts == 'coat' and not back:
-                    self.button(xo + (3 if L else 1), hand_y - 4, ap, small=True)
-            # hand
-            hx = xo + round(sgn * (1.2 - 0.6 * sw))
+                    self.button(int(round(wx)) - 1, wy - 4, ap, small=True)
+            # hand: 4x4 with a thumb; leading hands 5 wide, trailing hands 3 tall
+            hw = 5 if na > 0.45 else (3 if na < -0.6 else 4)
+            hh = 5 if na > 0.75 else (3 if na < -0.5 else 4)
+            hx = int(round(wx - hw / 2))
+            hy = wy
             hp = f.part()
-            hm = [(hx + 1, hand_y), (hx + 2, hand_y), (hx + 3, hand_y), (hx + 4, hand_y),
-                  (hx + 1, hand_y + 1), (hx + 2, hand_y + 1), (hx + 3, hand_y + 1), (hx + 4, hand_y + 1),
-                  (hx + 1, hand_y + 2), (hx + 2, hand_y + 2), (hx + 3, hand_y + 2), (hx + 4, hand_y + 2),
-                  (hx + 2, hand_y + 3), (hx + 3, hand_y + 3)]
-            hm.append((hx, hand_y + 1) if L else (hx + 5, hand_y + 1))    # thumb
-            f.paint(hm, s.get('gloves', s['skin']), hp, mode='sph', lo=1, hi=3, bias=0.12 if L else 0.02)
-            f.step(hx + 2, hand_y + 2, 1); f.step(hx + 3, hand_y + 2, 1)      # knuckle shadow
-            self.hand_props(side, hx, hand_y, back)
+            hm = [(x, y) for y in range(hy, hy + hh) for x in range(hx, hx + hw)
+                  if not (y == hy + hh - 1 and x in (hx, hx + hw - 1))]
+            hm.append((hx - 1, hy + 1) if not L else (hx + hw, hy + 1))    # thumb, on the body side
+            f.paint(hm, s.get('gloves', s['skin']), hp, mode='sph', lo=1, hi=3, bias=(0.12 if L else 0.02) + dim)
+            for x in range(hx + 1, hx + hw - 1): f.step(x, hy + hh - 2, 1) if x % 2 == 0 else None   # finger gaps
+            self.hand_props(side, hx - 1 if hw == 4 else hx - 1, hy, back)
 
     def hand_props(self, side, hx, hy, back):
         s, f = self.s, self.f
@@ -709,9 +821,15 @@ class Person:
             for k in range(3): f.put(ex + k, ey, OUT, 0, fp)
             f.put(ex - 1 if L else ex + 3, ey, OUT, 0, fp)                          # outer lash flick
             if not gl: f.put(ex - 1 if L else ex + 3, ey - 1, OUT, 0, fp) if s.get('lashes') else None
-            f.put(ex, ey + 1, eye, 0, fp); f.put(ex + 1, ey + 1, eye, 3, fp); f.put(ex + 2, ey + 1, eye, 3, fp)
-            f.put(ex, ey + 2, eye, 2, fp); f.put(ex + 1, ey + 2, eye, 4, fp); f.put(ex + 2, ey + 2, eye, 3, fp)
-            f.put(ex, ey + 3, eye, 1, fp); f.put(ex + 1, ey + 3, eye, 1, fp); f.put(ex + 2, ey + 3, eye, 2, fp)
+            if self.P.blink:   # closed: the lid comes down, the lash line curves under it
+                for k in range(3): f.put(ex + k, ey, sk, 1, fp); f.put(ex + k, ey + 1, sk, 1, fp)
+                for k in range(3): f.put(ex + k, ey + 2, OUT, 0, fp)
+                f.put(ex - 1 if L else ex + 3, ey + 1, OUT, 0, fp)
+                f.put(ex - 1 if L else ex + 3, ey, sk, 1, fp)
+            else:
+                f.put(ex, ey + 1, eye, 0, fp); f.put(ex + 1, ey + 1, eye, 3, fp); f.put(ex + 2, ey + 1, eye, 3, fp)
+                f.put(ex, ey + 2, eye, 2, fp); f.put(ex + 1, ey + 2, eye, 4, fp); f.put(ex + 2, ey + 2, eye, 3, fp)
+                f.put(ex, ey + 3, eye, 1, fp); f.put(ex + 1, ey + 3, eye, 1, fp); f.put(ex + 2, ey + 3, eye, 2, fp)
             f.put(ex + 2, ey + 2, 'white', 1, fp) if s.get('sparkle2') else None
             # lower lid: a single skin shadow under the outer corner
             f.put(ex + (0 if L else 2), ey + 4, sk, 2, fp)
@@ -796,8 +914,9 @@ class Person:
                     if p and p[0] == s['skin']: f.put(x, y, s['skin'], max(0, p[1] - 1), gp)
             f.put(c + 1, ey - 1, 'lens', 0, gp); f.put(c + 2, ey, 'lens', 1, gp)    # glint, upper right
         f.put(CX - 1, ey, rim, 1, gp); f.put(CX, ey, rim, 2, gp)                           # bridge
-        for x in (CX - 12, CX - 11): f.put(x, ey, rim, 2, gp)                               # arms to the ears
-        for x in (CX + 10, CX + 11): f.put(x, ey, rim, 3, gp)
+        for x in (CX - 12, CX - 11, CX + 10, CX + 11):                                      # arms to the ears,
+            if (x, ey) in self.hair_mask or (x, ey) in self.face_mask:                       # inside the silhouette
+                f.put(x, ey, rim, 2 if x < CX else 3, gp)
 
     # ---- hair (front and back views)
     HAIR = {  # cranium cx-offset, cy, rx, ry ; side depth (front) ; nape (back)
@@ -895,7 +1014,7 @@ class Person:
         hat = s.get('hat')
         if hat and not back: return
         if not back:
-            cy = 6.8 + b
+            cy = 6.8 + b + self.P.lag_bob          # trails the head by a frame
             bp = f.part()
             m = [p for p in ell(CX + 1, cy, 7.8, 6.4) if p not in self.hair_mask]
             f.paint(m, hr, bp, mode='sph', cx=CX - 1, rx=8.5, cy=cy - 1, ry=7, bias=0.06, lo=0, hi=4,
@@ -906,7 +1025,7 @@ class Person:
             # a hairpin
             f.put(CX + 5, cy - 1 + 3, 'gold', 1, bp) if s.get('hairpin') else None
         else:
-            cy = (11.4 if not hat else 30) + b
+            cy = (11.4 if not hat else 30) + b + self.P.lag_bob
             bp = f.part()
             m = ell(CX, cy, 8.0, 6.8)
             ring = set(m)
@@ -928,9 +1047,10 @@ class Person:
         scr = s.get('scrunchie', 'teal')
         if back:
             m = []
-            for y in range(31 + b, 52 + b):
-                w = 3 if y < 46 + b else 3 - (y - 46 - b) // 2
-                sway = 1 if y > 42 + b else 0
+            lag = self.P.lag_bob
+            for y in range(31 + b, 52 + b + lag):
+                w = 3 if y < 46 + b + lag else 3 - (y - 46 - b - lag) // 2
+                sway = (1 if y > 42 + b else 0) + (self.P.lag_x if y > 44 + b else 0)
                 for x in range(CX - w + sway, CX + w + sway): m.append((x, y))
             f.paint(m, hr, pp, bias=0.06, lo=0, hi=4, tex=lambda x, y: strands(x, y, CX, 16 + b, 10, 2))
             tie = f.part()
@@ -1006,98 +1126,140 @@ class Person:
 
     # ============================================================================ PROFILE (faces LEFT)
     def draw_side(self):
-        f = self.f
-        f.oy = self.bob
+        f, P = self.f, self.P
+        lean = P.lean                                  # the upper body leans a pixel into the walk
+        self.side_span = self._side_span()
+        f.oy = self.bob; f.ox = lean
         self.side_hair_behind()
         self.side_arm(False)
-        f.oy = 0
+        f.oy = 0; f.ox = 0
         self.side_legs()
-        f.oy = self.bob
+        f.oy = self.bob + P.lag_bob; f.ox = lean + P.bag_dx
         self.side_bag(far=True)
+        f.oy = self.bob; f.ox = lean
         self.side_torso()
         self.side_head()
         self.side_arm(True)
+        f.oy = self.bob + P.lag_bob; f.ox = lean + P.bag_dx   # the satchel swings on its strap, a beat behind
         self.side_bag(far=False)
+        f.oy = self.bob; f.ox = lean
         self.side_hat()
+        f.ox = 0
 
     def side_hair_behind(self):
         s, f, b = self.s, self.f, self.b
         if s['hairStyle'] != 'long': return
         hp = f.part(sep=False)
+        lag = self.P.lag_bob
         m = []
-        for y in range(28 + b, 56 + b):
-            for x in range(CX + 2, CX + 14 - max(0, y - 50 - b)): m.append((x, y))
+        for y in range(28 + b, 56 + b + lag):
+            for x in range(CX + 2, CX + 14 - max(0, y - 50 - b - lag)): m.append((x, y))
         f.paint(m, s['hair'], hp, bias=-0.1, lo=1, hi=4, tex=lambda x, y: strands(x, y, CX + 4, 4 + b, 12, 2))
 
+    # ---- profile legs: two hip pivots, two-bone IK, heel strike / flat / toe-off / swing foot pitch
+    L_THIGH, L_SHIN = 13.4, 13.4
+    SOLE_Y = FEET + 1.0                       # the ground line under the sole row
+    FOOT = {   # foot outline in ankle-local coordinates (facing left), sole at y = 5.5
+        'boots':    [(-3.2, -1.0), (3.2, -1.0), (3.7, 5.5), (-6.0, 5.5), (-7.0, 4.6), (-6.9, 3.2), (-4.8, 1.6)],
+        'shoes':    [(-2.8, 1.2), (3.0, 1.2), (3.5, 5.5), (-6.4, 5.5), (-7.2, 4.5), (-5.6, 2.9)],
+        'trainers': [(-3.0, 0.2), (3.4, 0.2), (3.9, 5.5), (-6.8, 5.5), (-7.4, 4.0), (-5.6, 1.9)],
+        'wellies':  [(-3.4, -1.0), (3.6, -1.0), (3.9, 5.5), (-6.4, 5.5), (-7.0, 3.8), (-5.0, 1.8)],
+    }
+    SHAFT = {'boots': 6, 'wellies': 12, 'shoes': 0, 'trainers': 0}
+
+    def side_leg_geo(self, which, pose=None):
+        P = pose or self.P
+        lg = P.sleg[which]
+        ft = self.s.get('feet', 'boots')
+        far = which == 'far'
+        hip = (CX - 1.5 + (2 if far else 0), 62.5 + P.bob - (0.5 if far else 0))
+        ang = math.radians(lg['fa'])
+        poly_ = rot(self.FOOT[ft], ang, (0, 0))
+        low = max(y for x, y in poly_)
+        ankle = (hip[0] + lg['ax'], self.SOLE_Y - lg['lift'] - low)
+        knee = ik(hip, ankle, self.L_THIGH, self.L_SHIN, forward=-1)
+        return hip, knee, ankle, ang, lg
+
     def side_legs(self):
-        s, f, b = self.s, self.f, self.b
+        s, f = self.s, self.f
         lw = s.get('legwear', 'trousers'); lr = s.get('legs', 'charcoal'); ft = s.get('feet', 'boots')
         fr = s.get('feet_ramp', 'leather')
-        for which, dx, lift in (('far', self.ffx, self.fl), ('near', self.nfx, self.nl)):
+        lrp = lr if lw != 'skirt' else s.get('tights', lr)
+        for which in ('far', 'near'):
             far = which == 'far'
-            hip = (CX - 1, 64 + b)
-            ankle = (CX - 1 + dx, 86 + lift)
+            hip, knee, ankle, ang, lg = self.side_leg_geo(which)
+            bias = -0.1 if far else 0.04
+            fstep = 1 if far else 0                  # the far leg: a ramp step darker and cooler, so the legs separate
+            shaft = self.SHAFT.get(ft, 0)
+            boot_r = s.get('welly', 'welly') if ft == 'wellies' else fr
             lp = f.part()
-            m = []
-            n = ankle[1] - hip[1]
-            for k in range(n + 1):
-                t = k / max(1, n); xx = round(hip[0] + (ankle[0] - hip[0]) * t)
-                for x in range(xx - 3, xx + 4): m.append((x, hip[1] + k))
-            lrp = lr if lw != 'skirt' else s.get('tights', lr)
-            if lw == 'shorts':
-                cut = 74 + b
-                f.paint([p for p in m if p[1] <= cut], lrp, lp, bias=-0.22 if far else 0.03, lo=1, hi=4)
-                sp = f.part()
-                f.paint([(x, y) for (x, y) in m if y > cut and abs(x + 0.5 - (hip[0] + (ankle[0] - hip[0]) * (y - hip[1]) / n)) < 2.8],
-                        s['skin'], sp, bias=-0.1 if far else 0.12, lo=1, hi=3)
-            else:
-                f.paint(m, lrp, lp, bias=(-0.22 if far else 0.03), lo=1, hi=4)
-                if lw == 'trousers' and not far:
-                    for k in range(8, n - 1):
-                        t = k / n; f.step(round(hip[0] + (ankle[0] - hip[0]) * t), hip[1] + k, 1)
-            self.side_foot(ankle[0] - 3, lift, ft, fr, far)
+            m = capsule([hip, knee, ankle], [4.0, 3.6, 3.1])
+            for (x, y), (nx, t) in m.items():
+                nz = math.sqrt(max(0.02, 1 - nx * nx))
+                # distance up the shin from the ankle decides trouser / boot shaft / bare leg (shorts)
+                up = math.hypot(x + 0.5 - ankle[0], y + 0.5 - ankle[1]) if y + 0.5 > knee[1] else 99
+                rp, lb = lrp, bias
+                if shaft and up <= shaft + 0.5: rp = boot_r
+                elif lw == 'shorts' and y > 73: rp = s['skin']; lb += 0.1
+                if lw == 'shorts' and y > 73 and up <= 5.5 and not (shaft and up <= shaft + 0.5): rp = s.get('socks', 'white')
+                l = lum(nx, -0.15, nz, f.lx) + lb
+                f.put(x, y, rp, min(4, tone(l, 1, 4 if rp != s['skin'] else 3) + fstep), lp)
+            if lw == 'trousers':
+                # the crease follows the shin; the knee reads as a soft lit bump; the hem breaks over the shoe
+                if not far:
+                    for k in range(3, 11):
+                        t = k / 12; x = knee[0] + (ankle[0] - knee[0]) * t; y = knee[1] + (ankle[1] - knee[1]) * t
+                        f.step(int(x), int(y), 1)
+                kx, ky = int(round(knee[0] - 3)), int(round(knee[1]))
+                f.step(kx + 1, ky, -1)
+                if knee[0] < min(hip[0], ankle[0]) - 1.5:
+                    bx_, by_ = int(round(knee[0] + 2.5)), int(round(knee[1] + 1))      # fold behind the bent knee
+                    f.step(bx_, by_, 1); f.step(bx_, by_ - 1, 1)
+                if not shaft:
+                    for (x, y), (nx, t) in m.items():
+                        up = math.hypot(x + 0.5 - ankle[0], y + 0.5 - ankle[1])
+                        if 1.0 <= up < 2.2 and y + 0.5 > knee[1]: f.step(x, y, 1)
+            self.side_foot(ankle, ang, ft, fr, far, lg)
 
-    def side_foot(self, x0, lift, ft, fr, far):
+    def side_foot(self, ankle, ang, ft, fr, far, lg):
         f, s = self.f, self.s
-        base = FEET + lift
-        bias = -0.2 if far else 0.03
-        if ft == 'wellies':
-            m = rows({y: (x0, x0 + 7) for y in range(base - 14, base + 1)})
-            m += [(x0 - 1, y) for y in range(base - 4, base + 1)] + [(x0 - 2, y) for y in range(base - 2, base + 1)]
-            pid = f.paint(m, s.get('welly', 'welly'), f.part(), bias=bias, lo=1, hi=4)
-            for x in range(x0 - 2, x0 + 8): f.put(x, base, 'sole', 2, pid)
-            for x in range(x0, x0 + 8): f.step(x, base - 14, -1)
-            return
-        if ft == 'trainers':
-            m = rows({base - 5: (x0, x0 + 6), base - 4: (x0 - 1, x0 + 7), base - 3: (x0 - 2, x0 + 7),
-                      base - 2: (x0 - 3, x0 + 7), base - 1: (x0 - 3, x0 + 7), base: (x0 - 3, x0 + 7)})
-            pid = f.paint(m, 'trainer', f.part(), bias=bias, lo=1, hi=3)
-            for x in range(x0 - 3, x0 + 8): f.put(x, base, 'sole', 1, pid)
-            if not far:
-                for x in range(x0 - 1, x0 + 5): f.put(x, base - 3 + (1 if x > x0 + 2 else 0), s.get('accent', 'paint_red'), 1, pid)
-            return
-        if ft == 'shoes':
-            m = rows({base - 3: (x0 - 1, x0 + 6), base - 2: (x0 - 3, x0 + 7), base - 1: (x0 - 3, x0 + 7)})
-            pid = f.paint(m, fr, f.part(), bias=bias, lo=1, hi=4)
-            for x in range(x0 - 3, x0 + 8): f.put(x, base, 'sole', 2, pid)
-            if not far: f.put(x0 - 2, base - 2, fr, 0, pid)
-            return
-        spans = {}
-        for y in range(base - 10, base + 1):
-            k = y - (base - 10)
-            if k < 5: spans[y] = (x0, x0 + 6)
-            elif k < 7: spans[y] = (x0 - 2, x0 + 7)
-            else: spans[y] = (x0 - 3, x0 + 7)
-        m = rows(spans)
-        m = [p for p in m if p != (x0 - 3, base - 3)]
-        pid = f.paint(m, fr, f.part(), bias=bias, lo=1, hi=4)
-        for x in range(x0 - 3, x0 + 8): f.put(x, base, 'sole', 2 if not far else 3, pid)
-        for x in range(x0, x0 + 7): f.step(x, base - 10, -1); f.step(x, base - 9, 1)
-        if not far:
-            for (dx_, dy_) in ((1, 2), (0, 4), (0, 6)):
-                f.put(x0 + dx_, base - 10 + dy_, 'gold', 2, pid)
-            f.put(x0 - 2, base - 3, fr, 0, pid); f.put(x0 - 1, base - 3, fr, 1, pid)
-            f.put(x0 + 6, base - 2, fr, 3, pid)
+        bias = -0.12 if far else 0.04
+        rp = s.get('welly', 'welly') if ft == 'wellies' else ('trainer' if ft == 'trainers' else fr)
+        pts = [(ankle[0] + x, ankle[1] + y) for x, y in rot(self.FOOT[ft], ang, (0, 0))]
+        m = poly(pts)
+        ms = set(m)
+        pid = f.part()
+        c, sn = math.cos(-ang), math.sin(-ang)
+
+        def local(x, y):
+            dx, dy = x + 0.5 - ankle[0], y + 0.5 - ankle[1]
+            return dx * c - dy * sn, dx * sn + dy * c
+        for (x, y) in m:
+            lx_, ly_ = local(x, y)
+            # a rounded shoe: lit along the instep and toe cap, darker towards the heel and the sole
+            l = 0.72 - 0.05 * lx_ - 0.07 * max(0, ly_ - 2) + bias
+            if ly_ < 1.5 and lx_ < -2: l += 0.1
+            f.put(x, y, rp, min(4, tone(l, 1, 4 if rp != 'trainer' else 3) + (1 if far else 0)), pid)
+        for (x, y) in m:
+            lx_, ly_ = local(x, y)
+            if (x, y + 1) not in ms and ly_ > 3.0:
+                f.put(x, y, 'sole', 2 if not far else 3, pid)                          # the welt / sole
+        if far: return
+        pt = lambda lx_, ly_: (int(math.floor(ankle[0] + lx_ * math.cos(ang) - ly_ * math.sin(ang))),
+                               int(math.floor(ankle[1] + lx_ * math.sin(ang) + ly_ * math.cos(ang))))
+        if ft == 'boots':
+            for lx_, ly_ in ((-2.0, -0.2), (-3.2, 1.3), (-4.4, 2.6)):
+                x, y = pt(lx_, ly_)
+                if (x, y) in ms: f.put(x, y, 'gold', 2, pid)                             # laces
+            x, y = pt(-5.9, 3.6)
+            if (x, y) in ms: f.put(x, y, fr, 0, pid)                                     # toe cap glint
+        elif ft == 'trainers':
+            for lx_ in (-4.5, -3.0, -1.5, 0.0):
+                x, y = pt(lx_, 3.4)
+                if (x, y) in ms: f.put(x, y, s.get('accent', 'paint_red'), 1, pid)        # side flash
+        elif ft == 'shoes':
+            x, y = pt(-5.6, 3.4)
+            if (x, y) in ms: f.put(x, y, fr, 0, pid)
 
     def side_torso(self):
         s, f, b = self.s, self.f, self.b
@@ -1116,6 +1278,16 @@ class Person:
             f.paint(rows(span), s.get('skirt', 'charcoal'), pid, lo=1, hi=4,
                     tex=lambda x, y: (-0.22 if x % 4 == 0 else (0.06 if x % 4 == 1 else 0)))
             for x in range(span[sk_bot][0], span[sk_bot][1] + 1): f.step(x, sk_bot, 1)
+        span = self.side_span
+        pid = f.part()
+        f.paint(rows(span), tr, pid, bias=0.03 + s.get('top_bias', 0), lo=1, hi=4,
+                tex=lambda x, y: (-0.2 if (x == CX + 3 and (y - top) / (bot - top) > .55) else 0))
+        self.side_torso_details(span, pid)
+
+    def _side_span(self):
+        s = self.s
+        ts = s['topStyle']; depth = s.get('depth', 9)
+        top, bot = self.top, self.bot
         span = {}
         fl = s.get('flare', 3.4 if ts == 'coat' else 1.4)
         belly = s.get('belly', 0)
@@ -1128,14 +1300,15 @@ class Person:
             if y == top: front += 3; backx -= 3
             elif y == top + 1: front += 1.5; backx -= 1.5
             elif y == top + 2: front += 0.5; backx -= 0.5
-            if ts == 'coat' or bot > 68:
-                fw, bk = self.hem_sway(y, bot, 10)
-                front -= fw; backx += bk
+            fw, bk = self.hem_sway(y, bot, 10 if (ts == 'coat' or bot > 68) else 5)
+            front -= fw; backx += bk
             span[y] = (round(front), round(backx))
-        self.side_span = span
-        pid = f.part()
-        f.paint(rows(span), tr, pid, bias=0.03 + s.get('top_bias', 0), lo=1, hi=4,
-                tex=lambda x, y: (-0.2 if (x == CX + 3 and (y - top) / (bot - top) > .55) else 0))
+        return span
+
+    def side_torso_details(self, span, pid):
+        s, f, b = self.s, self.f, self.b
+        ts = s['topStyle']; tr = s['top']; depth = s.get('depth', 9)
+        top, bot = self.top, self.bot
         for x in range(span[bot][0], span[bot][1] + 1): f.step(x, bot, 1)
         fx = lambda y: span[y][0]
         if ts in TAILORED:
@@ -1223,11 +1396,13 @@ class Person:
                 if y == vb: f.step(x, y, 1)
 
     def hem_sway(self, y, bot, rows_):
-        """Profile: the lower hem is pushed forward by the leading leg and trails behind the back one."""
+        """Profile: the lower hem is pushed forward by the leading knee and trails behind the back leg. It reads the
+        previous frame's stride, so the cloth follows the legs a beat late."""
         t = (y - (bot - rows_)) / rows_
         if t <= 0: return 0.0, 0.0
-        fwd = max(0, -min(self.nfx, self.ffx) - 2) * 0.6
-        bck = max(0, max(self.nfx, self.ffx) - 2) * 0.35
+        n, fa = self.P.prev_ax['near'], self.P.prev_ax['far']
+        fwd = max(0, -min(n, fa) - 3) * 0.3
+        bck = max(0, max(n, fa) - 3) * 0.22
         return t * t * fwd, t * t * bck
 
     def side_apron(self, top, span):
@@ -1242,37 +1417,62 @@ class Person:
         for x in range(span[top + 15][0], CX + 4): f.put(x, top + 15, 'apron', 2, ap)
 
     def side_arm(self, near):
-        s, f, b = self.s, self.f, self.b
+        s, f, b, P = self.s, self.f, self.b, self.P
         sleeve = self.sleeve_ramp()
         short = self.short_sleeves()
-        sw = self.swing if near else -self.swing
-        sx, sy = CX + 1, 43 + b
-        hx = sx - round(5 * sw); hy = 64 + b - round(abs(sw))
+        a = P.sarm['near' if near else 'far']
+        d = lambda th: (-math.sin(th), math.cos(th))
+        thu = math.radians(30 * a)
+        # the elbow bends as the arm swings forward (the forearm lifts), and a little on the back swing
+        thf = thu + math.radians(14 + 26 * max(0.0, a) + 12 * max(0.0, -a))
+        # shoulders counter-rotate against the hips: the near shoulder comes forward with the near arm
+        rot_ = P.sh_rot if near else -P.sh_rot
+        sx, sy = CX - 1.5 - 0.8 * rot_ + (0 if near else 1.5), 44.0 + b + (0 if near else -0.5)
+        sho = (sx, sy)
+        du, df = d(thu), d(thf)
+        elb = (sx + du[0] * 10.0, sy + du[1] * 10.0)
+        wri = (elb[0] + df[0] * 9.0, elb[1] + df[1] * 9.0)
+        far = 0 if near else 1
+        if not near:
+            # the far arm is mostly hidden by the body. Where its hand clears the chest, show the sleeve that leads to
+            # it; if only a knuckle would peep out, keep the whole hand tucked behind the torso
+            sp_ = self.side_span
+            hc = (wri[0] + df[0] * 1.8, wri[1] + df[1] * 1.8)
+            def outside(x, y):
+                if int(y) not in sp_: return True
+                a0, a1 = sp_[int(y)]
+                return x < a0 or x > a1
+            cap = capsule([sho, elb, wri], [3.3, 3.0, 2.6])
+            vis = sum(1 for (x, y), (nx, t) in cap.items() if t > 0.55 and outside(x, y))
+            self._far_hand_hidden = vis < 4
         ap = f.part(sepk=3)
-        m = []
-        n = hy - sy
-        for k in range(n + 1):
-            t = k / max(1, n); xx = round(sx + (hx - sx) * t)
-            for x in range(xx - 3, xx + 3): m.append((x, sy + k))
-        m += [(x, sy - 1) for x in range(sx - 3, sx + 2)] + [(x, sy - 2) for x in range(sx - 2, sx + 1)]
-        bias = 0.05 if near else -0.24
+        bias = 0.05 if near else -0.1
         if short:
             cut = sy + 8
-            f.paint([p for p in m if p[1] <= cut], sleeve, ap, lo=1, hi=4, bias=bias)
-            for x in range(sx - 5, sx + 4): f.step(x, cut, 1)
+            paint_limb(f, [sho, elb, wri], [3.3, 3.0, 2.6], sleeve, ap, bias=bias, lo=1, hi=4, clip=lambda x, y, t: t < 0.36, far=far)
             sp = f.part()
-            f.paint([(x, y) for (x, y) in m if y > cut and abs(x + 0.5 - (sx + (hx - sx) * (y - sy) / n)) < 2.5],
-                    s['skin'], sp, lo=1, hi=3, bias=bias + 0.12)
+            paint_limb(f, [sho, elb, wri], [2.5, 2.4, 2.2], s['skin'], sp, bias=bias + 0.12, lo=1, hi=3,
+                       clip=lambda x, y, t: t >= 0.36, far=far)
         else:
-            f.paint(m, sleeve, ap, lo=1, hi=4, bias=bias + (s.get('top_bias', 0) if sleeve == s['top'] else 0))
-            for x in range(hx - 4, hx + 4):
-                p = f.get(x, hy - 3)
-                if p and p[2] == ap: f.step(x, hy - 3, 1)
-            f.step(sx - 1, sy + 11, 1); f.step(sx, sy + 12, 1)
+            m = paint_limb(f, [sho, elb, wri], [3.3, 3.0, 2.6], sleeve, ap, lo=1, hi=4,
+                           bias=bias + (s.get('top_bias', 0) if sleeve == s['top'] else 0), far=far)
+            for (x, y), (nx, t) in m.items():
+                if 0.86 < t < 0.93: f.step(x, y, 1)                          # cuff seam
+            ex, ey_ = int(round(elb[0])), int(round(elb[1]))
+            f.step(ex - 2, ey_, 1)                                           # crook of the elbow
+            if a > 0.3: f.step(ex - 2, ey_ + 1, 1)
+            f.step(ex + 2, ey_ - 1, -1)
+        # hand: a 4x4 mitt with a thumb on the front and a knuckle shadow, turned with the forearm
+        hc = (wri[0] + df[0] * 1.8, wri[1] + df[1] * 1.8)
+        hx, hy = int(round(hc[0])), int(round(hc[1]))
+        if not near and self._far_hand_hidden: return
         hp = f.part()
-        hm = [(hx - 2, hy), (hx - 1, hy), (hx, hy), (hx + 1, hy), (hx - 2, hy + 1), (hx - 1, hy + 1), (hx, hy + 1),
-              (hx + 1, hy + 1), (hx - 2, hy + 2), (hx - 1, hy + 2), (hx, hy + 2), (hx - 1, hy + 3), (hx - 3, hy + 1)]
-        f.paint(hm, s.get('gloves', s['skin']), hp, mode='sph', lo=1, hi=3, bias=bias + 0.12)
+        hm = [(x, y) for y in range(hy - 2, hy + 2) for x in range(hx - 2, hx + 2)
+              if not (y == hy + 1 and x in (hx - 2, hx + 1))]
+        hm.append((hx - 3, hy - 1))                                           # thumb, forward
+        f.paint(hm, s.get('gloves', s['skin']), hp, mode='sph', lo=1, hi=3 + far, bias=bias + 0.12 - 0.12 * far)
+        f.step(hx, hy, 1)
+        hx, hy = hx, hy - 2            # hand props below use the top of the hand
         if not near: return
         right_hand = self.near == 'right'
         if s.get('carry') == 'tote' and not right_hand:
@@ -1327,161 +1527,274 @@ class Person:
             for (x, y) in line(CX + 1, top, CX - 8, top + 19):
                 f.put(x, y, br, 1, sp); f.put(x + 1, y, br, 2, sp)
 
-    # profile head geometry (character faces LEFT). The ear sits at the head's horizontal centre, just behind the jaw.
-    EAR_X = CX - 1                                         # ear columns EAR_X .. EAR_X + 3, rows 28 .. 34
-    FRONT = {19: 16, 20: 14, 21: 13, 22: 13, 23: 12, 24: 12, 25: 12, 26: 12, 27: 12, 28: 13, 29: 13, 30: 12,
-             31: 11, 32: 10, 33: 10, 34: 11, 35: 12, 36: 12, 37: 11, 38: 12, 39: 13}
-    # forehead -> brow (27) -> eye socket (28-29) -> nose protruding 2px (32-33) -> recessed mouth (35) ->
-    # chin 1px behind the nose tip (37) -> under the chin (39)
+    # ---- profile head (character faces LEFT). Rows line up with the front view: brow 25, lash line 28, nose 30-34,
+    # mouth 37, chin 38-40. An egg-shaped skull whose back sits a good 12px behind the ear; the face plane leads.
+    # Every character has their own silhouette (spec 'prof': nose, chin, brow, jaw), chosen by age and build.
+    EAR_X = 24                                             # ear columns 24..26, rows 29..33, on the skull's centre line
+    SKULL = (26.4, 26.4, 13.2, 12.8)
+    FOREHEAD = {16: 18, 17: 16, 18: 15, 19: 14, 20: 14, 21: 13, 22: 13, 23: 13, 24: 13, 25: 13, 27: 13, 28: 13, 29: 13}
+    NOSES = {   # row -> leading column; the lowest row is the underside (nostril) row
+        'straight': {30: 12, 31: 11, 32: 10, 33: 10, 34: 11},
+        'button':   {30: 13, 31: 12, 32: 11, 33: 11, 34: 12},
+        'soft':     {30: 12, 31: 12, 32: 11, 33: 10, 34: 11},
+        'pointed':  {30: 12, 31: 11, 32: 10, 33: 9, 34: 11},
+        'big':      {29: 12, 30: 11, 31: 10, 32: 9, 33: 9, 34: 10},
+        'round':    {30: 12, 31: 11, 32: 10, 33: 9, 34: 9, 35: 11},
+    }
+    CHINS = {   # philtrum, mouth notch, chin; the jaw exponent (higher = a squarer jaw), bottom row
+        'normal':   ({35: 12, 36: 12, 37: 13, 38: 12, 39: 12, 40: 13}, 1.5, 40),
+        'receding': ({35: 12, 36: 13, 37: 14, 38: 14, 39: 14, 40: 15}, 1.15, 40),
+        'strong':   ({35: 12, 36: 12, 37: 13, 38: 12, 39: 11, 40: 12}, 1.9, 40),
+        'round':    ({35: 12, 36: 12, 37: 13, 38: 12, 39: 12, 40: 13}, 1.7, 40),
+        'double':   ({35: 12, 36: 12, 37: 13, 38: 12, 39: 12, 40: 13, 41: 15}, 1.3, 41),
+    }
 
     @staticmethod
-    def jaw_bottom(x):
-        """Lowest face row at column x: the jaw runs from the chin back up to the bottom of the ear."""
-        return 39 - (x - 13) * 4.6 / (Person.EAR_X - 13)
+    def hat_rim(x):
+        """Profile hard-hat rim row at column x: level over the brow, dropping towards the back of the head."""
+        return 22.0 + max(0.0, x - 22) * 0.3
+
+    @staticmethod
+    def cap_rim(x):
+        """Profile flat-cap band row at column x."""
+        return 22.0 + max(0.0, x - 24) * 0.3
+
+    def cover_rim(self):
+        if self.s.get('hat'): return self.hat_rim
+        if self.s.get('flatcap'): return self.cap_rim
+        return None
+
+    def prof(self):
+        p = dict(nose='straight', chin='normal', brow=False)
+        p.update(self.s.get('prof', {}))
+        return p
+
+    def jaw_bottom(self, x):
+        """The underside of the face: flat under the chin, then curving up to the ear lobe."""
+        _, pw, cy = self.CHINS[self.prof()['chin']]
+        x0 = 14.0
+        if x <= x0: return float(cy)
+        t = min(1.0, (x - x0) / (self.EAR_X + 1 - x0))
+        return cy - (cy - 34.5) * (t ** pw)
+
+    def side_front(self):
+        pr = self.prof()
+        fr = dict(self.FOREHEAD)
+        fr[26] = 12 if pr['brow'] else 13
+        nose = self.NOSES[pr['nose']]
+        chin = self.CHINS[pr['chin']][0]
+        fr.update(chin); fr.update(nose)
+        return fr, nose, chin
 
     def side_head(self):
         s, f, b = self.s, self.f, self.b
         sk = s['skin']; EX = self.EAR_X
-        np_ = f.part()
-        f.paint(rows({y: (CX - 4, CX + 4) for y in range(34 + b, 43 + b)}), sk, np_, bias=-0.3, lo=2, hi=3)
+        FRONT, NOSE, CHIN = self.side_front()
+        self.FRONTX = FRONT
+        hat = s.get('hat')
+        # neck: set under the ear and behind the jaw; one shadow row directly under the jawline, mid-tone below
+        np_ = f.part(sep=False)
+        # the neck leans forward out of the shoulders: throat at x 19-20, the back of the neck just behind the ear
+        nm = [(x, y) for y in range(33 + b, 45 + b) for x in range(19, 28)
+              if y - b > self.jaw_bottom(x) - 0.5 and x <= 27.4 - max(0, y - b - 35) * 0.45
+              and x >= 20 - (1 if y - b > 40 else 0)]
+        nms = set(nm)
+        for (x, y) in nm:
+            f.put(x, y, sk, 3 if (x, y - 1) not in nms and x < EX + 1 else 2, np_)
         hp = f.part()
-        skull = set(ell(CX + 2.0, 25.6 + b, 13.4, 12.9))            # egg: the back of the skull well behind the ear
+        scx, scy, srx, sry = self.SKULL
+        skull = set(ell(scx, scy + b, srx, sry))
+        if hat or s.get('flatcap'):   # under a hat the back of the head tapers into the nape just below the rim
+            skull = set(p for p in skull if p[0] <= 36.5 - max(0, p[1] - b - 25) * 0.9)
         right = {}
         for (x, y) in skull: right[y] = max(right.get(y, -1), x)
-        m = set(p for p in skull if p[1] - b < 19 and p[0] >= 14)
-        for yy, x0 in self.FRONT.items():
+        m = set(p for p in skull if p[1] - b < 16)
+        for yy, x0 in FRONT.items():
             y = yy + b
-            for x in range(x0, right.get(y, CX + 10) + 1):
-                if x <= EX + 3 and yy > self.jaw_bottom(x) + 0.5: continue
+            for x in range(x0, right.get(y, 30) + 1):
+                if x <= EX + 1 and yy > self.jaw_bottom(x) + 0.01: continue
+                if x > EX + 1 and (x, y) not in skull: continue
                 m.add((x, y))
-        m = set(p for p in m if p in skull or p[0] < CX - 4)
         self.face_mask = m
-        f.paint(m, sk, hp, mode='sph', cx=CX - 3, rx=15, cy=25 + b, ry=16, bias=0.34, lo=1, hi=3,
-                th=(0.99, 0.52, 0.30, 0.12))
-        for (x, y) in m:                                             # the jaw line reads as one darker step
-            if (x, y + 1) not in m and 13 < x <= EX + 2: f.step(x, y, 1)
+        young = s.get('age') != 'old'
+        for (x, y) in m:
+            yy = y - b
+            fx0 = FRONT.get(yy, 14)
+            i = 1
+            if x >= EX - 2 or yy <= 17: i = 2                                  # towards the ear, under the hair
+            if x - fx0 <= 1 and 19 <= yy <= 25: i = 0                          # the lit forehead plane
+            if (x, y + 1) not in m and x <= EX + 1: i = 2                       # the jawline
+            f.put(x, y, sk, i, hp)
+        if young:   # a soft, lit cheek
+            for (x, y) in ((17, 32), (18, 32), (17, 31)): f.put(x, y + b, sk, 0, hp) if (x, y + b) in m else None
+        self.head_pid = hp
+        # ear: a small 3x5 ear with a lit rim, a shaded bowl, the lobe
         ep = f.part(shadow=False)
-        ear = [(x, y) for x in range(EX, EX + 4) for y in range(28 + b, 35 + b)]
-        ear = [p for p in ear if p not in {(EX, 28 + b), (EX + 3, 28 + b), (EX + 3, 34 + b), (EX, 34 + b)}]
+        ear = [(EX + 1, 29), (EX + 2, 29), (EX, 30), (EX + 1, 30), (EX + 2, 30), (EX, 31), (EX + 1, 31), (EX + 2, 31),
+               (EX, 32), (EX + 1, 32), (EX + 2, 32), (EX + 1, 33)]
+        ear = [(x, y + b) for x, y in ear]
         for (x, y) in ear: f.put(x, y, sk, 2, ep)
-        for (x, y) in [(EX + 1, 30 + b), (EX + 1, 31 + b), (EX + 2, 30 + b), (EX + 1, 32 + b)]: f.put(x, y, sk, 3, ep)
-        f.put(EX, 29 + b, sk, 1, ep); f.put(EX + 2, 29 + b, sk, 1, ep); f.put(EX + 3, 31 + b, sk, 3, ep)
-        if s.get('earrings'): f.put(EX + 1, 35 + b, 'gold', 1, ep)
+        for (x, y) in ((EX + 1, 29), (EX + 2, 30), (EX + 2, 31), (EX + 1, 33)): f.put(x, y + b, sk, 1, ep)   # rim, lobe
+        for (x, y) in ((EX + 1, 31), (EX + 1, 32)): f.put(x, y + b, sk, 3, ep)                             # the bowl
+        f.put(EX + 2, 32 + b, sk, 2, ep)
+        if s.get('earrings'): f.put(EX + 1, 34 + b, 'gold', 1, ep)
         self.ear = set(ear)
+        # features
         fp = f.part(shadow=False, sep=False)
-        ey = 28 + b; ex = 15
         eye = s.get('eye', 'eye')
-        for x in (ex - 1, ex, ex + 1): f.put(x, ey, OUT, 0, fp)
-        f.put(ex, ey + 1, eye, 0, fp); f.put(ex + 1, ey + 1, eye, 3, fp)
-        f.put(ex, ey + 2, eye, 4, fp); f.put(ex + 1, ey + 2, eye, 3, fp)
-        f.put(ex, ey + 3, eye, 1, fp); f.put(ex + 1, ey + 3, eye, 2, fp)
+        if self.P.blink:
+            for (x, y) in ((14, 29), (15, 30), (16, 30)): f.put(x, y + b, OUT, 0, fp)
+            f.put(15, 29 + b, sk, 1, fp); f.put(16, 29 + b, sk, 2, fp)
+        else:
+            for x in (14, 15, 16): f.put(x, 28 + b, OUT, 0, fp)                   # lash line
+            f.put(14, 29 + b, eye, 0, fp)                                          # the white / catchlight
+            f.put(15, 29 + b, eye, 4, fp); f.put(16, 29 + b, eye, 3, fp)
+            f.put(15, 30 + b, eye, 1, fp); f.put(16, 30 + b, eye, 2, fp)
+        f.put(15, 31 + b, sk, 2, fp)                                               # lower lid
         br = s.get('brow', s['hair']); bi = s.get('brow_i', 3)
-        by = ey - 3 if not s.get('glasses') else ey - 4
-        for k, x in enumerate(range(ex - 2, ex + 2)): f.put(x, by + (1 if k == 3 else 0), br, bi, fp)
-        f.put(12, 27 + b, sk, 1, fp)                                                      # brow ridge catches light
-        f.put(13, 28 + b, sk, 2, fp)                                                      # eye socket
-        f.put(ex + 3, ey + 5, sk + '_blush', 1, fp); f.put(ex + 4, ey + 5, sk + '_blush', 1, fp)
-        # nose: 1px highlight on the bridge/tip, shaded underside
-        f.put(11, 31 + b, sk, 1, fp); f.put(10, 32 + b, sk, 0, fp); f.put(10, 33 + b, sk, 1, fp)
-        f.put(11, 34 + b, sk, 2, fp); f.put(12, 34 + b, sk, 2, fp)
-        # mouth: one darker line, recessed behind the nose tip (no lip pixels)
-        f.put(12, 35 + b, sk, 3, fp); f.put(13, 35 + b, sk, 2, fp)
-        f.put(11, 37 + b, sk, 1, fp)                                                      # chin highlight
-        if s.get('age') == 'old': f.put(ex + 3, ey + 2, sk, 2, fp); f.put(ex + 3, ey + 3, sk, 2, fp)
-        if s.get('beard'):
-            bp = f.part(); hr = s.get('beard_ramp', s['hair'])
-            style = s.get('beard')
-            bm = []
-            for (x, y) in m:
-                yy = y - b
-                if x > EX + 1: continue                     # never behind the ear
-                if style == 'goatee':
-                    if yy >= 36 and x < 17: bm.append((x, y))
-                    continue
-                if yy >= 36: bm.append((x, y))                                   # chin
-                elif yy >= 31 and 17 <= x: bm.append((x, y))                      # jaw and cheek
-                elif x >= EX - 2 and yy >= 27: bm.append((x, y))                  # sideburn in front of the ear
-            for x in range(12, EX + 1):                                           # a little fullness under the jaw
-                yb = int(round(self.jaw_bottom(x))) + 1
-                bm.append((x, yb + b))
-                if x < EX - 3: bm.append((x, yb + 1 + b))
-            bm = [p for p in bm if p not in self.ear]
-            f.paint(bm, hr, bp, mode='sph', cx=CX - 5, rx=13, cy=31 + b, ry=12, lo=1, hi=4,
-                    tex=lambda x, y: -0.16 if hash01(x, (y - b) // 2, 5) > 0.7 else 0)
-            for x in range(11, 15): f.put(x, 34 + b, hr, 2 if x < 13 else 3, bp)            # moustache under the nose
-            f.put(12, 35 + b, hr, 4, bp); f.put(13, 35 + b, hr, 4, bp)                        # mouth line
-            f.put(11, 36 + b, hr, 1, bp)
+        by = 25 + b if not s.get('glasses') else 24 + b
+        for k, x in enumerate(range(13, 18)):
+            f.put(x, by + (1 if k == 4 else 0), br, bi if k < 3 else min(4, bi + 1), fp)
+        if s.get('bushy_brows'): f.put(14, by - 1, br, bi, fp); f.put(15, by - 1, br, bi, fp)
+        f.put(FRONT[27], 27 + b, sk, 2, fp); f.put(FRONT[27] + 1, 27 + b, sk, 2, fp)   # the socket under the brow
+        # nose: a lit bridge down to a highlighted tip, the underside and nostril wing in shadow
+        ns = sorted(NOSE)
+        tipx = min(NOSE.values())
+        tip = max(yy for yy in ns if NOSE[yy] == tipx)
+        for yy in ns:
+            x0 = NOSE[yy]
+            if yy < tip: f.put(x0, yy + b, sk, 0 if yy >= ns[0] + 1 else 1, fp)
+        f.put(tipx + 1, tip + b, sk, 0, fp)                                           # the tip highlight
+        f.put(tipx, tip + b, sk, 1, fp)
+        und = ns[-1]
+        f.put(NOSE[und], und + b, sk, 2, fp); f.put(NOSE[und] + 1, und + b, sk, 3, fp)   # underside, nostril
+        f.put(NOSE[und] + 2, und - 1 + b, sk, 2, fp)                                   # nostril wing
+        # mouth: one recessed line, no lip pixels; philtrum and chin catch the light
+        mx0 = CHIN[37]
+        f.put(mx0, 37 + b, sk, 3, fp); f.put(mx0 + 1, 37 + b, sk, 3, fp); f.put(mx0 + 2, 37 + b, sk, 2, fp)
+        f.put(CHIN[39], 39 + b, sk, 0, fp)
+        if 41 in CHIN:                                                                  # a soft double chin
+            for x in range(CHIN[41], CHIN[41] + 4): f.put(x, 40 + b, sk, 2, fp)
+        f.put(18, 34 + b, sk + '_blush', 1, fp); f.put(19, 34 + b, sk + '_blush', 1, fp); f.put(19, 33 + b, sk + '_blush', 1, fp)
+        if s.get('age') == 'old':
+            f.put(18, 29 + b, sk, 2, fp); f.put(18, 30 + b, sk, 2, fp)                # crow's feet
+            f.put(mx0 + 2, 35 + b, sk, 2, fp); f.put(mx0 + 3, 36 + b, sk, 2, fp)      # smile line
+        if s.get('freckles'):
+            for (x, y) in ((17, 31), (19, 32), (16, 32)): f.put(x, y + b, sk, 2, fp)
+        if s.get('lipstick'): f.put(mx0, 37 + b, 'wine', 2, fp); f.put(mx0 + 1, 37 + b, 'wine', 3, fp)
+        if s.get('beard'): self.side_beard(m)
         self.side_hair()
         if s.get('glasses'):
             gp = f.part(shadow=False, sep=False)
             rim = s.get('rim', 'rim_dark')
-            for (x, y) in [(ex - 1, ey - 2), (ex, ey - 2), (ex + 1, ey - 2), (ex - 2, ey - 1), (ex - 2, ey), (ex - 2, ey + 1),
-                           (ex - 2, ey + 2), (ex - 2, ey + 3), (ex - 1, ey + 4), (ex, ey + 4), (ex + 1, ey + 4), (ex + 2, ey + 3),
-                           (ex + 2, ey - 1)]:
-                f.put(x, y, rim, 1 if y < ey + 2 else 2, gp)
-            for x in range(ex + 3, EX + 1): f.put(x, ey - 1, rim, 2, gp)
-            f.put(ex - 1, ey - 1, 'lens', 0, gp)
+            ring = [(13, 28), (13, 29), (13, 30), (14, 27), (15, 27), (16, 27), (17, 27), (18, 28), (18, 29), (18, 30),
+                    (14, 31), (15, 32), (16, 32), (17, 31)]
+            for (x, y) in ring: f.put(x, y + b, rim, 1 if y < 30 else 2, gp)
+            for x in range(19, EX + 1): f.put(x, 28 + b, rim, 2, gp)                  # the arm, back to the ear
+            f.put(14, 30 + b, 'lens', 1, gp) if not self.P.blink else None
+            f.put(17, 28 + b, 'lens', 0, gp)
+
+    def side_beard(self, m):
+        """Profile beard: the lower front of the face only: chin, jaw and the cheek below the cheekbone, running back
+        along the jaw to a sideburn in front of the ear. A moustache under the nose; the mouth reads through."""
+        s, f, b = self.s, self.f, self.b
+        bp = f.part(); hr = s.get('beard_ramp', s['hair'])
+        style = s.get('beard'); EX = self.EAR_X
+        FRONT = self.FRONTX
+        bm = []
+        for (x, y) in m:
+            yy = y - b
+            if style == 'goatee':
+                if yy >= 38 and x <= 16: bm.append((x, y))
+                continue
+            if x >= EX: continue
+            edge = 35.5 - (x - 14) * 0.55                   # the cheek line slopes up and back to the sideburn
+            if yy >= edge and yy >= 33 - (1 if x > 19 else 0): bm.append((x, y))
+            if x >= EX - 2 and 29 <= yy: bm.append((x, y))  # sideburn
+        if style != 'goatee':
+            for x in range(FRONT[39], EX - 1):              # fullness under the chin and jaw
+                yb = int(math.floor(self.jaw_bottom(x))) + 1
+                bm.append((x, yb + b))
+                if x < 19: bm.append((x, yb + 1 + b))
+            fx = FRONT[39] - 1
+            for y in (38, 39, 40): bm.append((fx, y + b))
+        mx0 = FRONT[37]
+        bm = [p for p in bm if (p[0], p[1] - b) not in ((mx0, 37), (mx0 + 1, 37)) and p not in self.ear]
+        f.paint(bm, hr, bp, mode='sph', cx=14, rx=10, cy=35 + b, ry=8, lo=1, hi=4, bias=0.02,
+                tex=lambda x, y: -0.16 if hash01(x, (y - b) // 2, 5) > 0.72 else (0.05 if (x + y) % 4 == 0 else 0))
+        # moustache under the nose, the mouth line reads through as the darkest beard step
+        nx = FRONT[35]
+        for x in range(nx, nx + 5): f.put(x, 35 + b, hr, 1 if x < nx + 2 else 2, bp)
+        for x in range(nx + 1, nx + 5): f.put(x, 36 + b, hr, 2 if x < nx + 3 else 3, bp)
+        f.put(mx0, 37 + b, hr, 4, bp); f.put(mx0 + 1, 37 + b, hr, 4, bp)
+        f.put(FRONT[39], 39 + b, hr, 1, bp)
+
+    PHAIR = {   # (cx, cy, rx, ry) of the hair volume, forehead hairline row, nape row, row the hair covers the ear to
+        'short':    ((26.6, 25.4, 14.2, 13.9), 19.5, 37, None),
+        'bun':      ((26.6, 25.6, 14.0, 13.6), 20.0, 36, None),
+        'ponytail': ((26.6, 25.6, 14.0, 13.6), 19.8, 36, None),
+        'bob':      ((27.2, 26.4, 15.2, 15.2), 23.0, 41, 40),
+        'long':     ((27.0, 25.8, 14.8, 14.4), 20.0, 44, 41),
+        'curly':    ((25.0, 24.4, 13.8, 15.0), 20.5, 38, 33),
+    }
 
     def side_hair(self):
-        s, f, b = self.s, self.f, self.b
+        s, f, b, P = self.s, self.f, self.b, self.P
         st = s['hairStyle']; hr = s['hair']; EX = self.EAR_X
         if st == 'bald':
             dp = f.part(sep=False)
-            m = [p for p in ell(CX + 2, 25.6 + b, 13.4, 12.9) if p[1] < 23 + b and p[0] >= 14]
-            f.paint(m, s['skin'], dp, mode='sph', cx=CX - 3, rx=15, cy=20 + b, ry=13, bias=0.14, lo=0, hi=3,
+            scx, scy, srx, sry = self.SKULL
+            m = [p for p in ell(scx, scy + b, srx, sry) if p[0] >= 14 and (p[1] < 24 + b if p[0] < 20 else p[1] < 27 + b)]
+            f.paint(m, s['skin'], dp, mode='sph', cx=CX - 4, rx=15, cy=19 + b, ry=12, bias=0.14, lo=0, hi=2,
                     th=(0.95, 0.66, 0.42, 0.2))
-            for (x, y) in [(CX - 5, 15 + b), (CX - 4, 15 + b), (CX - 5, 16 + b)]: f.put(x, y, s['skin'], 0, dp)
+            for (x, y) in [(CX - 6, 16 + b), (CX - 5, 16 + b), (CX - 6, 17 + b)]: f.put(x, y, s['skin'], 0, dp)
             hp = f.part()
-            mm = [p for p in self.face_mask if EX + 3 < p[0] <= EX + 11 and 24 + b <= p[1] <= 35 + b] + \
-                 [p for p in self.face_mask if EX <= p[0] <= EX + 3 and 24 + b <= p[1] <= 27 + b]
-            f.paint(mm, hr, hp, mode='sph', lo=1, hi=4, tex=lambda x, y: -0.14 if (x + 2 * y) % 5 == 0 else 0.03)
+            # a horseshoe of hair: above and behind the ear, round the back of the head
+            inner = set(ell(scx - 2.6, scy - 3.5 + b, srx - 2.4, sry - 2.2))
+            mm = [p for p in ell(scx, scy + b, srx + 0.8, sry + 0.3)
+                  if p not in inner and p[0] >= EX + 2 + max(0, 27 + b - p[1]) and 24 + b <= p[1] <= 36 + b and p not in self.ear]
+            mm += [(x, y + b) for x in range(EX, EX + 3) for y in (27,)]
+            f.paint(mm, hr, hp, mode='sph', cx=EX + 2, rx=16, cy=24 + b, ry=12, lo=1, hi=3,
+                    tex=lambda x, y: -0.14 if (x + 2 * y) % 5 == 0 else 0.03)
             self.hair_mask = set(mm)
             return
-        geo = {'curly': (16.6, 16.2, 2.4, 23.6), 'bob': (15.4, 16.2, 2.2, 25.4), 'short': (14.4, 13.4, 2.0, 24.6),
-               'bun': (14.6, 13.8, 2.2, 24.4), 'ponytail': (14.6, 13.8, 2.2, 24.4), 'long': (15.0, 14.4, 2.4, 24.6)}
-        crx, cry, ox, ccy = geo[st]
-        ccx = CX + ox
-        cran = set(ell(ccx, ccy + b, crx, cry))
-        front = {'bun': 19.2, 'bob': 23.5, 'short': 18.6, 'curly': 20.6, 'ponytail': 19.0, 'long': 19.6}[st]
-        back_low = {'short': 37, 'bun': 38, 'ponytail': 37, 'bob': 41, 'curly': 39, 'long': 42}[st]
-        cover = {'bob': 40, 'curly': 34, 'long': 40}.get(st)            # styles that hang over the ear
+        (hcx, hcy, hrx, hry), front, nape, cover = self.PHAIR[st]
+        cran = set(ell(hcx, hcy + b, hrx, hry))
         m = set()
         for (x, y) in cran:
-            if (x, y) not in self.face_mask:
-                if x >= 13: m.add((x, y))
-                continue
             yy = y + 0.5 - b
             if x < EX:
-                # the hairline sweeps from the forehead back and down to the top of the ear
                 t = max(0.0, (x - 12) / (EX - 12))
-                lim = front + t * t * 8.0
-                if st == 'bob': lim = front + 1 + (t > 0.75) * 20
-                if cover and t > 0.72: lim = cover
-                if st == 'short' and x >= EX - 2: lim = 31                  # sideburn
-                if yy < lim: m.add((x, y))
+                lim = front + (t ** 1.7) * (28 - front)          # hairline sweeps back and down to the top of the ear
+                if st == 'short' and EX - 3 <= x < EX: lim = 31.5  # sideburn
+                if st == 'bob' and x < 19: lim = front + (1 if x > 15 else 0)
+                if cover and x >= EX - 4: lim = max(lim, cover - (EX - x) * 1.2)
             elif x <= EX + 3:
-                if yy < (cover or 28): m.add((x, y))
+                lim = cover or 28
             else:
-                if yy < back_low: m.add((x, y))
-        if st == 'bob':
-            for y in range(26 + b, 42 + b):
-                for x in range(EX - 1, CX + 16):
-                    if ((x + 0.5 - ccx - 1) / 15.6) ** 2 + ((y + 0.5 - 27 - b) / 15.4) ** 2 < 1: m.add((x, y))
+                lim = nape
+            if yy < lim: m.add((x, y))
         if st == 'long':
-            for y in range(26 + b, 46 + b):
-                for x in range(EX, CX + 15 - max(0, y - 40 - b)): m.add((x, y))
+            for y in range(34 + b, 46 + b + P.lag_bob):
+                for x in range(EX - 1, 40 - max(0, y - 42 - b)): m.add((x, y))
+        if st == 'bob':
+            for x in range(EX - 3, 42):                                   # the bob's curled-under ends
+                m.discard((x, 41 + b))
         if st == 'curly':
             for k in range(26):
                 a = k / 26 * math.tau
-                bx = ccx + math.cos(a) * (crx + 0.2); by = ccy + b + math.sin(a) * (cry + 0.1)
-                if by > 27 + b and bx < CX: continue
-                if bx < 14: continue
+                bx = hcx + math.cos(a) * (hrx + 0.2); by = hcy + b + math.sin(a) * (hry + 0.1)
+                if (by > 27 + b and bx < EX) or bx < 14 or by > 40 + b: continue
                 for p in ell(bx, by, 2.4, 2.4): m.add(p)
         if not cover:
             m -= self.ear
-        if s.get('hat'): m = set(p for p in m if p[1] > 20 + b)
+        rim = self.cover_rim()
+        if rim:
+            # tucked under the hat: a sideburn in front of the ear and 2-3 px of hair at the nape, no more
+            m = set(p for p in m if p[1] - b > rim(p[0]) and (p[0] < EX or p[1] - b <= rim(p[0]) + (3.2 if s.get('hat') else 6.2)))
+        m = set(p for p in m if not (p[0] < 14 and p[1] > 22 + b))           # never over the brow or the nose
         pid = f.part()
-        pivot = (CX - 7, 11 + b) if st != 'curly' else (CX + 2, 22 + b)
+        pivot = (15, 13 + b) if st != 'curly' else (CX + 2, 22 + b)
 
         def tex(x, y):
             if st == 'curly':
@@ -1490,68 +1803,86 @@ class Person:
                 if (u, v) in ((1, 3), (2, 3), (0, 2)): return -0.18
                 return 0.0
             return strands(x, y, pivot[0], pivot[1], 2.3, 1.7)
-        f.paint(m, hr, pid, mode='sph', cx=ccx - 4, rx=crx + 3, cy=ccy - 5 + b, ry=cry + 5, bias=0.04,
+        f.paint(m, hr, pid, mode='sph', cx=hcx - 7, rx=hrx + 6, cy=hcy - 7 + b, ry=hry + 6, bias=0.12,
                 lo=0, hi=4, tex=tex, th=(0.92, 0.70, 0.46, 0.25))
         for (x, y) in m:
-            if (x, y + 1) in self.face_mask and (x, y + 1) not in m and x < EX: f.step(x, y, 1)
+            if (x, y + 1) not in m and y > 24 + b: f.step(x, y, 1)             # the underside of the hair mass
+        for (x, y) in m:                                                     # soft shadow the hair casts on the skin
+            if (x, y + 1) in self.face_mask and (x, y + 1) not in m and (x, y + 1) not in self.ear:
+                p = f.get(x, y + 1)
+                if p and p[0] == s['skin'] and p[1] < 2: f.step(x, y + 1, 1)
         self.hair_mask = m
+        lag = P.lag_bob
         if st == 'bun' and not s.get('hat'):
             bp = f.part()
-            bcx, bcy = CX + 9.5, 10.5 + b
-            bm = ell(bcx, bcy, 6.8, 6.4)
+            bcx, bcy = CX + 8.5, 10.8 + b + lag                              # the bun trails the head by a frame
+            bm = ell(bcx, bcy, 6.6, 6.2)
             ring = set(bm)
             f.paint(bm, hr, bp, mode='sph', cx=bcx - 1.5, rx=7.5, cy=bcy - 1.5, ry=7, bias=0.08, lo=0, hi=4,
                     tex=lambda x, y: strands(x, y, bcx, bcy, 1.2, 0.4, 0.06))
             for (x, y) in bm:
                 if (x, y + 1) not in ring and (x, y + 1) in m: f.put(x, y, hr, 4, bp)
-                elif (x - 1, y + 1) in m and (x - 1, y + 1) not in ring and x < bcx: f.put(x, y, hr, 4, bp)
+                elif (x - 1, y + 1) in m and (x - 1, y + 1) not in ring and x < bcx: f.put(x, y, hr, 3, bp)
+            if s.get('hairpin'): f.put(int(bcx) - 3, int(bcy) + 2, 'gold', 1, bp)
         if st == 'bun' and s.get('hat'):
             bp = f.part()
-            f.paint(ell(CX + 12, 29 + b, 4.6, 4.2), hr, bp, mode='sph', bias=0.05, lo=0, hi=4)
+            f.paint(ell(CX + 13, 29 + b + lag, 4.6, 4.2), hr, bp, mode='sph', bias=0.05, lo=0, hi=4)
         if st == 'ponytail':
             pp = f.part()
             pm = []
-            path = [(CX + 11, 20), (CX + 12, 22), (CX + 13, 24), (CX + 14, 26), (CX + 14, 28), (CX + 14, 30),
-                    (CX + 14, 32), (CX + 13, 34), (CX + 13, 36), (CX + 12, 38), (CX + 12, 40), (CX + 11, 42), (CX + 10, 44)]
+            sw = 1 if P.lag_bob > 0 else 0                            # the tail swings back as the body rises
+            path = [(CX + 13, 21), (CX + 14, 23), (CX + 15, 25), (CX + 16, 27), (CX + 16, 29), (CX + 16, 31),
+                    (CX + 16, 33), (CX + 15, 35), (CX + 15, 37), (CX + 14, 39), (CX + 14, 41), (CX + 13, 43), (CX + 12, 45)]
             for k, (x, y) in enumerate(path):
                 w = 2 if k < 9 else 1
+                dl = (lag if k > 5 else 0); dx = sw if k > 7 else 0
                 for yy in (y, y + 1):
-                    for dx_ in range(-w, w + 1): pm.append((x + dx_, yy + b))
+                    for dx_ in range(-w, w + 1): pm.append((x + dx_ + dx, yy + b + dl))
             f.paint(pm, hr, pp, bias=0.02, lo=0, hi=4, tex=lambda x, y: strands(x, y, CX, 8 + b, 9, 2))
             tie = f.part(); scr = s.get('scrunchie', 'teal')
-            for (x, y) in [(CX + 10, 19), (CX + 11, 19), (CX + 11, 20), (CX + 12, 20), (CX + 12, 21)]:
-                f.put(x, y + b, scr, 1 if x < CX + 11 else 2, tie)
+            for (x, y) in [(CX + 12, 20), (CX + 13, 20), (CX + 13, 21), (CX + 14, 21), (CX + 14, 22)]:
+                f.put(x, y + b, scr, 1 if x < CX + 13 else 2, tie)
 
     def side_hat(self):
         s, f, b = self.s, self.f, self.b
         if s.get('hat'):
+            # hard hat: the shell sits level at the brow and low at the back (as a real one does, over the nape),
+            # a short peak projects forward over the brow; the rim is a lip that follows the shell's edge
             hr = s['hat']; hp = f.part()
-            dome = [p for p in ell(CX + 1.5, 21 + b, 14.6, 13) if p[1] <= 20 + b]
-            f.paint(dome, hr, hp, mode='sph', cx=CX - 3, rx=16, cy=15 + b, ry=13, bias=0.12, lo=0, hi=3)
-            for x in range(CX - 16, CX + 16): f.put(x, 22 + b, hr, 2 if x < CX + 6 else 3, hp)
-            for x in range(CX - 15, CX + 16): f.put(x, 21 + b, hr, 1 if x < CX + 4 else 2, hp)
-            for x in range(CX - 18, CX - 11): f.put(x, 23 + b, hr, 3, hp)            # the peak, forward over the face
-            for x in range(CX - 8, CX + 10):
-                if f.has(x, 9 + b): f.put(x, 9 + b, hr, 0, hp)
-            for x in range(CX - 6, CX + 8): f.put(x, 10 + b, hr, 0 if x < CX else 1, hp) if f.has(x, 10 + b) else None
+            dome = [p for p in ell(26.2, 23.0 + b, 14.2, 12.8) if p[1] - b <= self.hat_rim(p[0]) - 1]
+            f.paint(dome, hr, hp, mode='sph', cx=CX - 4, rx=16, cy=15 + b, ry=13, bias=0.12, lo=0, hi=3)
+            ds = set(dome)
+            xs = sorted(set(x for x, y in dome))
+            for x in range(11, xs[-1] + 2):
+                ry_ = int(round(self.hat_rim(x)))
+                f.put(x, ry_ + b, hr, 2 if x < 30 else 3, hp)
+                if x > 16: f.put(x, ry_ - 1 + b, hr, 1 if x < 28 else 2, hp)
+            for x in range(7, 13): f.put(x, 22 + b, hr, 1, hp); f.put(x, 23 + b, hr, 3, hp)     # the peak
+            f.put(12, 23 + b, hr, 3, hp)
+            for (x, y) in dome:                                                              # the crown ridge
+                if (x, y - 1) not in ds and 14 < x < 38: f.put(x, y, hr, 0, hp); f.put(x, y + 1, hr, 1, hp)
             return
         if s.get('cap'):
             cr = s['cap']; cp = f.part()
-            dome = [p for p in ell(CX + 1.5, 21.5 + b, 14.2, 11.4) if p[1] <= 20 + b]
-            f.paint(dome, cr, cp, mode='sph', cx=CX - 3, rx=16, cy=15 + b, ry=12, lo=1, hi=4)
-            for x in range(CX - 21, CX - 9):
-                f.put(x, 20 + b, cr, 2, cp); f.put(x, 21 + b, cr, 3, cp)
-            for x in range(CX - 20, CX - 10): f.put(x, 22 + b, cr, 4, cp)
-            f.put(CX + 14, 20 + b, 'sole', 2, cp); f.put(CX + 13, 20 + b, 'sole', 2, cp)
-            for y in range(11 + b, 21 + b): f.step(CX - 2 + (y - 11 - b) // 5, y, 1)
+            dome = [p for p in ell(26.6, 22.0 + b, 14.0, 11.4) if p[1] <= 21 + b]
+            f.paint(dome, cr, cp, mode='sph', cx=CX - 4, rx=16, cy=15 + b, ry=12, lo=1, hi=4)
+            for x in range(4, 14):
+                f.put(x, 20 + b, cr, 1 if x < 9 else 2, cp); f.put(x, 21 + b, cr, 3, cp)
+            for x in range(5, 13): f.put(x, 22 + b, cr, 4, cp)
+            f.put(39, 20 + b, 'sole', 2, cp); f.put(38, 20 + b, 'sole', 2, cp)
+            for y in range(11 + b, 21 + b): f.step(CX - 3 + (y - 11 - b) // 5, y, 1)
             return
         if s.get('flatcap'):
             cr = s['flatcap']; cp = f.part()
-            dome = [p for p in ell(CX + 2, 20 + b, 15, 8.4) if p[1] <= 22 + b]
-            f.paint(dome, cr, cp, mode='sph', cx=CX - 3, rx=17, cy=16 + b, ry=9, lo=1, hi=4,
+            # the cap is pulled down over the back of the head; only a fringe of hair shows beneath it
+            dome = [p for p in ell(27, 21.0 + b, 15.2, 8.6) if p[1] - b <= self.cap_rim(p[0])]
+            f.paint(dome, cr, cp, mode='sph', cx=CX - 4, rx=17, cy=16 + b, ry=9, lo=1, hi=4,
                     tex=lambda x, y: (-0.12 if (x + y) % 4 == 0 else 0.03) if (x // 2) % 2 else (-0.12 if (x - y) % 4 == 0 else 0.03))
-            for x in range(CX - 18, CX - 10): f.put(x, 22 + b, cr, 3, cp)
-            for x in range(CX - 17, CX - 10): f.put(x, 21 + b, cr, 2, cp)
+            ds = set(dome)
+            for (x, y) in dome:
+                if (x, y + 1) not in ds and x > 14: f.step(x, y, 1)                          # the band's lower edge
+            for x in range(7, 14): f.put(x, 22 + b, cr, 3, cp)
+            for x in range(8, 14): f.put(x, 21 + b, cr, 2, cp)
             return
 
     # ============================================================================ render
@@ -1563,5 +1894,8 @@ class Person:
         return cv
 
 
-def render(spec, view, frame):
-    return Person(spec, view, frame).render()
+def render(spec, view, frame, row=None):
+    """view: down / up / left / right, or a seated row: sit_down / sit_up (frames 0..SIT_COLS-1)."""
+    if view in ('sit_down', 'sit_up'):
+        row, view = view, view[4:]
+    return Person(spec, view, frame, row=row).render()

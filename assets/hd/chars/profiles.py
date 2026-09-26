@@ -14,7 +14,7 @@ def build(ids=None, out=None, ppe_too=True):
         for P in ((False, True) if ppe_too else (False,)):
             s = ppe(sp) if P else sp
             for v in ('left', 'right'):
-                ims.append((cid, render(s, v, 0).im.crop((0, 2, 48, 50))))
+                ims.append((cid, render(s, v, 0).im.crop((0, 6, 48, 54))))
     preview(ims, out or os.path.join(ROOT, 'assets', 'hd', 'out', 'chars', 'preview_profiles.png'), scale=6, cols=8)
 
 

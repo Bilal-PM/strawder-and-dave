@@ -71,8 +71,10 @@ def tone(l, lo=1, hi=4, th=(0.93, 0.70, 0.47, 0.27)):
 
 
 class Fig:
-    def __init__(self, w=48, h=96, lx=1):
+    def __init__(self, w=48, h=96, lx=1, base=0):
         self.w, self.h, self.lx = w, h, lx
+        self.base = base      # headroom: everything is drawn this many rows lower in the frame
+        self.ox = 0           # horizontal offset (lean / sway of the upper body), whole pixels only
         self.px = {}          # (x, y) -> [ramp, step, pid]
         self.flags = {}       # pid -> dict(shadow=bool casts shadow, sep=bool separation line, recv=bool)
         self.n = 0
@@ -83,22 +85,25 @@ class Fig:
         self.n += 1; self.flags[self.n] = dict(shadow=shadow, sep=sep, recv=recv, sepk=sepk); return self.n
 
     def put(self, x, y, rp, i, pid):
-        x, y = int(x), int(y) + self.oy
+        x, y = int(x) + self.ox, int(y) + self.oy + self.base
         if 0 <= x < self.w and 0 <= y < self.h:
             self.px[(x, y)] = [rp, max(0, min(len(RAMPS[rp]) - 1 if rp != OUT else 0, int(i))), pid]
 
+    def _k(self, x, y):
+        return (int(x) + self.ox, int(y) + self.oy + self.base)
+
     def get(self, x, y):
-        return self.px.get((int(x), int(y) + self.oy))
+        return self.px.get(self._k(x, y))
 
     def has(self, x, y):
-        return (int(x), int(y) + self.oy) in self.px
+        return self._k(x, y) in self.px
 
     def erase(self, x, y):
-        self.px.pop((int(x), int(y) + self.oy), None)
+        self.px.pop(self._k(x, y), None)
 
     def step(self, x, y, d, rp=None):
         """Shift the step of an existing pixel by d (darker +), optionally recolour to ramp rp."""
-        p = self.px.get((int(x), int(y) + self.oy))
+        p = self.px.get(self._k(x, y))
         if p:
             if rp: p[0] = rp
             if p[0] != OUT: p[1] = max(0, min(len(RAMPS[p[0]]) - 1, p[1] + d))

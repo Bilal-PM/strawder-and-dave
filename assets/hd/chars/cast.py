@@ -127,7 +127,44 @@ TOWNSFOLK = {
 }
 
 
+# Profile silhouettes (people.Person.NOSES / CHINS) and stride, by age and build: nobody shares a face.
+PROF = {
+    'moira': dict(prof=dict(nose='soft', chin='receding'), stride=0.72),
+    'helen': dict(prof=dict(nose='straight', chin='normal')),
+    'jo': dict(prof=dict(nose='button', chin='round')),
+    'tom': dict(prof=dict(nose='straight', chin='strong', brow=True)),
+    'hannah': dict(prof=dict(nose='button', chin='round')),
+    'steve': dict(prof=dict(nose='big', chin='strong', brow=True), stride=0.9),
+    'priya': dict(prof=dict(nose='pointed', chin='normal')),
+    'gaz': dict(prof=dict(nose='round', chin='strong', brow=True)),
+    'brian': dict(prof=dict(nose='round', chin='double'), stride=0.8),
+    'sue': dict(prof=dict(nose='straight', chin='receding')),
+    'raj': dict(prof=dict(nose='big', chin='normal', brow=True)),
+    'len': dict(prof=dict(nose='big', chin='receding', brow=True), stride=0.78),
+    'june': dict(prof=dict(nose='button', chin='round')),
+    'dev': dict(prof=dict(nose='button', chin='round')),
+    'jess': dict(prof=dict(nose='pointed', chin='round')),
+    'avatar0': dict(prof=dict(nose='straight', chin='normal')),
+    'avatar1': dict(prof=dict(nose='button', chin='round')),
+    'avatar2': dict(prof=dict(nose='pointed', chin='normal')),
+    'avatar3': dict(prof=dict(nose='soft', chin='round')),
+    'town_pensioner': dict(prof=dict(nose='big', chin='receding', brow=True), stride=0.7),
+    'town_shopper': dict(prof=dict(nose='soft', chin='normal')),
+    'town_teen': dict(prof=dict(nose='button', chin='round'), stride=1.05),
+    'town_farmer': dict(prof=dict(nose='round', chin='strong', brow=True)),
+    'town_postie': dict(prof=dict(nose='straight', chin='strong'), stride=1.05),
+    'town_walker': dict(prof=dict(nose='pointed', chin='receding')),
+}
+
+
 def all_specs():
+    out = []
+    for cid, sp, lk in _all_specs():
+        sp = dict(sp); sp.update(PROF.get(cid, {})); out.append((cid, sp, lk))
+    return out
+
+
+def _all_specs():
     """[(id, spec, look or None)] for every cast member, avatar and townsperson, in a stable order."""
     data = load_looks()
     out = []

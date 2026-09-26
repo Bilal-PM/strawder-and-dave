@@ -20,6 +20,17 @@ window.LS = window.LS || {};
   const GRADE = { dawn: ['#ffcfae', 0.28], day: null, dusk: ['#e79a8f', 0.32], overcast: ['#c3cad0', 0.26], night: ['#3b4a86', 0.6] };
   const tp = (tx, ty) => ({ x: tx * T + 8, y: ty * T + 12 });      // feet position for a tile
   const toTile = (x, y) => [Math.floor(x / T), Math.floor((y - 1) / T)];
+  // Walk cadence. The walk cycle is 8 frames (two steps); phase counts frames and advances with distance, one frame
+  // per stride(v) world units. At walking pace (80 u/s) that is 4 u a frame: 20 frames/s, five steps a second, the
+  // brisk cadence the sprite's short chibi legs can carry. Cadence rises with the square root of speed (so slow NPCs
+  // step slower but not in slow motion) and never lets the feet travel less than the ground (1.5 u a frame).
+  const stride = v => Math.max(1.5, Math.sqrt(Math.max(0, v) * 80) / 20);
+  // 4-way facing towards (dx, dy); `cur` is kept until the other axis is clearly bigger (no flicker on a diagonal)
+  const dir4 = (dx, dy, cur) => { const ax = Math.abs(dx), ay = Math.abs(dy), H = 1.25; if ((cur === 'left' && dx < 0 || cur === 'right' && dx > 0) && ax * H >= ay) return cur; if ((cur === 'up' && dy < 0 || cur === 'down' && dy > 0) && ay * H >= ax) return cur; return ax > ay ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up'); };
+  const seedOf = k => { const s = String(k); let h = 7; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0; return (h % 1000) / 1000; };
+  // ground that kicks up dust underfoot: dirt path, gravel, setts, ballast, cess and yard (two or three tones each)
+  const DUST = { p: ['#ead7b4', '#dcc39c', '#f3e6cc'], _: ['#e2ddd2', '#cfc9bc', '#f0ece4'], s: ['#d8d4cc', '#e8e5de'], y: ['#dcdcc8', '#ececdc'],
+    ':': ['#dcd0bc', '#cbbfa8', '#ebe2d2'], '=': ['#dcd0bc', '#cbbfa8'], '/': ['#dcd0bc', '#cbbfa8'], b: ['#d8d8d0', '#c6c6be'], a: ['#dedad0', '#ccc8bc'], '!': ['#dcd0bc', '#cbbfa8'] };
 
   // Rooms and doors from the level data
   const ROOMS = {};
@@ -166,10 +177,10 @@ window.LS = window.LS || {};
       const f = this.focus; if (!f) return;
       this.player.path = null; this.player.use = null;
       const p = this.player, dx = f.x - p.x, dy = f.y - p.y;
-      p.face = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
+      this.setFace(p, Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up'));
       if (f.kind === 'door') { this.tryDoor(f.door); return; }
       if (f.kind === 'exit') { this.exitRoom(); return; }
-      if (f.kind === 'npc') f.face = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'left' : 'right') : (dy > 0 ? 'up' : 'down');
+      if (f.kind === 'npc') this.setFace(f, Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'left' : 'right') : (dy > 0 ? 'up' : 'down'));
       if (this.onInteract) this.onInteract(f);
     }
     tryDoor(d) {
@@ -182,23 +193,71 @@ window.LS = window.LS || {};
     enter(room, x, y, face) {
       if (this.fadeDir) return;
       this.fadeDir = 1; this.player.path = null;
-      this.fadeCb = () => { this.room = room; this.player.x = x; this.player.y = y; this.player.face = face || this.player.face; this.player.path = null; this.trail = []; this.crumbs = null; this.fitScale(); this.snapCam();
+      this.fadeCb = () => { this.room = room; this.player.x = x; this.player.y = y; this.player.face = face || this.player.face; this.player.path = null; this.trail = []; this.crumbs = null; this.dust = []; this.fitScale(); this.snapCam();
         for (const e of this.entities) if (e.follow && room === 'outside') { e.room = room; e.x = x; e.y = y + 10; }
         if (LS.audio && LS.audio.setRoom) LS.audio.setRoom(room);
         if (this.onEnterRoom) this.onEnterRoom(room); };
     }
-    place(room, x, y, face) { this.room = room; this.player.x = x; this.player.y = y; if (face) this.player.face = face; this.player.path = null; this.fitScale(); this.snapCam(); if (LS.audio && LS.audio.setRoom) LS.audio.setRoom(room); }
-    snapCam() { const c = this.camTarget(); this.camX = c[0]; this.camY = c[1]; }
+    place(room, x, y, face) { this.dust = []; this.room = room; this.player.x = x; this.player.y = y; if (face) this.player.face = face; this.player.path = null; this.fitScale(); this.snapCam(); if (LS.audio && LS.audio.setRoom) LS.audio.setRoom(room); }
+    // snap on room change or teleport: no easing, no look-ahead carried over, no leftover momentum
+    snapCam() { this.look = { x: 0, y: 0 }; const p = this.player; p.vx = p.vy = 0; const c = this.camTarget(); this.camX = c[0]; this.camY = c[1]; this.cam1 = [c[0], c[1]]; this._cxs = null; }
+    // Camera: two cascaded exponential followers (a critically damped spring: smooth start, no overshoot for any
+    // monotonic move) chasing the player plus a look-ahead of up to 1.5 tiles in the walking direction. The look-ahead
+    // eases in slowly and is held when the player stops, so the camera never drifts back past where it came to rest.
+    updateCam(dt) {
+      const p = this.player, L0 = this.look || (this.look = { x: 0, y: 0 });
+      if (this.attract) { const [tx, ty] = this.camTarget(), k = Math.min(1, dt); this.camX += (tx - this.camX) * k; this.camY += (ty - this.camY) * k; this.cam1 = [this.camX, this.camY]; return; }
+      const sp = Math.hypot(p.vx || 0, p.vy || 0);
+      if (sp > 20 && !this.paused) { const kl = 1 - Math.exp(-dt / 0.55), m = Math.min(1, sp / 80); L0.x += ((p.vx / sp) * 24 * m - L0.x) * kl; L0.y += ((p.vy / sp) * 16 * m - L0.y) * kl; }
+      // gentler glide into and back out of a conversation's two-shot
+      const inConv = !!(this._conv && this._conv.e); this._convEase = inConv ? 0.9 : Math.max(0, (this._convEase || 0) - dt);
+      const [tx, ty] = this.camTarget(), k = 1 - Math.exp(-dt * (this._convEase > 0 ? 5 : 15)), c1 = this.cam1 || (this.cam1 = [this.camX, this.camY]);
+      c1[0] += (tx - c1[0]) * k; c1[1] += (ty - c1[1]) * k;
+      this.camX += (c1[0] - this.camX) * k; this.camY += (c1[1] - this.camY) * k;
+    }
+    // Pixel-perfect camera: the ground scrolls in whole art pixels, and while the camera is following it is snapped
+    // relative to the player (player snapped, then the player-to-camera offset snapped), so the player never jitters
+    // against the screen and never slides against the ground. At rest it holds its last pixel (no 1 px pop).
+    camPx(q) {
+      const p = this.player, sn = v => Math.round(v * q) / q, prev = this._cxs;
+      let cx, cy;
+      const moving = !prev || prev.q !== q || Math.abs(this.camX - prev.rx) > 1e-4 || Math.abs(this.camY - prev.ry) > 1e-4;
+      if (moving && p.look && !this.attract) { cx = sn(p.x) - sn(p.x - this.camX); cy = sn(p.y) - sn(p.y - this.camY); }
+      else if (moving) { cx = sn(this.camX); cy = sn(this.camY); }
+      else { cx = Math.abs(prev.cx - this.camX) <= 1 / q ? prev.cx : sn(this.camX); cy = Math.abs(prev.cy - this.camY) <= 1 / q ? prev.cy : sn(this.camY); }
+      this._cxs = { q, rx: this.camX, ry: this.camY, cx, cy };
+      return [cx, cy];
+    }
     camTarget() {
       const p = this.player;
       if (this.attract) { const t = (performance.now() - this.t0) / 1000, u = 0.5 + 0.5 * Math.sin(t * 0.035 - 1.4); return [Math.max(0, Math.min(MAP.W - this.vw, (14 + u * 90) * T - this.vw / 2)), Math.max(0, Math.min(MAP.H - this.vh, 28 * T - this.vh / 2 + Math.sin(t * 0.03) * 60))]; }
+      const lk = this.look || { x: 0, y: 0 }, c = this._conv;
+      let fx = p.x + lk.x, fy = p.y + lk.y - 12;   // the point the camera centres on
+      if (c && c.e) {   // in conversation: centre the pair, in the space between the HUD and the dialogue card
+        const S = this.S || 1, hud = this.hudBottom() / S, card = Math.min(innerHeight, c.top != null && c.top > 0 ? c.top : innerHeight) / S, free = card - hud;
+        const want = free > 44 ? hud + free / 2 : this.vh / 2;
+        fx = (p.x + c.e.x) / 2; fy = (p.y + c.e.y) / 2 - 14 - want + this.vh / 2;
+      }
       if (this.room !== 'outside') {
-        const R = ROOMS[this.room];
-        const cx = R.w < this.vw ? (R.w - this.vw) / 2 : Math.max(-8, Math.min(R.w + 8 - this.vw, p.x - this.vw / 2));
-        const cy = R.h < this.vh - 30 ? (R.h - this.vh) / 2 + 12 : Math.max(-24, Math.min(R.h + 24 - this.vh, p.y - this.vh / 2));
+        const R = ROOMS[this.room], hud = this.hudBottom() / (this.S || 1);
+        const cx = R.w < this.vw ? (R.w - this.vw) / 2 : Math.max(-8, Math.min(R.w + 8 - this.vw, fx - this.vw / 2));
+        // a room shorter than the screen is centred in the space below the HUD (so the HUD sits over the letterbox,
+        // not over the room's signage); one that only fits under the HUD sits on the bottom edge
+        let cy = R.h + hud + 8 <= this.vh ? -(hud + (this.vh - hud - R.h) / 2) : R.h < this.vh - 30 ? R.h + 4 - this.vh : Math.max(-24, Math.min(R.h + 24 - this.vh, fy - this.vh / 2));
+        // in conversation the two-shot wins, as long as at least half the screen stays on the room
+        if (c && c.e) return [R.w < this.vw ? cx : Math.max(-this.vw / 2, Math.min(R.w - this.vw / 2, fx - this.vw / 2)), Math.max(Math.min(cy, -this.vh / 2), Math.min(Math.max(cy, R.h - this.vh / 2), fy - this.vh / 2))];
         return [cx, cy];
       }
-      return [Math.max(0, Math.min(MAP.W - this.vw, p.x - this.vw / 2)), Math.max(0, Math.min(MAP.H - this.vh, p.y - 12 - this.vh / 2))];
+      return [Math.max(0, Math.min(MAP.W - this.vw, fx - this.vw / 2)), Math.max(0, Math.min(MAP.H - this.vh, fy - this.vh / 2))];
+    }
+    // Bottom edge of the HUD band in CSS px (the top bar and the menu button), re-measured every half second.
+    hudBottom() {
+      const now = performance.now(), h = this._hudB;
+      if (h && now - h.t < 500 && h.w === innerWidth && h.h === innerHeight) return h.v;
+      let v = 0;
+      if (typeof document !== 'undefined') for (const el of document.querySelectorAll('#hud .hud-top, #hudMenu')) { const r = el.getBoundingClientRect(); if (r.height > 0 && r.top < innerHeight * 0.3 && r.bottom < innerHeight * 0.3) v = Math.max(v, r.bottom); }
+      this._hudB = { t: now, w: innerWidth, h: innerHeight, v };
+      return v;
     }
 
     // ---------- Update ----------
@@ -214,17 +273,33 @@ window.LS = window.LS || {};
         if (dx || dy) { manual = true; p.path = null; p.use = null; }
         else if (p.path && p.path.length) {
           const w = p.path[0], tx = w.x - p.x, ty = w.y - p.y, d = Math.hypot(tx, ty);
-          if (d < 2.5) { p.path.shift(); if (!p.path.length) { const u = p.use; p.path = null; p.use = null; if (u) { this.focus = u; this.use(); } else this.checkDoorArrive(); } }
+          if (d < 2.5) { p.path.shift(); if (!p.path.length) { const u = p.use; p.path = null; p.use = null; if (u) { this.focus = u; this.use(); } else this.checkDoorArrive(); }
+            else { const n = p.path[0], nd = Math.hypot(n.x - p.x, n.y - p.y); if (nd > 1e-3) { dx = (n.x - p.x) / nd; dy = (n.y - p.y) / nd; } } }   // straight on to the next waypoint: no stall
           else { dx = tx / d; dy = ty / d; }
         }
       }
       const len = Math.hypot(dx, dy);
-      if (len > 0) {
-        dx /= Math.max(1, len); dy /= Math.max(1, len);
-        const sp = 80 * (this.keys['shift'] ? 1.6 : 1) * dt;
-        const nx = p.x + dx * sp, ny = p.y + dy * sp, ox = p.x, oy = p.y;
+      // Weight: velocity eases towards the intended velocity (full speed in ~0.08 s) and bleeds off in ~0.06 s when
+      // input stops. Path walking keeps its direction exactly (so it never cuts a corner) and eases only the speed.
+      const vmax = 80 * (this.keys['shift'] ? 1.6 : 1);
+      if (len > 0) { dx /= Math.max(1, len); dy /= Math.max(1, len); }
+      let tvx = dx * vmax, tvy = dy * vmax;
+      if (!manual && len > 0 && p.path && p.path.length === 1) {   // last waypoint: arrive, never overshoot
+        const w = p.path[0], d = Math.hypot(w.x - p.x, w.y - p.y), cap = Math.min(vmax, 12 + d / 0.05);
+        tvx = dx * cap; tvy = dy * cap;
+      }
+      p.vx = p.vx || 0; p.vy = p.vy || 0;
+      if (len > 0 && !manual) { const cs = Math.hypot(p.vx, p.vy), ts = Math.hypot(tvx, tvy), ns = Math.min(ts, cs + vmax / 0.08 * dt); p.vx = dx / Math.hypot(dx, dy) * ns; p.vy = dy / Math.hypot(dx, dy) * ns; }
+      else {
+        const ex = tvx - p.vx, ey = tvy - p.vy, el = Math.hypot(ex, ey), rate = (len > 0 ? vmax / 0.08 : vmax / 0.06) * dt;
+        if (el <= rate) { p.vx = tvx; p.vy = tvy; } else { p.vx += ex / el * rate; p.vy += ey / el * rate; }
+      }
+      const spd = Math.hypot(p.vx, p.vy);
+      if (spd > 0.01) {
+        const ox = p.x, oy = p.y, nx = p.x + p.vx * dt, ny = p.y + p.vy * dt;
         const bx = this.canStand(nx, p.y), by = this.canStand(p.x, ny);
-        if (!bx) p.x = nx; if (!by) p.y = ny;
+        if (!bx) p.x = nx; else p.vx = 0;
+        if (!by) p.y = ny; else p.vy = 0;
         const lz = this.leash; if (lz && lz.room === this.room) { const ddx = p.x - lz.x, ddy = p.y - lz.y, dd = Math.hypot(ddx, ddy); if (dd > lz.r) { p.x = lz.x + ddx / dd * lz.r; p.y = lz.y + ddy / dd * lz.r; } }
         const why = [bx, by].find(b => typeof b === 'string');
         if (why && t - this.lastBlock > 3) {
@@ -235,22 +310,30 @@ window.LS = window.LS || {};
           else if (this.onBlocked) this.onBlocked(why);
         }
         if (bx && by && p.path) { p.path = null; p.use = null; }
-        p.face = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
-        // the walk cycle advances with distance walked (one frame per 4.5 world units: a full 8-frame cycle every ~2 tiles), so feet don't slide
-        const moved = Math.hypot(p.x - ox, p.y - oy); p.moving = moved > 0.01; p.phase += moved / 4.5;
-        const st = Math.floor(p.phase / 4); if (p.moving && st !== p.lastStep) { p.lastStep = st; if (LS.audio && LS.audio.sfx) LS.audio.sfx(this.stepSound(p.x, p.y)); }
+        if (len > 0) this.faceTo(p, dx, dy);
+        // the walk cycle advances with distance walked, at a cadence matched to speed (see stride()), so feet don't skate
+        const moved = Math.hypot(p.x - ox, p.y - oy); p.moving = moved > 0.01; p.phase += moved / stride(moved / Math.max(1e-4, dt));
+        const st = Math.floor((p.phase + 3) / 4); if (p.moving && st !== p.lastStep) { p.lastStep = st; if (LS.audio && LS.audio.sfx) LS.audio.sfx(this.stepSound(p.x, p.y)); this.footfall(p.x, p.y, p.vx, p.vy); }
         if (manual) this.checkDoorStep(dy);
         const lt = this.trail[this.trail.length - 1]; if (!lt || Math.hypot(lt.x - p.x, lt.y - p.y) > 6) { this.trail.push({ x: p.x, y: p.y }); if (this.trail.length > 40) this.trail.shift(); }
-      } else { p.moving = false; p.phase = 0; p.lastStep = -1; }
+      } else { p.vx = p.vy = 0; p.moving = false; p.phase = 0; p.lastStep = -1; if (len > 0) this.faceTo(p, dx, dy); }
+      this.tickTurn(p, dt);
+      this.convTick();
       this.updateNPCs(dt);
-      for (const s of this.sheep) { s.t -= dt; if (s.t <= 0) { s.t = 2 + Math.random() * 5; const a = Math.random() * 6.28, m = Math.random() < 0.5 ? 0 : 8; s.dx = Math.cos(a) * m; s.dy = Math.sin(a) * m * 0.6; if (s.dx) s.face = s.dx > 0 ? 1 : -1; } const nx = s.x + s.dx * dt, ny = s.y + s.dy * dt; if (L.rows[Math.floor(ny / T)] && L.rows[Math.floor(ny / T)][Math.floor(nx / T)] === '"') { s.x = nx; s.y = ny; } }
+      // sheep: ease into and out of each amble (no instant starts), and turn only when properly under way
+      for (const s of this.sheep) {
+        s.t -= dt; if (s.t <= 0) { s.t = 2 + Math.random() * 5; const a = Math.random() * 6.28, m = Math.random() < 0.5 ? 0 : 8; s.dx = Math.cos(a) * m; s.dy = Math.sin(a) * m * 0.6; }
+        const k = 1 - Math.exp(-dt / 0.45); s.vx = (s.vx || 0) + (s.dx - (s.vx || 0)) * k; s.vy = (s.vy || 0) + (s.dy - (s.vy || 0)) * k;
+        if (Math.abs(s.vx) > 1.5) s.face = s.vx > 0 ? 1 : -1;
+        const nx = s.x + s.vx * dt, ny = s.y + s.vy * dt; if (L.rows[Math.floor(ny / T)] && L.rows[Math.floor(ny / T)][Math.floor(nx / T)] === '"') { s.x = nx; s.y = ny; } else { s.vx = s.vy = s.dx = s.dy = 0; }
+      }
+      this.tickDust(dt);
       // focus: the nearest interactable within reach of its stand point
       let best = null, bd = 22;
       if (!this.paused) for (const e of this.visible()) { if (!e.prompt) continue; const d = Math.hypot((e.sx ?? e.x) - p.x, ((e.sy ?? e.y) - p.y) * 1.2); if (d < bd) { bd = d; best = e; } }
       if (best !== this.focus && this.onFocus) this.onFocus(best);
       this.focus = best;
-      const [tx, ty] = this.camTarget(), k = this.attract ? Math.min(1, dt) : 1 - Math.exp(-dt * 11);
-      this.camX += (tx - this.camX) * k; this.camY += (ty - this.camY) * k;
+      this.updateCam(dt);
       if (this.fadeDir) { this.fade += this.fadeDir * dt * 3.2; if (this.fade >= 1) { this.fade = 1; this.fadeDir = -1; if (this.fadeCb) { this.fadeCb(); this.fadeCb = null; } } if (this.fade <= 0 && this.fadeDir < 0) { this.fade = 0; this.fadeDir = 0; } }
       const mt = this.mainTrain; mt.next -= dt; if (mt.next <= 0 && mt.y < -2000) { mt.dir = Math.random() < 0.5 ? 1 : -1; mt.y = mt.dir > 0 ? -200 : MAP.H + 200; mt.next = 24 + Math.random() * 18; if (LS.audio && LS.audio.sfx && this.room === 'outside' && Math.abs(this.player.x - 120 * T) < 30 * T) LS.audio.sfx('train_pass', { dir: mt.dir }); }
       if (mt.y > -2000) { mt.y += mt.dir * 260 * dt; if (mt.y > MAP.H + 400 || mt.y < -400) mt.y = -9999; }
@@ -271,14 +354,33 @@ window.LS = window.LS || {};
       else { const R = ROOMS[this.room]; if (R.grid[ty] && R.grid[ty][tx] === 'X') this.exitRoom(); }
     }
     updateNPCs(dt) {
-      const p = this.player;
+      const p = this.player, cv = this._conv;
       for (const e of this.entities) {
         if (e.kind !== 'npc' || e.room !== this.room || e.hidden) continue;
         let gx = null, gy = null, speed = 40;
-        if (e.follow && !this.paused && e.room === this.room) {
-          const tr = this.trail[Math.max(0, this.trail.length - 4)] || { x: p.x, y: p.y + 14 };
+        const sb = e._sb;
+        if (sb && (sb.room !== e.room || Math.min(Math.hypot(e.x - sb.x0, e.y - sb.y0), Math.hypot(e.x - sb.tx, e.y - sb.ty)) > 30)) e._sb = null;   // moved by the story
+        if (e._sb) {   // the conversation step-back, and the step home again afterwards
+          const back = !(cv && cv.e === e), X = back ? sb.x0 : sb.tx, Y = back ? sb.y0 : sb.ty;
+          if (back && Math.hypot(X - e.x, Y - e.y) < 2.2) { e.x = X; e.y = Y; e._sb = null; } else { gx = X; gy = Y; speed = 34; }
+        } else if (e.follow && !this.paused && e.room === this.room) {
+          const behind = () => this.trail[Math.max(0, this.trail.length - 4)] || { x: p.x, y: p.y + 14 };
+          const tr = behind();
           if (Math.hypot(tr.x - e.x, tr.y - e.y) > 10 && Math.hypot(p.x - e.x, p.y - e.y) > 20) { gx = tr.x; gy = tr.y; speed = 86; }
-          if (Math.hypot(p.x - e.x, p.y - e.y) > 8 * T) { e.x = p.x; e.y = p.y + 12; }
+          // left far behind: catch up with a short fade (out 0.15 s, move, in 0.15 s) rather than a visible pop;
+          // if they are off screen anyway they just step in behind the player
+          if (!e.hop && Math.hypot(p.x - e.x, p.y - e.y) > 8 * T) {
+            const off = e.x < this.camX - 24 || e.x > this.camX + this.vw + 24 || e.y < this.camY - 8 || e.y > this.camY + this.vh + 40;
+            if (off) { const b = behind(); e.x = b.x; e.y = b.y; e.spd = 0; } else e.hop = { t: 0, moved: false };
+          }
+          if (e.hop) {
+            e.hop.t += dt; gx = null;
+            if (e.hop.t >= 0.15 && !e.hop.moved) { const b = behind(); e.x = b.x; e.y = b.y; e.spd = 0; e.hop.moved = true; }
+            e.alpha = e.hop.t < 0.15 ? 1 - e.hop.t / 0.15 : Math.min(1, (e.hop.t - 0.15) / 0.15);
+            if (e.hop.t >= 0.3) { e.hop = null; e.alpha = 1; }
+          }
+          // standing on someone (the trail ran through them): step aside a few units
+          if (gx === null && !e.hop) { const [sx, sy, near] = this.separation(e, 0, 0); if (near < 9) { const l = Math.hypot(sx, sy) || 1, ax = e.x + sx / l * 10, ay = e.y + sy / l * 10; if (!this.canStand(ax, ay)) { gx = ax; gy = ay; speed = 30; } } }
         } else if (e.guide && !e.guide.done) {
           const G = e.guide, w = G.path[G.i];
           if (!w) { G.done = true; if (G.onDone) G.onDone(); }
@@ -288,12 +390,85 @@ window.LS = window.LS || {};
           if (e.wt <= 0) { const [x0, y0, x1, y1] = e.wander; const tx = x0 + Math.floor(Math.random() * (x1 - x0 + 1)), ty = y0 + Math.floor(Math.random() * (y1 - y0 + 1)); const q = tp(tx, ty); e.goal = [q.x, q.y]; e.wt = 3 + Math.random() * 6; }
           if (e.goal) { gx = e.goal[0]; gy = e.goal[1]; }
         }
+        // NPCs ease in (about 0.1 s to full pace) and ease out as they arrive (never past the goal)
         if (gx !== null) {
           const ddx = gx - e.x, ddy = gy - e.y, d = Math.hypot(ddx, ddy);
-          e.moving = d > 2; if (e.moving) { const st = Math.min(d, speed * dt); e.x += ddx / d * st; e.y += ddy / d * st; e.face = Math.abs(ddx) > Math.abs(ddy) ? (ddx > 0 ? 'right' : 'left') : (ddy > 0 ? 'down' : 'up'); e.phase = (e.phase || 0) + st / 4.5; }
-          else if (e.goal && e.wander) e.goal = null;
-        } else e.moving = false;
+          e.moving = d > 2;
+          if (e.moving) {
+            const through = e.guide && e.guide.path && e.guide.i < e.guide.path.length - 1, cap = through ? speed : Math.min(speed, 10 + d / 0.08);
+            e.spd = Math.min(cap, (e.spd || 0) + speed / 0.1 * dt);
+            const st = Math.min(d, e.spd * dt);
+            let ux = ddx / d, uy = ddy / d;
+            if (e.follow) {   // separation: steer round anyone in the way instead of walking through them
+              const [sx, sy] = this.separation(e, ux, uy), vx = ux + sx, vy = uy + sy, vl = Math.hypot(vx, vy);
+              if (vl > 1e-3) { const nx = vx / vl, ny = vy / vl; if (!this.canStand(e.x + nx * st, e.y + ny * st)) { ux = nx; uy = ny; } }
+            }
+            e.x += ux * st; e.y += uy * st;
+            this.faceTo(e, ux, uy); e.phase = (e.phase || 0) + st / stride(st / Math.max(1e-4, dt));
+          } else { e.spd = 0; e.phase = 0; if (e.goal && e.wander) e.goal = null; }
+        } else { e.moving = false; e.spd = 0; e.phase = 0; }
+        if (!e.moving && !(e.guide && !e.guide.done)) this.lookAtPlayer(e, dt, cv && cv.e === e);
+        this.tickTurn(e, dt);
       }
+    }
+    // Separation steering for a walking NPC: a push away from every other actor within about a tile, plus a sideways
+    // component round anyone ahead (so they pass beside, not through). Radius 22 units. Returns [px, py, nearest distance].
+    separation(e, ux, uy) {
+      let sx = 0, sy = 0, near = 1e9;
+      const others = this.entities.filter(o => o !== e && o.kind === 'npc' && o.room === this.room && !o.hidden);
+      others.push(this.player);
+      for (const o of others) {
+        const rx = e.x - o.x, ry = e.y - o.y, d = Math.hypot(rx, ry); near = Math.min(near, d);
+        if (d >= 22 || d < 1e-3) continue;
+        const w = (22 - d) / 22; sx += rx / d * w * 1.8; sy += ry / d * w * 1.8;
+        if (ux * -rx + uy * -ry > 0) { const tx = -uy, ty = ux, sg = (tx * rx + ty * ry) >= 0 ? 1 : -1; sx += tx * sg * w * 1.6; sy += ty * sg * w * 1.6; }
+      }
+      return [sx, sy, near];
+    }
+    // Idle NPCs notice you: within about 2.5 tiles they turn to face the player (4 directions, the new facing has to
+    // hold for 0.2 s before they turn, so a player walking past doesn't make them twitch); once the player is more
+    // than 3 tiles away they go back to how they were standing. In conversation the speaker turns straight away.
+    lookAtPlayer(e, dt, talking) {
+      const p = this.player, dx = p.x - e.x, dy = p.y - e.y, d = Math.hypot(dx, dy * 1.2);
+      if (!['down', 'up', 'left', 'right'].includes(e.face || 'down')) return;
+      const near = talking || d < (e.homeFace ? 3 * T : 2.5 * T);
+      if (e.homeFace && e.homeAt && Math.hypot(e.x - e.homeAt[0], e.y - e.homeAt[1]) > 4) e.homeFace = null;   // moved by the story: forget
+      if (near && !e.homeFace) { e.homeFace = e.face || 'down'; e.homeAt = [e.x, e.y]; }
+      const want = near ? dir4(dx, dy, e.face) : e.homeFace;
+      if (!want) return;
+      if (want !== e.face) { e.lookT = (e.lookT || 0) + dt; if (talking || e.lookT >= (near ? 0.2 : 0.6)) { this.setFace(e, want); e.lookT = 0; } }
+      else e.lookT = 0;
+      if (!near && e.face === e.homeFace) e.homeFace = null;
+    }
+    // Conversation staging (presentation only): while a dialogue card is up, find who is speaking (the name on the
+    // card, or world.speaker), turn the player and them to face each other, let the camera ease to the midpoint, and
+    // tell the renderer while their line is still typing so the speaker's head nods along.
+    convTick() {
+      const now = performance.now();
+      if (!this.paused || this.attract || typeof document === 'undefined') { this._conv = null; return; }
+      const box = document.querySelector('#talk.on .dlg') || document.querySelector('#talk.on .narr');
+      if (!box) { this._conv = null; return; }
+      let id = this.speaker;
+      const nm = box.querySelector('.who .nm'), name = nm && nm.textContent;
+      if (name) {
+        const pk = LS.PACKS && Object.values(LS.PACKS)[0], cast = pk && pk.cast;
+        if (cast) { if (!this._castBy || this._castBy.n !== name) { const k = Object.keys(cast).find(k => cast[k] && cast[k].name === name); this._castBy = { n: name, id: k || null }; } if (this._castBy.id) id = this._castBy.id; }
+      }
+      const e = id && this.entities.find(v => v.kind === 'npc' && v.id === id && v.room === this.room && !v.hidden);
+      const p = this.player, c = this._conv && this._conv.e === e ? this._conv : (this._conv = { e, len: 0, grew: -1e9, top: null, box: null });
+      if (!e || Math.hypot(e.x - p.x, e.y - p.y) > 6 * T) { c.e = null; return; }
+      const tx = box.querySelector('.tx'), n = tx ? tx.textContent.length : 0;
+      if (box !== c.box) { c.box = box; c.len = 0; }
+      if (n > c.len) c.grew = now; c.len = n; c.typing = now - c.grew < 140 && !!nm;
+      if (!c.top || now - c.topT > 400) { c.top = box.getBoundingClientRect().top; c.topT = now; }
+      // standing on top of each other (a scripted entrance can do that): the speaker takes a small step aside first
+      const gap = Math.hypot(e.x - p.x, e.y - p.y);
+      if (gap < 11 && !e._sb && !e.moving && !e.follow && !(e.guide && !e.guide.done)) {
+        const l = gap > 0.5 ? gap : 1, ux = gap > 0.5 ? (e.x - p.x) / l : 0, uy = gap > 0.5 ? (e.y - p.y) / l : 1;
+        const sd = e.x >= p.x ? 1 : -1;   // side by side reads best as a two-shot, so step to the side first
+        for (const [dx, dy] of [[sd, 0], [-sd, 0], [ux, uy], [0, 1], [0, -1]]) { const tx = p.x + dx * 20, ty = p.y + dy * 16; if (!this.canStand(tx, ty)) { e._sb = { room: this.room, x0: e.x, y0: e.y, tx, ty }; break; } }
+      }
+      if (!p.moving && !e.moving) this.setFace(p, dir4(e.x - p.x, e.y - p.y, p.face));
     }
     // Guide an NPC along a path (they wait if the player lags). Resolves on arrival.
     guide(e, tx, ty) {
@@ -312,7 +487,52 @@ window.LS = window.LS || {};
       const p = this.player; if (Math.hypot(gx - p.x, gy - p.y) < 28) return null;
       const path = this.findPath(this.room, p.x, p.y, gx, gy); return path ? path.slice(1, 60) : null;
     }
-    spawnSheep() { const r = LS.art ? LS.art.rng(4) : Math.random; const tiles = []; for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) if (L.rows[y][x] === '"') tiles.push([x, y]); for (let i = 0; i < 9 && tiles.length; i++) { const [x, y] = tiles[Math.floor(r() * tiles.length)]; this.sheep.push({ x: x * T + 8, y: y * T + 12, t: r() * 5, dx: 0, dy: 0, face: 1 }); } }
+    spawnSheep() { const r = LS.art ? LS.art.rng(4) : Math.random; const tiles = []; for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) if (L.rows[y][x] === '"') tiles.push([x, y]); for (let i = 0; i < 9 && tiles.length; i++) { const [x, y] = tiles[Math.floor(r() * tiles.length)]; this.sheep.push({ x: x * T + 8, y: y * T + 12, t: r() * 5, dx: 0, dy: 0, vx: 0, vy: 0, face: 1, seed: i * 1.7 }); } }
+
+    // ---------- Animation helpers ----------
+    // Facing with hysteresis: near a diagonal the current facing holds until the other axis clearly wins, so a
+    // diagonal walk (keyboard, joystick or A* path) never flickers between two rows of the sheet.
+    faceTo(o, dx, dy) {
+      const ax = Math.abs(dx), ay = Math.abs(dy), f = o.face, H = 1.35;
+      if ((f === 'left' && dx < 0 || f === 'right' && dx > 0) && ax * H >= ay) return;
+      if ((f === 'up' && dy < 0 || f === 'down' && dy > 0) && ay * H >= ax) return;
+      this.setFace(o, ax > ay ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up'));
+    }
+    // A turn right round (left to right, up to down) passes through one in-between frame, like a real body turning.
+    setFace(o, face) {
+      if (!face || face === o.face) return;
+      const opp = { left: 'right', right: 'left', up: 'down', down: 'up' }[o.face] === face;
+      if (opp) { o.turnVia = (face === 'left' || face === 'right') ? 'down' : (o.lastSide || 'right'); o.turnT = 0.07; }
+      if (face === 'left' || face === 'right') o.lastSide = face;
+      o.face = face;
+    }
+    tickTurn(o, dt) { if (o.turnT > 0) o.turnT -= dt; }
+    shownFace(o) { return o.turnT > 0 && o.turnVia ? o.turnVia : (o.face || 'down'); }
+    // Footfalls outdoors on loose or hard ground kick up a few pixels of dust (a ripple instead, in the rain).
+    footfall(x, y, vx, vy) {
+      if (this.room !== 'outside' || this.reduced) return;
+      const c = (L.rows[Math.floor(y / T)] || '')[Math.floor(x / T)] || '.', col = DUST[c]; if (!col) return;
+      const a = this._atm, wet = a && a.cur && a.cur.rain > 0.3, D = this.dust || (this.dust = []);
+      if (D.length > 60) D.splice(0, D.length - 60);
+      const sp = Math.hypot(vx, vy) || 1, bx = -vx / sp, by = -vy / sp, side = ((this._foot = !this._foot) ? 1 : -1) * 2;
+      const fx = x - by * side * 0.6, fy = y + 0.5;
+      if (wet) { D.push({ ring: 1, x: fx, y: fy, t: 0, life: 0.45 }); return; }
+      for (let i = 0; i < 4; i++) D.push({ x: fx + bx * 2 + (Math.random() - 0.5) * 3, y: fy - Math.random() * 0.8, vx: bx * (5 + Math.random() * 7) + (Math.random() - 0.5) * 7, vy: by * 3 - 2.5 - Math.random() * 3.5, t: 0, life: 0.28 + Math.random() * 0.1, c: col[i % col.length], s: 2 + (i & 1) });
+    }
+    tickDust(dt) { const D = this.dust; if (!D || !D.length) return; for (const d of D) { d.t += dt; if (!d.ring) { d.x += d.vx * dt; d.y += d.vy * dt; d.vx *= 1 - 4 * dt; d.vy *= 1 - 4 * dt; } } this.dust = D.filter(d => d.t < d.life); }
+    drawDust(x) {
+      const D = this.dust; if (!D || !D.length || this.room !== 'outside') return;
+      const q = this.snapRes || 3, px = 1 / q;
+      for (const d of D) {
+        const u = d.t / d.life;
+        if (d.ring) { x.globalAlpha = 0.55 * (1 - u); x.strokeStyle = '#dfe8f0'; x.lineWidth = px; x.beginPath(); x.ellipse(d.x, d.y, 1.5 + u * 5, (1.5 + u * 5) * 0.4, 0, 0, 7); x.stroke(); continue; }
+        // a soft puff: a pixel cluster that swells by an art pixel, lifts and fades
+        const n = d.s + (u > 0.35 ? 1 : 0), sz = n * px, hf = (n >> 1) * px, X = Math.round(d.x * q) / q - hf, Y = Math.round(d.y * q) / q - hf;
+        x.globalAlpha = 0.78 * (1 - u) * (1 - u * 0.4); x.fillStyle = d.c;
+        x.fillRect(X, Y, sz, sz); x.fillRect(X - px, Y + px, sz + 2 * px, Math.max(px, sz - 2 * px));
+      }
+      x.globalAlpha = 1;
+    }
     pop(room, x, y, text, secs) { this.fx.push({ room, x, y, text, until: performance.now() + (secs || 1.6) * 1000, t0: performance.now() }); }
     invalidate(room) { delete this.scenes[room]; }
 
@@ -337,10 +557,10 @@ window.LS = window.LS || {};
       const Z = this.S * this.dpr, sc = this.scene(this.room), snap = Math.min(Z, sc.res || Z);
       // snap the camera to the art-pixel grid (and so to whole device pixels): actors snap to the same grid, so nothing
       // shimmers against the ground while the camera follows the player
-      const cx = Math.round(this.camX * snap) / snap, cy = Math.round(this.camY * snap) / snap;
-      this.snapRes = snap;
+      const [cx, cy] = this.camPx(snap);
+      this.snapRes = snap; this._cx = cx; this._cy = cy;
       x.setTransform(1, 0, 0, 1, 0, 0); x.imageSmoothingEnabled = false;
-      x.fillStyle = this.room === 'outside' ? '#265c42' : '#181425'; x.fillRect(0, 0, this.cv.width, this.cv.height);
+      x.fillStyle = this.room === 'outside' ? '#265c42' : this.letterbox(x, sc, cx, cy, Z); x.fillRect(0, 0, this.cv.width, this.cv.height);
       // Art may be authored at any density: scene.res = art pixels per world unit (1 = 16px tiles, 4 = 64px tiles).
       // scene.smooth = true for painted (non-pixel) art.
       const res = sc.res || 1, smooth = !!sc.smooth;
@@ -351,8 +571,9 @@ window.LS = window.LS || {};
       else if (x1 > x0 && y1 > y0) x.drawImage(sc.ground, x0 * res, y0 * res, (x1 - x0) * res, (y1 - y0) * res, x0, y0, x1 - x0, y1 - y0);
       if (this.art && this.art.drawAnimated) this.art.drawAnimated(x, sc, t, x0, y0, x1, y1);
       this.drawCrumbs(x, t);
+      this.drawDust(x);
       // y-sorted objects and actors
-      const Lst = [], add = (y, fn) => Lst.push([y, fn]), p = this.player;
+      const Lst = [], add = (y, fn) => Lst.push([y, fn]), p = this.player, cv = this._conv;
       for (const o of sc.objects) {
         const ow = o.w || o.img.width / res, oh = o.h || o.img.height / res;   // world-unit size (w/h optional)
         if (o.dx > x1 || o.dx + ow < x0 || o.dy > y1 || o.dy + oh < y0) continue;
@@ -360,20 +581,41 @@ window.LS = window.LS || {};
       }
       for (const e of this.visible()) {
         if (e.x < x0 - 30 || e.x > x1 + 30 || e.y < y0 - 40 || e.y > y1 + 40) continue;
-        if (e.kind === 'npc') add(e.y, () => this.actor(x, e.look, e.x, e.y, e.face || 'down', e.moving ? Math.floor(e.phase || 0) : 0, { ppe: e.ppe, moving: e.moving }));
+        if (e.kind === 'npc') add(e.y, () => this.actor(x, e.look, e.x, e.y, this.shownFace(e), e.moving ? (e.phase || 0) : 0, { ppe: e.ppe, moving: e.moving, idle: t, seed: seedOf(e.id || e.name || e.x), talk: !!(cv && cv.e === e && cv.typing), alpha: e.alpha != null && e.alpha < 1 ? e.alpha : null }));
         else if (e.kind === 'cat') add(e.y, () => this.animal(x, 'cat', e.x, e.y, t));
       }
       if (this.room === 'outside') {
-        for (const s of this.sheep) if (s.x > x0 && s.x < x1 && s.y > y0 && s.y < y1) add(s.y, () => this.animal(x, 'sheep', s.x, s.y, t, { face: s.face }));
+        for (const s of this.sheep) if (s.x > x0 && s.x < x1 && s.y > y0 && s.y < y1) add(s.y, () => { const v = Math.hypot(s.vx || 0, s.vy || 0); this.animal(x, 'sheep', s.x, s.y, t, v > 3 ? { face: s.face, anim: 'walk', fps: 1.1 * v, seed: s.seed } : { face: s.face, seed: s.seed }); });
         const duck = (sc.anchors && sc.anchors.duck) || tp(83, 22); if (!this.flags.drainCleared) add(duck.y, () => this.animal(x, 'duck', duck.x, duck.y, t));
         if (this.mainTrain.y > -2000) add(this.mainTrain.y + 160, () => this.drawMainTrain(x, this.mainTrain.y));
       }
       if (this.room === 'shed' && !this.flags.pigeonGone) { const a = (sc.anchors && sc.anchors.pigeon) || { x: 24 * T, y: 4 * T + 6 }; add(a.sortY != null ? a.sortY : a.y + 40, () => this.animal(x, 'pigeon', a.x, a.y, t)); }
-      if (p.look && !this.attract) add(p.y, () => this.actor(x, p.look, p.x, p.y, p.face, p.moving ? Math.floor(p.phase) : 0, { ppe: this.ppe, moving: p.moving }));
+      if (p.look && !this.attract) add(p.y, () => this.actor(x, p.look, p.x, p.y, this.shownFace(p), p.moving ? p.phase : 0, { ppe: this.ppe, moving: p.moving, idle: t, seed: 0.37 }));
       Lst.sort((a, b) => a[0] - b[0]); for (const [, fn] of Lst) fn();
       this.grade(x, t, sc);
       if (this.depthOfField) this.depthOfField(x);
       this.drawUI(x, t, cx, cy);
+    }
+    // Indoors, the space round a room smaller than the screen is filled with a dark wash of the room's own top-wall
+    // and skirting colours (sampled once per scene), graded towards the screen edges, instead of flat black.
+    letterbox(x, sc, cx, cy, Z) {
+      const R = ROOMS[this.room]; if (!R) return '#181425';
+      if (!sc._lb) {
+        sc._lb = ['#1c1826', '#141120'];
+        try {
+          const c = document.createElement('canvas'); c.width = c.height = 1; const g = c.getContext('2d', { willReadFrequently: true });
+          const at = (wx, wy) => { if (sc.chunks) { const k = sc.chunks.find(k => wx >= k.x && wx < k.x + k.w && wy >= k.y && wy < k.y + k.h); if (!k) return null; const r = sc.res || 1; g.drawImage(k.img, (wx - k.x) * r, (wy - k.y) * r, 1, 1, 0, 0, 1, 1); } else { const r = sc.res || 1; g.drawImage(sc.ground, wx * r, wy * r, 1, 1, 0, 0, 1, 1); } return g.getImageData(0, 0, 1, 1).data; };
+          const avg = wy => { let r = 0, gg = 0, b = 0, n = 0; for (let i = 1; i < 8; i++) { const d = at(R.w * i / 8, wy); if (d && d[3]) { r += d[0]; gg += d[1]; b += d[2]; n++; } } return n ? [r / n, gg / n, b / n] : null; };
+          const dark = (c, k) => `rgb(${Math.round(c[0] * k + 14 * (1 - k))},${Math.round(c[1] * k + 11 * (1 - k))},${Math.round(c[2] * k + 22 * (1 - k))})`;
+          const top = avg(3), bot = avg(R.h - 3);
+          if (top && bot) sc._lb = [dark(top, 0.34), dark(bot, 0.34), dark(top, 0.14), dark(bot, 0.14)];
+        } catch (e) { /* unreadable canvas: keep the plain dark fill */ }
+      }
+      const L = sc._lb; if (L.length < 4) return L[0];
+      const H = this.cv.height, y0 = Math.max(0, Math.min(H, -cy * Z)), y1 = Math.max(0, Math.min(H, (R.h - cy) * Z));
+      const gr = x.createLinearGradient(0, 0, 0, H || 1), f = v => Math.max(0, Math.min(1, v / (H || 1)));
+      gr.addColorStop(0, L[2]); gr.addColorStop(f(y0), L[0]); gr.addColorStop(f(y1), L[1]); gr.addColorStop(1, L[3]);
+      return gr;
     }
     actor(x, look, px, py, face, frame, opt) {
       const q = this.snapRes || 1;

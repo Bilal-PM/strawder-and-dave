@@ -56,13 +56,18 @@ def cat_head(f, hx, hy, blink=False):
 
 
 def cat_sit(frame, flip):
+    """8 frames (a 4 s loop at the engine's 2 fps): three still frames, then the tail tip lifts, flicks up and curls,
+    drops back and settles, with a slow blink as it settles. Mostly still, so the flick reads as a flick."""
     f = Fig(*CAT, lx=-1 if flip else 1)
     tail = f.part()
-    sway = [0, 1][frame % 2]
+    k = frame % 8
+    lift = [0, 0, 0, 1.4, 3.4, 2.2, 0.8, 0][k]
+    curl = [0, 0, 0, 0.4, 1.3, 1.6, 0.6, 0][k]
     tm = []
-    for k in range(14):
-        a = math.pi * 0.1 + k / 13 * math.pi * 0.9
-        x = 20 - math.cos(a) * 9 + sway * (k > 9); y = 25 - math.sin(a) * 2.2 * (k > 6)
+    for k in range(15):
+        a = math.pi * 0.1 + k / 14 * math.pi * 0.9
+        t = max(0.0, (k - 8) / 6)                       # only the last third of the tail moves
+        x = 20 - math.cos(a) * 9 - curl * t * t * 2; y = 25 - math.sin(a) * 2.2 * (k > 6) - lift * t * t * 1.6
         for d in (0, 1): tm.append((round(x), round(y) + d - 1))
     f.paint(tm, 'ginger', tail, lo=1, hi=4, bias=-0.05, tex=lambda x, y: -0.3 if x % 3 == 0 else 0)
     bp = f.part()
@@ -73,7 +78,7 @@ def cat_sit(frame, flip):
     for lx in (14, 17):
         leg(f, lx, 20, 25, 'ginger', lp, w=2, bias=0.05 if lx == 14 else -0.1)
         f.put(lx, 25, 'cream', 1, lp); f.put(lx + 1, 25, 'cream', 2, lp)
-    cat_head(f, 15, 9.5 + (0 if frame == 0 else 0), blink=frame == 1)
+    cat_head(f, 15, 9.5, blink=k in (6, 7))
     return finish(f, flip)
 
 
@@ -161,15 +166,26 @@ def duck_body(f, bob, swim):
 
 
 def duck_swim(frame, flip):
+    """8 frames: the body rides a slow swell (one pixel, eased: 0 0 0 1 1 1 1 0) and the head leads it by a frame, so
+    only one thing changes per frame; the ripples drift back one pixel a frame (period 4, so the loop is seamless) and
+    a paddle ring spreads behind the tail on each stroke."""
     f = Fig(*DUCK, lx=-1 if flip else 1)
-    bob = frame
+    k = frame % 8
+    bob = [0, 0, 0, 1, 1, 1, 1, 0][k]
     duck_body(f, bob, True)
-    # waterline: cut the lower body, lay ripple arcs (translucent-free: pale water ramp pixels)
+    hbob = [0, 0, 1, 1, 1, 1, 0, 0][k] - bob         # head and neck dip a beat ahead of the body
+    if hbob:
+        moved = {}
+        for (x, y), v in list(f.px.items()):
+            if x <= 8 and y <= 10 + bob: moved[(x, y + hbob)] = v; del f.px[(x, y)]
+        f.px.update(moved)
     for (x, y) in list(f.px.keys()):
-        if y > 15 + bob * 0: f.erase(x, y)
+        if y > 15: f.erase(x, y)
     cv = f.finish()
-    wp = [(x, 16) for x in range(3, 23)] + [(x, 17) for x in range(1 + frame, 21 + frame, 3)]
-    for (x, y) in wp:
+    wl = [(x, 16) for x in range(3, 23)]
+    rip = [(x, 17) for x in range(1 + (k % 4), 22, 4)]
+    ring = {2: [(22, 16)], 3: [(22, 16), (23, 17)], 6: [(22, 16)], 7: [(22, 16), (23, 17)]}.get(k, [])
+    for (x, y) in wl + rip + ring:
         if 0 <= x < 24: cv.put(x, y, RAMPS['water'][0 if y == 16 else 1])
     return cv.flip() if flip else cv
 
@@ -300,8 +316,8 @@ def pigeon_frame(kind, frame, flip):
 def build(out):
     entries = {}
     specs = [
-        ('cat', CAT, (18, 26), [('sit', cat_sit, 2), ('walk', cat_walk, 6), ('sleep', cat_sleep, 2)]),
-        ('duck', DUCK, (12, 20), [('swim', duck_swim, 2), ('waddle', duck_waddle, 4)]),
+        ('cat', CAT, (18, 26), [('sit', cat_sit, 8), ('walk', cat_walk, 6), ('sleep', cat_sleep, 2)]),
+        ('duck', DUCK, (12, 20), [('swim', duck_swim, 8), ('waddle', duck_waddle, 4)]),
         ('sheep', SHEEP, (30, 44), [('graze', lambda i, fl: sheep_frame('graze', i, fl), 2),
                                     ('walk', lambda i, fl: sheep_frame('walk', i, fl), 6)]),
         ('pigeon', PIGEON, (11, 20), [('idle', lambda i, fl: pigeon_frame('idle', i, fl), 2),
@@ -322,7 +338,8 @@ def build(out):
                 looks += [(f'{name}_{an}{i}{"R" if flip else "L"}', rowf[i]) for i in range(n)]
         im = sheet(frames, cols, fw, fh)
         fn_ = f'animal_{name}.png'
-        im.save(os.path.join(out, fn_), optimize=True)
+        from build import save_small
+        save_small(im, os.path.join(out, fn_))
         entries['animal_' + name] = dict(id=name, file=fn_, w=im.width, h=im.height, frame=[fw, fh], cols=cols,
                                          anims=am, anchor=list(anchor), name='Kevin' if name == 'pigeon' else (
                                              'Sleeper' if name == 'cat' else None))

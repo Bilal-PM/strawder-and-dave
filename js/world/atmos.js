@@ -5,7 +5,7 @@
  * - Weather: clear, fair (cloud shadows sweep the valley), overcast, drizzle and rain, each lasting a minute or two,
  *   blended smoothly. Rain brings streaks on the wind, splash rings on the ground and a wet, cooler grade.
  * - Night: the valley darkens; lamps, lit windows and doorways (scene.lights and buildings' lit overlays) glow.
- * - Ambient motion: drifting cloud shadows, low dawn mist, golden-hour light shafts, birds by day, fireflies at night.
+ * - Ambient motion: drifting cloud shadows, low dawn mist, golden-hour light shafts, birds by day, moths round the lamps at night.
  *
  * Patches LS.World.prototype (grade, drawWeather, drawNight, update). Respects world.reduced (fewer, slower effects).
  */
@@ -41,6 +41,11 @@ window.LS = window.LS || {};
     const a = SKY[i], b = SKY[i + 1], t = (h - a[0]) / (b[0] - a[0] || 1), s = t * t * (3 - 2 * t);
     return { tint: a[1].map((c, k) => mix(c, b[1][k], s)), str: mix(a[2], b[2], s), dark: mix(a[3], b[3], s), warm: mix(a[4], b[4], s), mist: mix(a[5], b[5], s) };
   }
+  let PATCHC = null;   // a soft oblong of window light
+  const PATCH = () => { if (PATCHC) return PATCHC; const c = document.createElement('canvas'); c.width = 32; c.height = 64; const g = c.getContext('2d');
+    const gy = g.createLinearGradient(0, 0, 0, 64); gy.addColorStop(0, 'rgba(255,238,200,1)'); gy.addColorStop(1, 'rgba(255,230,190,0)'); g.fillStyle = gy; g.fillRect(4, 0, 24, 64);
+    g.globalCompositeOperation = 'destination-in'; const gx = g.createLinearGradient(0, 0, 32, 0); gx.addColorStop(0, 'rgba(0,0,0,0)'); gx.addColorStop(0.3, 'rgba(0,0,0,1)'); gx.addColorStop(0.7, 'rgba(0,0,0,1)'); gx.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gx; g.fillRect(0, 0, 32, 64);
+    return (PATCHC = c); };
   const bucket = h => (h >= 5.2 && h < 8 ? 'dawn' : h >= 8 && h < 17.8 ? 'day' : h >= 17.8 && h < 20.6 ? 'dusk' : 'night');
 
   function A(w) {   // lazily attached state
@@ -48,7 +53,7 @@ window.LS = window.LS || {};
     const r = Math.random;
     return (w._atm = {
       hour: 11, state: 'fair', left: 90, cur: Object.assign({}, STATES.fair), clouds: Array.from({ length: 9 }, () => ({ x: r() * 2200, y: r() * 1400, r: 90 + r() * 170, s: 0.7 + r() * 0.6 })),
-      drops: [], rings: [], birds: [], flies: Array.from({ length: 26 }, () => ({ x: 0, y: 0, p: r() * 7, a: 0 })), shaft: r() * 100, rainOn: false
+      drops: [], rings: [], birds: [], shaft: r() * 100, rainOn: false
     });
   }
   function pickState(cur) {
@@ -86,8 +91,20 @@ window.LS = window.LS || {};
     const a = A(this), S = a.sky || sky(a.hour), c = a.cur; a.dt = a.dt || 0.016; const D = this.cv, Z = this.S * this.dpr, cx = this.camX, cy = this.camY;
     const toS = (wx, wy) => [(wx - cx) * Z, (wy - cy) * Z], red = this.reduced;
     x.setTransform(1, 0, 0, 1, 0, 0);
-    if (this.room !== 'outside') {   // interiors: soft warm air, the depot torch in the cold open
-      x.fillStyle = 'rgba(255,236,200,0.05)'; x.fillRect(0, 0, D.width, D.height);
+    if (this.room !== 'outside') {   // interiors: daylight through the windows, soft air, the depot torch in the cold open
+      const day = Math.max(0, 1 - S.dark * 1.6) * (1 - c.cloud * 0.5), h = a.hour;
+      // window light lying across the floor, sliding with the sun (east in the morning light, west by evening)
+      const WIN = { shed: [64, 176, 288, 400], hall: [64, 400], office: [64, 272] }[this.room];
+      if (WIN && day > 0.05 && !this.flags.dark) {
+        const P = PATCH(), off = (12 - h) * 3.2, len = 34 + Math.abs(12 - h) * 3;
+        x.globalCompositeOperation = 'lighter'; x.imageSmoothingEnabled = true;
+        for (const wx of WIN) {
+          const [sx, sy] = toS(wx + off - 13, 36); x.globalAlpha = 0.16 * day;
+          x.setTransform(1, 0, (off / len) * 0.9, 1, sx, sy); x.drawImage(P, 0, 0, 26 * Z, len * Z);
+        }
+        x.setTransform(1, 0, 0, 1, 0, 0); x.globalAlpha = 1; x.globalCompositeOperation = 'source-over'; x.imageSmoothingEnabled = false;
+      }
+      x.fillStyle = day > 0.5 ? 'rgba(236,240,255,0.03)' : 'rgba(255,226,180,0.06)'; x.fillRect(0, 0, D.width, D.height);
       if (this.flags.dark) {
         const px = (this.player.x - cx) * Z, py = (this.player.y - 14 - cy) * Z, R = 70 * Z, rg = x.createRadialGradient(px, py, R * 0.15, px, py, R);
         rg.addColorStop(0, 'rgba(8,6,14,0)'); rg.addColorStop(0.7, 'rgba(8,6,14,0.55)'); rg.addColorStop(1, 'rgba(8,6,14,0.93)'); x.fillStyle = rg; x.fillRect(0, 0, D.width, D.height);
@@ -125,18 +142,41 @@ window.LS = window.LS || {};
       for (const cl of a.clouds) { const [sx, sy] = toQ(cl.x, cl.y), R = cl.r * Zq; if (sx < -R || sy < -R || sx > lw + R || sy > lh + R) continue; stamp(M, blob('96,104,140'), sx, sy, R, 0.55 * shade, 0.7); }
       M.globalAlpha = 1; M.globalCompositeOperation = 'source-over'; useM = true;
     }
-    // night: darkness, with pools of light cut out at lamps, windows, doorways and around the player
+    // low sun: long soft shadows raking across the ground, away from the sun (east at dusk, west at dawn), laid over
+    // the baked midday ones; drawn at quarter resolution from the blurred silhouettes shadows.js keeps
+    const lowSun = S.warm * (1 - c.cloud * 0.85) * (1 - S.dark);
+    if (lowSun > 0.08 && LS.HD && LS.HD.silhouette) {
+      const dir = a.hour > 12 ? 1 : -1, kx = 2.3 * dir, ky = 0.22, x0 = cx - 40, x1 = cx + this.vw + 40, y0 = cy - 20, y1 = cy + this.vh + 60;
+      M.save(); M.setTransform(Zq, 0, 0, Zq, -cx * Zq, -cy * Zq); M.globalAlpha = Math.min(0.4, 0.5 * lowSun);
+      const casters = sc._sunCasters || (sc._sunCasters = sc.objects.filter(o => o.img && o.h > 8 && o.sortY < 1e5 && !/^(hd_overlay|hd_fence_v)$/.test(o.kind || '')));
+      for (const o of casters) {
+        const base = o.sortY, reach = o.h * Math.abs(kx);
+        if (base < y0 || base - o.h > y1 || o.dx + o.w + (dir > 0 ? reach : 0) < x0 || o.dx - (dir < 0 ? reach : 0) > x1) continue;
+        const s = LS.HD.silhouette(o.img, 6), pd = 12, px = o.w / (s.width - 2 * pd) * pd, py = o.h / (s.height - 2 * pd) * pd;
+        M.save(); M.transform(1, 0, -kx, -ky, kx * base, (1 + ky) * base); M.drawImage(s, o.dx - px, o.dy - py, o.w + 2 * px, o.h + 2 * py); M.restore();
+      }
+      M.restore(); M.globalAlpha = 1; useM = true;
+    }
+    // night: darkness (a moonlit blue, not black), with pools of light cut out at lamps, windows, doorways and,
+    // more gently, around the player; a light only counts while its source is on screen (no glow without a lamp)
     if (S.dark > 0.02) {
-      M.globalCompositeOperation = 'multiply'; M.fillStyle = `rgba(22,28,70,${0.82 * S.dark})`; M.fillRect(0, 0, lw, lh);
+      M.globalCompositeOperation = 'multiply'; M.fillStyle = `rgba(34,46,104,${0.64 * S.dark})`; M.fillRect(0, 0, lw, lh);
+      const vis = L => { const m = Math.min(L.x - cx, cx + this.vw - L.x, L.y - cy, cy + this.vh - L.y); return m < -12 ? 0 : Math.min(1, (m + 12) / 16); };
       M.globalCompositeOperation = 'destination-out';
-      for (const L of (sc.lights || []).concat([{ x: this.player.x, y: this.player.y - 12, r: 22 }])) { const [sx, sy] = toQ(L.x, L.y), R = (L.r || 20) * Zq * 1.3; if (sx < -R || sy < -R || sx > lw + R || sy > lh + R) continue; stamp(M, blob('0,0,0'), sx, sy, R, 0.9 * S.dark); }
+      // street lamps light the ground at their foot too: a flattened pool ~42 units below the lantern
+      const pool = L => L.r >= 40 && !L.win;
+      for (const L of (sc.lights || [])) { const v = vis(L); if (v <= 0) continue; const [sx, sy] = toQ(L.x, L.y), R = (L.r || 20) * Zq * 1.3; stamp(M, blob('0,0,0'), sx, sy, pool(L) ? R * 0.75 : R, 0.9 * S.dark * v); if (pool(L)) { const [px, py] = toQ(L.x, L.y + 42); stamp(M, blob('0,0,0'), px, py, 40 * Zq, 0.85 * S.dark * v, 0.45); } }
+      { const [sx, sy] = toQ(this.player.x, this.player.y - 12); stamp(M, blob('0,0,0'), sx, sy, 22 * Zq * 1.3, 0.55 * S.dark); }
       M.globalAlpha = 1; M.globalCompositeOperation = 'source-over'; useM = true;
       Gg.globalCompositeOperation = 'lighter';
-      for (const L of sc.lights || []) { const [sx, sy] = toQ(L.x, L.y), R = (L.r || 20) * Zq * 0.9; if (sx < -R || sy < -R || sx > lw + R || sy > lh + R) continue; stamp(Gg, blob('255,184,96'), sx, sy, R, 0.5 * S.dark * (red ? 1 : 0.92 + 0.08 * Math.sin(t * 7 + L.x))); }
-      if (!red && c.rain < 0.2 && S.dark > 0.3) for (const f of a.flies) {
-        if (f.a <= 0) { f.x = this.player.x + (Math.random() - 0.5) * this.vw; f.y = this.player.y + (Math.random() - 0.5) * this.vh; f.a = 3 + Math.random() * 4; }
-        f.a -= a.dt; f.x += Math.sin(t * 0.7 + f.p) * 0.12; f.y += Math.cos(t * 0.5 + f.p) * 0.08;
-        const [sx, sy] = toQ(f.x, f.y); stamp(Gg, blob('230,255,150'), sx, sy, 2.2 * this.dpr, Math.max(0, Math.sin(t * 2 + f.p)) * S.dark);
+      for (const L of sc.lights || []) { const v = vis(L); if (v <= 0) continue; const fl = red ? 1 : 0.92 + 0.08 * Math.sin(t * 7 + L.x), [sx, sy] = toQ(L.x, L.y), R = (L.r || 20) * Zq * (pool(L) ? 0.6 : 0.9); stamp(Gg, blob('255,184,96'), sx, sy, R, (L.win ? 0.28 : 0.5) * S.dark * v * fl); if (pool(L)) { const [px, py] = toQ(L.x, L.y + 42); stamp(Gg, blob('255,176,90'), px, py, 34 * Zq, 0.3 * S.dark * v * fl, 0.45); } }
+      // a few moths about each lit street lamp (March: no fireflies)
+      if (!red && c.rain < 0.2 && S.dark > 0.3) for (const L of sc.lights || []) {
+        if (!(L.r >= 40) || vis(L) < 1) continue;
+        for (let k = 0; k < 3; k++) {
+          const ph = L.x * 0.37 + k * 2.1, mx = L.x + Math.cos(t * (1.3 + k * 0.4) + ph) * (4 + k * 2.5) + Math.sin(t * 3.1 + ph) * 1.2, my = L.y + 2 + Math.sin(t * (1.7 + k * 0.3) + ph * 1.3) * (3 + k * 1.5);
+          const [sx, sy] = toQ(mx, my); stamp(Gg, blob('255,240,214'), sx, sy, 0.9 * this.dpr, (0.55 + 0.45 * Math.sin(t * 9 + ph)) * S.dark);
+        }
       }
       Gg.globalAlpha = 1; Gg.globalCompositeOperation = 'source-over'; useG = true;
     }
@@ -166,22 +206,7 @@ window.LS = window.LS || {};
     a.useM = useM; a.useG = useG;
     this.drawRain(x, t, a, c, D, Z, cx, cy, toS, red, S);
   };
-  // depth of field: a gentle tilt-shift, softening the top and bottom of the view so the eye sits on the player
-  P.depthOfField = function (x) {
-    const a = A(this); if (a.lite || this.reduced || this.attract) return;
-    const D = this.cv, q = 6, sw = Math.ceil(D.width / q), sh = Math.ceil(D.height / q);
-    const c = this._dof || (this._dof = document.createElement('canvas')); if (c.width !== sw || c.height !== sh) { c.width = sw; c.height = sh; }
-    const g = c.getContext('2d'); g.imageSmoothingEnabled = true; g.drawImage(D, 0, 0, sw, sh);
-    x.setTransform(1, 0, 0, 1, 0, 0); x.imageSmoothingEnabled = true;
-    const band = 0.22, steps = 6;
-    for (let i = 0; i < steps; i++) {
-      const f0 = band * i / steps, f1 = band * (i + 1) / steps, al = 0.85 * (1 - i / steps);
-      x.globalAlpha = al;
-      x.drawImage(c, 0, f0 * sh, sw, (f1 - f0) * sh, 0, f0 * D.height, D.width, (f1 - f0) * D.height);                        // top
-      x.drawImage(c, 0, (1 - f1) * sh, sw, (f1 - f0) * sh, 0, (1 - f1) * D.height, D.width, (f1 - f0) * D.height);            // bottom
-    }
-    x.globalAlpha = 1; x.imageSmoothingEnabled = false;
-  };
+  // depth of field, aerial perspective, vignette, bloom and foreground leaves: js/world/hd/depth.js (P.depthOfField)
   P.drawRain = function (x, t, a, c, D, Z, cx, cy, toS, red, S) {
     // 6. rain: streaks on the wind, splash rings on the ground
     if (c.rain > 0.03) {

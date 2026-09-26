@@ -574,3 +574,188 @@ body.modal #toast{top:calc(84px + env(safe-area-inset-top));bottom:auto}
 .gantt .trk i.grey{top:4px;bottom:4px;height:auto}
 .gantt .trk.axis{height:14px}.gantt .trk.axis span{position:absolute;transform:translateX(-50%);font-size:10px;color:var(--muted);white-space:nowrap}
 .pimg{width:100%;height:100%;object-fit:cover;display:block}
+
+/* ==========================================================================================================
+   Motion layer. Transform, opacity and filter only; nothing here changes layout. Entry animations use
+   fill-mode "backwards" so they hand control back to the hover/press transforms once they finish.
+   ========================================================================================================== */
+:root{
+  --e-out:cubic-bezier(.22,1,.36,1);          /* quick settle, no overshoot */
+  --e-spring:cubic-bezier(.34,1.45,.64,1);    /* a hint of overshoot */
+  --e-pop:cubic-bezier(.3,1.8,.55,1);         /* springy press/pop */
+  --e-in:cubic-bezier(.5,0,.75,0);            /* exits */
+}
+@keyframes mFade{from{opacity:0}to{opacity:1}}
+@keyframes mRise{from{opacity:0;transform:translateY(12px) scale(.985)}to{opacity:1;transform:none}}
+@keyframes mRiseA{from{opacity:.45;transform:translateY(12px) scale(.985)}to{opacity:1;transform:none}}
+@keyframes mCardIn{0%{opacity:0;transform:translateY(18px) scale(.965)}55%{opacity:1}100%{opacity:1;transform:none}}
+@keyframes mDlgIn{0%{opacity:0;transform:translate(-50%,14px) scale(.965)}55%{opacity:1}100%{opacity:1;transform:translate(-50%,0) scale(1)}}
+@keyframes mNarrIn{0%{opacity:0;transform:translate(-50%,10px);filter:blur(5px)}100%{opacity:1;transform:translate(-50%,0);filter:blur(0)}}
+@keyframes mFaceIn{0%{opacity:0;transform:scale(.72) rotate(-4deg)}100%{opacity:1;transform:none}}
+@keyframes mSlideR{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:none}}
+@keyframes mChoiceIn{0%{opacity:0;transform:translateY(10px) scale(.975)}100%{opacity:1;transform:none}}
+@keyframes mChipIn{0%{opacity:0;transform:scale(.6)}100%{opacity:1;transform:none}}
+@keyframes mBump{0%{transform:scale(1)}28%{transform:scale(1.14)}52%{transform:scale(.96)}74%{transform:scale(1.03)}100%{transform:scale(1)}}
+@keyframes mRing{0%{opacity:.85;transform:scale(1)}100%{opacity:0;transform:scale(1.45,1.7)}}
+@keyframes mDelta{0%{opacity:0;transform:translate(-50%,6px) scale(.6)}14%{opacity:1;transform:translate(-50%,-8px) scale(1.12)}26%{transform:translate(-50%,-10px) scale(1)}72%{opacity:1}100%{opacity:0;transform:translate(-50%,-36px) scale(.96)}}
+@keyframes mLogo{0%{opacity:0;transform:translateY(8px) scale(1.08,1.02);filter:blur(12px)}60%{opacity:1;filter:blur(0)}100%{opacity:1;transform:none;filter:blur(0)}}
+@keyframes mTitleT{0%{opacity:0;transform:translateY(14px) scale(1.07,1.02);filter:blur(8px)}65%{opacity:1;filter:blur(0)}100%{opacity:1;transform:none;filter:blur(0)}}
+@keyframes mTrack{0%{opacity:0;transform:scaleX(1.18)}100%{opacity:.8;transform:none}}
+@keyframes mRule{0%{opacity:0;transform:scaleX(0)}100%{opacity:1;transform:scaleX(1)}}
+@keyframes mHudIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}
+@keyframes mHalo{0%{opacity:.7;transform:scale(1)}70%,100%{opacity:0;transform:scale(1.9)}}
+@keyframes mStamp{0%{opacity:0;transform:scale(1.9) rotate(-16deg);filter:blur(3px)}55%{opacity:1;transform:scale(.94) rotate(-5deg);filter:blur(0)}78%{transform:scale(1.04) rotate(-6.5deg)}100%{opacity:1;transform:scale(1) rotate(-6deg)}}
+@keyframes mIconPop{0%{opacity:0;transform:scale(.4) rotate(-20deg)}60%{opacity:1;transform:scale(1.15) rotate(6deg)}100%{opacity:1;transform:none}}
+@keyframes mDrawer{from{transform:translateX(100%)}to{transform:none}}
+@keyframes mKnob{0%{transform:scale(1)}40%{transform:scale(.86)}100%{transform:scale(1)}}
+
+/* layers fade as they open (a layer that stays open while its content changes doesn't re-fade) */
+.layer.on{animation:mFade .2s var(--e-out)}
+#talk.on{animation:none}
+/* the title's own parts rise in one by one, so the layer itself needs no fade; its buttons are never fully
+   transparent, so Continue / New game are always visible and clickable straight after a reload */
+#title.on{animation:none}
+
+/* ---------- Title: a soft rise, the logo's tracking settles, then the actions ---------- */
+#title.on .brandmark{animation:mTrack .9s .05s var(--e-out) backwards}
+#title.on .logo{animation:mLogo 1.1s .12s var(--e-out) backwards;transform-origin:50% 60%}
+#title.on .tagline{animation:mRise .7s .45s var(--e-out) backwards}
+#title.on .packline{animation:mRise .7s .58s var(--e-out) backwards}
+#title.on .title-actions{animation:mRiseA .6s .72s var(--e-spring) backwards}
+#title.on .title-foot{animation:mFade .8s .95s ease backwards}
+
+/* ---------- Setup / panels: the backdrop dims in (layer fade), the card lifts in. No backdrop blur: a full-screen
+   backdrop-filter doubled the frame time in software rendering and would tip atmos.js into its lite mode. ---------- */
+.center-wrap>.card{animation:mCardIn .3s var(--e-spring) backwards;transform-origin:50% 70%}
+#setup.on .avatars .avatar{animation:mChipIn .34s var(--e-pop) backwards}
+#setup.on .avatars .avatar:nth-child(1){animation-delay:.08s}
+#setup.on .avatars .avatar:nth-child(2){animation-delay:.12s}
+#setup.on .avatars .avatar:nth-child(3){animation-delay:.16s}
+#setup.on .avatars .avatar:nth-child(4){animation-delay:.2s}
+#setup.on .avatars .avatar:nth-child(n+5){animation-delay:.24s}
+.avatar{transition:transform .26s var(--e-pop),border-color .2s}
+.avatar:active{transform:scale(.93)}
+.avatar.sel{transform:scale(1.04)}
+
+/* options inside the Calls, defects and plans stagger in after the card */
+.call-body .opt{animation:mChoiceIn .26s var(--e-spring) backwards}
+.call-body .opt:nth-of-type(1){animation-delay:.1s}
+.call-body .opt:nth-of-type(2){animation-delay:.145s}
+.call-body .opt:nth-of-type(3){animation-delay:.19s}
+.call-body .opt:nth-of-type(n+4){animation-delay:.235s}
+.conf button{animation:mChoiceIn .26s var(--e-spring) backwards;transition:border-color .15s,background .15s,transform .24s var(--e-pop),box-shadow .2s}
+.conf button:nth-child(1){animation-delay:.1s}
+.conf button:nth-child(2){animation-delay:.15s}
+.conf button:nth-child(3){animation-delay:.2s}
+.conf button:active{transform:scale(.95)}
+.stamp{animation:mStamp .5s var(--e-out) backwards}
+
+/* ---------- Dialogue ---------- */
+/* reveal order: the panel slides up (~120 ms), then the speaker (portrait + name, ~80 ms), then the line itself,
+   so you always know who is talking before you read what they say */
+#talk .dlg{animation:mDlgIn .2s var(--e-spring) backwards;transform-origin:50% 100%}
+.dlg .eyebrow{animation:mSlideR .18s .06s var(--e-out) backwards}
+.dlg .face{animation:mFaceIn .2s .1s var(--e-pop) backwards}
+.dlg .who>div:not(.face){animation:mSlideR .16s .12s var(--e-out) backwards}
+.dlg .tx{animation:mTextIn .16s .2s var(--e-out) backwards}
+.dlg.note .tx{animation-delay:.12s}
+.dlg .next{animation:mFade .2s .3s ease backwards}
+@keyframes mTextIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.narr{animation:mNarrIn .42s var(--e-out) backwards}
+.choices .choice{animation:mChoiceIn .24s var(--e-spring) backwards}
+.choices .choice:nth-child(2){animation-delay:.045s}
+.choices .choice:nth-child(3){animation-delay:.09s}
+.choices .choice:nth-child(4){animation-delay:.135s}
+.choices .choice:nth-child(n+5){animation-delay:.18s}
+.choice{transition:border-color .15s,background .15s,transform .26s var(--e-pop),box-shadow .2s}
+.choice:hover{box-shadow:0 6px 16px rgba(0,0,0,.08)}
+.choice:active{transform:scale(.975);transition-duration:.08s}
+.chips .chip{animation:mChipIn .3s var(--e-pop) backwards}
+.chips .chip:nth-child(1){animation-delay:.12s}
+.chips .chip:nth-child(2){animation-delay:.17s}
+.chips .chip:nth-child(3){animation-delay:.22s}
+.chips .chip:nth-child(n+4){animation-delay:.27s}
+.dlg .next .arrow{display:inline-block;animation:mNudge 1.5s ease-in-out infinite}
+@keyframes mNudge{0%,100%{transform:translateX(0);opacity:.7}50%{transform:translateX(3px);opacity:1}}
+
+/* ---------- Buttons: springy hover and press ---------- */
+.btn{transition:transform .26s var(--e-pop),box-shadow .2s,background .2s,border-color .2s}
+.btn:active{transform:scale(.95);transition-duration:.08s}
+.btn.primary:active{transform:translateY(0) scale(.95)}
+.btn.ghost:hover,.btn.line:hover,.btn.dark:hover{transform:translateY(-1px)}
+.opt{transition:border-color .15s,transform .26s var(--e-pop),box-shadow .2s}
+.opt:active{transform:scale(.985);transition-duration:.08s}
+.pcard{transition:transform .24s var(--e-pop),box-shadow .2s}
+.pcard:active{transform:scale(.96)}
+.iconbtn{transition:transform .24s var(--e-pop),background .2s}
+.iconbtn:hover{transform:scale(1.08)}
+.iconbtn:active{transform:scale(.9);transition-duration:.08s}
+button.metric{transition:background .2s,border-color .2s}
+.switch:after{transition:transform .3s var(--e-pop)}
+.tabs button{transition:color .2s,border-color .2s}
+#pad button{transition:transform .2s var(--e-pop),background .2s,opacity .2s}
+#pad button:active{transform:scale(.9);transition-duration:.06s}
+
+/* ---------- Chapter card ---------- */
+#chapter.on{animation:mFade .35s var(--e-out)}
+#chapter .n{animation:mTrack .7s .05s var(--e-out) backwards}
+#chapter .t{animation:mTitleT .75s .14s var(--e-out) backwards;transform-origin:50% 60%}
+#chapter .m{animation:mRise .55s .32s var(--e-out) backwards}
+#chapter .rule{animation:mRule .6s .42s var(--e-out) backwards}
+#chapter .obj1{animation:mRise .6s .52s var(--e-out) backwards}
+#chapter .go{animation:mRise .5s .78s var(--e-out) backwards}
+
+/* ---------- HUD ---------- */
+#hud.on .hud-left{animation:mHudIn .45s var(--e-out) backwards}
+#hud.on .hud-right{animation:mHudIn .45s .08s var(--e-out) backwards}
+.metric.bump,.jq.bump{animation:mBump .52s var(--e-out)}
+.metric.bump:after,.jq.bump:after{content:'';position:absolute;inset:-1px;border-radius:inherit;border:1.5px solid currentColor;pointer-events:none;animation:mRing .7s var(--e-out) forwards}
+.jq.bump:after{border-color:var(--gold)}
+.delta{animation:mDelta 1.6s var(--e-out) forwards}
+.obj li.next{animation:mSlideR .32s var(--e-out) backwards}
+.obj li.next .bx{position:relative}
+.obj li.next .bx:after{content:'';position:absolute;inset:-2px;border-radius:6px;border:1.5px solid var(--gold);pointer-events:none;animation:mHalo 2.4s 1s var(--e-out) infinite backwards}
+.obj li.done .bx{animation:mChipIn .3s var(--e-pop) backwards}
+.obj li.alt{transition:opacity .2s}
+
+/* ---------- Toast, tip, badge ---------- */
+#toast{transform:translate(-50%,14px) scale(.96);transition:opacity .18s ease,transform .22s var(--e-in)}
+#toast.on{transform:translate(-50%,0) scale(1);transition:opacity .2s ease,transform .32s var(--e-spring)}
+#tip{transform:translate(-50%,-10px) scale(.97);transition:opacity .2s ease,transform .22s var(--e-in)}
+#tip.on{transform:translate(-50%,0) scale(1);transition:opacity .22s ease,transform .34s var(--e-spring)}
+#tip.on .tk{animation:mChipIn .3s .08s var(--e-pop) backwards}
+/* the badge never leaves the screen: it starts 12px up from its resting place and springs down */
+#ach{transform:translate(-50%,-12px) scale(.92);transition:transform .26s var(--e-in),opacity .22s ease,visibility 0s .26s}
+#ach.on{transform:translate(-50%,0) scale(1);transition:transform .5s var(--e-spring),opacity .2s ease,visibility 0s 0s}
+#ach.on .ic{animation:mIconPop .55s .12s var(--e-out) backwards}
+#ach.on .eb{animation:mSlideR .3s .16s var(--e-out) backwards}
+#ach.on .nm{animation:mSlideR .3s .22s var(--e-out) backwards}
+#ach.on .ds{animation:mSlideR .3s .28s var(--e-out) backwards}
+/* the badge and the pill/tip never stack: while a badge is up, a top-anchored pill or tip steps down below it */
+body.modal #toast,#tip{--push:0px}
+body.modal:has(#ach.on) #toast.on,body:not(.modal):has(#ach.on) #tip.on{transform:translate(-50%,var(--push)) scale(1);transition:opacity .2s ease,transform .42s var(--e-spring)}
+body.modal:has(#ach.on) #toast.on{--push:48px}
+body:not(.modal):has(#ach.on) #tip.on{--push:40px}
+@media (max-width:720px){
+  /* phone: the badge sits under the chapter title in the HUD, not over it */
+  #ach{top:calc(58px + env(safe-area-inset-top))}
+  body.modal:has(#ach.on) #toast.on{--push:84px}
+  body:not(.modal):has(#ach.on) #tip.on{--push:0px}
+}
+
+/* ---------- Drawer, report ---------- */
+#board.on{animation:mFade .22s var(--e-out)}
+.drawer{animation:mDrawer .36s var(--e-out)}
+.report .hero{animation:mRise .6s var(--e-out) backwards}
+.report .card{animation:mRise .5s var(--e-out) backwards}
+.report .card:nth-of-type(2){animation-delay:.06s}
+.report .card:nth-of-type(3){animation-delay:.12s}
+.report .card:nth-of-type(n+4){animation-delay:.18s}
+
+/* ---------- Reduced motion: no movement, just instant state changes ---------- */
+body.reduced *,body.reduced *:before,body.reduced *:after{animation-duration:.01ms!important;animation-delay:0s!important;animation-iteration-count:1!important;transition-duration:.01ms!important;transition-delay:0s!important}
+body.reduced .btn:hover,body.reduced .btn:active,body.reduced .choice:hover,body.reduced .choice:active,body.reduced .opt:hover,body.reduced .opt:active,body.reduced .conf button:hover,body.reduced .conf button:active,body.reduced .pcard:hover,body.reduced .pcard:active,body.reduced .iconbtn:hover,body.reduced .iconbtn:active,body.reduced .avatar:hover,body.reduced .avatar:active,body.reduced .avatar.sel,body.reduced #pad button:active{transform:none}
+@media (prefers-reduced-motion:reduce){
+  *,*:before,*:after{animation-duration:.01ms!important;animation-delay:0s!important;animation-iteration-count:1!important;transition-duration:.01ms!important;transition-delay:0s!important}
+  .btn:hover,.btn:active,.choice:hover,.choice:active,.opt:hover,.opt:active,.conf button:hover,.conf button:active,.pcard:hover,.pcard:active,.iconbtn:hover,.iconbtn:active,.avatar:hover,.avatar:active,.avatar.sel,#pad button:active{transform:none}
+}
