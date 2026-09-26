@@ -471,7 +471,7 @@
     $('#bClose').onclick = closeBoard;
     el.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => openBoard(b.dataset.tab));
     el.querySelectorAll('[data-set]').forEach(b => b.onclick = () => { SET[b.dataset.set] = !SET[b.dataset.set]; saveSet(); openBoard('settings'); });
-    const rs = $('#restart'); if (rs) rs.onclick = () => { if (confirm('Restart the project from chapter one?')) { localStorage.removeItem('lineside_save'); location.reload(); } };
+    const rs = $('#restart'); if (rs) rs.onclick = () => { if (rs.dataset.armed) { try { localStorage.removeItem('lineside_save'); } catch (e) { } location.reload(); } else { rs.dataset.armed = 1; rs.textContent = 'Tap again to restart'; } };
   }
   function closeBoard() { hide('board'); }
 
