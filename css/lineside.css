@@ -331,9 +331,10 @@ body.exploring .obj{display:flex}
 body.exploring #pad{display:block}
 @media (hover:hover) and (pointer:fine){body.exploring #pad{display:none}}
 #pad button{position:fixed;bottom:calc(22px + env(safe-area-inset-bottom));width:66px;height:66px;border-radius:50%;background:rgba(247,241,231,.16);border:1.5px solid rgba(247,241,231,.35);color:var(--paper);font-size:22px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:25;touch-action:none;user-select:none;-webkit-user-select:none}
-#padL{left:18px}#padR{left:96px}
+#joy{position:fixed;left:22px;bottom:calc(24px + env(safe-area-inset-bottom));width:124px;height:124px;border-radius:50%;background:rgba(247,241,231,.14);border:1.5px solid rgba(247,241,231,.35);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:25;touch-action:none}
+#knob{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;background:rgba(247,241,231,.85);box-shadow:0 3px 10px rgba(0,0,0,.35);pointer-events:none}
 #padA{right:20px;width:78px!important;height:78px!important;background:var(--ember)!important;border-color:rgba(255,255,255,.4)!important;font-size:26px!important}
-#padL:active,#padR:active{background:rgba(247,241,231,.32)}
+
 @media (max-width:720px){
   .hud-left{max-width:100%;width:100%}
   .obj{padding:8px 10px;gap:4px}

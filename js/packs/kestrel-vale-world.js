@@ -8,10 +8,10 @@
 (function () {
   const P = LS.PACKS['kestrel-vale'];
   const town = {
-    len:  { name: 'Len Haworth', role: 'Retired signalman · Kestrel Arms regular', look: { skin: '#e3b596', hair: '#d6d2cc', hairStyle: 'short', top: '#6b5a44', topStyle: 'jacket', cap: '#4f4a3e', legs: '#3b3a36', bg: '#dccfbc' }, at: 772, wander: [760, 790] },
-    june: { name: 'June Pritchard', role: 'Baker', look: { skin: '#f0cfb4', hair: '#8a5a3a', hairStyle: 'bun', top: '#c7563f', topStyle: 'tee', apron: '#f3ecdf', legs: '#3b3f4a', bg: '#f1d6c8' }, at: 640, wander: [600, 700] },
-    dev:  { name: 'Dev Mistry', role: '17 · wants to study in the city', look: { skin: '#a87450', hair: '#15100d', hairStyle: 'short', top: '#3d5a8a', topStyle: 'tee', legs: '#2a2f3a', bg: '#cfd8e8' }, at: 748, wander: [735, 760] },
-    jess: { name: 'Jess Carter', role: 'Parent · school gate', look: { skin: '#e8c0a0', hair: '#c98d3a', hairStyle: 'ponytail', top: '#7c4d7a', topStyle: 'cardigan', legs: '#34384a', bg: '#e8d2e6' }, at: 240, wander: [200, 320] }
+    len:  { name: 'Len Haworth', role: 'Retired signalman · Kestrel Arms regular', look: { skin: '#e3b596', hair: '#d6d2cc', hairStyle: 'short', top: '#6b5a44', topStyle: 'jacket', cap: '#4f4a3e', legs: '#3b3a36', bg: '#dccfbc' }, at: [775, 1326], wander: 30 },
+    june: { name: 'June Pritchard', role: 'Baker', look: { skin: '#f0cfb4', hair: '#8a5a3a', hairStyle: 'bun', top: '#c7563f', topStyle: 'tee', apron: '#f3ecdf', legs: '#3b3f4a', bg: '#f1d6c8' }, at: [690, 1326], wander: 60 },
+    dev:  { name: 'Dev Mistry', role: '17 · wants to study in the city', look: { skin: '#a87450', hair: '#15100d', hairStyle: 'short', top: '#3d5a8a', topStyle: 'tee', legs: '#2a2f3a', bg: '#cfd8e8' }, at: [790, 1388], wander: 30 },
+    jess: { name: 'Jess Carter', role: 'Parent · school gate', look: { skin: '#e8c0a0', hair: '#c98d3a', hairStyle: 'ponytail', top: '#7c4d7a', topStyle: 'cardigan', legs: '#34384a', bg: '#e8d2e6' }, at: [240, 1322], wander: 70 }
   };
   Object.entries(town).forEach(([id, t]) => { P.cast[id] = { name: t.name, role: t.role, look: t.look }; });
   const workerLooks = [
@@ -32,40 +32,60 @@
     town, workerLooks, crowd,
     // Per chapter: where the team stands, who holds which conversation/Call, where to spawn,
     // where this chapter's notebook page is, and what the hall banner says.
+    // Per chapter (x, y in world units; rooms use their own coordinates):
+    // who stands where, who holds which conversation/Call, spawn, notebook page, engineering note, hall banner.
     chapters: [
-      { spawn: { room: 'cabin', x: 520 },
-        cast: [{ id: 'amara', room: 'cabin', x: 400 }, { id: 'tom', room: 'outside', x: 2480 }, { id: 'elaine', room: 'hall', x: 620 }, { id: 'moira', room: 'cabin', x: 190 }],
+      { spawn: { room: 'outside', x: 2548, y: 1160 },
+        cast: [{ id: 'amara', room: 'cabin', x: 360, y: 270 }, { id: 'tom', room: 'outside', x: 2200, y: 905 }, { id: 'elaine', room: 'hall', x: 380, y: 205 }, { id: 'moira', room: 'cabin', x: 190, y: 185 }],
         talks: { amara_budget: 'amara', tom_realnews: 'tom' }, calls: { name_date: 'elaine' },
-        memo: { room: 'outside', x: 1840 }, hall: 'KESTREL VALE LINE · PRESS LAUNCH TOMORROW' },
-      { spawn: { room: 'outside', x: 3840 },
-        cast: [{ id: 'hana', room: 'outside', x: 2020 }, { id: 'tom', room: 'outside', x: PIER4() + 40 }, { id: 'amara', room: 'cabin', x: 420 }, { id: 'moira', room: 'cabin', x: 190 }],
+        memo: { room: 'outside', x: 1398, y: 1035 }, note: { x: 1400, y: 935 }, hall: 'KESTREL VALE LINE · PRESS LAUNCH TOMORROW' },
+      { spawn: { room: 'outside', x: 2548, y: 1160 },
+        cast: [{ id: 'hana', room: 'outside', x: 2200, y: 960 }, { id: 'tom', room: 'outside', x: PIER4X() - 28, y: 1158 }, { id: 'amara', room: 'cabin', x: 360, y: 270 }, { id: 'moira', room: 'cabin', x: 190, y: 185 }],
         talks: { hana_authority: 'hana' }, calls: { under_pier: 'tom' },
-        memo: { room: 'outside', x: 4760 }, hall: 'HARROWBY HISTORY SOCIETY · TUESDAYS' },
-      { spawn: { room: 'outside', x: 3840 },
-        cast: [{ id: 'priya', room: 'outside', x: 1190 }, { id: 'elaine', room: 'hall', x: 640 }, { id: 'amara', room: 'cabin', x: 380 }, { id: 'tom', room: 'cabin', x: 470 }, { id: 'moira', room: 'cabin', x: 190 }],
+        memo: { room: 'outside', x: 3160, y: 1040 }, note: { x: PIER4X() - 70, y: 1178 }, hall: 'HARROWBY HISTORY SOCIETY · TUESDAYS' },
+      { spawn: { room: 'outside', x: 2548, y: 1160 },
+        cast: [{ id: 'priya', room: 'outside', x: 960, y: 1440 }, { id: 'elaine', room: 'hall', x: 380, y: 205 }, { id: 'amara', room: 'cabin', x: 320, y: 268 }, { id: 'tom', room: 'cabin', x: 430, y: 268 }, { id: 'moira', room: 'cabin', x: 190, y: 185 }],
         talks: { priya_meeting: 'priya' }, calls: { scope_ramp: 'elaine', two_experts: 'amara' },
-        memo: { room: 'outside', x: 905 }, hall: 'STEERING GROUP · STEP-FREE ACCESS?' },
-      { spawn: { room: 'outside', x: 3840 },
-        cast: [{ id: 'victor', room: 'cabin', x: 430 }, { id: 'tom', room: 'outside', x: 3300 }, { id: 'moira', room: 'cabin', x: 190 }],
+        memo: { room: 'outside', x: 880, y: 1320 }, note: { x: 2250, y: 1070 }, hall: 'STEERING GROUP · STEP-FREE ACCESS?' },
+      { spawn: { room: 'outside', x: 2548, y: 1160 },
+        cast: [{ id: 'victor', room: 'cabin', x: 330, y: 268 }, { id: 'tom', room: 'outside', x: 2660, y: 1500 }, { id: 'moira', room: 'cabin', x: 190, y: 185 }],
         talks: { victor_contingency: 'victor' }, calls: { cheapest_bid: 'victor' },
-        memo: { room: 'outside', x: 1330 }, hall: 'HARVEST SUPPER · SATURDAY' },
-      { spawn: { room: 'cabin', x: 540 },
-        cast: [{ id: 'tom', room: 'outside', x: 3250 }, { id: 'amara', room: 'outside', x: 4760 }, { id: 'hana', room: 'outside', x: 2200 }, { id: 'moira', room: 'cabin', x: 190 }],
+        memo: { room: 'outside', x: 340, y: 1585 }, note: { x: 1845, y: 1296 }, hall: 'HARVEST SUPPER · SATURDAY' },
+      { spawn: { room: 'outside', x: 2548, y: 1160 },
+        cast: [{ id: 'tom', room: 'outside', x: 1900, y: 902 }, { id: 'amara', room: 'outside', x: 3160, y: 1045 }, { id: 'hana', room: 'outside', x: 2200, y: 960 }, { id: 'moira', room: 'cabin', x: 190, y: 185 }],
         talks: { tom_weekends: 'tom' }, calls: { friday_4pm: 'amara' },
-        memo: { room: 'outside', x: 3712 }, hall: 'CONSTRUCTION TRAFFIC · Q&A' },
-      { spawn: { room: 'cabin', x: 540 },
-        cast: [{ id: 'amara', room: 'cabin', x: 420 }, { id: 'hana', room: 'outside', x: 4900 }, { id: 'elaine', room: 'hall', x: 640 }, { id: 'moira', room: 'cabin', x: 190 }],
+        memo: { room: 'outside', x: 2262, y: 1040 }, note: { x: 2080, y: 900 }, hall: 'CONSTRUCTION TRAFFIC · Q&A' },
+      { spawn: { room: 'cabin', x: 260, y: 290 },
+        cast: [{ id: 'amara', room: 'cabin', x: 360, y: 270 }, { id: 'hana', room: 'outside', x: 3120, y: 1070 }, { id: 'elaine', room: 'hall', x: 380, y: 205 }, { id: 'moira', room: 'cabin', x: 190, y: 185 }],
         talks: { amara_tired: 'amara' }, calls: { nobody_hurt: 'hana', green_amber_red: 'elaine' },
-        memo: { room: 'outside', x: PIER4() - 30 }, hall: 'BOARD BRIEFING · PRIVATE' },
-      { spawn: { room: 'outside', x: 2300 },
-        cast: [{ id: 'priya', room: 'outside', x: 1810 }, { id: 'elaine', room: 'outside', x: 1905 }, { id: 'tom', room: 'outside', x: 2150 }, { id: 'moira', room: 'outside', x: 1990 }],
+        memo: { room: 'outside', x: PIER4X() - 50, y: 1170 }, note: { x: 3200, y: 902 }, hall: 'BOARD BRIEFING · PRIVATE' },
+      { spawn: { room: 'outside', x: 1240, y: 1150 },
+        cast: [{ id: 'priya', room: 'outside', x: 1335, y: 1045 }, { id: 'elaine', room: 'outside', x: 1250, y: 1048 }, { id: 'tom', room: 'outside', x: 1190, y: 1062 }, { id: 'moira', room: 'outside', x: 1410, y: 1052 }],
         talks: { priya_headline: 'priya' }, calls: { opening_day: 'elaine' }, crowd: true,
-        memo: { room: 'outside', x: 1640 }, hall: 'OPENING CELEBRATION · ALL WELCOME' },
-      { spawn: { room: 'outside', x: 3840 },
-        cast: [{ id: 'victor', room: 'cabin', x: 430 }, { id: 'moira', room: 'hall', x: 560 }, { id: 'amara', room: 'hall', x: 420 }, { id: 'tom', room: 'hall', x: 480 }, { id: 'hana', room: 'hall', x: 640 }, { id: 'priya', room: 'hall', x: 700 }],
+        memo: { room: 'outside', x: 1625, y: 590 }, note: { x: 1402, y: 1002 }, hall: 'OPENING CELEBRATION · ALL WELCOME' },
+      { spawn: { room: 'outside', x: 2548, y: 1160 },
+        cast: [{ id: 'victor', room: 'cabin', x: 330, y: 268 }, { id: 'moira', room: 'hall', x: 380, y: 205 }, { id: 'amara', room: 'hall', x: 300, y: 205 }, { id: 'tom', room: 'hall', x: 335, y: 212 }, { id: 'hana', room: 'hall', x: 450, y: 205 }, { id: 'priya', room: 'hall', x: 500, y: 212 }],
         talks: {}, calls: { the_claim: 'victor', lessons: 'moira' },
-        memo: { room: 'outside', x: 700 }, hall: 'LESSONS LEARNED · THE WHOLE TEAM' }
+        memo: { room: 'outside', x: 2440, y: 360 }, note: { x: 1300, y: 1060 }, hall: 'LESSONS LEARNED · THE WHOLE TEAM' }
     ],
+
+    // Why the build happens in this order. One note per chapter, placed where the work is.
+    engineering: [
+      { title: 'Structural survey', text: `Step one on any old structure: find out what you've actually got. A laser scan and a hands-on inspection of all eleven arches, before anyone designs a thing. Until it's assessed, the deck stays fenced off — so for now you cross the valley on foot.` },
+      { title: 'Ground investigation', text: `The rig is drilling beside Pier 4 to find out what's under it. Cheap now, ruinous later: you can't design foundations for ground you haven't seen.` },
+      { title: 'Temporary works design', text: `Before you repair an arch, you design how to hold it up while you do it: scaffold, props, the order of work. Many failures during repairs happen in the temporary works, not the permanent ones.` },
+      { title: 'Enabling works', text: `Nothing big starts without access. A haul road, a temporary bridge over the beck for plant, a bigger compound, power and welfare. Get these wrong and every trade after you waits.` },
+      { title: 'Deck waterproofing', text: `Water is what killed this viaduct. The deck is stripped back and a waterproof membrane goes on before any ballast or track, because you only get one chance before it's buried. The edge protection is up, so with PPE the deck is now a place you can work.` },
+      { title: 'The junction tie-in', text: `Track goes onto a finished structure. Then new points join the branch to the main line — the riskiest interface on the job, because the main line never stops. That work happens in short, tightly planned closures.` },
+      { title: 'Testing and commissioning', text: `Empty trains first: gauging runs to check clearances, then driver training, then trial running. The deck is a live railway now, so nobody walks on it — use the valley path or the footbridge.` },
+      { title: 'Handover', text: `The operator runs the railway now. What's left for you is the defects list, the as-built drawings and the maintenance records that let someone look after this for the next century.` }
+    ],
+    blocked: {
+      deck_closed: `The viaduct is fenced off: the structure hasn't been assessed and repaired yet. Cross the valley on foot — by the stepping stones or the packhorse bridge.`,
+      deck_ppe: `Site rules: hard hat and hi-vis on the viaduct. Pick up your PPE from the locker in the site office.`,
+      deck_live: `It's a live railway now. No walking on the viaduct — take the valley path.`,
+      track_live: `Live railway. Cross the line at the footbridge.`
+    },
 
     // Moira won't give answers. She tells you what to think about.
     hints: [
@@ -150,7 +170,10 @@
       crane: `Maureen the tower crane swings a bundle of steel over the deck. Somebody has painted her name on the counterweight in pink.`,
       signalbox: `Kestrel Junction signal box. The main line to the city rushes past every twenty minutes. This is where your branch will join it — no second chances here.`,
       urn: `The village hall tea urn. It's older than the railway closure and twice as reliable.`,
-      desk: `Your desk. The inbox can wait. Your list for this week is pinned to the monitor.`
+      desk: `Your desk. The inbox can wait. Your list for this week is pinned to the monitor.`,
+      crag: `Kestrel Crag. The whole valley lies below you: Harrowby's chimneys, the viaduct striding across the beck, the lights of the compound. From up here the project looks small. It isn't.`,
+      cottage: `Beck Cottage. Moira's. Seed trays on the windowsill, a very old railway lamp beside the door, and a view straight up the valley to the viaduct.`,
+      packhorse: `The old packhorse bridge. It has carried people over Kestrel Beck for three hundred years without anyone writing a risk assessment.`
     },
 
     // Moira's notebook, 1986–87. One page per chapter, hidden somewhere in the world.
@@ -166,5 +189,5 @@
     ],
     memoFinale: `You found every page of my notebook. So you already knew. Thank you for not saying anything — and for doing everything differently.`
   };
-  function PIER4() { return 1960 + 4 * (1700 / 11); }
+  function PIER4X() { return 1450 + 4 * (700 / 11); }
 })();

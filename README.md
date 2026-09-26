@@ -12,19 +12,33 @@ Open `index.html` in a browser, or serve the folder over HTTPS (GitHub Pages / N
 
 `classic.html` is the previous prototype (*Project Valley*), kept for comparison.
 
-## The world
+## The world (open world, top-down 3/4 view)
 
-Walk the whole valley, left to right:
+Kestrel Vale is free to roam in any direction, in the style of *Stardew Valley*:
 
-- **Harrowby**: school, cottages, Pritchard's bakery, the Kestrel Arms, the **Village Hall** (enterable) and the church. Four townsfolk (Len the retired signalman, June the baker, Dev who needs the train for college, and Jess at the school gate) say different things each chapter and react when the project is going badly.
-- **The hill path and Harrowby Station**: boarded up and overgrown at the start, restored with a canopy, clock, flowers and bunting by opening day.
-- **The viaduct**: 11 arches over Kestrel Beck. It changes with the project: ivy and a broken parapet, then survey flags and an X on Pier 4, then scaffolding, a crane and the crew, then track and lamps, then a working train crossing it.
-- **The site compound**: your **site office** (enterable). Moira sits in the armchair, the planning wall opens the project board, and the kettle is a small morale boost. There's also the welfare cabin, materials and Tom's van.
-- **Kestrel Junction**: the live main line with passing trains, signals and the signal box.
+- **Harrowby** (south-west): High Street, the village green, school, cottages, Pritchard's bakery, the Kestrel Arms, the church and the **Village Hall** (enterable). Four townsfolk give new and reactive lines each chapter: Len the retired signalman, June the baker, Dev who needs the train for college, and Jess at the school gate.
+- **Station Road** leads up to the terminus. **Harrowby Station** starts derelict ("HARR BY") and is restored by opening day.
+- **The valley of Kestrel Beck**: walk down the slopes, cross by the **stepping stones** or the **packhorse bridge**, and stand at the foot of **Pier 4**. You can't wade across anywhere else.
+- **The viaduct**: 11 arches over the beck.
+- **The site compound** (east plateau): your **site office** (enterable: Moira, the planning wall, the **PPE locker**, the kettle), the welfare cabin, materials and the crane.
+- **The trackbed** out to **Kestrel Junction**: the live main line with trains running, and the signal box.
+- **Woods, the fell and Kestrel Crag viewpoint** to the north, **Beck Cottage** (Moira's) up the valley, and **farmland with sheep** to the south.
 
-Each chapter changes the time of day, the season and the weather (dawn, day, dusk, overcast rain, night snow). **The loop:** your list (top left) and markers in the world show who to see. Gold diamonds mark conversations; an orange **!** marks the chapter's **Call**. Once everything is done, you close the week at your desk. **Optional exploring** rewards curiosity: townsfolk chats (+People), things to inspect, Moira's hints, and **eight hidden pages of Moira's 1986 notebook** that reveal her secret before she tells it.
+### The build follows engineering logic
 
-Controls: A/D or arrow keys to walk (Shift to hurry) and E to interact. You can also click or tap where you want to go, or tap a person. Phones get on-screen ◀ ▶ Ⓐ buttons.
+| Stage (chapter) | What you see on site | What you can and can't do |
+|---|---|---|
+| Structural survey (1) | Laser-scan tripod, survey van, ivy, a crack in Pier 4 | Deck **fenced off**: unassessed. Cross the valley on foot |
+| Ground investigation (2–3) | Drilling rig at the foot of Pier 4, an X sprayed on the pier | Deck still closed; a new access track down to the pier |
+| Temporary works design (3) | Design tent at the east end | Deck closed |
+| Enabling works (4) | Haul road, **temporary bridge over the beck**, bigger compound, materials | New river crossing opens |
+| Masonry repair and waterproofing (5) | Scaffold towers, crane, membrane going onto the deck, **edge protection** | Deck open to site staff **with PPE** from the site-office locker |
+| Track and junction tie-in (6) | Rails on the deck, a tamper, new points at the junction | Deck open with PPE |
+| Testing (7) and service (8) | Test train, then passenger trains; lineside fencing; a **footbridge** | **Live railway**: no walking on the deck or the trackbed. Use the footbridge |
+
+Each stage has an **engineering note** on site (blue *i*) explaining why it comes in that order. These build into an Engineering Log. **Eight notebook pages** of Moira's, hidden around the valley, tell her 1986 story before she does.
+
+Controls: WASD or the arrow keys (Shift to hurry), or click or tap where you want to go; E to interact. Phones get a joystick and an Ⓐ button.
 
 ## Why it builds judgment (first principles)
 
@@ -52,8 +66,8 @@ Judgment is choosing well **under uncertainty**, when **goods compete** and **co
 ```
 index.html              Shell: layers, HUD, fonts
 css/lineside.css        UI: editorial type (Fraunces + Inter), paper cards, responsive
-js/world/world.js       The explorable world: terrain, parallax, viaduct build states, rooms, camera, input
-js/world/sprites.js     In-world illustration: characters (walk cycle, clothing, hats) and buildings
+js/world/world.js       The open world: map, collision grid and build-logic gating, y-sorted rendering, rooms, lighting, input
+js/world/sprites.js     In-world illustration: 4-direction characters with PPE, and building facades
 js/scene.js             Palette/colour helpers (plus the older static landscape renderer)
 js/portraits.js         Flat-vector character portraits (SVG, 3 moods)
 js/audio.js             Generative ambient score + weather + UI sound (Web Audio)

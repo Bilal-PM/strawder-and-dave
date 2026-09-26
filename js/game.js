@@ -331,44 +331,61 @@
     if (worst.length) await say('moira', `${worst.map(m => m.label).join(' and ')} ${worst.length > 1 ? 'are' : 'is'} in real trouble. If you don't steer it, events will start making decisions for you.`, 'concern');
     for (const [who, text] of ch.intro) await say(who, text);
     hide('talk');
-    if (!S.tutorial) { S.tutorial = 1; await say('note', world.touch ? `Walk with the arrows or tap where you want to go. Tap Ⓐ (or tap a person) to talk. Gold diamonds mark people you need to see; the orange ! is this chapter's Call. Your list is top left.` : `Walk with A / D or the arrow keys (hold Shift to hurry). Press E to talk or look. Gold diamonds mark people you need to see; the orange ! is this chapter's Call. Your list is top left.`, null, 'How to play'); hide('talk'); }
+    if (!S.tutorial) { S.tutorial = 1; await say('note', world.touch ? `The valley is yours to explore. Move with the joystick or tap where you want to go; tap Ⓐ or tap a person to talk. Gold diamonds mark people to see, the orange ! is this chapter's Call, and blue i marks an engineering note. Your list is top left.` : `The valley is yours to explore. Walk with WASD or the arrow keys (Shift to hurry) or click where you want to go; press E to talk or look. Gold diamonds mark people to see, the orange ! is this chapter's Call, and blue i marks an engineering note. Your list is top left.`, null, 'How to play'); hide('talk'); }
     await explore(i);
     if (ch.moira) await chapterEnd(ch, i, start);
   }
 
-  // ---------- The explorable world ----------
+  // ---------- The open world ----------
   const WD = () => PACK.world;
   const first = id => cast(id).name.split(' ')[0];
-  function placeName(room, x) {
+  function placeName(room, x, y) {
     if (room === 'hall') return 'the village hall'; if (room === 'cabin') return 'the site office';
-    return x < 1480 ? 'Harrowby' : x < 1960 ? 'the station' : x < 3660 ? 'the viaduct' : x < 4380 ? 'the site compound' : 'Kestrel Junction';
+    const V = LS.WORLD.VIA;
+    if (y < 820) return x < 2000 && x > 1450 ? 'up the valley' : 'the woods';
+    if (y > 1700) return 'the fields';
+    if (x < 1150) return 'Harrowby';
+    if (x < V.x1) return 'the station';
+    if (x <= V.x2) return y < V.yS ? 'the viaduct' : 'the valley';
+    if (x < 2980) return y < 940 ? 'the trackbed' : 'the site compound';
+    return 'Kestrel Junction';
   }
-  let EX = null; // current exploration state
+  let EX = null;
   function setupWorld(i) {
     const W = WD(), wc = W.chapters[i], ch = PACK.chapters[i], B = ch.scene.build;
     if (!S.explore || S.explore.ch !== i) S.explore = { ch: i, chats: {}, kettle: false, memo: false };
+    S.notes = S.notes || []; S.memos = S.memos || [];
     const ents = [];
-    wc.cast.forEach(c => ents.push({ kind: 'npc', id: c.id, who: c.id, room: c.room, x: c.x, look: cast(c.id).look, facing: -1, team: true }));
-    Object.entries(W.town).forEach(([id, t]) => ents.push({ kind: 'npc', id, who: id, room: 'outside', x: t.at, look: t.look, wander: t.wander, town: true }));
-    if (B === 3 || B === 4) [2280, 2920, 3380, 4180].forEach((x, k) => ents.push({ kind: 'npc', id: 'w' + k, who: 'crew', room: 'outside', x, look: W.workerLooks[k], work: true, worker: true, facing: k % 2 ? -1 : 1 }));
-    if (wc.crowd) W.crowd.forEach((lk, k) => ents.push({ kind: 'npc', id: 'c' + k, who: 'resident', room: 'outside', x: 1800 + k * 26 + (k % 2) * 8, look: lk, crowd: true, wave: k % 2 === 0, facing: 1 }));
-    const prop = (id, room, x, extra) => ents.push(Object.assign({ kind: 'prop', id, room, x, h: 70 }, extra));
-    prop('door_cabin', 'outside', LS.WORLD.DOORS.cabin, { to: { room: 'cabin', x: 590 }, label: 'Enter the site office', h: 80 });
-    prop('door_hall', 'outside', LS.WORLD.DOORS.hall, { to: { room: 'hall', x: 90 }, label: 'Enter the village hall', h: 70 });
-    prop('exit_cabin', 'cabin', LS.WORLD.ROOMS.cabin.door, { to: { room: 'outside', x: LS.WORLD.DOORS.cabin }, label: 'Leave', h: 100 });
-    prop('exit_hall', 'hall', LS.WORLD.ROOMS.hall.door, { to: { room: 'outside', x: LS.WORLD.DOORS.hall }, label: 'Leave', h: 110 });
-    prop('noticeboard', 'outside', 1258, { label: 'Read the noticeboard', h: 64 });
-    prop('station', 'outside', 1905, { label: 'Look at the station', h: 86 });
-    prop('pier4', 'outside', LS.WORLD.PIER4, { label: 'Look over the parapet · Pier 4', h: 40 });
-    if (B >= 3) prop('crane', 'outside', 3712, { label: 'Watch the crane', h: 60 });
-    prop('signalbox', 'outside', 4735, { label: 'Visit the signal box', h: 100 });
-    prop('desk', 'cabin', 360, { h: 84 }); prop('wall', 'cabin', 525, { label: 'Project board', h: 120 });
-    prop('kettle', 'cabin', 58, { label: 'Make a brew', h: 70 }); prop('urn', 'hall', 125, { label: 'Tea urn', h: 86 });
-    if (wc.memo && !S.explore.memo) ents.push({ kind: 'memo', id: 'memo', room: wc.memo.room, x: wc.memo.x, marker: 'memo', h: 30 });
-    world.entities = ents; world.hallBanner = wc.hall;
+    wc.cast.forEach(c => ents.push({ kind: 'npc', id: c.id, room: c.room, x: c.x, y: c.y, look: cast(c.id).look, face: 'down', team: true }));
+    Object.entries(W.town).forEach(([id, t]) => ents.push({ kind: 'npc', id, room: 'outside', x: t.at[0], y: t.at[1], home: t.at, wander: t.wander, look: t.look, town: true, face: 'down' }));
+    if (B === 3 || B === 4) [[2020, 900], [1600, 900], [2460, 1180], [2780, 1200]].forEach(([x, y], k) => ents.push({ kind: 'npc', id: 'w' + k, room: 'outside', x, y, look: W.workerLooks[k], work: true, worker: true, face: k % 2 ? 'left' : 'right' }));
+    if (wc.crowd) W.crowd.forEach((lk, k) => ents.push({ kind: 'npc', id: 'c' + k, room: 'outside', x: 1170 + k * 40, y: 1078 + (k % 2) * 16, look: lk, crowd: true, wave: k % 2 === 0, face: 'up' }));
+    const prop = (id, room, x, y, label, extra) => ents.push(Object.assign({ kind: 'prop', id, room, x, y, label, h: 60 }, extra));
+    const D = LS.WORLD.DOORS, R = LS.WORLD.ROOMS;
+    prop('door_cabin', 'outside', D.cabin.x, D.cabin.y + 6, 'Enter the site office', { to: { room: 'cabin', x: 260, y: 296 }, h: 70 });
+    prop('door_hall', 'outside', D.hall.x, D.hall.y + 6, 'Enter the village hall', { to: { room: 'hall', x: 380, y: 404 }, h: 70 });
+    prop('exit_cabin', 'cabin', 260, 318, 'Leave', { to: { room: 'outside', x: R.cabin.exitTo.x, y: R.cabin.exitTo.y }, h: 30 });
+    prop('exit_hall', 'hall', 380, 428, 'Leave', { to: { room: 'outside', x: R.hall.exitTo.x, y: R.hall.exitTo.y }, h: 30 });
+    prop('noticeboard', 'outside', 925, 1402, 'Read the noticeboard', { h: 70 });
+    prop('station', 'outside', 1280, 1045, 'Look at the station', { h: 110 });
+    prop('pier4', 'outside', LS.WORLD.PIER4.x - 8, LS.WORLD.PIER4.y - 6, 'Look up at Pier 4', { h: 60 });
+    if (B >= 3 && B <= 4) prop('crane', 'outside', 2250, 1030, 'Watch the crane', { h: 80 });
+    prop('signalbox', 'outside', 3160, 1030, 'Visit the signal box', { h: 110 });
+    prop('crag', 'outside', 2430, 350, 'Kestrel Crag viewpoint', { h: 40 });
+    prop('cottage', 'outside', 1620, 580, "Beck Cottage", { h: 90 });
+    prop('packhorse', 'outside', LS.WORLD.riverX(2008) + 70, 2030, 'The packhorse bridge', { h: 40 });
+    prop('desk', 'cabin', 372, 244, 'Check your desk', { h: 70 });
+    prop('wall', 'cabin', 300, 112, 'Project board', { h: 20 });
+    prop('lockers', 'cabin', 452, 112, 'PPE locker', { h: 20 });
+    prop('kettle', 'cabin', 70, 164, 'Make a brew', { h: 50 });
+    prop('urn', 'hall', 92, 176, 'Tea urn', { h: 60 });
+    if (wc.note) ents.push({ kind: 'note', id: 'note', room: 'outside', x: wc.note.x, y: wc.note.y, h: 50 });
+    if (wc.memo && !S.explore.memo) ents.push({ kind: 'memo', id: 'memo', room: wc.memo.room, x: wc.memo.x, y: wc.memo.y, h: 26 });
+    world.entities = ents; world.hallBanner = wc.hall; world.ppe = !!S.ppe;
     world.player.look = PACK.avatars[S.avatar]; world.attract = false; world.paused = true;
-    world.place(wc.spawn.room, wc.spawn.x);
+    world.place(wc.spawn.room, wc.spawn.x, wc.spawn.y);
     EX = { i, wc, ch };
+    world.onBlocked = why => toast(WD().blocked[why] || 'You can’t go that way.');
     refreshWorld();
   }
   const talkDone = id => S.talks.some(t => t.id === id);
@@ -376,14 +393,22 @@
   function pendingTalks() { return Object.keys(EX.wc.talks).filter(id => !talkDone(id)); }
   function nextCall() { return pendingTalks().length ? null : EX.ch.calls.find(id => !callDone(id)); }
   function allDone() { return !pendingTalks().length && !nextCall(); }
+  const onDeck = c => c.room === 'outside' && c.x > LS.WORLD.VIA.x1 && c.x < LS.WORLD.VIA.x2 && c.y < LS.WORLD.VIA.yS;
   function refreshWorld() {
     if (!EX) return;
     const W = WD(), wc = EX.wc, pt = pendingTalks(), nc = nextCall();
     const talkBy = {}; pt.forEach(id => talkBy[wc.talks[id]] = id);
+    const noteRead = S.notes.includes(EX.i);
     for (const e of world.entities) {
-      e.marker = e.kind === 'memo' ? 'memo' : null;
+      e.marker = null;
       if (e.kind === 'memo') { e.prompt = 'Pick up the notebook page'; continue; }
-      if (e.kind === 'prop') { e.prompt = e.id === 'desk' ? (allDone() ? 'Close the week' : 'Check your desk') : e.label; if (e.id === 'desk' && allDone()) e.marker = 'task'; continue; }
+      if (e.kind === 'note') { e.prompt = `Engineering note · ${W.engineering[EX.i].title}`; if (!noteRead) e.marker = 'note'; continue; }
+      if (e.kind === 'prop') {
+        e.prompt = e.label;
+        if (e.id === 'desk') { e.prompt = allDone() ? 'Close the week' : 'Check your desk'; if (allDone()) e.marker = 'task'; }
+        if (e.id === 'lockers') e.prompt = S.ppe ? 'PPE locker (you’re wearing yours)' : 'Collect PPE';
+        continue;
+      }
       if (e.team) {
         if (talkBy[e.id]) { e.prompt = `Talk to ${first(e.id)}`; e.marker = 'task'; }
         else if (nc && wc.calls[nc] === e.id) { e.prompt = `The Call · ${PACK.calls[nc].title}`; e.marker = 'call'; }
@@ -391,20 +416,21 @@
       } else if (e.town) e.prompt = `Chat with ${first(e.id)}`;
       else e.prompt = 'Chat';
     }
-    // next objective for the pointer and the list
-    let target = null;
-    if (pt.length) { const who = wc.talks[pt[0]]; const c = wc.cast.find(c => c.id === who); target = { room: c.room, x: c.x, label: first(who) }; }
-    else if (nc) { const who = wc.calls[nc]; const c = wc.cast.find(c => c.id === who); target = { room: c.room, x: c.x, label: first(who) }; }
-    else target = { room: 'cabin', x: 360, label: 'Your desk' };
+    let target;
+    const who = pt.length ? wc.talks[pt[0]] : nc ? wc.calls[nc] : null;
+    if (who) { const c = wc.cast.find(c => c.id === who); target = { room: c.room, x: c.x, y: c.y, label: first(who) }; if (onDeck(c) && !S.ppe) target = { room: 'cabin', x: 452, y: 112, label: 'PPE locker', ppe: true }; }
+    else target = { room: 'cabin', x: 372, y: 244, label: 'Your desk' };
     if (target.room !== 'outside' && world.room === 'outside') target.label = target.room === 'hall' ? 'Village hall' : 'Site office';
     world.objective = target;
     const items = [];
-    Object.entries(wc.talks).forEach(([tid, who]) => { const c = wc.cast.find(c => c.id === who); items.push([talkDone(tid), `Talk to ${cast(who).name}`, placeName(c.room, c.x)]); });
-    EX.ch.calls.forEach(cid => { const who = wc.calls[cid], c = wc.cast.find(c => c.id === who); items.push([callDone(cid), `The Call: ${PACK.calls[cid].title}`, `${first(who)} · ${placeName(c.room, c.x)}`]); });
+    const needPPE = [...Object.values(wc.talks), ...Object.values(wc.calls)].some(w => onDeck(wc.cast.find(c => c.id === w)));
+    if (needPPE) items.push([!!S.ppe, 'Collect your PPE', 'site office locker · needed on the viaduct']);
+    Object.entries(wc.talks).forEach(([tid, w]) => { const c = wc.cast.find(c => c.id === w); items.push([talkDone(tid), `Talk to ${cast(w).name}`, placeName(c.room, c.x, c.y)]); });
+    EX.ch.calls.forEach(cid => { const w = wc.calls[cid], c = wc.cast.find(c => c.id === w); items.push([callDone(cid), `The Call: ${PACK.calls[cid].title}`, `${first(w)} · ${placeName(c.room, c.x, c.y)}`]); });
     items.push([false, 'Close the week at your desk', 'the site office']);
-    let nextShown = false;
-    $('#obj').innerHTML = items.map(([d, t, w]) => { const isNext = !d && !nextShown; if (isNext) nextShown = true; return `<li class="${d ? 'done' : isNext ? 'next' : ''}"><span class="bx">${d ? '✓' : ''}</span><span><b>${esc(t)}</b><small>${esc(w)}</small></span></li>`; }).join('') +
-      (S.memos && S.memos.length ? `<li class="memo"><span class="bx">✎</span><span><small>Notebook pages found: ${S.memos.length}/8</small></span></li>` : '');
+    let shown = false;
+    $('#obj').innerHTML = items.map(([d, t, w]) => { const nx = !d && !shown; if (nx) shown = true; return `<li class="${d ? 'done' : nx ? 'next' : ''}"><span class="bx">${d ? '✓' : ''}</span><span><b>${esc(t)}</b><small>${esc(w)}</small></span></li>`; }).join('') +
+      `<li class="memo"><span class="bx">✎</span><span><small>Notebook ${S.memos.length}/8 · Engineering log ${S.notes.length}/8${noteRead ? '' : ' · a new note is on site'}</small></span></li>`;
   }
   function pad(on) { document.body.classList.toggle('exploring', !!on); }
   function explore(i) {
@@ -412,7 +438,7 @@
     return new Promise(resolve => {
       world.onEnterRoom = () => refreshWorld();
       world.onInteract = async e => {
-        if (e.to) { world.enter(e.to.room, e.to.x); LS.audio.sfx('page'); return; }
+        if (e.to) { world.enter(e.to.room, e.to.x, e.to.y); LS.audio.sfx('page'); return; }
         world.paused = true; pad(false);
         let end = false;
         try { end = await handle(e, i); } catch (err) { console.error(err); }
@@ -423,27 +449,32 @@
     });
   }
   async function handle(e, i) {
-    const W = WD(), wc = EX.wc, ex = S.explore;
+    const W = WD(), wc = EX.wc, ex = S.explore, B = EX.ch.scene.build;
     if (e.kind === 'memo') {
-      ex.memo = true; S.memos = S.memos || []; if (!S.memos.includes(i)) S.memos.push(i);
-      e.hidden = true; LS.audio.sfx('good');
-      await say('note', `“${W.memos[i]}”`, null, `Moira's notebook, 1986–87 · page ${S.memos.length} of 8`);
-      return false;
+      ex.memo = true; if (!S.memos.includes(i)) S.memos.push(i); e.hidden = true; LS.audio.sfx('good');
+      await say('note', `“${W.memos[i]}”`, null, `Moira's notebook, 1986–87 · page ${S.memos.length} of 8`); return false;
+    }
+    if (e.kind === 'note') {
+      const n = W.engineering[i]; if (!S.notes.includes(i)) { S.notes.push(i); LS.audio.sfx('select'); }
+      await say('note', n.text, null, `Engineering note ${i + 1} of 8 · ${n.title}`); return false;
     }
     if (e.kind === 'prop') {
-      const B = EX.ch.scene.build;
       if (e.id === 'desk') {
         if (allDone()) return true;
         const left = pendingTalks().map(id => `talk to ${cast(wc.talks[id]).name}`).concat(nextCall() ? [`make the Call with ${cast(wc.calls[nextCall()]).name}`] : []);
         await say('note', `${W.inspect.desk} Still to do: ${left.join('; ')}.`, null, 'Your desk'); return false;
       }
-      if (e.id === 'wall') { world.paused = true; await new Promise(res => { boardDone = res; openBoard('project'); }); return false; }
+      if (e.id === 'wall') { await new Promise(res => { boardDone = res; openBoard('project'); }); return false; }
+      if (e.id === 'lockers') {
+        if (!S.ppe) { S.ppe = true; world.ppe = true; LS.audio.sfx('select'); await say('note', `Hard hat, hi-vis, gloves, safety boots. You look like you know what you're doing. Keep it on — the viaduct is a place of work while it's being rebuilt.`, null, 'PPE collected'); }
+        else await say('note', `Your locker. The spare hard hat has "VISITOR" written on it in marker pen.`, null, 'PPE locker');
+        return false;
+      }
       if (e.id === 'kettle') { if (!ex.kettle) { ex.kettle = true; apply({ morale: 1 }, false); await say('note', `You make a round of tea for whoever's about. Nobody says thank you, and everybody notices.`, null, 'The kettle'); } else await say('note', `You've already had three cups. Your hands are shaking slightly.`, null, 'The kettle'); return false; }
-      const txt = { noticeboard: () => W.inspect.noticeboard(S.m), station: () => W.inspect.station(B), pier4: () => W.inspect.pier4(B), crane: () => W.inspect.crane, signalbox: () => W.inspect.signalbox, urn: () => W.inspect.urn }[e.id];
+      const txt = { noticeboard: () => W.inspect.noticeboard(S.m), station: () => W.inspect.station(B), pier4: () => W.inspect.pier4(B), crane: () => W.inspect.crane, signalbox: () => W.inspect.signalbox, urn: () => W.inspect.urn, crag: () => W.inspect.crag, cottage: () => W.inspect.cottage, packhorse: () => W.inspect.packhorse }[e.id];
       if (txt) await say('note', txt(), null, e.label);
       return false;
     }
-    // People
     const pt = pendingTalks(), nc = nextCall();
     const tid = pt.find(id => wc.talks[id] === e.id);
     if (e.team && tid) { await talk(PACK.talks[tid], tid); return false; }
@@ -462,13 +493,14 @@
     return false;
   }
   let boardDone = null;
+
   async function run(from) {
     for (let i = from; i < PACK.chapters.length; i++) await runChapter(i);
     S.ch = PACK.chapters.length;
     for (const r of due(S.ch)) await ripple(r);
     const st = stats(false);
     setScene({ time: 'dusk', season: 'summer', weather: 'clear', build: 5, train: true });
-    world.entities = []; world.attract = true; world.room = 'outside'; world.objective = null; EX = null; pad(false);
+    world.entities = []; world.attract = true; world.room = 'outside'; world.fitScale(); world.objective = null; EX = null; pad(false);
     hud(false);
     if (S.memos && S.memos.length >= 8) await say('moira', WD().memoFinale, 'smile');
     await say('moira', PACK.finale.reveal, 'concern');
@@ -610,7 +642,7 @@
   // ---------- Title / setup / educators ----------
   function title() {
     world.chapter = 6; setScene({ time: 'dusk', season: 'summer', weather: 'clear', build: 5, train: true });
-    world.attract = true; world.paused = true; world.entities = []; world.room = 'outside';
+    world.attract = true; world.paused = true; world.entities = []; world.room = 'outside'; world.fitScale();
     const sv = loadSave();
     layer('title', `<div class="brandmark">Groundwork Studio presents</div><div class="logo">LINESIDE</div><div class="tagline">A game about judgment.</div>
       <p class="packline">${esc(PACK.title)} — ${esc(PACK.blurb)}</p>
@@ -656,9 +688,14 @@
   // ---------- Boot ----------
   function boot() {
     world = new LS.World($('#world'));
-    const hold = (id, v) => { const b = $(id); const on = e => { e.preventDefault(); world.hold = v; }; const off = () => { if (world.hold === v) world.hold = 0; };
-      b.addEventListener('pointerdown', on); b.addEventListener('pointerup', off); b.addEventListener('pointerleave', off); b.addEventListener('pointercancel', off); };
-    hold('#padL', -1); hold('#padR', 1); $('#padA').addEventListener('pointerdown', e => { e.preventDefault(); world.use(); });
+    // virtual joystick
+    const joy = $('#joy'), knob = $('#knob'); let jid = null;
+    const jmove = e => { const r = joy.getBoundingClientRect(), R = r.width / 2; let dx = e.clientX - r.left - R, dy = e.clientY - r.top - R; const d = Math.hypot(dx, dy); if (d > R) { dx *= R / d; dy *= R / d; } world.stick = { x: dx / R, y: dy / R }; knob.style.transform = `translate(${dx}px,${dy}px)`; };
+    const jend = () => { jid = null; world.stick = { x: 0, y: 0 }; knob.style.transform = ''; };
+    joy.addEventListener('pointerdown', e => { e.preventDefault(); jid = e.pointerId; try { joy.setPointerCapture(jid); } catch (err) { } jmove(e); LS.audio.init(); });
+    joy.addEventListener('pointermove', e => { if (e.pointerId === jid) jmove(e); });
+    joy.addEventListener('pointerup', jend); joy.addEventListener('pointercancel', jend);
+    $('#padA').addEventListener('pointerdown', e => { e.preventDefault(); world.use(); });
     applySet();
     $('#hudMenu').innerHTML = ICON.menu; $('#hudMenu').onclick = () => openBoard();
     document.addEventListener('pointerdown', () => LS.audio.init(), { once: true });
