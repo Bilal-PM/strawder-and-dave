@@ -177,6 +177,21 @@
   ],
   "w": 336
  },
+ "beck_washing_line": {
+  "anchor": [
+   8,
+   108
+  ],
+  "file": "beck_washing_line.png",
+  "h": 112,
+  "kind": "prop",
+  "suggested_tile": [
+   59,
+   10
+  ],
+  "tile_px": 48,
+  "w": 176
+ },
  "church": {
   "anchor": [
    0,

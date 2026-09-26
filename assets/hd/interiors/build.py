@@ -57,7 +57,7 @@ def compose(res, figs=()):
 
 
 def save_room(room, res, man, figs):
-    for alt in res.get('preview_skip', ()):   # alternate states get their own composed preview
+    for alt in [a for a in res.get('preview_skip', ()) if a.endswith('_planned')]:   # alternate states get their own preview
         r2 = dict(res); r2['objects'] = [o for o in res['objects'] if o.name != alt.replace('_planned', '').replace('_panel', '') or o.name == alt]
         r2['preview_skip'] = []
         c2 = compose(r2, figs)
@@ -70,7 +70,7 @@ def save_room(room, res, man, figs):
         d['overlay'] = {'file': f'{room}_overlay.png', 'w': res['overlay'].w, 'h': res['overlay'].h, 'draw': 'after everything'}
     d['objects'] = {}
     for o in res['objects']:
-        fn = f'{room}_{o.name}.png'
+        fn = (o.name if o.name.startswith(room + '_') else f'{room}_{o.name}') + '.png'
         save_png(o.cv, os.path.join(OUT, fn)); d['objects'][o.name] = o.entry(fn)
     for k in ('variants', 'text_slots', 'points'):
         if res.get(k): d[k] = res[k]

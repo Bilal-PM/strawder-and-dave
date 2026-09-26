@@ -215,11 +215,11 @@ def crossing_gate_closed_line(rows=4, live=False):
     return cv
 
 
-def barrier(state='raised', side='w', live=True):
+def barrier(state='raised', side='e', live=True, span=2):
     """UK half-barrier with the road traffic light unit on the post: twin reds + amber, a St Andrew's-free plate
     (blank backboard), striped boom. state: 'raised' (boom upright) | 'lowered' (boom across 2 tiles of lane).
     side 'w' = post on the west verge, boom reaching east; 'e' = mirrored."""
-    L = 2 * T + 6
+    L = span * T + 6
     if state == 'raised': Wd, Hh = 48, 180
     else: Wd, Hh = 48 + L, 110
     cv = Canvas(Wd, Hh)

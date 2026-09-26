@@ -5,6 +5,7 @@ Writes tile sheets, overlay sheets and manifest.json to assets/hd/out/terrain/ (
 Deterministic: every random stream is seeded.
 """
 import os, sys, json, argparse
+sys.dont_write_bytecode = True
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import numpy as np
@@ -33,6 +34,14 @@ def main():
             import scene
             scene.track_preview(OUT)
             if hasattr(scene, 'scene_preview'): scene.scene_preview(OUT)
+        # previews: store losslessly as palette PNGs when they have <= 256 colours (pixel art usually does)
+        from PIL import Image
+        for f in os.listdir(OUT):
+            if f.startswith('preview') and f.endswith('.png'):
+                pth = os.path.join(OUT, f); im = Image.open(pth).convert('RGB')
+                if im.getcolors(256) is not None: im.quantize(colors=256, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE).save(pth, optimize=True)
+        tot_all = sum(os.path.getsize(os.path.join(dp, f)) for dp, _, fs in os.walk(OUT) for f in fs)
+        print('total output incl. previews: %.0f KB' % (tot_all / 1024))
         print('assets: %d entries, %.0f KB of sheets (previews excluded)' % (len(man), tot / 1024))
 
 

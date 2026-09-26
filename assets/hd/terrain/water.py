@@ -79,9 +79,10 @@ def bank_overlay(sides, v, mode='edge', seed=191):
         face = np.where(a <= b, FACE[sides[0]][0], FACE[sides[1]][0]); etone = np.where(a <= b, FACE[sides[0]][1], FACE[sides[1]][1])
     else:
         face = np.full((T, T), FACE[sides][0]); etone = np.full((T, T), FACE[sides][1])
-    f1, f2, f3 = L.field((16, 8, 4)), L.field((8, 4, 2)), L.field((4, 2))
+    (f1, f1b), (f2, f2b), f3 = L.field((16, 8, 4), both=True), L.field((8, 4, 2), both=True), L.field((4, 2))
     d1 = 2.5 + 1.5 * f1                    # grass lip
     d2 = d1 + face + 2.0 * f2              # earth / stones down to the waterline
+    d2b = 2.5 + 1.5 * f1b + face + 2.0 * f2b
     out = blank()
     gimg, _ = GR.grass_tile(v, 'grass', seed=613)
     grass_m = s < d1
@@ -103,7 +104,7 @@ def bank_overlay(sides, v, mode='edge', seed=191):
     stones = blank()
     def mk(q, rr):
         x, y = int(q[0]) % T, int(q[1]) % T
-        if abs(s[y, x] - d2[y, x]) > 2.5: return None
+        if abs(s[y, x] - (d2b if is_base(q) else d2)[y, x]) > 2.5: return None
         return pebble(rr, 'stone', 1.4 + q[2] * 2.0, 1.1 + q[3] * 1.3, tone=rr.normal() * 0.25 - 0.1, lo=0, hi=5,
                       shadow_idx=SHADOW[:3] + (110,))
     scatter_sprites(stones, L, 4.0, mk, (5, 6, 5, 1), p=0.85)
@@ -152,7 +153,7 @@ def puddle(rng, rx, ry):
             r = f[k] * (1 - t) + f[(k + 1) % 7] * t
             d = (dx * dx + dy * dy) / (r * r)
             if d < 1:
-                i = 4 if dy < -0.45 else (3 if dy < 0.2 else 2)
+                i = 5 if dy < -0.4 else (4 if dy < 0.25 else 3)
                 if d > 0.72 and dy < 0: i = 5
                 put(a, x, y, rgb('water', i), False)
             elif d < 1.5:

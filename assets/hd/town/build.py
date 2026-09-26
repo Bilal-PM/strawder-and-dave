@@ -16,7 +16,7 @@ import os, sys, json, subprocess
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from townlib import T, save, preview, manifest, figure_silhouette  # noqa: E402
-from buildings import BUILDINGS  # noqa: E402
+from buildings import BUILDINGS, PROPS  # noqa: E402
 
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..', '..'))
 OUTD = os.path.join(ROOT, 'assets', 'hd', 'out', 'town')
@@ -101,6 +101,12 @@ def main(only):
                      'door_px': [b.dcx, b.Hh], 'lights': p.lights, 'signs': p.signs, 'tile_px': T}
         built.append((name, b))
         print('  %-14s %3dx%-3d  tiles %-8s origin %-9s door %s' % (name, b.W, b.Hh, fp['tiles'], fp['origin'], fp['door']))
+    for name, fn, tile, anchor in PROPS:
+        if only and name not in only: continue
+        b = fn(); save(b.p.cv, os.path.join(OUTD, name + '.png'))
+        man[name] = {'file': name + '.png', 'w': b.W, 'h': b.Hh, 'anchor': anchor, 'suggested_tile': tile,
+                     'kind': 'prop', 'tile_px': T}
+        print('  %-14s %3dx%-3d  prop, suggested tile %s' % (name, b.W, b.Hh, tile))
     manifest(mpath, man)
     for name, b in built:
         day, lit = b.p.cv.im, b.p.lit.im
@@ -111,5 +117,63 @@ def main(only):
     return built
 
 
+def street_preview(man, names, path, dusk_too=True):
+    """Compose buildings at their true map positions on a simple lawn + pavement strip, for judging them together."""
+    from PIL import Image
+    ents = [man[n] for n in names if n in man]
+    c0 = min(e['map_origin'][0] for e in ents) - 1; c1 = max(e['map_origin'][0] + e['tiles'][0] for e in ents) + 1
+    gy = max(e['map_origin'][1] + e['tiles'][1] for e in ents)          # ground row (south edge)
+    top = min((e['map_origin'][1] + e['tiles'][1]) * T - e['h'] for e in ents) - 8
+    W = (c1 - c0) * T; H = (gy + 1) * T - top
+    def scene(lit):
+        im = Image.new('RGBA', (W, H), (150, 186, 104, 255)); px = im.load()
+        for y in range(H):
+            for x in range(W):
+                wy = y + top
+                if wy >= gy * T:   # pavement flags
+                    g = (x // 24 + (wy // 24) * 7) % 5
+                    c = (196, 188, 172) if (x % 24 and wy % 24) else (150, 142, 132)
+                    px[x, y] = tuple(max(0, v - g * 3) for v in c) + (255,)
+                elif (x * 7 + wy * 13) % 29 == 0: px[x, y] = (128, 166, 86, 255)
+        for e in ents:
+            spr = Image.open(os.path.join(OUTD, e['file'])).convert('RGBA')
+            ox = (e['map_origin'][0] - c0) * T; oy = (e['map_origin'][1] + e['tiles'][1]) * T - e['h'] - top
+            im.alpha_composite(spr, (ox, oy))
+        if lit:
+            px = im.load()
+            for y in range(H):
+                for x in range(W):
+                    r, g, b_, a = px[x, y]; px[x, y] = (int(r * .45 + 10), int(g * .42 + 10), int(b_ * .55 + 26), a)
+            for e in ents:
+                if 'lit' not in e: continue
+                spr = Image.open(os.path.join(OUTD, e['lit'])).convert('RGBA')
+                ox = (e['map_origin'][0] - c0) * T; oy = (e['map_origin'][1] + e['tiles'][1]) * T - e['h'] - top
+                im.alpha_composite(spr, (ox, oy))
+        else:
+            for e in ents[:1]:
+                fx = (e['map_origin'][0] - c0) * T + e['door_px'][0] + 60
+                im.alpha_composite(figure_silhouette().im, (fx - 24, gy * T - top - 95 + 30))
+        return im
+    day = scene(False)
+    out = Image.new('RGBA', (W, H * 2 + 8), (236, 230, 214, 255))
+    out.alpha_composite(day, (0, 0)); out.alpha_composite(scene(True), (0, H + 8))
+    out.save(path)
+    return out
+
+
+def shrink_previews():
+    """Previews are for looking at only: store them as 256-colour PNGs to keep the area under its size budget."""
+    from PIL import Image
+    for f in os.listdir(OUTD):
+        if f.startswith('preview_') and f.endswith('.png'):
+            pth = os.path.join(OUTD, f)
+            Image.open(pth).convert('RGB').quantize(256, method=Image.Quantize.MEDIANCUT).save(pth, optimize=True)
+
+
 if __name__ == '__main__':
     main(sys.argv[1:])
+    if not sys.argv[1:]:
+        man = json.load(open(os.path.join(OUTD, 'manifest.json')))
+        street_preview(man, ['hall', 'pub', 'bakery', 'cottage_a', 'cottage_b'], os.path.join(OUTD, 'preview_street.png'))
+        street_preview(man, ['farmhouse', 'barn', 'church'], os.path.join(OUTD, 'preview_south.png'))
+    shrink_previews()

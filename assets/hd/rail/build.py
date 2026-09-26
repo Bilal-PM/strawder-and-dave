@@ -125,33 +125,34 @@ def build_lineside():
     g = LN.crossing_gate_closed_line(4, live=False)
     emit('crossing_gate_closedline_w', g, (103, 18), (1, 6), note="closed-line state: white gates shut across the rails, padlocked; covers 'z' col 103, posts on rows 18 and 23")
     emit('crossing_gate_closedline_e', g.flip(), (107, 18), (1, 6), note="as _w, for 'z' col 107")
-    sg0 = LN.crossing_sign(False); emit('crossing_sign_dead', sg0, (107, 17), (1, 1), anchor=[0, sg0.h], note='St Andrew cross + dead lights (closed line); also at (103,24)')
-    sg1 = LN.crossing_sign(True); emit('crossing_sign_live', sg1, (107, 17), (1, 1), anchor=[0, sg1.h])
+    sg0 = LN.crossing_sign(False); emit('crossing_sign_dead', sg0, (108, 17), (1, 1), anchor=[-4, sg0.h], placements=[[108, 17], [107, 24]], note='St Andrew cross + dead lights (closed line)')
+    sg1 = LN.crossing_sign(True); emit('crossing_sign_live', sg1, (108, 17), (1, 1), anchor=[-4, sg1.h], placements=[[108, 17], [109, 24]])
     frames = [('gate', g), ('dead', sg0), ('live', sg1)]
-    for side, origin in (('w', (103, 24)), ('e', (107, 17))):
-        for stt in ('raised', 'lowered'):
-            b = LN.barrier(stt, side)
-            ax = 0 if side == 'w' else b.w - TILE
-            nm = f'crossing_barrier_{side}_{stt}'
-            px, by = 20, b.h - 96
-            lamps = [(px - 8, by + 9), (px + 8, by + 9), (px, by + 20)]
-            if side == 'e': lamps = [(b.w - 1 - x, y) for x, y in lamps]
-            emit(nm, b, origin, (1, 1), anchor=[ax, b.h], lamps={'red_l': list(lamps[0]), 'red_r': list(lamps[1]), 'amber': list(lamps[2])},
-                 note='live line: half-barrier on the %s verge; lowered boom covers 2 lane tiles; lamps in sprite px' % ('west' if side == 'w' else 'east'))
-            frames.append((nm, b))
-            if stt == 'lowered':
-                for which, cs in (('l', [(lamps[0][0], lamps[0][1], 'lamp_glow')]), ('r', [(lamps[1][0], lamps[1][1], 'lamp_glow')]), ('a', [(lamps[2][0], lamps[2][1], 'lamp_glow')])):
-                    cols = [(x, y, 'flower_red' if which != 'a' else 'lamp_glow') for (x, y, _) in cs]
-                    lf = LN.light_frames(b, cols, 4)
-                    emit(nm + '_lit_' + which, lf, origin, (1, 1), anchor=[ax, b.h], note='flash frame: alternate _lit_l/_lit_r at ~1.5 Hz after _lit_a')
-                    if side == 'w': frames.append((which, lf))
+    # live line: full-width barriers on the east verge at both approaches (the west verges are trees):
+    # posts at (107,17) and (107,24); lowered booms cover the lane x104-106 on rows 17 / 24
+    for stt in ('raised', 'lowered'):
+        b = LN.barrier(stt, 'e', span=3)
+        ax = b.w - TILE
+        nm = f'crossing_barrier_{stt}'
+        px, by = 20, b.h - 96
+        lamps = [(b.w - 1 - x, y) for x, y in [(px - 8, by + 9), (px + 8, by + 9), (px, by + 20)]]
+        emit(nm, b, (107, 17), (1, 1), anchor=[ax, b.h], placements=[[107, 17], [107, 24]],
+             lamps={'red_l': list(lamps[1]), 'red_r': list(lamps[0]), 'amber': list(lamps[2])},
+             note='live line: barrier post in tile (107,17) and again at (107,24); lowered boom spans x104-106; lamps in sprite px')
+        frames.append((nm, b))
+        if stt == 'lowered':
+            for which, (lx, ly) in (('l', lamps[1]), ('r', lamps[0]), ('a', lamps[2])):
+                lf = LN.light_frames(b, [(lx, ly, 'flower_red' if which != 'a' else 'lamp_glow')], 4)
+                emit(nm + '_lit_' + which, lf, (107, 17), (1, 1), anchor=[ax, b.h], placements=[[107, 17], [107, 24]],
+                     note='flash frames: steady _lit_a first, then alternate _lit_l/_lit_r at ~1.5 Hz')
+                frames.append((which, lf))
     prev('crossing', [(l, with_scale(c) if i == 0 else c) for i, (l, c) in enumerate(frames)], scale=2, cols=6)
     sb, i = LN.signal_box(); emit('signal_box', sb, (110, 25), (5, 5), i, door=(112, 29), door_enterable=False)
     small = []
     for live in (False, True):
         tg = 'live' if live else 'closed'
         bs = LN.buffer_stop(live); emit('buffer_stop_' + tg, bs, (8, 20), (1, 2)); small.append((tg, bs))
-    cb = LN.location_cabinet(False); emit('lineside_cabinet', cb, (108, 24), (1, 1), anchor=[-4, cb.h], note='free-standing; centred in its tile'); small.append(('cab', cb))
+    cb = LN.location_cabinet(False); emit('lineside_cabinet', cb, (109, 24), (1, 1), anchor=[-4, cb.h], note='free-standing; centred in its tile'); small.append(('cab', cb))
     mp, face = LN.milepost(False); emit('milepost', mp, (60, 19), (1, 1), anchor=[-9, mp.h], sign={'plate': face}, note='suggested spots: cess on row 19 every ~20 tiles'); small.append(('mp', mp))
     wb, face = LN.post_board(30, 30, 40); emit('whistle_board', wb, (100, 19), (1, 1), anchor=[-9, wb.h], sign={'face': face}); small.append(('wb', wb))
     lb, face = LN.post_board(96, 40, 40, legs=2); emit('limit_board', lb, (116, 22), (2, 1), anchor=[24, lb.h], sign={'face': face},

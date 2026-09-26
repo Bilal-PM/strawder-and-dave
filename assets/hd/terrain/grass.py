@@ -136,7 +136,7 @@ def clump_layer(img, L, spacing, sizes, rampf, base_i=4, tip_lit=0, tip_dark=2, 
     pts = periodic_copies(locked_pts(L, spacing, 0, jit=jit, ext=ext), (ext[0] + 2, ext[1] + 9, ext[2] + 2, ext[3] + 1))
     pts.sort(key=lambda p: (p[1], p[0]))
     for p in pts:
-        x, y, r1, r2, r3, isb = p
+        x, y, r1, r2, r3, isb = p[:6]
         if skip and skip(p): continue
         if interior_only and not (1 + ext[0] <= x <= T - 2 - ext[2] and 1 + ext[1] <= y <= T - 2 - ext[3]): continue
         rr = np.random.default_rng(int(r2 * 1e7) + int(r3 * 1e3))
@@ -214,9 +214,9 @@ def meadow_variants():
     M = 'meadow'
     for v in range(8):
         L = Layered(37, v)
-        dry = L.field((8, 4))
+        dry, dryb = L.field((8, 4), both=True)
         img = from_idx(ground_idx(L, 4, 6, lo=-1.0, hi=0.5), G)
-        rf = lambda p: M if (dry[int(p[1]) % T, int(p[0]) % T] > 0.7 or p[4] < 0.12) else G
+        rf = lambda p: M if ((dryb if is_base(p) else dry)[int(p[1]) % T, int(p[0]) % T] > 0.7 or p[4] < 0.12) else G
 
         def ex(p, rr):
             if p[2] > 0.95: return seedhead(rr), -1, -9 - int(rr.random() * 3)

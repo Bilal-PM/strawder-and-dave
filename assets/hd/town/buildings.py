@@ -930,6 +930,69 @@ def barn(fp):
     return b
 
 
+def washing_line(fp=None):
+    """Prop for Beck Cottage's garden (not a building): two timber T-posts and a sagging line with Moira's oily blue
+    overalls, a tea towel, a cardigan and odd socks, pegged out. Suggested placement: the lawn east of Beck Cottage,
+    posts on tiles (59, 10) and (62, 10). anchor = foot of the west post."""
+    W_, H_ = 176, 112
+    b = B({'tiles': [0, 0], 'origin': [0, 0], 'door': None}, 0, 1111)
+    b.W, b.Hh, b.G = W_, H_, H_; b.p = Painter(W_, H_, 1111); p = b.p
+    G = H_ - 4
+    for px in (6, W_ - 10):
+        for yy in range(G - 92, G):
+            for k in range(4): p.r(px + k, yy, 'wood', [1, 0, 2, 3][k] + (hash01(k, yy // 5, px) < .15))
+        for xx in range(px - 12, px + 16):
+            p.r(xx, G - 92, 'wood', 1); p.r(xx, G - 91, 'wood', 2); p.r(xx, G - 90, 'wood', 3)
+        for xx in range(px - 3, px + 8): p.shift(xx, G, 0); p.c(xx, G, SHADOW[:3] + (90,)) if False else None
+    x0, x1, ly = 10, W_ - 6, G - 90
+    sag = lambda xx: ly + int(round(10 * 4 * ((xx - x0) / (x1 - x0)) * (1 - (xx - x0) / (x1 - x0))))
+    for xx in range(x0, x1): p.r(xx, sag(xx), 'cream', 3)
+    def garment(xc, kind):
+        top = sag(xc) + 1
+        if kind == 'overalls':   # bib-and-brace overalls, oil-stained
+            for yy in range(top, top + 50):
+                ly2 = yy - top
+                if ly2 < 16: xs = range(xc - 9, xc + 9)
+                elif ly2 < 24: xs = range(xc - 11, xc + 11)
+                else: xs = list(range(xc - 11, xc - 1)) + list(range(xc + 1, xc + 11))
+                for xx in xs:
+                    i = 1 + ((xx - xc) > 4) + (ly2 > 44)
+                    if (xx - xc) % 5 == 0 and ly2 > 24: i += 1
+                    r_ = 'denim'
+                    if fbm(xx, yy, 5, 7) > .64: r_, i = 'charcoal', 2 + (fbm(xx, yy, 3, 8) > .6)
+                    p.r(xx, yy, r_, i)
+            for yy in range(top + 6, top + 12):
+                for xx in range(xc - 4, xc + 4): p.r(xx, yy, 'denim', 3)   # bib pocket
+            p.r(xc - 6, top + 3, 'gold', 1); p.r(xc + 5, top + 3, 'gold', 1)
+        elif kind == 'towel':
+            for yy in range(top, top + 22):
+                for xx in range(xc - 8, xc + 8):
+                    p.r(xx, yy, 'white', 1 + ((xx - xc) > 4) + ((xx - xc) % 5 == 2 and yy > top + 3))
+                    if (yy - top) in (4, 5, 16, 17): p.r(xx, yy, 'paint_red', 1)
+        elif kind == 'cardigan':
+            for yy in range(top, top + 28):
+                for xx in range(xc - 14, xc + 14):
+                    ly2 = yy - top
+                    if abs(xx - xc) > 8 and ly2 > 22: continue
+                    if abs(xx - xc) > 10 and ly2 < 3: continue
+                    i = 1 + ((xx - xc) > 6) + ((xx - xc) % 6 == 3)
+                    if abs(xx - xc) in (9, 10): i = 3          # sleeve seam
+                    if ly2 > 24: i = 3                         # ribbed hem
+                    p.r(xx, yy, 'mustard', i)
+                if (yy - top) % 5 == 2: p.r(xc, yy, 'cream', 1)
+        elif kind == 'socks':
+            for d, r_ in ((0, 'wine'), (9, 'teal')):
+                for yy in range(top, top + 16):
+                    for xx in range(xc + d - 2, xc + d + 2 + (4 if yy > top + 11 else 0)):
+                        p.r(xx, yy, r_, 1 + (xx > xc + d))
+        for dxp in (-6, 6) if kind != 'socks' else (0, 9):   # clothes pegs
+            p.r(xc + dxp, top - 2, 'wood', 0); p.r(xc + dxp, top - 1, 'wood', 1); p.r(xc + dxp, top, 'wood', 2)
+    garment(40, 'overalls'); garment(76, 'towel'); garment(108, 'cardigan'); garment(142, 'socks')
+    outline(p.cv, OUTLINE)
+    b.dcx = 8
+    return b
+
+
 BUILDINGS = [  # (name, map letter, index among that letter's footprints (west to east), function)
     ('cottage_a', 'V', 0, cottage_a),
     ('cottage_b', 'V', 1, cottage_b),
@@ -942,3 +1005,4 @@ BUILDINGS = [  # (name, map letter, index among that letter's footprints (west t
     ('farmhouse', 'F', 0, farmhouse),
     ('barn', 'R', 0, barn),
 ]
+PROPS = [('beck_washing_line', washing_line, [59, 10], [8, 108])]  # (name, fn, suggested map tile of west post, anchor)

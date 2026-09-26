@@ -23,23 +23,22 @@ def floor():
             tx, ty = x // T, y // T
             lx, ly = x % T, y % T
             if tx <= 3 and ty <= 4:   # vinyl by the kettle (easy to mop)
-                i = 1 if hash01(x // 3, y // 3, 5) > 0.2 else 2
-                if fbm(x, y, 12, 7, 2) > 0.66: i = 2
+                i = 1 if ((x - T) // (T // 2) + y // (T // 2)) % 2 == 0 else 2   # two-tone vinyl tiles
+                if hash01(x, y, 5) < 0.04: i += 1
                 if (x - T) % (T // 2) == 0 and x >= T: i = 3       # vinyl tile joints
                 if y % (T // 2) == 0: i = 3
                 px[x, y] = vi[i]; continue
             quarter = (tx + ty) % 2                                # carpet tiles laid quarter-turned
             pile = (lx if quarter else ly)
+            worn = dist_path(x, y) < 30
             i = 2
-            if pile % 3 == 0: i = 3 if hash01(x, y, 3) < 0.5 else 2
-            n = hash01(x, y, SEED)
-            if n < 0.06: i = 3
-            elif n > 0.95: i = 1
+            if pile % 3 == 0 and not worn: i = 3
+            if worn and pile % 6 == 0: i = 3
             tone = hash01(tx, ty, SEED + 1)
-            if tone < 0.18: i = min(5, i + (1 if hash01(x, y, 4) < 0.5 else 0))
-            # a worn, flattened path: door -> table -> board, and to the kettle
-            wear = min(dist_path(x, y), 99)
-            if wear < 34 and hash01(x, y, 9) < (1 - wear / 34) * 0.7: i = 1
+            if tone < 0.2 and pile % 3 == 1: i = 3
+            n = hash01(x, y, SEED)
+            if n < 0.015: i = 4
+            elif n > 0.99: i = 1
             if lx == 0 or ly == 0: i = 4 if hash01(x, y, 8) < 0.8 else 3    # tile seams
             px[x, y] = cp[i]
     # a coffee stain and a biscuit crumb trail by the table
@@ -96,9 +95,9 @@ def panel_wall(cv, x0, y0, w, h):
     for y in range(y0, y0 + h):
         for x in range(x0, x0 + w):
             t = (y - y0) / h
-            i = 1 if t < 0.8 else 2
-            if fbm(x, y, 30, 11, 2) > 0.66: i += 1
-            if hash01(x, y, 12) < 0.02: i += 1
+            i = 1 if t < 0.85 else 2
+            if (x - x0) % 64 in (2, 3): i = 0
+            if hash01(x, y, 12) < 0.012: i += 1
             c = C('laminate', i)
             j = (x - x0) % 64
             if j == 0: c = C('laminate', 4)
@@ -225,7 +224,9 @@ def kettle():
     cv, X, Y = o.cv, o.X, o.Y
     w = 2 * T
     ground_shadow(cv, X(w // 2 + 4), Y(92), w // 2, 5, 80)
-    top_y, top_d = 30, 22
+    cv.rect(X(-1), Y(-10), w + 2, 12, C('white', 1)); hl(cv, X(-1), Y(-10), w + 2, C('white', 0)); hl(cv, X(-1), Y(1), w + 2, C('white', 3))   # tiled splashback
+    for xx in range(0, w, 8): vl(cv, X(xx), Y(-10), 11, C('white', 2))
+    top_y, top_d = 2, 34
     # base units: doors with handles, kickboard
     fy = top_y + top_d
     cv.rect(X(0), Y(fy), w, 96 - fy, C('white', 1)); vl(cv, X(0), Y(fy), 96 - fy, C('white', 0)); vl(cv, X(w - 1), Y(fy), 96 - fy, C('white', 3))
@@ -461,76 +462,75 @@ def sign_in():
 
 
 def filing():
-    o = Obj('filing', (5, 1, 2, 1), up=74, m=2)
+    """Two three-drawer filing cabinets against the wall, box files and a spider plant on top."""
+    o = Obj('filing', (5, 1, 2, 1), up=50, m=2)
     cv, X, Y = o.cv, o.X, o.Y
     ground_shadow(cv, X(48), Y(44), 46, 5, 80)
-    for (x0, rn) in ((2, 'steel_blue'), (48, 'steel_blue')):
-        cv.rect(X(x0), Y(-56), 44, 100, C(rn, 2)); hl(cv, X(x0), Y(-60), 44, C(rn, 0))
-        cv.rect(X(x0), Y(-60), 44, 4, C(rn, 1)); vl(cv, X(x0 + 43), Y(-60), 104, C(rn, 4)); vl(cv, X(x0), Y(-56), 100, C(rn, 1))
-        for k in range(4):
-            dy = -54 + k * 24
-            cv.rect(X(x0 + 3), Y(dy), 38, 22, C(rn, 1)); hl(cv, X(x0 + 3), Y(dy), 38, C(rn, 0)); hl(cv, X(x0 + 3), Y(dy + 21), 38, C(rn, 4))
-            cv.rect(X(x0 + 15), Y(dy + 4), 14, 6, C('paper', 1)); frame(cv, X(x0 + 15), Y(dy + 4), 14, 6, C('metal', 2))
-            hl(cv, X(x0 + 16), Y(dy + 13), 12, C('metal', 1)); hl(cv, X(x0 + 16), Y(dy + 14), 12, C('metal', 4))
-    cv.rect(X(52), Y(-47), 36, 20, C(rn, 3))   # one drawer left open with files poking up
-    for k in range(6): cv.rect(X(54 + k * 6), Y(-54), 5, 8, [C('sticky_y', 1), C('paint_blue', 1), C('sticky_g', 1)][k % 3])
-    # a spider plant on top, trailing
-    cyl_v(cv, X(12), Y(-72), 20, 12, 'terracotta', 0, 4); cv.ellipse(X(22), Y(-72), 10, 3, C('terracotta', 1)); cv.ellipse(X(22), Y(-72), 8, 2, C('mud', 3))
-    for k in range(16):
-        a = -2.8 + k * 0.36; ln = 12 + (k % 4) * 4
-        for s in range(ln):
-            x = 22 + math.cos(a) * s * 0.9; y = -74 + math.sin(a) * s * 0.6 + (s * s) / (40 if k % 3 == 0 else 90)
-            cv.put(X(int(x)), Y(int(y)), C('plant', 1 if s < ln // 2 else 2) if k % 2 else C('sticky_g', 1))
-    # box files on the other cabinet
+    rn = 'steel_blue'
+    for x0 in (2, 48):
+        cv.rect(X(x0), Y(-26), 44, 4, C(rn, 1)); hl(cv, X(x0), Y(-26), 44, C(rn, 0))
+        cv.rect(X(x0), Y(-22), 44, 66, C(rn, 2)); vl(cv, X(x0 + 43), Y(-26), 70, C(rn, 4)); vl(cv, X(x0), Y(-22), 66, C(rn, 1))
+        for k in range(3):
+            dy = -20 + k * 21
+            cv.rect(X(x0 + 3), Y(dy), 38, 19, C(rn, 1)); hl(cv, X(x0 + 3), Y(dy), 38, C(rn, 0)); hl(cv, X(x0 + 3), Y(dy + 18), 38, C(rn, 4))
+            cv.rect(X(x0 + 15), Y(dy + 3), 14, 5, C('paper', 1)); frame(cv, X(x0 + 15), Y(dy + 3), 14, 5, C('metal', 2))
+            hl(cv, X(x0 + 16), Y(dy + 11), 12, C('metal', 1)); hl(cv, X(x0 + 16), Y(dy + 12), 12, C('metal', 4))
+        hl(cv, X(x0), Y(43), 44, C(rn, 5))
+    cv.rect(X(51), Y(-1), 38, 7, C(rn, 3)); hl(cv, X(51), Y(5), 38, C(rn, 4))   # middle drawer left open, files poking up
+    for k in range(6): cv.rect(X(53 + k * 6), Y(-5), 5, 6, [C('sticky_y', 1), C('paint_blue', 1), C('sticky_g', 1)][k % 3])
+    cyl_v(cv, X(12), Y(-38), 20, 12, 'terracotta', 0, 4); cv.ellipse(X(22), Y(-38), 10, 3, C('terracotta', 1)); cv.ellipse(X(22), Y(-38), 8, 2, C('mud', 3))
+    for k in range(16):   # spider plant, trailing over the edge
+        a = -2.8 + k * 0.36; ln = 10 + (k % 4) * 4
+        for s_ in range(ln):
+            x = 22 + math.cos(a) * s_ * 0.9; y = -40 + math.sin(a) * s_ * 0.5 + (s_ * s_) / (30 if k % 3 == 0 else 80)
+            cv.put(X(int(x)), Y(int(y)), C('plant', 1 if s_ < ln // 2 else 2) if k % 2 else C('sticky_g', 1))
     for k in range(4):
-        cv.rect(X(56 + k * 8), Y(-78), 7, 18, [C('wine', 2), C('navy', 2), C('forest', 2), C('mustard', 2)][k])
-        hl(cv, X(56 + k * 8), Y(-78), 7, [C('wine', 1), C('navy', 1), C('forest', 1), C('mustard', 1)][k]); cv.ellipse(X(59 + k * 8), Y(-70), 1.5, 2, C('white', 2))
+        cv.rect(X(58 + k * 8), Y(-42), 7, 16, [C('wine', 2), C('navy', 2), C('forest', 2), C('mustard', 2)][k])
+        hl(cv, X(58 + k * 8), Y(-42), 7, [C('wine', 1), C('navy', 1), C('forest', 1), C('mustard', 1)][k]); cv.ellipse(X(61 + k * 8), Y(-35), 1.5, 2, C('white', 2))
     o.finish(); return o
 
 
 def cooler():
     """Water cooler and a tall yucca against the wall between the board and the right-hand window."""
-    o = Obj('water_cooler', (14, 1, 2, 1), up=82, m=2)
+    o = Obj('water_cooler', (14, 1, 2, 1), up=50, m=2)
     cv, X, Y = o.cv, o.X, o.Y
     ground_shadow(cv, X(48), Y(44), 44, 5, 80)
-    cv.rect(X(4), Y(-20), 28, 64, C('white', 1)); vl(cv, X(4), Y(-20), 64, C('white', 0)); vl(cv, X(31), Y(-20), 64, C('white', 3)); hl(cv, X(4), Y(43), 28, C('white', 4))
-    cv.rect(X(8), Y(-8), 20, 14, C('charcoal', 3)); cv.rect(X(12), Y(-6), 3, 4, C('paint_blue', 1)); cv.rect(X(21), Y(-6), 3, 4, C('paint_red', 1))
-    cv.rect(X(9), Y(4), 18, 2, C('metal', 2))
-    for yy in range(-50, -20):   # the big blue bottle
-        t = (yy + 50) / 30
-        ww = 22 if t > 0.2 else int(8 + t * 70)
-        ww = min(ww, 22)
+    cv.rect(X(4), Y(-4), 28, 48, C('white', 1)); vl(cv, X(4), Y(-4), 48, C('white', 0)); vl(cv, X(31), Y(-4), 48, C('white', 3)); hl(cv, X(4), Y(43), 28, C('white', 4))
+    hl(cv, X(4), Y(-4), 28, C('white', 0))
+    cv.rect(X(8), Y(2), 20, 12, C('charcoal', 3)); cv.rect(X(12), Y(4), 3, 4, C('paint_blue', 1)); cv.rect(X(21), Y(4), 3, 4, C('paint_red', 1))
+    cv.rect(X(9), Y(13), 18, 2, C('metal', 2))
+    for yy in range(-32, -4):   # the big blue bottle
+        t = (yy + 32) / 28
+        ww = min(22, int(8 + t * 70)) if t < 0.2 else 22
         for xx in range(ww):
             lum = light((xx - ww / 2) / (ww / 2 + 0.5), 0, 0.8)
-            cv.put(X(18 - ww // 2 + xx), Y(yy), shade('glass', lum - 0.1) if t > 0.35 else shade('water', lum))
-    hl(cv, X(7), Y(-36), 22, C('glass', 0)); cv.put(X(10), Y(-44), C('white', 0))
-    cv.rect(X(8), Y(10), 20, 22, C('white', 2))   # cup dispenser column
-    cyl_v(cv, X(34), Y(-26), 5, 30, 'white', 0, 3)
-    # yucca in a big pot
-    cyl_v(cv, X(50), Y(18), 32, 26, 'terracotta', 0, 4); cv.ellipse(X(66), Y(18), 16, 4, C('terracotta', 1)); cv.ellipse(X(66), Y(18), 13, 3, C('mud', 3))
-    for yy in range(-40, 18): cv.put(X(65), Y(yy), C('bark', 2)); cv.put(X(66), Y(yy), C('bark', 3))
-    for k in range(26):
-        a = -3.0 + k * 0.23 + (hash01(k, 1, 5) - 0.5) * 0.3; ln = 16 + int(hash01(k, 2, 5) * 16)
-        base = (65, -40 + (k % 3) * 10)
-        for s in range(ln):
-            x = base[0] + math.cos(a) * s; y = base[1] + math.sin(a) * s * 0.9 + (s * s) / 60
-            cv.put(X(int(x)), Y(int(y)), C('plant', 1 if s < ln // 3 else 2 if s < 2 * ln // 3 else 3))
+            cv.put(X(18 - ww // 2 + xx), Y(yy), shade('glass', lum - 0.1) if t > 0.3 else shade('water', lum))
+    hl(cv, X(7), Y(-20), 22, C('glass', 0)); cv.put(X(10), Y(-26), C('white', 0))
+    cyl_v(cv, X(34), Y(-14), 5, 26, 'white', 0, 3)   # cup dispenser
+    cyl_v(cv, X(50), Y(20), 32, 24, 'terracotta', 0, 4); cv.ellipse(X(66), Y(20), 16, 4, C('terracotta', 1)); cv.ellipse(X(66), Y(20), 13, 3, C('mud', 3))
+    for yy in range(-18, 20): cv.put(X(65), Y(yy), C('bark', 2)); cv.put(X(66), Y(yy), C('bark', 3))
+    for k in range(28):   # yucca
+        a = -3.0 + k * 0.22 + (hash01(k, 1, 5) - 0.5) * 0.3; ln = 14 + int(hash01(k, 2, 5) * 14)
+        by = -22 + (k % 3) * 8
+        for s_ in range(ln):
+            x = 65 + math.cos(a) * s_; y = by + math.sin(a) * s_ * 0.8 + (s_ * s_) / 70
+            cv.put(X(int(x)), Y(int(y)), C('plant', 1 if s_ < ln // 3 else 2 if s_ < 2 * ln // 3 else 3))
     o.finish(); return o
 
 
 def board(planned):
     """The planning board: a whiteboard with two swim lanes of sticky notes (blank; the game labels the lanes).
     Normal: notes scattered. Planned: notes in columns and a red critical-path line through them."""
-    o = Obj('board_planned' if planned else 'board', (8, 1, 6, 1), up=86, m=2, tile=[10, 1])
+    o = Obj('board_planned' if planned else 'board', (8, 1, 6, 1), up=46, m=2, tile=[10, 1])
     cv, X, Y = o.cv, o.X, o.Y
     w = 6 * T
-    x0, y0, bw, bh = 6, -72, w - 12, 70
+    x0, y0, bw, bh = 6, -38, w - 12, 66
     cv.rect(X(x0 + 3), Y(y0 + 3), bw, bh, SHADOW[:3] + (100,))
     cv.rect(X(x0), Y(y0), bw, bh, C('metal', 3)); hl(cv, X(x0), Y(y0), bw, C('metal', 1)); vl(cv, X(x0), Y(y0), bh, C('metal', 1)); vl(cv, X(x0 + bw - 1), Y(y0), bh, C('metal', 4))
     for y in range(y0 + 3, y0 + bh - 3):
         for x in range(x0 + 3, x0 + bw - 3):
             c = C('white', 0)
-            if fbm(x, y, 12, 71, 2) > 0.7: c = C('white', 1)        # ghost of old marker
+            if fbm(x, y, 16, 71, 2) > 0.8: c = C('white', 1)        # ghost of old marker
             if (x - y) % 90 < 2 and y < y0 + 30: c = C('white', 1)  # sheen
             cv.put(X(x), Y(y), c)
     lane = (bh - 6) // 2
@@ -580,9 +580,28 @@ def board(planned):
     o.finish(); return o
 
 
+def overlay():
+    """Warm light: pools under two ceiling panels and soft shafts from the windows (drawn over everything)."""
+    cv = Canvas(W, H)
+    for (lx, ly) in ((6 * T, 5 * T), (14 * T, 5 * T)):
+        for y in range(ly - 110, ly + 110):
+            for x in range(lx - 170, lx + 170):
+                d = math.hypot((x - lx) / 170, (y - ly) / 110)
+                if d < 1: cv.put(x, y, C('lamp_glow', 1)[:3] + (int(46 * (1 - d) ** 1.4),))
+    for wc in (3, 16):
+        cx = wc * T + T; y0 = 76
+        for y in range(y0, y0 + 260):
+            t = (y - y0) / 260; sx = cx - 10 + (y - y0) * 0.4; half = 26 + t * 18
+            for x in range(int(sx - half), int(sx + half)):
+                e = abs(x - sx) / half
+                a = int(40 * (1 - t) ** 1.2 * (1 - e ** 4))
+                if a > 2: cv.put(x, y, C('lamp_glow', 0)[:3] + (a,))
+    return cv
+
+
 def build():
     objs = [kettle(), lockers(), meeting_table(), desk(), plan_chest(), sign_in(), filing(), cooler(), board(False), board(True),
             SH.exit_sign_at('exit_sign', EXIT_X, TH)]
-    return {'size': [W, H], 'floor': floor(), 'walls': walls(), 'objects': objs,
+    return {'size': [W, H], 'floor': floor(), 'walls': walls(), 'overlay': overlay(), 'objects': objs,
             'variants': {'board': {'normal': 'board', 'planned': 'board_planned', 'flag': 'planned'}},
             'preview_skip': ['board_planned']}

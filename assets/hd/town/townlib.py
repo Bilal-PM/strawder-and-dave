@@ -343,7 +343,7 @@ def roof(p, x0, w, y_top, ridge_y, eave_y, kind='wslate', seed=0, ridge='clay', 
                     for b2 in range(-3, 4):
                         d = math.hypot(a, b2 * 1.4)
                         if d <= rr and hash01(xx + a, yy + b2, 17) > (0.25 if d > rr - 1 else 0):
-                            p.r(xx + a, yy + b2, 'lichen', 0 if (d > rr - 1 and a + b2 < 0) else (2 if d < rr * .45 else 1))
+                            p.r(xx + a, yy + b2, 'lichen', 1 if (d > rr - 1 and a + b2 < 0) else (3 if d < rr * .45 else 2))
             else:
                 r = rnd.choice([3, 3, 4, 5, 6])
                 for a in range(-r, r + 1):

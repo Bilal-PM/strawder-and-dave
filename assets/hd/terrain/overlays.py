@@ -42,8 +42,9 @@ def grass_edge(sides, mode, v, kind='grass'):
     seed = 23 if kind == 'grass' else 11            # the same seed as the grass / lawn sets: identical at the border
     L = Layered(seed + 400, v)
     s, near = sdist(sides, mode)
-    f = L.field((16, 8, 4)) * 1.8 + L.field((4, 2)) * 0.8
-    d = 5.0 + f
+    fa, fab = L.field((16, 8, 4), both=True); fc, fcb = L.field((4, 2), both=True)
+    d = 5.0 + fa * 1.8 + fc * 0.8
+    db = 5.0 + fab * 1.8 + fcb * 0.8
     gimg, _ = GR.grass_tile(v, kind, seed=seed)
     out = blank()
     m = s < d
@@ -54,7 +55,7 @@ def grass_edge(sides, mode, v, kind='grass'):
     # tufts leaning out over the other surface along the edge
     tuft = blank()
     GR.clump_layer(tuft, L, 4.5, (3, 6, 3, 6), lambda q: 'grass', base_i=3, tip_lit=0, tip_dark=1, nbl=(3, 5),
-                   skip=lambda q: abs(s[int(q[1]) % T, int(q[0]) % T] - d[int(q[1]) % T, int(q[0]) % T]) > 1.5 or q[2] > 0.75)
+                   skip=lambda q: abs(s[int(q[1]) % T, int(q[0]) % T] - (db if is_base(q) else d)[int(q[1]) % T, int(q[0]) % T]) > 1.5 or q[2] > 0.75)
     # cast shadow on the lower surface when the grass is to the north or west (NW light)
     sh = (~m) & (s < d + 2.5) & np.isin(near, ['N', 'W'])
     out[sh] = np.array(SHADOW[:3] + (80,), np.uint8)
@@ -184,7 +185,7 @@ def platform_edges(closed=True):
     base, _ = ST.platform_variants(closed)
     N, S = [], []
     for v in range(4):
-        rng = np.random.default_rng(1010 + v)
+        rng = np.random.default_rng(1010)          # coping and line identical in every variant (they tile along x)
         a = base[v].copy()
         # coping along the north (track) edge: bullnose lip, lit top, joints every 24 px
         for x in range(T):
@@ -201,8 +202,9 @@ def platform_edges(closed=True):
                 if closed and rng.random() < 0.06: continue
                 put(a, x, y, c, False)
         if closed:   # weeds in coping joints
-            for jx in (23, 47):
-                if rng.random() < 0.6:
+            wr = np.random.default_rng(1020 + v)
+            for jx in (23,):
+                if wr.random() < 0.7:
                     for (dx, dy, i) in [(0, 8, 3), (-1, 7, 2), (1, 7, 2), (0, 6, 1)]: put(a, jx + dx, dy, rgb('grass', i), False)
         N.append(a)
         # south (back) edge: coping, then the visible retaining face in brick, AO at its foot
@@ -216,7 +218,7 @@ def platform_edges(closed=True):
             for x in range(T):
                 if (y - top - 4) % 4 == 3 or (x + (course % 2) * 6) % 12 == 0: c = rgb('stone', 3)   # mortar
                 else:
-                    k = ((x + (course % 2) * 6) // 12 * 7 + course * 3 + v) % 5
+                    k = ((x + (course % 2) * 6) // 12 * 7 + course * 3) % 5
                     c = rgb('brick_dark' if k == 0 else 'brick', 1 if (y - top - 4) % 4 == 0 else (2 if k < 3 else 3))
                 if y >= T - 2: c = rgb('brick', 4)
                 put(b, x, y, c, False)

@@ -158,7 +158,7 @@ def bench(variant=0, plaque=True):
         for x in range(8 + (y - 50) // 3, Wd - 2 + (y - 50) // 3):
             if y >= 60 or (x < L0 + 8 or x > L1 - 2): pass
         pass
-    for x in range(6, Wd - 2):
+    for x in range(6, Wd - 6):
         for y in range(62, 69): sh.put(x + (y - 62) // 2, y, SHADOW[:3] + (80 if y < 67 else 50,))
     over(sh, cv)
     return sh, [Wd // 2, 66]

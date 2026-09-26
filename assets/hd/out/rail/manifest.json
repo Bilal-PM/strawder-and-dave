@@ -139,24 +139,24 @@
   ],
   "w": 48
  },
- "crossing_barrier_e_lowered": {
+ "crossing_barrier_lowered": {
   "anchor": [
-   102,
+   150,
    110
   ],
-  "file": "crossing_barrier_e_lowered.png",
+  "file": "crossing_barrier_lowered.png",
   "h": 110,
   "lamps": {
    "amber": [
-    129,
+    177,
     34
    ],
    "red_l": [
-    137,
+    169,
     23
    ],
    "red_r": [
-    121,
+    185,
     23
    ]
   },
@@ -164,73 +164,113 @@
    107,
    17
   ],
-  "note": "live line: half-barrier on the east verge; lowered boom covers 2 lane tiles; lamps in sprite px",
+  "note": "live line: barrier post in tile (107,17) and again at (107,24); lowered boom spans x104-106; lamps in sprite px",
+  "placements": [
+   [
+    107,
+    17
+   ],
+   [
+    107,
+    24
+   ]
+  ],
   "tiles": [
    1,
    1
   ],
-  "w": 150
+  "w": 198
  },
- "crossing_barrier_e_lowered_lit_a": {
+ "crossing_barrier_lowered_lit_a": {
   "anchor": [
-   102,
+   150,
    110
   ],
-  "file": "crossing_barrier_e_lowered_lit_a.png",
+  "file": "crossing_barrier_lowered_lit_a.png",
   "h": 110,
   "map_origin": [
    107,
    17
   ],
-  "note": "flash frame: alternate _lit_l/_lit_r at ~1.5 Hz after _lit_a",
+  "note": "flash frames: steady _lit_a first, then alternate _lit_l/_lit_r at ~1.5 Hz",
+  "placements": [
+   [
+    107,
+    17
+   ],
+   [
+    107,
+    24
+   ]
+  ],
   "tiles": [
    1,
    1
   ],
-  "w": 150
+  "w": 198
  },
- "crossing_barrier_e_lowered_lit_l": {
+ "crossing_barrier_lowered_lit_l": {
   "anchor": [
-   102,
+   150,
    110
   ],
-  "file": "crossing_barrier_e_lowered_lit_l.png",
+  "file": "crossing_barrier_lowered_lit_l.png",
   "h": 110,
   "map_origin": [
    107,
    17
   ],
-  "note": "flash frame: alternate _lit_l/_lit_r at ~1.5 Hz after _lit_a",
+  "note": "flash frames: steady _lit_a first, then alternate _lit_l/_lit_r at ~1.5 Hz",
+  "placements": [
+   [
+    107,
+    17
+   ],
+   [
+    107,
+    24
+   ]
+  ],
   "tiles": [
    1,
    1
   ],
-  "w": 150
+  "w": 198
  },
- "crossing_barrier_e_lowered_lit_r": {
+ "crossing_barrier_lowered_lit_r": {
   "anchor": [
-   102,
+   150,
    110
   ],
-  "file": "crossing_barrier_e_lowered_lit_r.png",
+  "file": "crossing_barrier_lowered_lit_r.png",
   "h": 110,
   "map_origin": [
    107,
    17
   ],
-  "note": "flash frame: alternate _lit_l/_lit_r at ~1.5 Hz after _lit_a",
+  "note": "flash frames: steady _lit_a first, then alternate _lit_l/_lit_r at ~1.5 Hz",
+  "placements": [
+   [
+    107,
+    17
+   ],
+   [
+    107,
+    24
+   ]
+  ],
   "tiles": [
    1,
    1
   ],
-  "w": 150
+  "w": 198
  },
- "crossing_barrier_e_raised": {
+ "crossing_barrier_raised": {
   "anchor": [
    0,
    180
   ],
-  "file": "crossing_barrier_e_raised.png",
+  "file": "crossing_barrier_raised.png",
   "h": 180,
   "lamps": {
    "amber": [
@@ -238,11 +278,11 @@
     104
    ],
    "red_l": [
-    35,
+    19,
     93
    ],
    "red_r": [
-    19,
+    35,
     93
    ]
   },
@@ -250,125 +290,17 @@
    107,
    17
   ],
-  "note": "live line: half-barrier on the east verge; lowered boom covers 2 lane tiles; lamps in sprite px",
-  "tiles": [
-   1,
-   1
-  ],
-  "w": 48
- },
- "crossing_barrier_w_lowered": {
-  "anchor": [
-   0,
-   110
-  ],
-  "file": "crossing_barrier_w_lowered.png",
-  "h": 110,
-  "lamps": {
-   "amber": [
-    20,
-    34
+  "note": "live line: barrier post in tile (107,17) and again at (107,24); lowered boom spans x104-106; lamps in sprite px",
+  "placements": [
+   [
+    107,
+    17
    ],
-   "red_l": [
-    12,
-    23
-   ],
-   "red_r": [
-    28,
-    23
+   [
+    107,
+    24
    ]
-  },
-  "map_origin": [
-   103,
-   24
   ],
-  "note": "live line: half-barrier on the west verge; lowered boom covers 2 lane tiles; lamps in sprite px",
-  "tiles": [
-   1,
-   1
-  ],
-  "w": 150
- },
- "crossing_barrier_w_lowered_lit_a": {
-  "anchor": [
-   0,
-   110
-  ],
-  "file": "crossing_barrier_w_lowered_lit_a.png",
-  "h": 110,
-  "map_origin": [
-   103,
-   24
-  ],
-  "note": "flash frame: alternate _lit_l/_lit_r at ~1.5 Hz after _lit_a",
-  "tiles": [
-   1,
-   1
-  ],
-  "w": 150
- },
- "crossing_barrier_w_lowered_lit_l": {
-  "anchor": [
-   0,
-   110
-  ],
-  "file": "crossing_barrier_w_lowered_lit_l.png",
-  "h": 110,
-  "map_origin": [
-   103,
-   24
-  ],
-  "note": "flash frame: alternate _lit_l/_lit_r at ~1.5 Hz after _lit_a",
-  "tiles": [
-   1,
-   1
-  ],
-  "w": 150
- },
- "crossing_barrier_w_lowered_lit_r": {
-  "anchor": [
-   0,
-   110
-  ],
-  "file": "crossing_barrier_w_lowered_lit_r.png",
-  "h": 110,
-  "map_origin": [
-   103,
-   24
-  ],
-  "note": "flash frame: alternate _lit_l/_lit_r at ~1.5 Hz after _lit_a",
-  "tiles": [
-   1,
-   1
-  ],
-  "w": 150
- },
- "crossing_barrier_w_raised": {
-  "anchor": [
-   0,
-   180
-  ],
-  "file": "crossing_barrier_w_raised.png",
-  "h": 180,
-  "lamps": {
-   "amber": [
-    20,
-    104
-   ],
-   "red_l": [
-    12,
-    93
-   ],
-   "red_r": [
-    28,
-    93
-   ]
-  },
-  "map_origin": [
-   103,
-   24
-  ],
-  "note": "live line: half-barrier on the west verge; lowered boom covers 2 lane tiles; lamps in sprite px",
   "tiles": [
    1,
    1
@@ -413,16 +345,26 @@
  },
  "crossing_sign_dead": {
   "anchor": [
-   0,
+   -4,
    132
   ],
   "file": "crossing_sign_dead.png",
   "h": 132,
   "map_origin": [
-   107,
+   108,
    17
   ],
-  "note": "St Andrew cross + dead lights (closed line); also at (103,24)",
+  "note": "St Andrew cross + dead lights (closed line)",
+  "placements": [
+   [
+    108,
+    17
+   ],
+   [
+    107,
+    24
+   ]
+  ],
   "tiles": [
    1,
    1
@@ -431,14 +373,24 @@
  },
  "crossing_sign_live": {
   "anchor": [
-   0,
+   -4,
    132
   ],
   "file": "crossing_sign_live.png",
   "h": 132,
   "map_origin": [
-   107,
+   108,
    17
+  ],
+  "placements": [
+   [
+    108,
+    17
+   ],
+   [
+    109,
+    24
+   ]
   ],
   "tiles": [
    1,
@@ -562,7 +514,7 @@
   "file": "lineside_cabinet.png",
   "h": 84,
   "map_origin": [
-   108,
+   109,
    24
   ],
   "note": "free-standing; centred in its tile",

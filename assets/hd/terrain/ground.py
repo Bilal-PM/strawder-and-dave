@@ -97,7 +97,7 @@ def _rail(out, man, pv):
         for o in ('H', 'V'):
             a = rail.rail_strip(kind, o)
             emit_sprites(out, man, 'rail_%s_%s' % (kind, o), [a], 'rail_%s_%s' % (kind, o), anchor=[0, 0],
-                         tiling='x' if o == 'H' else 'y', note='top-left at the rail offset (24 or 60 across the 96 px band)')
+                         tiling='x' if o == 'H' else 'y', note='top-left at the rail offset (29 or 65 across the 96 px band)')
         emit_sprites(out, man, 'rail_xsec_%s' % kind, [rail.rail_xsec(kind)], 'rail_xsec_%s' % kind, anchor=[0, 0],
                      note='cross-section, row 0 = lit side, last = cast shadow; stamp along the curve normal')
         emit_sprites(out, man, 'rail_joint_%s_H' % kind, [rail.rail_joint(kind)], 'rail_joint_%s_H' % kind, anchor=[8, 0])

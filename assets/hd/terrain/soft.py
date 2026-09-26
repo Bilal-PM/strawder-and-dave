@@ -290,12 +290,13 @@ def woodland_variants():
         img = from_idx(noise_idx(L, 5, 3.0, cells=(8, 4, 2), amp=0.5, speck=0.1), 'mud')
         # moss patches (from the locked field, so they flow across edges)
         mf = L.field((16, 8, 4))
-        m1 = mf > (0.9 if v < 6 else 0.3)
+        m1 = mf > blend_thr(0.9, 0.9 if v < 6 else 0.3)
         mw = L.white()
         img[m1] = from_idx(np.where(mw > 0.7, 1, np.where(mw > 0.25, 2, 3)), 'leaf')[m1]
-        m2 = mf > (1.5 if v < 6 else 0.9)
+        m2 = mf > blend_thr(1.5, 1.5 if v < 6 else 0.9)
         img[m2 & (mw > 0.55)] = from_idx(np.full((T, T), 0), 'leaf')[m2 & (mw > 0.55)]
-        scatter_sprites(img, L, 3.4, lambda q, rr: leaf(rr), (5, 9, 5, 1), p=0.8 if v < 6 else 0.4)
+        pv = 0.8 if v < 6 else 0.4
+        scatter_sprites(img, L, 3.4, lambda q, rr: leaf(rr) if (q[2] < (0.8 if is_base(q) else pv)) else None, (5, 9, 5, 1))
         rng = np.random.default_rng(2300 + v)
         if v in (3, 4):   # twigs
             for _ in range(2):

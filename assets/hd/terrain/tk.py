@@ -85,9 +85,9 @@ class Layered:
         b = fbm(self.base, cells, amps); v = fbm(self.var, cells, amps)
         return (lock_blend(b, v), b) if both else lock_blend(b, v)
 
-    def white(self):
+    def white(self, both=False):
         b = white(self.base); v = white(self.var)
-        return lock_hard(b, v, 3.0)
+        return (lock_hard(b, v, 3.0), b) if both else lock_hard(b, v, 3.0)
 
 
 def jitter_pts(rng, spacing, w=T, h=T, jit=0.9):
@@ -291,7 +291,7 @@ def scatter_sprites(img, L, spacing, make, ext, p=1.0, interior_only=False, sort
     pts = periodic_copies(locked_pts(L, spacing, 0, ext=ext), (ext[0] + 2, ext[1] + 2, ext[2] + 2, ext[3] + 2))
     if sort: pts.sort(key=lambda q: (q[1], q[0]))
     for q in pts:
-        x, y, r1, r2, r3, isb = q
+        x, y, r1, r2, r3, isb = q[:6]
         if r1 > p: continue
         if interior_only and not (1 + ext[0] <= x <= T - 2 - ext[2] and 1 + ext[1] <= y <= T - 2 - ext[3]): continue
         rr = np.random.default_rng(int(r2 * 1e7) + int(r3 * 1e4) + 17)

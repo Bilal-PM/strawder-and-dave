@@ -174,7 +174,7 @@ def scene_preview(out):
     for ty in range(H):
         for tx in range(W):
             ch = G[ty][tx]
-            if ch in 'p:-':
+            if ch in 'p:-r':
                 autotile(C, A, G, tx, ty, 'grass_edge', lambda c: c == '.')
                 autotile(C, A, G, tx, ty, 'lawn_edge', lambda c: c in ',"')
     # railway (closed line): rotten sleepers in the middle, a blocked-drain puddle on the cess

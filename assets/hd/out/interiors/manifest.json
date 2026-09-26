@@ -4,6 +4,373 @@
   "tile": 48,
   "units": "art px; at = room art px where the sprite anchor lands; tile = the level.js entity tile; foot = [x, y, w, h] map tiles; fade = [x, y, w, h] tiles where the player behind the object makes it draw at half alpha; points/text_slots are sprite px"
  },
+ "hall": {
+  "floor": {
+   "file": "hall_floor.png",
+   "h": 672,
+   "w": 1344
+  },
+  "objects": {
+   "chair": {
+    "anchor": [
+     26,
+     60
+    ],
+    "at": [
+     24,
+     48
+    ],
+    "file": "hall_chair.png",
+    "foot": [
+     0,
+     0,
+     1,
+     1
+    ],
+    "h": 62,
+    "note": "one stacking chair (blue) for placing per seat; not placed in the room",
+    "tile": null,
+    "w": 52
+   },
+   "chairs_back_e": {
+    "anchor": [
+     242,
+     60
+    ],
+    "at": [
+     1008,
+     432
+    ],
+    "fade": [
+     16,
+     7,
+     10,
+     1
+    ],
+    "file": "hall_chairs_back_e.png",
+    "foot": [
+     16,
+     8,
+     10,
+     1
+    ],
+    "h": 62,
+    "tile": [
+     16,
+     8
+    ],
+    "w": 484
+   },
+   "chairs_back_w": {
+    "anchor": [
+     242,
+     60
+    ],
+    "at": [
+     384,
+     432
+    ],
+    "fade": [
+     3,
+     7,
+     10,
+     1
+    ],
+    "file": "hall_chairs_back_w.png",
+    "foot": [
+     3,
+     8,
+     10,
+     1
+    ],
+    "h": 62,
+    "tile": [
+     3,
+     8
+    ],
+    "w": 484
+   },
+   "chairs_front_e": {
+    "anchor": [
+     242,
+     60
+    ],
+    "at": [
+     1008,
+     336
+    ],
+    "fade": [
+     16,
+     5,
+     10,
+     1
+    ],
+    "file": "hall_chairs_front_e.png",
+    "foot": [
+     16,
+     6,
+     10,
+     1
+    ],
+    "h": 62,
+    "tile": [
+     16,
+     6
+    ],
+    "w": 484
+   },
+   "chairs_front_w": {
+    "anchor": [
+     242,
+     60
+    ],
+    "at": [
+     384,
+     336
+    ],
+    "fade": [
+     3,
+     5,
+     10,
+     1
+    ],
+    "file": "hall_chairs_front_w.png",
+    "foot": [
+     3,
+     6,
+     10,
+     1
+    ],
+    "h": 62,
+    "tile": [
+     3,
+     6
+    ],
+    "w": 484
+   },
+   "exit_sign": {
+    "anchor": [
+     50,
+     2
+    ],
+    "at": [
+     624,
+     624
+    ],
+    "file": "hall_exit_sign.png",
+    "foot": [
+     12,
+     13,
+     2,
+     0
+    ],
+    "glow": true,
+    "h": 30,
+    "note": "hangs over the exit gap on the south wall; draw after actors",
+    "text_slot": [
+     24,
+     10,
+     52,
+     12
+    ],
+    "tile": [
+     12,
+     13
+    ],
+    "w": 100
+   },
+   "hall_noticeboard": {
+    "anchor": [
+     50,
+     106
+    ],
+    "at": [
+     1248,
+     144
+    ],
+    "file": "hall_hall_noticeboard.png",
+    "foot": [
+     25,
+     2,
+     2,
+     1
+    ],
+    "h": 108,
+    "tile": [
+     25,
+     2
+    ],
+    "w": 100
+   },
+   "piano": {
+    "anchor": [
+     50,
+     110
+    ],
+    "at": [
+     1248,
+     576
+    ],
+    "file": "hall_piano.png",
+    "foot": [
+     25,
+     11,
+     2,
+     1
+    ],
+    "h": 112,
+    "tile": [
+     25,
+     11
+    ],
+    "w": 100
+   },
+   "stacked_chairs": {
+    "anchor": [
+     50,
+     118
+    ],
+    "at": [
+     96,
+     576
+    ],
+    "file": "hall_stacked_chairs.png",
+    "foot": [
+     1,
+     11,
+     2,
+     1
+    ],
+    "h": 120,
+    "tile": [
+     1,
+     11
+    ],
+    "w": 100
+   },
+   "stage": {
+    "anchor": [
+     242,
+     60
+    ],
+    "at": [
+     672,
+     144
+    ],
+    "file": "hall_stage.png",
+    "foot": [
+     9,
+     2,
+     10,
+     1
+    ],
+    "h": 62,
+    "tile": [
+     9,
+     2
+    ],
+    "w": 484
+   },
+   "table": {
+    "anchor": [
+     242,
+     74
+    ],
+    "at": [
+     672,
+     240
+    ],
+    "file": "hall_table.png",
+    "foot": [
+     9,
+     4,
+     10,
+     1
+    ],
+    "h": 76,
+    "hidden_until": "panel",
+    "text_slots": {
+     "card_helen": [
+      207,
+      29,
+      24,
+      6
+     ],
+     "card_raj": [
+      399,
+      29,
+      24,
+      6
+     ],
+     "card_sue": [
+      63,
+      29,
+      24,
+      6
+     ]
+    },
+    "tile": [
+     13,
+     4
+    ],
+    "w": 484
+   },
+   "urn": {
+    "anchor": [
+     50,
+     136
+    ],
+    "at": [
+     96,
+     192
+    ],
+    "file": "hall_urn.png",
+    "foot": [
+     1,
+     2,
+     2,
+     2
+    ],
+    "h": 138,
+    "points": {
+     "steam": [
+      23,
+      10
+     ]
+    },
+    "tile": [
+     1,
+     2
+    ],
+    "w": 100
+   }
+  },
+  "overlay": {
+   "draw": "after everything",
+   "file": "hall_overlay.png",
+   "h": 672,
+   "w": 1344
+  },
+  "text_slots": {
+   "banner": [
+    492,
+    28,
+    456,
+    18
+   ]
+  },
+  "variants": {
+   "table": {
+    "flag": "panel",
+    "note": "draw only when flags.panel"
+   }
+  },
+  "walls": {
+   "file": "hall_walls.png",
+   "h": 672,
+   "w": 1344
+  }
+ },
  "marjorie": {
   "anchor": [
    578,
@@ -102,7 +469,7 @@
    "board": {
     "anchor": [
      146,
-     134
+     94
     ],
     "at": [
      528,
@@ -115,17 +482,17 @@
      6,
      1
     ],
-    "h": 136,
+    "h": 96,
     "text_slots": {
      "lane_marjorie": [
       15,
-      21,
+      15,
       36,
       7
      ],
      "lane_track": [
       15,
-      53,
+      45,
       36,
       7
      ]
@@ -139,7 +506,7 @@
    "board_planned": {
     "anchor": [
      146,
-     134
+     94
     ],
     "at": [
      528,
@@ -148,39 +515,39 @@
     "critical_path": [
      [
       69,
-      38
+      32
      ],
      [
       93,
-      42
+      36
      ],
      [
       117,
-      38
+      32
      ],
      [
       141,
-      38
+      32
      ],
      [
       165,
-      70
+      62
      ],
      [
       189,
-      70
+      62
      ],
      [
       213,
-      38
+      32
      ],
      [
       237,
-      42
+      36
      ],
      [
       261,
-      38
+      32
      ]
     ],
     "file": "office_board_planned.png",
@@ -190,17 +557,17 @@
      6,
      1
     ],
-    "h": 136,
+    "h": 96,
     "text_slots": {
      "lane_marjorie": [
       15,
-      21,
+      15,
       36,
       7
      ],
      "lane_track": [
       15,
-      53,
+      45,
       36,
       7
      ]
@@ -268,7 +635,7 @@
    "filing": {
     "anchor": [
      50,
-     122
+     98
     ],
     "at": [
      288,
@@ -281,7 +648,7 @@
      2,
      1
     ],
-    "h": 124,
+    "h": 100,
     "tile": [
      5,
      1
@@ -308,7 +675,7 @@
     "points": {
      "steam": [
       7,
-      52
+      24
      ]
     },
     "tile": [
@@ -424,7 +791,7 @@
    "water_cooler": {
     "anchor": [
      50,
-     130
+     98
     ],
     "at": [
      720,
@@ -437,13 +804,19 @@
      2,
      1
     ],
-    "h": 132,
+    "h": 100,
     "tile": [
      14,
      1
     ],
     "w": 100
    }
+  },
+  "overlay": {
+   "draw": "after everything",
+   "file": "office_overlay.png",
+   "h": 576,
+   "w": 960
   },
   "variants": {
    "board": {
@@ -574,7 +947,7 @@
    "hoist": {
     "anchor": [
      74,
-     132
+     96
     ],
     "at": [
      696,
@@ -587,7 +960,7 @@
      3,
      1
     ],
-    "h": 134,
+    "h": 98,
     "tile": [
      13,
      1
@@ -620,7 +993,7 @@
    "racking": {
     "anchor": [
      98,
-     138
+     98
     ],
     "at": [
      1392,
@@ -633,7 +1006,7 @@
      4,
      1
     ],
-    "h": 140,
+    "h": 100,
     "tile": [
      27,
      1

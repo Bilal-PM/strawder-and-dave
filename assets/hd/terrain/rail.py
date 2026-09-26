@@ -2,7 +2,7 @@
 cross-section for curves, rail joint, and level-crossing decks.
 
 Track geometry (art px, 48 px tiles, a straight track occupies a band 2 tiles = 96 px across):
-  * rail strips: top row at 24 and 60 across the band (strip is 7 px: head, side, web/foot, cast shadow)
+  * rail strips: top row at 29 and 65 across the band (strip is 7 px: head, side, web/foot, cast shadow)
   * sleepers: 66 px long, centred on the band (from 15 to 81), 12 px wide, laid every 24 px
 Vertical (N-S) track uses the same numbers across x.
 """
@@ -12,7 +12,7 @@ from tk import *  # noqa: F401,F403
 import grass as GR
 
 BAND = 96
-RAIL_TOP = (24, 60)
+RAIL_TOP = (29, 65)   # head centres at 30 and 66: +-18 px about the band centre (48)
 RAIL_H = 7
 SL_LEN, SL_W, SL_PITCH, SL_START = 66, 12, 24, 15
 CHAIR_AT = (RAIL_TOP[0] - SL_START + 3, RAIL_TOP[1] - SL_START + 3)   # rail-head centre along the sleeper
@@ -97,15 +97,16 @@ def weed(rng, big=False):
     return a
 
 
-def grass_patches(img, L, v, thresh, seed=611, tufts=True, island=False):
+def grass_patches(img, L, v, thresh, seed=611, tufts=True, island=False, base_thresh=None):
     """Grass creeping over: a real grass texture inside a ragged, locked-noise mask, a shaded lip on the stones
     beyond it, and tufts leaning out over the edge."""
     f, fb = L.field((16, 8, 4), both=True)
-    wn = L.white(); f = f + (wn - 0.5) * 0.5; fb = fb + (wn - 0.5) * 0.5
+    wn, wnb = L.white(both=True); f = f + (wn - 0.5) * 0.5; fb = fb + (wnb - 0.5) * 0.5
     if island:   # patches fade out before the border, so these tiles mix freely with the plain set
         t = np.clip((EDGE_D - 3) / 10, 0, 1); f = f - 3 * (1 - t * t * (3 - 2 * t))
     gimg, _ = GR.grass_tile(v, 'grass', seed=seed)
-    thr = thresh
+    bthr = thresh if base_thresh is None else base_thresh
+    thresh = blend_thr(bthr, thresh)
     m = f > thresh
     lip = np.zeros_like(m)
     for dx, dy in ((1, 0), (0, 1), (1, 1)): lip |= np.roll(np.roll(m, dy, 0), dx, 1)
@@ -115,7 +116,7 @@ def grass_patches(img, L, v, thresh, seed=611, tufts=True, island=False):
     img[m] = gimg[m]
     if tufts:
         GR.clump_layer(img, L, 5.0, (3, 6, 4, 7), lambda q: 'grass', base_i=3, tip_lit=0, tip_dark=1, nbl=(3, 5),
-                       skip=lambda q: abs((fb if is_base(q) else f)[int(q[1]) % T, int(q[0]) % T] - thr) > 0.35 or q[2] > 0.8)
+                       skip=lambda q: (abs(fb[int(q[1]) % T, int(q[0]) % T] - bthr) if is_base(q) else abs(f[int(q[1]) % T, int(q[0]) % T] - thresh[int(q[1]) % T, int(q[0]) % T])) > 0.35 or q[2] > 0.8)
     return f
 
 
@@ -137,7 +138,7 @@ def ballast_sets():
     weedy = []
     for v in range(8):
         img, L = ballast_tile(v, 137, 'ballast', 4.4, rust_p=0.25, dirty=0.4, gap_ramp='mud', gap_idx=3)
-        grass_patches(img, L, v, 0.4 if v < 4 else -0.1, island=True)
+        grass_patches(img, L, v, 0.4 if v < 4 else -0.1, island=True, base_thresh=0.4)
         weeds_on(img, L, 12, 0.45, 0.4)
         weedy.append(img)
     out['ballast_old_weedy'] = (weedy, [1] * 8)
@@ -150,7 +151,7 @@ def ballast_sets():
     cold = []
     for v in range(8):
         img, L = ballast_tile(v, 151, 'charcoal', 3.2, rust_p=0.12, dirty=0.4, gap_ramp='mud', gap_idx=4, tone_sd=0.35)
-        grass_patches(img, L, v, blend_thr(1.0, 1.0 if v < 5 else 0.45), seed=617)
+        grass_patches(img, L, v, 1.0 if v < 5 else 0.45, seed=617, base_thresh=1.0)
         if v >= 3: weeds_on(img, L, 14, 0.4, 0.3)
         cold.append(img)
     out['cess_old'] = (cold, [2, 2, 2, 1, 1, 1, 1, 1])
@@ -354,7 +355,7 @@ def xing_deck(kind, v=0, rail='rust', rails=True, y0=10, y1=86, h=BAND):
         for y in range(y0, y1):
             plank = (y - y0) // 8
             joint = (y - y0) % 8 == 7
-            off = [0, 20, 34, 10, 28, 40][plank % 6] + v * 7
+            off = [0, 20, 34, 10, 28, 40][plank % 6]
             for x in range(T):
                 g = math.sin((x + plank * 13) * 0.9) * 0.3 + ((x * 31 + y * 17 + plank * 7) % 13) / 13 * 0.8
                 i = int(np.clip(round(1.8 + g - (0.8 if (y - y0) % 8 == 0 else 0) + (0.8 if (y - y0) % 8 == 6 else 0)), 0, 4))
@@ -362,6 +363,12 @@ def xing_deck(kind, v=0, rail='rust', rails=True, y0=10, y1=86, h=BAND):
                 if (x - off) % T == 0 and not joint: c = rgb('wood_dark', 4)
                 if (x - off - 3) % T == 0 and (y - y0) % 8 == 3: c = rgb('metal', 3)   # coach screw
                 put(a, x, y, c, False)
+        for _ in range(2 + v):   # knots, splits and a moss tuft or two, inside the tile only
+            kx, ky = int(rng.integers(6, T - 6)), int(rng.integers(y0 + 2, y1 - 3))
+            put(a, kx, ky, rgb('wood_dark', 4), False); put(a, kx + 1, ky, rgb('wood_dark', 3), False)
+            if rng.random() < 0.4:
+                for dx in range(2, 7): put(a, kx + dx, ky, rgb('wood_dark', 4), False)
+            if rng.random() < 0.3: put(a, kx - 1, ky - 1, rgb('leaf', 2), False); put(a, kx, ky - 1, rgb('leaf', 3), False)
     else:
         for y in range(y0, y1):
             for x in range(T):

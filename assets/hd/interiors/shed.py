@@ -605,11 +605,11 @@ def oil_drums():
 
 
 def hoist():
-    o = Obj('hoist', (13, 1, 3, 1), up=84, m=2)
+    o = Obj('hoist', (13, 1, 3, 1), up=48, m=2)
     cv, X, Y = o.cv, o.X, o.Y
     w = 3 * T
     ground_shadow(cv, X(w // 2), Y(44), w // 2, 6, 80)
-    beam_y = -78
+    beam_y = -42
     for (fx, tx) in ((6, 20), (34, 20), (w - 6, w - 20), (w - 34, w - 20)):
         for s in range(140):
             t = s / 140; x = fx + (tx - fx) * t; y = 44 + (beam_y + 6 - 44) * t
@@ -627,11 +627,11 @@ def hoist():
     for wx in (tx + 3, tx + 14): cv.ellipse(X(wx), Y(beam_y + 9), 2, 2, C('metal', 2))
     cv.rect(X(tx + 1), Y(beam_y + 17), 16, 18, C('paint_red', 2)); hl(cv, X(tx + 1), Y(beam_y + 17), 16, C('paint_red', 1)); vl(cv, X(tx + 1), Y(beam_y + 17), 18, C('paint_red', 1)); vl(cv, X(tx + 16), Y(beam_y + 17), 18, C('paint_red', 4))
     cv.ellipse(X(tx + 9), Y(beam_y + 25), 5, 5, C('metal', 2)); cv.ellipse(X(tx + 9), Y(beam_y + 25), 2, 2, C('metal', 4))
-    for y in range(beam_y + 35, beam_y + 72): cv.put(X(tx + 9), Y(y), C('metal', 1) if y % 2 else C('metal', 3)); cv.put(X(tx + 10), Y(y), C('metal', 4) if y % 2 else C('metal', 2))
-    for y in range(beam_y + 35, beam_y + 96):   # hand chain loop
+    for y in range(beam_y + 35, beam_y + 60): cv.put(X(tx + 9), Y(y), C('metal', 1) if y % 2 else C('metal', 3)); cv.put(X(tx + 10), Y(y), C('metal', 4) if y % 2 else C('metal', 2))
+    for y in range(beam_y + 35, beam_y + 80):   # hand chain loop
         cv.put(X(tx + 1), Y(y), C('metal', 2) if y % 2 else C('metal', 4)); cv.put(X(tx + 16), Y(y), C('metal', 2) if y % 2 else C('metal', 4))
-    hl(cv, X(tx + 1), Y(beam_y + 96), 16, C('metal', 3))
-    hy = beam_y + 72
+    hl(cv, X(tx + 1), Y(beam_y + 80), 16, C('metal', 3))
+    hy = beam_y + 60
     cv.rect(X(tx + 6), Y(hy), 8, 4, C('warn', 2)); hl(cv, X(tx + 6), Y(hy), 8, C('warn', 1))
     for k, (dx, dy) in enumerate(((9, 4), (9, 5), (9, 6), (9, 7), (10, 8), (11, 9), (12, 10), (12, 11), (11, 12), (10, 13), (9, 13), (8, 12), (7, 11))):
         cv.put(X(tx + dx), Y(hy + dy), C('metal', 1 if k < 6 else 2)); cv.put(X(tx + dx + 1), Y(hy + dy), C('metal', 3))
@@ -655,47 +655,48 @@ def fire_point():
 
 
 def racking():
-    o = Obj('racking', (27, 1, 4, 1), up=90, m=2)
+    o = Obj('racking', (27, 1, 4, 1), up=50, m=2)
     cv, X, Y = o.cv, o.X, o.Y
     w = 4 * T - 12
     ground_shadow(cv, X(w // 2 + 4), Y(44), w // 2 + 6, 6, 90)
-    shelves = [-62, -30, 2, 32]
+    shelves = [-28, 0, 30]
     for sy in shelves:
         cv.rect(X(0), Y(sy), w, 6, C('steel_blue', 2)); hl(cv, X(0), Y(sy), w, C('steel_blue', 0)); hl(cv, X(0), Y(sy + 1), w, C('steel_blue', 1)); hl(cv, X(0), Y(sy + 5), w, C('steel_blue', 4))
         hl(cv, X(0), Y(sy + 6), w, SHADOW[:3] + (120,)); hl(cv, X(0), Y(sy + 7), w, SHADOW[:3] + (70,))
     for px_ in (0, w - 4, w // 2 - 2):
-        cv.rect(X(px_), Y(-66), 4, 110, C('steel_blue', 3)); vl(cv, X(px_), Y(-66), 110, C('steel_blue', 1)); vl(cv, X(px_ + 3), Y(-66), 110, C('steel_blue', 4))
-        for y in range(-62, 42, 6): cv.put(X(px_ + 1), Y(y), C('steel_blue', 5)); cv.put(X(px_ + 2), Y(y), C('steel_blue', 5))
+        cv.rect(X(px_), Y(-32), 4, 76, C('steel_blue', 3)); vl(cv, X(px_), Y(-32), 76, C('steel_blue', 1)); vl(cv, X(px_ + 3), Y(-32), 76, C('steel_blue', 4))
+        for y in range(-28, 42, 6): cv.put(X(px_ + 1), Y(y), C('steel_blue', 5)); cv.put(X(px_ + 2), Y(y), C('steel_blue', 5))
     for k, bx in enumerate((6, 32, 54, 96, 124, 150)):   # top: cardboard boxes (blank labels)
-        bw = 20 + (k % 2) * 6; bh = 20 + (k % 3) * 5
+        bw = 20 + (k % 2) * 6; bh = 12 + (k % 3) * 3
         if bx + bw > w - 4: continue
-        cv.rect(X(bx), Y(-62 - bh), bw, bh, C('cork', 2)); hl(cv, X(bx), Y(-62 - bh), bw, C('cork', 1)); vl(cv, X(bx), Y(-62 - bh), bh, C('cork', 1)); vl(cv, X(bx + bw - 1), Y(-62 - bh), bh, C('cork', 4))
-        hl(cv, X(bx), Y(-62 - bh + 5), bw, C('cork', 3)); vl(cv, X(bx + bw // 2), Y(-62 - bh), 5, C('cork', 3))
-        cv.rect(X(bx + 4), Y(-62 - bh + 9), 9, 6, C('paper', 1)); hl(cv, X(bx + 4), Y(-62 - bh + 9), 9, C('paper', 0))
+        cv.rect(X(bx), Y(-28 - bh), bw, bh, C('cork', 2)); hl(cv, X(bx), Y(-28 - bh), bw, C('cork', 1)); vl(cv, X(bx), Y(-28 - bh), bh, C('cork', 1)); vl(cv, X(bx + bw - 1), Y(-28 - bh), bh, C('cork', 4))
+        hl(cv, X(bx), Y(-28 - bh + 5), bw, C('cork', 3)); vl(cv, X(bx + bw // 2), Y(-28 - bh), 5, C('cork', 3))
+        cv.rect(X(bx + 4), Y(-28 - bh + 9), 9, 6, C('paper', 1)); hl(cv, X(bx + 4), Y(-28 - bh + 9), 9, C('paper', 0))
     for k in range(4):   # middle: brake blocks, a spare headlamp, coiled air hose
         for j in range(3 - k // 2):
-            bx = X(8 + j * 17); by = Y(-30 - 7 - k * 5)
+            if k > 2: continue
+            bx = X(8 + j * 17); by = Y(0 - 7 - k * 5)
             cv.rect(bx, by, 15, 6, C('rust', 2)); hl(cv, bx, by, 15, C('rust', 1)); hl(cv, bx, by + 5, 15, C('rust', 4)); vl(cv, bx + 14, by, 6, C('rust', 3))
-    cv.ellipse(X(96), Y(-44), 12, 12, C('under', 2)); cv.ellipse(X(96), Y(-44), 9, 9, C('metal', 1)); cv.ellipse(X(95), Y(-45), 7, 7, C('glass', 0))
-    cv.ellipse(X(95), Y(-45), 4, 4, C('glass', 1)); cv.put(X(91), Y(-48), C('white', 0)); cv.put(X(92), Y(-49), C('white', 0))
+    cv.ellipse(X(96), Y(-13), 12, 12, C('under', 2)); cv.ellipse(X(96), Y(-13), 9, 9, C('metal', 1)); cv.ellipse(X(95), Y(-14), 7, 7, C('glass', 0))
+    cv.ellipse(X(95), Y(-14), 4, 4, C('glass', 1)); cv.put(X(91), Y(-17), C('white', 0)); cv.put(X(92), Y(-18), C('white', 0))
     for r in (15, 11, 7):
-        cv.ellipse(X(146), Y(-44), r, 10, C('under', 1 if r == 15 else (2 if r == 11 else 4))); cv.ellipse(X(146), Y(-44), r - 3, 7, C('under', 4))
-    cv.rect(X(12), Y(-28), 24, 24, C('paint_red', 2)); hl(cv, X(12), Y(-28), 24, C('paint_red', 1)); vl(cv, X(35), Y(-28), 24, C('paint_red', 4))   # jerry can
+        cv.ellipse(X(146), Y(-12), r, 10, C('under', 1 if r == 15 else (2 if r == 11 else 4))); cv.ellipse(X(146), Y(-12), r - 3, 7, C('under', 4))
+    cv.rect(X(12), Y(6), 24, 22, C('paint_red', 2)); hl(cv, X(12), Y(0), 24, C('paint_red', 1)); vl(cv, X(35), Y(0), 24, C('paint_red', 4))   # jerry can
     for k in range(4): cv.put(X(17 + k * 5), Y(-15 + k), C('paint_red', 4)); cv.put(X(18 + k * 5), Y(-16 + k), C('paint_red', 4))
-    cv.rect(X(18), Y(-33), 11, 5, C('paint_red', 3)); hl(cv, X(18), Y(-33), 11, C('paint_red', 1))
-    cv.rect(X(44), Y(-22), 46, 18, C('wood', 2)); hl(cv, X(44), Y(-22), 46, C('wood', 1)); hl(cv, X(44), Y(-13), 46, C('wood', 3)); vl(cv, X(89), Y(-22), 18, C('wood', 4))
+    cv.rect(X(18), Y(-5), 11, 5, C('paint_red', 3)); hl(cv, X(18), Y(-5), 11, C('paint_red', 1))
+    cv.rect(X(44), Y(6), 46, 18, C('wood', 2)); hl(cv, X(44), Y(6), 46, C('wood', 1)); hl(cv, X(44), Y(15), 46, C('wood', 3)); vl(cv, X(89), Y(6), 18, C('wood', 4))
     for k in range(12): cv.put(X(47 + k * 3), Y(-23 - (k % 2)), C('metal', 1 + k % 3))
-    cyl_v(cv, X(104), Y(-20), 18, 16, 'metal', 0, 5); cv.ellipse(X(113), Y(-20), 9, 3, C('metal', 1)); cv.rect(X(107), Y(-15), 12, 6, C('paint_cream', 1))
-    for k in range(3): cyl_v(cv, X(130 + k * 13), Y(-18), 11, 14, ['mustard', 'forest', 'paint_blue'][k], 0, 4)
-    cv.rect(X(8), Y(20), 22, 12, C('warn', 2)); hl(cv, X(8), Y(20), 22, C('warn', 1))   # wheel chocks
-    cv.rect(X(34), Y(22), 22, 10, C('warn', 2)); hl(cv, X(34), Y(22), 22, C('warn', 1))
-    cv.ellipse(X(118), Y(24), 22, 10, lambda x, y, nx, ny, nz: shade('tweed', light(nx, ny, nz)))   # sack of sand
+    cyl_v(cv, X(104), Y(8), 18, 16, 'metal', 0, 5); cv.ellipse(X(113), Y(8), 9, 3, C('metal', 1)); cv.rect(X(107), Y(13), 12, 6, C('paint_cream', 1))
+    for k in range(3): cyl_v(cv, X(130 + k * 13), Y(10), 11, 14, ['mustard', 'forest', 'paint_blue'][k], 0, 4)
+    cv.rect(X(8), Y(34), 22, 12, C('warn', 2)); hl(cv, X(8), Y(34), 22, C('warn', 1))   # wheel chocks
+    cv.rect(X(34), Y(36), 22, 10, C('warn', 2)); hl(cv, X(34), Y(36), 22, C('warn', 1))
+    cv.ellipse(X(118), Y(38), 22, 10, lambda x, y, nx, ny, nz: shade('tweed', light(nx, ny, nz)))   # sack of sand
     for k in range(5): cv.put(X(108 + k * 4), Y(20 + (k % 2)), C('tweed', 3))
     o.finish(); return o
 
 
 def workbench():
-    o = Obj('workbench', (26, 9, 3, 2), up=64, m=2)
+    o = Obj('workbench', (26, 9, 3, 2), up=64, m=2, tile=[27, 9])
     cv, X, Y = o.cv, o.X, o.Y
     w, d = 3 * T, 2 * T
     ground_shadow(cv, X(w // 2 + 6), Y(d - 6), w // 2 + 4, 10, 90)
