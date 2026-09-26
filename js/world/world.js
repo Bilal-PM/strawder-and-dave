@@ -333,16 +333,22 @@ window.LS = window.LS || {};
       const cx = Math.round(this.camX * Z) / Z, cy = Math.round(this.camY * Z) / Z;
       x.setTransform(1, 0, 0, 1, 0, 0); x.imageSmoothingEnabled = false;
       x.fillStyle = this.room === 'outside' ? '#265c42' : '#181425'; x.fillRect(0, 0, this.cv.width, this.cv.height);
-      x.setTransform(Z, 0, 0, Z, -cx * Z, -cy * Z); x.imageSmoothingEnabled = false;
+      // Art may be authored at any density: scene.res = art pixels per world unit (1 = 16px tiles, 4 = 64px tiles).
+      // scene.smooth = true for painted (non-pixel) art.
+      const res = sc.res || 1, smooth = !!sc.smooth;
+      x.setTransform(Z, 0, 0, Z, -cx * Z, -cy * Z); x.imageSmoothingEnabled = smooth; if (smooth) x.imageSmoothingQuality = 'high';
       const x0 = Math.max(0, Math.floor(cx) - 2), y0 = Math.max(0, Math.floor(cy) - 2), x1 = Math.min(sc.w, Math.ceil(cx + this.vw) + 2), y1 = Math.min(sc.h, Math.ceil(cy + this.vh) + 2);
-      if (x1 > x0 && y1 > y0) x.drawImage(sc.ground, x0, y0, x1 - x0, y1 - y0, x0, y0, x1 - x0, y1 - y0);
+      // ground: one canvas, or (for high-resolution art) an array of chunks { img, x, y, w, h } in world units
+      if (sc.chunks) { for (const c of sc.chunks) if (c.x < x1 && c.x + c.w > x0 && c.y < y1 && c.y + c.h > y0) x.drawImage(c.img, c.x, c.y, c.w, c.h); }
+      else if (x1 > x0 && y1 > y0) x.drawImage(sc.ground, x0 * res, y0 * res, (x1 - x0) * res, (y1 - y0) * res, x0, y0, x1 - x0, y1 - y0);
       if (this.art && this.art.drawAnimated) this.art.drawAnimated(x, sc, t, x0, y0, x1, y1);
       this.drawCrumbs(x, t);
       // y-sorted objects and actors
       const Lst = [], add = (y, fn) => Lst.push([y, fn]), p = this.player;
       for (const o of sc.objects) {
-        if (o.dx > x1 || o.dx + o.img.width < x0 || o.dy > y1 || o.dy + o.img.height < y0) continue;
-        add(o.sortY, () => { const f = o.fade && p.x > o.fade.x && p.x < o.fade.x + o.fade.w && p.y > o.fade.y && p.y < o.fade.y + o.fade.h; if (f) x.globalAlpha = 0.5; x.drawImage(o.img, o.dx, o.dy); if (f) x.globalAlpha = 1; });
+        const ow = o.w || o.img.width / res, oh = o.h || o.img.height / res;   // world-unit size (w/h optional)
+        if (o.dx > x1 || o.dx + ow < x0 || o.dy > y1 || o.dy + oh < y0) continue;
+        add(o.sortY, () => { const f = o.fade && p.x > o.fade.x && p.x < o.fade.x + o.fade.w && p.y > o.fade.y && p.y < o.fade.y + o.fade.h; if (f) x.globalAlpha = 0.5; x.drawImage(o.img, o.dx, o.dy, ow, oh); if (f) x.globalAlpha = 1; });
       }
       for (const e of this.visible()) {
         if (e.x < x0 - 30 || e.x > x1 + 30 || e.y < y0 - 40 || e.y > y1 + 40) continue;

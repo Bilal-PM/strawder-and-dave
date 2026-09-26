@@ -79,7 +79,12 @@
   const fill = t => String(t).replace(/\{name\}/g, esc(S.name));
   const cast = id => PACK.cast[id] || { name: '', role: '' };
   const first = id => cast(id).name.replace(/^Cllr /, '').split(' ')[0];
-  const face = (id, mood) => id === 'player' ? LS.portrait(PACK.avatars[S.avatar], mood) : LS.portrait(cast(id).look, mood);
+  // Portraits: generated images if provided (LS.PORTRAIT_IMG[id|'avatar0'..][mood] = data URI), else the vector portraits
+  const face = (id, mood) => {
+    const key = id === 'player' ? 'avatar' + S.avatar : id, P = LS.PORTRAIT_IMG && LS.PORTRAIT_IMG[key];
+    if (P) { const src = P[mood || 'neutral'] || P.neutral; if (src) return `<img class="pimg" src="${src}" alt="">`; }
+    return id === 'player' ? LS.portrait(PACK.avatars[S.avatar], mood) : LS.portrait(cast(id).look, mood);
+  };
 
   // ---------- Input: one pending "advance" and one pending "choice" at a time ----------
   let onAdvance = null, onKey = null;
@@ -1127,7 +1132,7 @@
     let av = 0;
     const el = layer('setup', `<div class="center-wrap"><div class="card"><div class="eyebrow">${esc(PACK.sector)} · ${esc(PACK.budgetLabel)} · Chapter 1 of 6</div>
       <h2>You've been hired to reopen the Kestrel Vale Line.</h2><p>Three miles of worn-out track, a 1961 railcar called Marjorie, and a town that has heard it all before. First job: look at everything, then make the case to the Funding Panel. There are no scores on the buttons, just the calls you make.</p>
-      <div class="avatars" role="radiogroup" aria-label="Choose your portrait">${PACK.avatars.map((a, i) => `<button class="avatar ${i === 0 ? 'sel' : ''}" role="radio" aria-checked="${i === 0}" data-a="${i}" aria-label="Portrait ${i + 1}">${LS.portrait(a, 'smile')}</button>`).join('')}</div>
+      <div class="avatars" role="radiogroup" aria-label="Choose your portrait">${PACK.avatars.map((a, i) => `<button class="avatar ${i === 0 ? 'sel' : ''}" role="radio" aria-checked="${i === 0}" data-a="${i}" aria-label="Portrait ${i + 1}">${(LS.PORTRAIT_IMG && LS.PORTRAIT_IMG['avatar' + i]) ? `<img class="pimg" src="${LS.PORTRAIT_IMG['avatar' + i].smile || LS.PORTRAIT_IMG['avatar' + i].neutral}" alt="">` : LS.portrait(a, 'smile')}</button>`).join('')}</div>
       <label class="eyebrow" for="pname">Your name</label><input class="field" id="pname" maxlength="18" autocomplete="off" placeholder="e.g. Sam" style="margin-top:8px">
       <div class="setup-row"><button class="btn dark" id="sGo">Take the job →</button><button class="btn line small" id="sBack">Back</button></div></div></div>`);
     el.querySelectorAll('.avatar').forEach(b => b.onclick = () => { el.querySelectorAll('.avatar').forEach(x => { x.classList.remove('sel'); x.setAttribute('aria-checked', 'false'); }); b.classList.add('sel'); b.setAttribute('aria-checked', 'true'); av = +b.dataset.a; LS.audio.sfx('tap'); });
