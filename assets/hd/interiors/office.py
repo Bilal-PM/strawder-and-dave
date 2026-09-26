@@ -582,7 +582,7 @@ def board(planned):
 
 def build():
     objs = [kettle(), lockers(), meeting_table(), desk(), plan_chest(), sign_in(), filing(), cooler(), board(False), board(True),
-            SH.exit_sign_at('exit_sign', EXIT_X)]
+            SH.exit_sign_at('exit_sign', EXIT_X, TH)]
     return {'size': [W, H], 'floor': floor(), 'walls': walls(), 'objects': objs,
             'variants': {'board': {'normal': 'board', 'planned': 'board_planned', 'flag': 'planned'}},
             'preview_skip': ['board_planned']}

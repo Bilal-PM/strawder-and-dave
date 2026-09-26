@@ -521,12 +521,12 @@
   ],
   "file": "heras_v.png",
   "h": 144,
-  "note": "one per 'k' tile in a north-south run; x-centre the 12px strip on the tile centre",
+  "note": "one per 'k' tile in a north-south run (edge-on); sprite bottom-left on the tile's SW corner",
   "tiles": [
    1,
    1
   ],
-  "w": 12
+  "w": 48
  },
  "limit_board": {
   "anchor": [
@@ -1069,7 +1069,7 @@
  "station_canopy_closed": {
   "anchor": [
    0,
-   135
+   150
   ],
   "columns": [
    24,
@@ -1080,13 +1080,13 @@
    504
   ],
   "fade": {
-   "h": 135,
+   "h": 150,
    "w": 576,
    "x": 0,
    "y": 0
   },
   "file": "station_canopy_closed.png",
-  "h": 135,
+  "h": 150,
   "lights": [],
   "map_origin": [
    13,
@@ -1103,7 +1103,7 @@
  "station_canopy_live": {
   "anchor": [
    0,
-   135
+   150
   ],
   "columns": [
    24,
@@ -1114,13 +1114,13 @@
    504
   ],
   "fade": {
-   "h": 135,
+   "h": 150,
    "w": 576,
    "x": 0,
    "y": 0
   },
   "file": "station_canopy_live.png",
-  "h": 135,
+  "h": 150,
   "lights": [
    [
     72,

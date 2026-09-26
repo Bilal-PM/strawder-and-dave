@@ -839,7 +839,12 @@ def buffer_stop():
 
 
 def exit_sign():
-    o = Obj('exit_sign', (15, 13, 2, 0), up=2, m=2, down=26)
+    return exit_sign_at('exit_sign', EXIT_X, TH)
+
+
+def exit_sign_at(name, exit_x, th=None):
+    th = th or (H // T)
+    o = Obj(name, (exit_x // T, th - 1, 2, 0), up=2, m=2, down=26)
     cv, X, Y = o.cv, o.X, o.Y
     cv.rect(X(18), Y(4), 60, 20, OUTLINE)
     cv.rect(X(19), Y(5), 58, 18, C('enamel_g', 2)); hl(cv, X(19), Y(5), 58, C('enamel_g', 0)); hl(cv, X(19), Y(22), 58, C('enamel_g', 4))

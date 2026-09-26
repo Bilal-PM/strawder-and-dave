@@ -819,7 +819,7 @@ def farmhouse(fp):
     mullioned windows with hood moulds, a dated door lintel, ivy at the west end, wellies and a milk churn."""
     b = B(fp, 64, 909); p = b.p; W, G = b.W, b.G
     eave = G - 170; ridge = b.top + 36
-    roof(p, 0, W, b.top + 2, ridge, eave, 'stoneslate', seed=91, ridge='stone', verge='coping', moss=0.2)
+    roof(p, 0, W, b.top + 2, ridge, eave, 'stoneslate', seed=91, ridge='stone', verge='coping', moss=0.11)
     chimney(p, 24, ridge + 7, 32, 58, 'grit', pots=1, seed=92, roof_kind='stoneslate')
     chimney(p, W - 24, ridge + 7, 32, 58, 'grit', pots=2, seed=93, roof_kind='stoneslate')
     chimney(p, 238, ridge + 7, 30, 52, 'grit', pots=2, seed=94, roof_kind='stoneslate')
@@ -848,7 +848,7 @@ def barn(fp):
     through-stones."""
     b = B(fp, 44, 1001); p = b.p; W, G = b.W, b.G
     eave = G - 196; ridge = b.top + 26
-    roof(p, 0, W, b.top + 2, ridge, eave, 'stoneslate', seed=101, ridge='stone', verge='coping', moss=0.3)
+    roof(p, 0, W, b.top + 2, ridge, eave, 'stoneslate', seed=101, ridge='stone', verge='coping', moss=0.15)
     stone_wall(p, 0, eave, W, G - eave, 'grit', seed=102, soot=0.35, course=(10, 15), block=(18, 40), rubble=0.45)
     quoins(p, 0, eave, G, -1, seed=17, long=26, short=15, ch=18); quoins(p, W, eave, G, 1, seed=18, long=26, short=15, ch=18)
     dx = b.dcx
@@ -873,14 +873,24 @@ def barn(fp):
             lx = xx - x0
             ajar = xx >= dx + 6
             if ajar and xx < dx + 30:   # the gap: warm lamp-lit hay inside
-                if yy > G - 40: p.r(xx, yy, 'hay', 1 + (hash01(xx, yy, 3) < .4) + (yy > G - 12))
-                else: p.r(xx, yy, 'interior', 2 if yy < G - 70 else 1)
+                if yy > G - 44:   # stacked hay bales, strands and twine
+                    ly = (yy - (G - 44)) % 22
+                    i = 1 + (hash01(xx, yy // 2, 3) < .35) + (ly > 17)
+                    if ly in (0, 21): i = 3
+                    if xx == dx + 18: i = 3
+                    p.r(xx, yy, 'hay', i)
+                else: p.r(xx, yy, 'interior', 3 if yy < G - 80 else 2)
                 continue
             i = 2 if lx % 9 else 4
             if lx % 9 == 1: i = 1
             if hash01(xx // 9, yy // 3, 7) < .12: i += 1
             if (yy - (G - ah)) in (18, 19, 20) or (yy - G) in (-24, -23, -22): i = 1 if (yy % 3 == 0) else 2
             p.r(xx, yy, 'wood_dark' if hash01(xx // 9, 1, 2) < .5 else 'tweed', i)
+    for hy in (G - 100, G - 30):   # iron strap hinges
+        for xx in range(x0 + 2, dx + 2):
+            p.r(xx, hy, 'paint_black', 1); p.r(xx, hy + 1, 'paint_black', 3)
+        for xx in range(dx + 36, x1 - 2):
+            p.r(xx, hy, 'paint_black', 1); p.r(xx, hy + 1, 'paint_black', 3)
     for yy in range(ay, G):   # the ajar leaf's edge, in shadow
         for k in range(4): p.r(dx + 30 + k, yy, 'wood_dark', 3 + (k > 1))
     for yy in range(G - 70, G):
@@ -890,14 +900,17 @@ def barn(fp):
     lantern(p, dx + 18, G - 92)
     p.lights.append([dx + 18, G - 40, 50])
     # pitching door and owl hole
-    for yy in range(eave + 24, eave + 64):
+    for yy in range(eave + 10, eave + 44):   # pitching door, boarded, with a dressed surround
         for xx in range(dx - 18, dx + 18):
             lx = xx - (dx - 18)
-            if lx < 3 or lx >= 33 or yy < eave + 27: p.r(xx, yy, 'dressed', 1 if lx < 3 or yy < eave + 26 else 2)
+            if lx < 3 or lx >= 33 or yy < eave + 13: p.r(xx, yy, 'dressed', 1 if lx < 3 or yy < eave + 12 else 2)
             else: p.r(xx, yy, 'tweed', 2 if lx % 6 else 3)
-    for yy in range(eave + 10, eave + 20):
-        for xx in range(dx - 6, dx + 6):
-            if math.hypot(xx + .5 - dx, (yy + .5 - (eave + 17)) * 1.2) < 6: p.r(xx, yy, 'pane', 5)
+    for xx in range(dx - 20, dx + 20):
+        p.r(xx, eave + 44, 'dressed', 0); p.r(xx, eave + 45, 'dressed', 2); p.r(xx, eave + 46, 'dressed', 4)
+    for yy in range(eave + 18, eave + 30):   # owl hole high in the west half
+        for xx in range(56, 70):
+            if math.hypot(xx + .5 - 63, (yy + .5 - 24) + 0) < 6 or (yy > eave + 24 and abs(xx + .5 - 63) < 6):
+                p.r(xx, yy - eave + eave, 'pane', 5)
     for x in (30, W - 34):   # ventilation slits
         for yy in range(G - 150, G - 100):
             for xx in range(x, x + 5): p.r(xx, yy, 'pane', 5 if xx > x else 4)

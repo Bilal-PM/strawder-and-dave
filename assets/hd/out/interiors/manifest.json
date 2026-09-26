@@ -92,6 +92,372 @@
   ],
   "w": 1156
  },
+ "office": {
+  "floor": {
+   "file": "office_floor.png",
+   "h": 576,
+   "w": 960
+  },
+  "objects": {
+   "board": {
+    "anchor": [
+     146,
+     134
+    ],
+    "at": [
+     528,
+     96
+    ],
+    "file": "office_board.png",
+    "foot": [
+     8,
+     1,
+     6,
+     1
+    ],
+    "h": 136,
+    "text_slots": {
+     "lane_marjorie": [
+      15,
+      21,
+      36,
+      7
+     ],
+     "lane_track": [
+      15,
+      53,
+      36,
+      7
+     ]
+    },
+    "tile": [
+     10,
+     1
+    ],
+    "w": 292
+   },
+   "board_planned": {
+    "anchor": [
+     146,
+     134
+    ],
+    "at": [
+     528,
+     96
+    ],
+    "critical_path": [
+     [
+      69,
+      38
+     ],
+     [
+      93,
+      42
+     ],
+     [
+      117,
+      38
+     ],
+     [
+      141,
+      38
+     ],
+     [
+      165,
+      70
+     ],
+     [
+      189,
+      70
+     ],
+     [
+      213,
+      38
+     ],
+     [
+      237,
+      42
+     ],
+     [
+      261,
+      38
+     ]
+    ],
+    "file": "office_board_planned.png",
+    "foot": [
+     8,
+     1,
+     6,
+     1
+    ],
+    "h": 136,
+    "text_slots": {
+     "lane_marjorie": [
+      15,
+      21,
+      36,
+      7
+     ],
+     "lane_track": [
+      15,
+      53,
+      36,
+      7
+     ]
+    },
+    "tile": [
+     10,
+     1
+    ],
+    "w": 292
+   },
+   "desk": {
+    "anchor": [
+     50,
+     136
+    ],
+    "at": [
+     96,
+     336
+    ],
+    "file": "office_desk.png",
+    "foot": [
+     1,
+     5,
+     2,
+     2
+    ],
+    "h": 138,
+    "tile": [
+     1,
+     5
+    ],
+    "w": 112
+   },
+   "exit_sign": {
+    "anchor": [
+     50,
+     2
+    ],
+    "at": [
+     480,
+     528
+    ],
+    "file": "office_exit_sign.png",
+    "foot": [
+     9,
+     11,
+     2,
+     0
+    ],
+    "glow": true,
+    "h": 30,
+    "note": "hangs over the exit gap on the south wall; draw after actors",
+    "text_slot": [
+     24,
+     10,
+     52,
+     12
+    ],
+    "tile": [
+     9,
+     11
+    ],
+    "w": 100
+   },
+   "filing": {
+    "anchor": [
+     50,
+     122
+    ],
+    "at": [
+     288,
+     96
+    ],
+    "file": "office_filing.png",
+    "foot": [
+     5,
+     1,
+     2,
+     1
+    ],
+    "h": 124,
+    "tile": [
+     5,
+     1
+    ],
+    "w": 100
+   },
+   "kettle": {
+    "anchor": [
+     50,
+     132
+    ],
+    "at": [
+     96,
+     192
+    ],
+    "file": "office_kettle.png",
+    "foot": [
+     1,
+     2,
+     2,
+     2
+    ],
+    "h": 134,
+    "points": {
+     "steam": [
+      7,
+      52
+     ]
+    },
+    "tile": [
+     1,
+     2
+    ],
+    "w": 100
+   },
+   "lockers": {
+    "anchor": [
+     60,
+     156
+    ],
+    "at": [
+     864,
+     192
+    ],
+    "file": "office_lockers.png",
+    "foot": [
+     17,
+     2,
+     2,
+     2
+    ],
+    "h": 158,
+    "tile": [
+     17,
+     2
+    ],
+    "w": 110
+   },
+   "plan_chest": {
+    "anchor": [
+     74,
+     74
+    ],
+    "at": [
+     792,
+     384
+    ],
+    "file": "office_plan_chest.png",
+    "foot": [
+     15,
+     7,
+     3,
+     1
+    ],
+    "h": 76,
+    "tile": [
+     15,
+     7
+    ],
+    "w": 148
+   },
+   "sign_in": {
+    "anchor": [
+     50,
+     126
+    ],
+    "at": [
+     144,
+     480
+    ],
+    "file": "office_sign_in.png",
+    "foot": [
+     2,
+     8,
+     2,
+     2
+    ],
+    "h": 128,
+    "text_slot": [
+     15,
+     87,
+     70,
+     10
+    ],
+    "tile": [
+     2,
+     8
+    ],
+    "w": 100
+   },
+   "table": {
+    "anchor": [
+     98,
+     120
+    ],
+    "at": [
+     528,
+     288
+    ],
+    "fade": [
+     9,
+     3,
+     4,
+     1
+    ],
+    "file": "office_table.png",
+    "foot": [
+     9,
+     4,
+     4,
+     2
+    ],
+    "h": 122,
+    "tile": [
+     9,
+     4
+    ],
+    "w": 196
+   },
+   "water_cooler": {
+    "anchor": [
+     50,
+     130
+    ],
+    "at": [
+     720,
+     96
+    ],
+    "file": "office_water_cooler.png",
+    "foot": [
+     14,
+     1,
+     2,
+     1
+    ],
+    "h": 132,
+    "tile": [
+     14,
+     1
+    ],
+    "w": 100
+   }
+  },
+  "variants": {
+   "board": {
+    "flag": "planned",
+    "normal": "board",
+    "planned": "board_planned"
+   }
+  },
+  "walls": {
+   "file": "office_walls.png",
+   "h": 576,
+   "w": 960
+  }
+ },
  "shed": {
   "floor": {
    "file": "shed_floor.png",

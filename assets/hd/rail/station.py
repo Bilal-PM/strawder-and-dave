@@ -500,7 +500,7 @@ def station(live=False):
 # ------------------------------------------------------------------ the platform canopy (separate object: fades)
 
 CAN_COLS = 12
-CW, CH = CAN_COLS * T, 135
+CW, CH = CAN_COLS * T, 150
 
 
 def canopy(live=False):
@@ -592,9 +592,8 @@ def running_in(live=False):
         R(cv, lx - 2, h - 5, 9, 5, C('grit', 2)); HL(cv, lx - 2, lx + 7, h - 5, C('grit', 1))
         ao_band(cv, lx, bh, 5, (0.4, 0.2))
     if not live:
-        for x in range(8, w - 8, 16):
-            P(cv, x, 7, C('rust', 1)); P(cv, x, 8, C('rust', 3))
-            for yy in range(9, 9 + int(hash01(x, 1, 2) * 6)): P(cv, x, yy, C('paint_cream', 3))
+        for x in (6, w - 7):
+            for yy in (6, 29): P(cv, x, yy, C('rust', 1)); P(cv, x, yy + 1, C('rust', 3))
     sel_outline(cv, k=0.7, base_rows=[h - 1])
     outline(cv)
     return cv, dict(sign={'face': [4, 4, w - 8, bh - 8]})

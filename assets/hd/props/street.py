@@ -188,7 +188,9 @@ def done(cv, anchor, shadow=None, a=86):
     """Outline, then put a cast shadow (cx, cy, rx, ry) under it."""
     fin(cv)
     if shadow:
-        sh = Canvas(cv.w, cv.h); shadow_ellipse(sh, *shadow, alpha=a); over(sh, cv); cv = sh
+        big = Canvas(cv.w + 10, cv.h + 3); big.im.paste(cv.im, (0, 0)); big.px = big.im.load()   # room for the shadow
+        sh = Canvas(big.w, big.h); shadow_ellipse(sh, *shadow, alpha=a); over(sh, big); cv = sh
+        bb = cv.im.getbbox(); cv.im = cv.im.crop((0, 0, max(bb[2], anchor[0] + 1), max(bb[3], anchor[1] + 1))); cv.w, cv.h = cv.im.size; cv.px = cv.im.load()
     return cv, anchor
 
 

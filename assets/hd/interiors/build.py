@@ -35,6 +35,7 @@ def compose(res, figs=()):
     base.alpha_composite(res['walls'].im)
     items = []
     for o in res['objects']:
+        if o.name in res.get('preview_skip', ()): continue
         ax, ay = o.anchor; tx, ty = o.at
         items.append((ty, o.cv.im, tx - ax, ty - ay))
     if res.get('marjorie'):
@@ -56,6 +57,11 @@ def compose(res, figs=()):
 
 
 def save_room(room, res, man, figs):
+    for alt in res.get('preview_skip', ()):   # alternate states get their own composed preview
+        r2 = dict(res); r2['objects'] = [o for o in res['objects'] if o.name != alt.replace('_planned', '').replace('_panel', '') or o.name == alt]
+        r2['preview_skip'] = []
+        c2 = compose(r2, figs)
+        c2.resize((c2.width * 2, c2.height * 2), Image.NEAREST).convert('RGB').save(os.path.join(OUT, f'preview_{room}_{alt}.png'))
     d = {}
     save_png(res['floor'], os.path.join(OUT, f'{room}_floor.png')); d['floor'] = {'file': f'{room}_floor.png', 'w': res['floor'].w, 'h': res['floor'].h}
     save_png(res['walls'], os.path.join(OUT, f'{room}_walls.png')); d['walls'] = {'file': f'{room}_walls.png', 'w': res['walls'].w, 'h': res['walls'].h}
