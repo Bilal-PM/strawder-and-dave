@@ -81,9 +81,9 @@ class Layered:
         self.base = np.random.default_rng(seed)
         self.var = np.random.default_rng(seed * 1000 + 7919 * (variant + 1))
 
-    def field(self, cells=(16, 8, 4, 2), amps=None):
+    def field(self, cells=(16, 8, 4, 2), amps=None, both=False):
         b = fbm(self.base, cells, amps); v = fbm(self.var, cells, amps)
-        return lock_blend(b, v)
+        return (lock_blend(b, v), b) if both else lock_blend(b, v)
 
     def white(self):
         b = white(self.base); v = white(self.var)
@@ -251,7 +251,7 @@ def periodic_copies(pts, ext, w=T, h=T):
             for ox in (-w, 0, w):
                 x, y = p[0] + ox, p[1] + oy
                 if x + r < 0 or x - l >= w or y + d < 0 or y - u >= h: continue
-                out.append((x, y) + tuple(p[2:5]) + (False,))
+                out.append((x, y) + tuple(p[2:5]) + (False, True))   # index 6: came from the base stream
     return out
 
 
@@ -327,3 +327,14 @@ def draw_crack(img, pts, dark, lit=None, clip=True):
     for (x, y) in pts:
         put(img, x, y, dark, not clip)
         if lit is not None: put(img, x, y + 1, lit, not clip)   # lit lower lip (the far wall catches the NW light)
+
+
+def is_base(q):
+    """True for a scatter point from the shared base stream (decisions for it must use base-only data)."""
+    return bool(q[5]) or (len(q) > 6 and q[6])
+
+
+def blend_thr(base_thr, var_thr):
+    """A per-variant threshold that equals the shared one at the tile border."""
+    t = np.clip((EDGE_D - LOCK_A) / (LOCK_B - LOCK_A), 0, 1)
+    return base_thr + (var_thr - base_thr) * t

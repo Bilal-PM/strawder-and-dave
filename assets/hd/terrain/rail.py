@@ -100,10 +100,12 @@ def weed(rng, big=False):
 def grass_patches(img, L, v, thresh, seed=611, tufts=True, island=False):
     """Grass creeping over: a real grass texture inside a ragged, locked-noise mask, a shaded lip on the stones
     beyond it, and tufts leaning out over the edge."""
-    f = L.field((16, 8, 4)) + (L.white() - 0.5) * 0.5
+    f, fb = L.field((16, 8, 4), both=True)
+    wn = L.white(); f = f + (wn - 0.5) * 0.5; fb = fb + (wn - 0.5) * 0.5
     if island:   # patches fade out before the border, so these tiles mix freely with the plain set
         t = np.clip((EDGE_D - 3) / 10, 0, 1); f = f - 3 * (1 - t * t * (3 - 2 * t))
     gimg, _ = GR.grass_tile(v, 'grass', seed=seed)
+    thr = thresh
     m = f > thresh
     lip = np.zeros_like(m)
     for dx, dy in ((1, 0), (0, 1), (1, 1)): lip |= np.roll(np.roll(m, dy, 0), dx, 1)
@@ -113,7 +115,7 @@ def grass_patches(img, L, v, thresh, seed=611, tufts=True, island=False):
     img[m] = gimg[m]
     if tufts:
         GR.clump_layer(img, L, 5.0, (3, 6, 4, 7), lambda q: 'grass', base_i=3, tip_lit=0, tip_dark=1, nbl=(3, 5),
-                       skip=lambda q: abs(f[int(q[1]) % T, int(q[0]) % T] - thresh) > 0.35 or q[2] > 0.8)
+                       skip=lambda q: abs((fb if is_base(q) else f)[int(q[1]) % T, int(q[0]) % T] - thr) > 0.35 or q[2] > 0.8)
     return f
 
 
@@ -148,7 +150,7 @@ def ballast_sets():
     cold = []
     for v in range(8):
         img, L = ballast_tile(v, 151, 'charcoal', 3.2, rust_p=0.12, dirty=0.4, gap_ramp='mud', gap_idx=4, tone_sd=0.35)
-        grass_patches(img, L, v, 1.0 if v < 5 else 0.45, seed=617)
+        grass_patches(img, L, v, blend_thr(1.0, 1.0 if v < 5 else 0.45), seed=617)
         if v >= 3: weeds_on(img, L, 14, 0.4, 0.3)
         cold.append(img)
     out['cess_old'] = (cold, [2, 2, 2, 1, 1, 1, 1, 1])
