@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#1b2446">
-<meta name="description" content="LINESIDE — a game about judgment. Reopen a closed Victorian railway through a valley that has waited 39 years for a train. Make the calls. Live with the ripples.">
+<meta name="description" content="LINESIDE — a game about judgment. Renew a worn-out branch line, bring a 1961 railcar back to life and give a valley town its future back. Chapter 1: Make the Case.">
 <meta property="og:title" content="LINESIDE — a game about judgment">
-<meta property="og:description" content="No scores on the buttons. No right answers on screen. Just the calls you make — and the ripples they send.">
+<meta property="og:description" content="Walk the line. Check the train. Win over the town. Face the Funding Panel. No scores on the buttons — just the calls you make.">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -17,11 +17,11 @@
 <link rel="stylesheet" href="css/lineside.css">
 </head>
 <body>
-<canvas id="world" aria-label="The Kestrel Vale — walk around and explore"></canvas>
+<canvas id="world" aria-label="Harrowby and the Kestrel Vale Line — walk around and explore"></canvas>
 
 <div id="hud" role="status">
-  <div class="hud-left"><div class="hud-ch" id="hudCh"></div><ol class="obj" id="obj" aria-label="This week"></ol></div>
-  <div class="hud-right"><div class="metrics" id="hudMetrics"></div><div class="jq" id="hudJQ"></div><button class="iconbtn" id="hudMenu" aria-label="Open project board"></button></div>
+  <div class="hud-left"><div class="hud-top"><div class="hud-ch" id="hudCh"></div><button class="jq" id="hudJQ" aria-label="Judgment Points and rank"></button></div><ol class="obj" id="obj" aria-label="Chapter objectives"></ol></div>
+  <div class="hud-right"><div class="metrics" id="hudMetrics"></div><button class="iconbtn" id="hudMenu" aria-label="Open project board"></button></div>
 </div>
 
 <main>
@@ -36,6 +36,7 @@
 </main>
 <div id="pad" aria-hidden="true"><div id="joy"><div id="knob"></div></div><button id="padA" aria-label="Interact">Ⓐ</button></div>
 <div id="toast" role="status"></div>
+<div id="ach" role="status" aria-live="polite"></div>
 <div id="live" class="sr" aria-live="polite"></div>
 <noscript><p style="color:#fff;padding:20px">LINESIDE needs JavaScript to run.</p></noscript>
 

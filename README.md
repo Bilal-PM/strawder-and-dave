@@ -1,44 +1,60 @@
 # LINESIDE — a game about judgment
 
-> No scores on the buttons. No right answers on screen. Just the calls you make — and the ripples they send.
+> No scores on the buttons. No right answers on screen. Just the calls you make, and what they lead to.
 
-LINESIDE is an explorable, story-driven judgment game: a side-on 2.5D world you walk around (in the spirit of *Stardew Valley* and *Dave the Diver*), painted in a layered atmospheric style (*Firewatch*, *Alto's Odyssey*). The first scenario pack, **The Kestrel Vale Line**, puts the player in charge of reopening a closed Victorian railway through Harrowby, a valley town that has waited 39 years for a train. It takes about 20 minutes, runs in any browser (desktop, tablet, phone), and needs no install or login.
+LINESIDE is an explorable, story-driven judgment game set in an open, top-down world you walk around (in the spirit of *Stardew Valley*). The first scenario pack, **The Kestrel Vale Line**, puts you in charge of reopening a worn-out branch line in Harrowby, a valley town whose railway closed "temporarily" in 2009. The track is life-expired, and the only train, **Marjorie**, a 1961 diesel railcar, has sat in the depot ever since. Your job: renew the track, restore the train, test it all, open the line, and bring the town back to life.
 
-It is built to be the first title in an education product line (working name **Groundwork Studio**): one engine, many sector packs.
+It runs in any browser (desktop, tablet or phone), with no install or login. It is built to be the first title in an education product line (working name **Groundwork Studio**): one engine, many sector packs.
+
+## Status: Chapter 1 of 6
+
+The game is planned in six chapters (see [`docs/DESIGN.md`](docs/DESIGN.md)). **Chapter 1, "Make the Case", is complete and playable** (about 15–20 minutes). The rest are designed and waiting for sign-off.
+
+| # | Chapter | Real-world phase | Status |
+|---|---|---|---|
+| 1 | Make the Case | Feasibility & funding (gate review) | **Playable** |
+| 2 | Strip Down | Mobilisation, ecology, first possession | Designed |
+| 3 | The Relay | Drainage and track renewal | Designed |
+| 4 | Crossing Lines | Level crossing, regulator, main-line junction | Designed |
+| 5 | First Movement | Static tests, test runs, driver training | Designed |
+| 6 | The Big Day | Grand opening, and the town's economy returns | Designed |
 
 ## Play
 
-Open `index.html` in a browser, or serve the folder over HTTPS (GitHub Pages / Netlify). Serving over HTTPS lets phones use native sharing and puts the link on the share card.
+Open `index.html` in a browser, or serve the folder over HTTPS (GitHub Pages or Netlify). Serving over HTTPS lets phones use native sharing and puts the link on the share card. `classic.html` is the earlier *Project Valley* prototype, kept for comparison.
 
-`classic.html` is the previous prototype (*Project Valley*), kept for comparison.
+Controls: WASD or the arrow keys (Shift to hurry), or click or tap where you want to go; E to interact. Phones get a joystick and an Ⓐ button.
+
+## Chapter 1: Make the Case
+
+Six in-game weeks, from March to April. You arrive, then:
+
+1. **Site induction** with Hannah (safety) at the project office, which gets you your PPE. Without it you can't walk on the closed line or enter the depot.
+2. **Walk the line** with Tom, judging five real defects: rotten sleepers, a blocked drain (with a duck in it), Beck Bridge, vegetation (with nesting-season rules) and the dead Crag Lane level crossing.
+3. **Marjorie's health check** with Gaz in the depot: cab and electrics (the horn goes *peep*), bogies and wheelsets, brakes, engines (someone has secretly been maintaining her) and the body (with Kevin the pigeon in residence).
+4. **The works plan** with Jo: put both workstreams in dependency order (strip down → bogies → brakes → engines & electrics → static tests; ecology → drainage → relay → level crossing), then work out when test runs can start and which workstream is the **critical path**.
+5. **The drop-in** at the village hall with Priya and Cllr Brian: three questions from the town. Honest answers build support; over-promises feel good now and **echo into Chapter 2**.
+6. **Two Calls**: *The Ridership Forecast* (optimism bias) with Steve, and *Name the Date* (ranges, not points) with Helen.
+7. **The Funding Panel**, a gate review. Everything you did is laid out as "your case", the panel asks two questions, and your readiness score decides the outcome: **Approved**, **Approved with conditions** or **Deferred**. That outcome carries into Chapter 2.
+
+The world obeys engineering logic: the closed line needs PPE, the depot needs PPE, and some tasks unlock only after others (you can't plan work you haven't seen).
+
+### Points that make sense
+
+- **The project dashboard, in real units**: schedule float (weeks), contingency (£k), safety culture, evidence, team morale and town support (%). Outcomes move it, and outcomes include luck.
+- **Judgment Points (JP) and a career rank** (Graduate PM → Assistant PM → Project Manager → Senior PM → Programme Director). JP reward the quality of each decision (expert-graded) and, on the Calls, **calibration**: confidence that matches the quality of your call earns a bonus, and being certain about a weak call costs you. Luck never earns JP.
+- **13 achievements** that unlock in fun ways: *Kettle's On*, *Peep Peep*, *Pigeon Whisperer*, *Where's Sleeper?* (the depot cat), *Eagle Eye*, *Order, Order!*, *Biscuit Diplomacy*, *Measure Twice*, *Range Rover*, *Local*, *Anorak*, *First Page* and *Green Light*.
+
+### The cast
+
+Helen Walsh (sponsor), Jo Adeyemi (engineering), Tom Brennan (track and site), Hannah Clarke (safety), Steve Hale (commercial), Priya Nair (community), Gaz Whitfield (depot fitter), Cllr Brian Pike (parish council, biscuits), Moira Kell (Harrowby's last station master, your mentor), and the townsfolk Len, June, Dev and Jess. Also Marjorie the railcar, Sleeper the cat and Kevin the pigeon. The humour is warm and relatable, never dark or rude.
 
 ## The world (open world, top-down 3/4 view)
 
-Kestrel Vale is free to roam in any direction, in the style of *Stardew Valley*:
-
-- **Harrowby** (south-west): High Street, the village green, school, cottages, Pritchard's bakery, the Kestrel Arms, the church and the **Village Hall** (enterable). Four townsfolk give new and reactive lines each chapter: Len the retired signalman, June the baker, Dev who needs the train for college, and Jess at the school gate.
-- **Station Road** leads up to the terminus. **Harrowby Station** starts derelict ("HARR BY") and is restored by opening day.
-- **The valley of Kestrel Beck**: walk down the slopes, cross by the **stepping stones** or the **packhorse bridge**, and stand at the foot of **Pier 4**. You can't wade across anywhere else.
-- **The viaduct**: 11 arches over the beck.
-- **The site compound** (east plateau): your **site office** (enterable: Moira, the planning wall, the **PPE locker**, the kettle), the welfare cabin, materials and the crane.
-- **The trackbed** out to **Kestrel Junction**: the live main line with trains running, and the signal box.
-- **Woods, the fell and Kestrel Crag viewpoint** to the north, **Beck Cottage** (Moira's) up the valley, and **farmland with sheep** to the south.
-
-### The build follows engineering logic
-
-| Stage (chapter) | What you see on site | What you can and can't do |
-|---|---|---|
-| Structural survey (1) | Laser-scan tripod, survey van, ivy, a crack in Pier 4 | Deck **fenced off**: unassessed. Cross the valley on foot |
-| Ground investigation (2–3) | Drilling rig at the foot of Pier 4, an X sprayed on the pier | Deck still closed; a new access track down to the pier |
-| Temporary works design (3) | Design tent at the east end | Deck closed |
-| Enabling works (4) | Haul road, **temporary bridge over the beck**, bigger compound, materials | New river crossing opens |
-| Masonry repair and waterproofing (5) | Scaffold towers, crane, membrane going onto the deck, **edge protection** | Deck open to site staff **with PPE** from the site-office locker |
-| Track and junction tie-in (6) | Rails on the deck, a tamper, new points at the junction | Deck open with PPE |
-| Testing (7) and service (8) | Test train, then passenger trains; lineside fencing; a **footbridge** | **Live railway**: no walking on the deck or the trackbed. Use the footbridge |
-
-Each stage has an **engineering note** on site (blue *i*) explaining why it comes in that order. These build into an Engineering Log. **Eight notebook pages** of Moira's, hidden around the valley, tell her 1986 story before she does.
-
-Controls: WASD or the arrow keys (Shift to hurry), or click or tap where you want to go; E to interact. Phones get a joystick and an Ⓐ button.
+- **Harrowby** (south-west): High Street, the village green, school, cottages, Pritchard's bakery, the Kestrel Arms, the church and the **Village Hall** (enterable).
+- **The station yard**: Harrowby station ("temporarily closed, 2009"), **Harrowby Depot** (enterable, with Marjorie inside) and the **project office** (enterable: the planning board, the PPE lockers, the kettle).
+- **The old line**, running east: rusty bullhead rail and rotten sleepers, the little three-arch **Beck Bridge**, the **Crag Lane level crossing**, and **Kestrel Junction** on the live main line with its signal box.
+- **The beck valley** (stepping stones and a packhorse bridge), woods, **Kestrel Crag**, Moira's **Beck Cottage**, and farmland with sheep.
 
 ## Why it builds judgment (first principles)
 
@@ -49,15 +65,18 @@ Judgment is choosing well **under uncertainty**, when **goods compete** and **co
 | Weigh the situation, not the scoreboard | Effects are **hidden until after** every choice |
 | Make uncertainty explicit | Every **Call** lists *What you know / What you don't* |
 | Know how sure to be | **Confidence rating** after each Call, scored for calibration (Brier-style) |
-| Delayed, probabilistic consequences | **Ripples** land chapters later. A poor call can get lucky and a good call can get unlucky, and the mentor explains why that still doesn't change the judgment |
-| Expert comparison | **Moira Kell** (retired chief engineer) grades every Call, explains her reasoning, and names a **principle** |
-| People, not just metrics | Team conversations change **trust** with five colleagues |
-| Reflection | **Judgment report**: score, decision style, blind spot, calibration, principles, discussion guide |
+| Go and see | Walk the track, inspect the train and hear the town **before** committing to anything |
+| Real sequencing | Order the works in dependency order and find the **critical path** |
+| Delayed consequences | **Echoes**: over-promises made in Chapter 1 come back in Chapter 2 |
+| Expert comparison | Moira, Tom and Jo explain the expert view after every graded decision; each Call names a **principle** |
+| A real gate | The **Funding Panel** judges the whole body of evidence you built up |
+| People, not just metrics | Conversations change **trust**; town support moves with how honest you are |
+| Reflection | **Chapter report**: Judgment score, JP and rank, decision style, dashboard, achievements, lessons, facilitator guide |
 
 ## For educators and L&D
 
-- A 20-minute individual play, then a 20–30 minute debrief using the built-in **discussion guide** (one prompt per Call).
-- **Export results as CSV**: every call, grade, confidence and deliberation time, plus a summary. Useful for comparing decision styles across a cohort.
+- Chapter 1 takes 15–20 minutes of individual play, followed by a 20–30 minute debrief using the built-in **discussion guide**.
+- **Export results as CSV**: every graded decision, grade and confidence, plus a summary. Useful for comparing decision styles across a cohort.
 - Private by default: everything runs in the browser, and nothing leaves the device unless the learner exports or shares it.
 - Accessibility: keyboard play (1–4, Enter), screen-reader live region, reduced motion, larger text, instant text, WCAG-contrast paper UI.
 
@@ -66,27 +85,22 @@ Judgment is choosing well **under uncertainty**, when **goods compete** and **co
 ```
 index.html              Shell: layers, HUD, fonts
 css/lineside.css        UI: editorial type (Fraunces + Inter), paper cards, responsive
-js/world/world.js       The open world: map, collision grid and build-logic gating, y-sorted rendering, rooms, lighting, input
-js/world/sprites.js     In-world illustration: 4-direction characters with PPE, and building facades
+js/world/world.js       The open world: map, collision + PPE gating, y-sorted rendering, rooms (office, hall, depot + Marjorie), lighting, input
+js/world/sprites.js     In-world illustration: 4-direction characters with PPE, building facades (incl. the depot)
 js/scene.js             Palette/colour helpers (plus the older static landscape renderer)
 js/portraits.js         Flat-vector character portraits (SVG, 3 moods)
 js/audio.js             Generative ambient score + weather + UI sound (Web Audio)
-js/game.js              Engine: chapter flow, Calls, ripples, scoring, report, share, export
-js/packs/kestrel-vale.js        Scenario pack: story, cast, conversations, Calls (pure data)
-js/packs/kestrel-vale-world.js  World layer: who stands where each chapter, townsfolk, inspect text, notebook pages
+js/game.js              Engine: tasks & gating, activities (track walk, health check, works plan, drop-in, panel), Calls, JP & ranks, achievements, report
+js/packs/kestrel-vale.js        Scenario pack: cast, chapters, Chapter 1 content, Calls, achievements, ranks (pure data)
+js/packs/kestrel-vale-world.js  World layer: placements, townsfolk (attitudes change with support), notes, hints, inspect text
+docs/DESIGN.md                  The full six-chapter design
 ```
 
-**Art direction.** Layered atmospheric landscape illustration: the proven look of *Firewatch* and *Alto's Odyssey*. Flat silhouettes, aerial perspective, strong time-of-day palettes, parallax, weather, film grain and vignette. The viaduct changes across the project: derelict and ivy-covered, surveyed, scaffolded with a crane, track laid, then open with trains. Characters use a flat editorial portrait style. All art is generated in code, so there are no asset licences to manage and the whole game is under 200 KB.
+**Art direction.** Flat editorial illustration in a top-down 3/4 view, with strong time-of-day palettes (dawn, day, dusk, overcast with rain), weather, film grain and vignette. The world changes as the chapter progresses through six weeks. All art is generated in code, so there are no asset licences to manage and the whole game is a few hundred KB.
 
-### Adding a scenario pack
+### Pack data (Chapter 1)
 
-A pack is a data file. Copy `js/packs/kestrel-vale.js` and change:
-
-- `cast`: people and their portrait `look`
-- `chapters[]`: title, phase, month, scene (`time`: dawn/day/dusk/night/overcast · `season` · `weather`: clear/rain/snow · `build` 0–5 · `train`), intro lines, `talks`, `calls`, mentor line
-- `talks{}`: small conversations with hidden effects and trust changes
-- `calls{}`: the dilemmas. Each has `known[]`, `unknown[]`, a `principle`, a `discuss` prompt, and `choices` with `grade` (best/ok/poor), `why`, effects `e`, and an optional `ripple {at, p, hit, miss}`
-- `finale`: the mentor's closing words for high, mid and low judgment
+`PACK.c1` holds the chapter: `intro`, `tasks[]` (with `needs` for dependency gating), `talks`, `defects[]` (each with graded options), `hotspots[]` (Marjorie's health check, with optional fun follow-ups), `plan` (lanes of cards in their correct order, plus critical-path questions), `dropin`, `panel` (questions and the three outcomes) and `end`. `PACK.calls` holds the Calls (`known`, `unknown`, `principle`, `discuss`, graded `choices` with effects `e`, an optional `ripple` echo and `ach`). `PACK.achievements` and `PACK.ranks` drive progression.
 
 ## Engine choice: do we need Godot?
 

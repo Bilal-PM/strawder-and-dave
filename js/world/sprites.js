@@ -170,14 +170,35 @@ window.LS = window.LS || {};
       }
       if (bunting) { for (let i = 0; i < 16; i++) { x.fillStyle = T(['#d8643a', '#f2c230', '#2c7c77', '#f3ecdf'][i % 4]); x.beginPath(); x.moveTo(px + 10 + i * 10, -88 + Math.sin(i / 15 * Math.PI) * 8); x.lineTo(px + 20 + i * 10, -88 + Math.sin((i + 1) / 15 * Math.PI) * 8); x.lineTo(px + 15 + i * 10, -80 + Math.sin(i / 15 * Math.PI) * 8); x.fill(); } }
     },
-    cabin(x, px, lit) {
+    depot(x, px, lit) {
+      const brick = '#9a5a44';
+      x.fillStyle = T(brick); x.fillRect(px, -112, 260, 112);
+      x.fillStyle = TS(brick); x.fillRect(px + 196, -112, 64, 112);
+      x.fillStyle = T(shade(brick, -0.18)); for (let yy = -104; yy < 0; yy += 8) x.fillRect(px, yy, 260, 1);
+      x.fillStyle = T('#e3d6bf'); x.fillRect(px - 2, -114, 264, 5); x.fillRect(px - 2, -4, 264, 4);
+      // slate roof with smoke vents
+      x.fillStyle = T('#4a4f58'); x.beginPath(); x.moveTo(px - 8, -112); x.lineTo(px + 40, -150); x.lineTo(px + 220, -150); x.lineTo(px + 268, -112); x.fill();
+      x.fillStyle = TS('#4a4f58'); x.beginPath(); x.moveTo(px + 220, -150); x.lineTo(px + 268, -112); x.lineTo(px + 200, -112); x.fill();
+      for (const vx of [px + 70, px + 130, px + 190]) { x.fillStyle = T('#3a3e46'); x.fillRect(vx, -164, 26, 14); x.fillStyle = T('#5b616b'); x.fillRect(vx - 3, -167, 32, 4); }
+      // the big arched doorway (train-sized), closed with old green timber doors
+      x.fillStyle = T('#3d5a3a'); x.beginPath(); x.moveTo(px + 70, 0); x.lineTo(px + 70, -70); x.arc(px + 120, -70, 50, Math.PI, 0); x.lineTo(px + 170, 0); x.fill();
+      x.fillStyle = T('#2f4a2e'); x.fillRect(px + 119, -118, 2, 118); for (let yy = -64; yy < 0; yy += 12) x.fillRect(px + 72, yy, 96, 1.4);
+      x.strokeStyle = T('#e3d6bf'); x.lineWidth = 3; x.beginPath(); x.arc(px + 120, -70, 52, Math.PI, 0); x.stroke();
+      // arched windows
+      for (const wx of [px + 16, px + 40, px + 186, px + 210]) { x.fillStyle = lit > 0.25 ? 'rgba(255,214,140,.85)' : T('#3c4a5a'); x.beginPath(); x.moveTo(wx, -40); x.lineTo(wx, -72); x.arc(wx + 8, -72, 8, Math.PI, 0); x.lineTo(wx + 16, -40); x.fill(); x.fillStyle = T('#e3d6bf'); x.fillRect(wx - 1, -40, 18, 2); }
+      // personnel door
+      door(x, px + 216, 20, 34, '#2f5d62');
+      sign(x, px + 76, -142, 108, 14, '#2f5d62', '#f3ecdf', 'HARROWBY DEPOT · 1911', 6.5);
+      x.fillStyle = T('#f2c230'); x.fillRect(px + 212, -46, 28, 7); x.fillStyle = T('#1b1e25'); x.font = '700 4.5px Inter, sans-serif'; x.fillText('PPE ONLY', px + 215, -41);
+    },
+    cabin(x, px, lit, label) {
       x.fillStyle = T('#8fa3a8'); rr(x, px, -64, 150, 60, 3); x.fill();
       x.fillStyle = TS('#8fa3a8'); x.fillRect(px, -18, 150, 14);
       for (let i = 1; i < 10; i++) { x.fillStyle = TS('#8fa3a8'); x.fillRect(px + i * 15, -64, 1, 46); }
       x.fillStyle = T('#3b3f44'); for (const bx of [px + 10, px + 128]) x.fillRect(bx, -4, 12, 4);
       windows(x, 2, 1, px + 14, -52, 28, 18, 40, 0, Math.max(lit, 0.35), 31);
       door(x, px + 104, 20, 44, '#43565c');
-      sign(x, px + 12, -76, 70, 10, '#f2c230', '#1b1e25', 'SITE OFFICE', 6.5);
+      sign(x, px + 12, -76, 78, 10, '#f2c230', '#1b1e25', label || 'SITE OFFICE', 6.5);
       x.fillStyle = T('#5b6e73'); x.fillRect(px + 100, -4, 28, 4);
     },
     welfare(x, px, lit) {

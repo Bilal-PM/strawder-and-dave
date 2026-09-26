@@ -81,6 +81,12 @@ window.LS = window.LS || {};
       case 'bad': tone(mtof(45), 1.1, 'triangle', 0.22); tone(mtof(46), 1.1, 'triangle', 0.14, 0.02); break;
       case 'ripple': for (let i = 0; i < 5; i++) tone(mtof(84 - i * 3), 0.6, 'sine', 0.06, i * 0.07); break;
       case 'chapter': [60, 67, 72].forEach((m, i) => tone(mtof(m), 2.4, 'sine', 0.09, i * 0.18)); break;
+      case 'unlock': [67, 71, 74, 79, 83].forEach((m, i) => tone(mtof(m), 0.7, 'triangle', 0.09, i * 0.06)); tone(mtof(91), 1.2, 'sine', 0.05, 0.34); break;
+      case 'peep': tone(520, 0.16, 'square', 0.05); tone(505, 0.1, 'square', 0.03, 0.2); break;
+      case 'meow': { const o = c.createOscillator(), g = c.createGain(); o.type = 'triangle'; o.frequency.setValueAtTime(520, t); o.frequency.linearRampToValueAtTime(780, t + 0.18); o.frequency.linearRampToValueAtTime(430, t + 0.5); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.09, t + 0.05); g.gain.exponentialRampToValueAtTime(0.001, t + 0.55); o.connect(g); g.connect(sfxBus); o.start(t); o.stop(t + 0.6); break; }
+      case 'coo': for (let i = 0; i < 3; i++) tone(310 - i * 12, 0.22, 'sine', 0.07, i * 0.26); noise(0.5, 900, 0.08); break;
+      case 'clank': tone(180, 0.3, 'square', 0.05); noise(0.18, 3200, 0.3); tone(1240, 0.25, 'triangle', 0.04, 0.02); break;
+      case 'place': tone(520, 0.08, 'triangle', 0.12); tone(780, 0.1, 'sine', 0.06, 0.04); break;
     }
   };
 })();

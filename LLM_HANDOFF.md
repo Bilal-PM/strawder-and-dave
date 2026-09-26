@@ -1,26 +1,23 @@
 # LLM Handoff
 
-> Last updated: 2026-09-26 · Branch `claude/lineside-overhaul`
+> Last updated: 2026-09-26 · Branch `claude/lineside-chapter-1`
 
 ## Current state
-The project has been rebuilt as **LINESIDE**, a cinematic, story-driven judgment game (see `README.md` for product, design rationale, architecture and roadmap).
+LINESIDE, **Chapter 1 "Make the Case"** of the redesigned Kestrel Vale Line story (branch `claude/lineside-chapter-1`). The viaduct story has been replaced: the line's track is worn out and Marjorie, a 1961 railcar, sits in the depot. Chapters 2–6 are designed in `docs/DESIGN.md`, but **don't build them until the user gives the go-ahead**. Do not reuse the old sponsor character’s first name (the user asked for it to be removed).
 
-- `index.html` + `css/` + `js/` — LINESIDE (the current game)
-- `classic.html` — previous prototype *Project Valley* (v10, pixel-art office sim), kept for comparison. Still uses `img/`.
-- `js/packs/kestrel-vale.js` — all story and decision content. **Edit content here, not in the engine.**
-- `js/packs/kestrel-vale-world.js` — world placements per chapter (cast positions, who holds which talk/Call), townsfolk lines, inspect text, Moira's notebook.
-- `js/world/world.js` — open world, top-down 3/4. Map 3450×2300 units; buildings are facades drawn at their front edge and y-sorted with people and trees. Collision is a 10-unit grid rebuilt per chapter (`buildCollision`): 1 = solid, 2 = viaduct deck (walkable only when `build` is 3–4 AND `world.ppe`), 3 = live trackbed (build ≥ 5). Blocked moves call `onBlocked(reason)` → game toasts `PACK.world.blocked[reason]`. `LS.WORLD` exports geometry (VIA, PIER4, DOORS, ROOMS, riverX). Rooms (cabin, hall) are small top-down maps with their own grids.
+- `js/packs/kestrel-vale.js`: cast, `chapters[]` (roadmap), `c1` (intro, tasks with `needs`, talks, defects, hotspots, plan, dropin, panel, end), `calls`, `achievements`, `ranks`. **Edit content here, not in the engine.**
+- `js/packs/kestrel-vale-world.js`: `P.world.c1` placements (cast per room, task holders, panel cast, notes, memo, cat spots), townsfolk with two-tier lines by town support, hints keyed by the next task, idle lines and inspect text.
+- `js/world/world.js`: the top-down open world. Map 3450×2300. `TRACK` y 880–922 from x 1300 to 3250, `BRIDGE` (Beck Bridge) x 1725–1865, `CROSSING` (Crag Lane) x 2585–2625. Collision is a 10-unit grid: 1 = solid, 2 = the closed line (walkable only with `world.ppe`), 3 = live line (later chapters). The crossing is always open. Rooms: `office`, `hall` and `shed` (the depot, with `drawMarjorie`). `world.flags` drives visuals (pigeonGone, planned, panel). `world.pop()` shows speech bubbles.
 
 ## Key engine facts (js/game.js)
-- Flow is async/await: `run()` → `runChapter(i)` → `setupWorld` → `chapterCard` → due `ripple`s → intro `say`s → `explore(i)` (player walks to people; talks, Calls, chats, inspections, notebook pages via `handle()`; resolves when they close the week at the desk) → `chapterEnd`. Then the epilogue ripples, Moira's finale, then `report()`.
-- One pending input at a time: `onAdvance` (Enter/Space/click) and `onKey` (number keys click `[data-k]`).
-- Scoring: `stats(live)` (decision quality 75% + Brier calibration 25%; `live` adds a small prior for the HUD), `profile()` (archetype from cumulative choice deltas `S.trade`).
-- Save: the whole `S` is saved to `localStorage.lineside_save` at each chapter start; Continue resumes at that chapter.
-- Scene: `LS.Scene#set({time, season, weather, build, train})` crossfades; layers are cached offscreen canvases, rebuilt on resize.
-- Settings in `localStorage.lineside_settings`: sound, reduced, large, instant.
+- Flow: `runChapter()` → `setupWorld()` → chapter card and intro (skipped once `S.introDone`) → `explore()` → `handle(e)` → `runTask(id)` for the task holders → `chapterEnd()` → `report()` → `comingSoon()`.
+- Gating: `avail(task)` = not done and all `needs` done. `currentTarget()` picks the objective arrow. `refreshWorld()` sets markers (task ◆, call !, find ?, done ✓, note i) and the compact objective list.
+- Activities: `defectCard`, `hotspot`, `planBoard` (tap to place, check, fix, then 2 questions), `dropin`, `panelReview` (case rows → readiness score → outcome), `doCall`/`reveal`.
+- Points: dashboard `S.m` in real units (METRICS with fmt/lfmt/df); `gainJP` + `rankOf`; the `JP` and `CAL` tables. `stats()` gives decision quality over `S.graded` plus Brier over the Calls. `unlock(id)` shows achievement toasts, persisted in `localStorage.lineside_ach`.
+- Save: `localStorage.lineside_v2`, written after every interaction, including position. Continue resumes mid-chapter. The completed result goes to `lineside_c1_result`.
 
 ## Testing
-No build step. Headless Chromium via Playwright (`/opt/node22/lib/node_modules/playwright`) is used to play through desktop/mobile and screenshot every state. Google Fonts may fail in the sandbox (falls back to Georgia/system sans).
+No build step. Playwright (`/opt/node22/lib/node_modules/playwright`) scripts (kept outside the repo): a full playthrough with expert or random choices on desktop and mobile, a BFS reachability check with and without PPE, save/continue, and live walking. Use `ignoreHTTPSErrors:true` so Google Fonts load in the sandbox.
 
 ---
 

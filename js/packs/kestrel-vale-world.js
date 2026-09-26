@@ -1,193 +1,115 @@
-/* LINESIDE — "The Kestrel Vale Line": the explorable world layer.
- * Where people are each chapter, what the town says, what you can inspect,
- * Moira's hints and the eight pages of her 1986 notebook.
- * World x reference (units): school 30 · cottages 300–500 · bakery 520 · bus stop 662 · pub 730
- * · village hall 940 (door 1015) · noticeboard 1135 · church 1170 · hill 1320–1790 · station 1785–1960
- * · viaduct 1960–3660 (Pier 4 ≈ 2578) · site cabin 3760 (door 3874) · welfare 3950 · junction 4380+ · signal box 4690
+/* LINESIDE — "The Kestrel Vale Line": the explorable world layer for Chapter 1.
+ * Where people stand, what the town says (it changes as support grows), what you can inspect,
+ * engineering notes, Moira's hints and the page of a very private log.
+ *
+ * Map reference (world units, see js/world/world.js): Harrowby high street y≈1335 (x 40–1300) ·
+ * station 1170–1374 · depot 1410–1670 · project office 1420–1615 (door 1568) · Beck Bridge 1725–1865 ·
+ * old trackbed y 880–922 from x 1300 to the junction at 3250 · Crag Lane level crossing x 2585–2625 ·
+ * Kestrel Junction signal box 3120 · Moira's cottage 1570,560 (north).
  */
 (function () {
   const P = LS.PACKS['kestrel-vale'];
   const town = {
     len:  { name: 'Len Haworth', role: 'Retired signalman · Kestrel Arms regular', look: { skin: '#e3b596', hair: '#d6d2cc', hairStyle: 'short', top: '#6b5a44', topStyle: 'jacket', cap: '#4f4a3e', legs: '#3b3a36', bg: '#dccfbc' }, at: [775, 1326], wander: 30 },
-    june: { name: 'June Pritchard', role: 'Baker', look: { skin: '#f0cfb4', hair: '#8a5a3a', hairStyle: 'bun', top: '#c7563f', topStyle: 'tee', apron: '#f3ecdf', legs: '#3b3f4a', bg: '#f1d6c8' }, at: [690, 1326], wander: 60 },
-    dev:  { name: 'Dev Mistry', role: '17 · wants to study in the city', look: { skin: '#a87450', hair: '#15100d', hairStyle: 'short', top: '#3d5a8a', topStyle: 'tee', legs: '#2a2f3a', bg: '#cfd8e8' }, at: [790, 1388], wander: 30 },
+    june: { name: 'June Pritchard', role: 'Baker · Pritchard’s', look: { skin: '#f0cfb4', hair: '#8a5a3a', hairStyle: 'bun', top: '#c7563f', topStyle: 'tee', apron: '#f3ecdf', legs: '#3b3f4a', bg: '#f1d6c8' }, at: [690, 1326], wander: 60 },
+    dev:  { name: 'Dev Mistry', role: '17 · wants to study engineering', look: { skin: '#a87450', hair: '#15100d', hairStyle: 'short', top: '#3d5a8a', topStyle: 'tee', legs: '#2a2f3a', bg: '#cfd8e8' }, at: [1010, 1420], wander: 40 },
     jess: { name: 'Jess Carter', role: 'Parent · school gate', look: { skin: '#e8c0a0', hair: '#c98d3a', hairStyle: 'ponytail', top: '#7c4d7a', topStyle: 'cardigan', legs: '#34384a', bg: '#e8d2e6' }, at: [240, 1322], wander: 70 }
   };
   Object.entries(town).forEach(([id, t]) => { P.cast[id] = { name: t.name, role: t.role, look: t.look }; });
-  const workerLooks = [
-    { skin: '#e0b090', hair: '#3a2a20', hairStyle: 'short', top: '#f07a28', topStyle: 'hivis', hat: '#f4f1ea', legs: '#2f3542' },
-    { skin: '#8a5a3b', hair: '#15100d', hairStyle: 'short', beard: true, top: '#e5d534', topStyle: 'hivis', hat: '#f4f1ea', legs: '#2f3542' },
-    { skin: '#f0cdb2', hair: '#b4492a', hairStyle: 'ponytail', top: '#f07a28', topStyle: 'hivis', hat: '#2c7c77', legs: '#2f3542' },
-    { skin: '#c28f6a', hair: '#231a16', hairStyle: 'short', top: '#e5d534', topStyle: 'hivis', hat: '#f4f1ea', legs: '#2f3542' }
-  ];
-  const crowd = [
-    { skin: '#f0cdb2', hair: '#4a3222', hairStyle: 'short', top: '#3d6b54', topStyle: 'jacket' }, { skin: '#8a5a3b', hair: '#15100d', hairStyle: 'curly', top: '#d9a441', topStyle: 'tee' },
-    { skin: '#e7bf9c', hair: '#c9c4c0', hairStyle: 'bun', top: '#7a2e3b', topStyle: 'cardigan' }, { skin: '#c28f6a', hair: '#231a16', hairStyle: 'short', top: '#34506e', topStyle: 'tee' },
-    { skin: '#f3d2bb', hair: '#e2c27a', hairStyle: 'long', top: '#2f7f7a', topStyle: 'cardigan' }, { skin: '#b07852', hair: '#17110f', hairStyle: 'bob', top: '#c7563f', topStyle: 'jacket' }
-  ];
 
-  P.cast.crew = { name: 'Site crew', role: 'Contractor B · Kestrel Vale works', look: workerLooks[0] };
-  P.cast.resident = { name: 'Harrowby resident', role: 'Opening day', look: crowd[4] };
   P.world = {
-    town, workerLooks, crowd,
-    // Per chapter: where the team stands, who holds which conversation/Call, where to spawn,
-    // where this chapter's notebook page is, and what the hall banner says.
-    // Per chapter (x, y in world units; rooms use their own coordinates):
-    // who stands where, who holds which conversation/Call, spawn, notebook page, engineering note, hall banner.
-    chapters: [
-      { spawn: { room: 'outside', x: 2548, y: 1160 },
-        cast: [{ id: 'amara', room: 'cabin', x: 360, y: 270 }, { id: 'tom', room: 'outside', x: 2200, y: 905 }, { id: 'elaine', room: 'hall', x: 380, y: 205 }, { id: 'moira', room: 'cabin', x: 190, y: 185 }],
-        talks: { amara_budget: 'amara', tom_realnews: 'tom' }, calls: { name_date: 'elaine' },
-        memo: { room: 'outside', x: 1398, y: 1035 }, note: { x: 1400, y: 935 }, hall: 'KESTREL VALE LINE · PRESS LAUNCH TOMORROW' },
-      { spawn: { room: 'outside', x: 2548, y: 1160 },
-        cast: [{ id: 'hana', room: 'outside', x: 2200, y: 960 }, { id: 'tom', room: 'outside', x: PIER4X() - 28, y: 1158 }, { id: 'amara', room: 'cabin', x: 360, y: 270 }, { id: 'moira', room: 'cabin', x: 190, y: 185 }],
-        talks: { hana_authority: 'hana' }, calls: { under_pier: 'tom' },
-        memo: { room: 'outside', x: 3160, y: 1040 }, note: { x: PIER4X() - 70, y: 1178 }, hall: 'HARROWBY HISTORY SOCIETY · TUESDAYS' },
-      { spawn: { room: 'outside', x: 2548, y: 1160 },
-        cast: [{ id: 'priya', room: 'outside', x: 960, y: 1440 }, { id: 'elaine', room: 'hall', x: 380, y: 205 }, { id: 'amara', room: 'cabin', x: 320, y: 268 }, { id: 'tom', room: 'cabin', x: 430, y: 268 }, { id: 'moira', room: 'cabin', x: 190, y: 185 }],
-        talks: { priya_meeting: 'priya' }, calls: { scope_ramp: 'elaine', two_experts: 'amara' },
-        memo: { room: 'outside', x: 880, y: 1320 }, note: { x: 2250, y: 1070 }, hall: 'STEERING GROUP · STEP-FREE ACCESS?' },
-      { spawn: { room: 'outside', x: 2548, y: 1160 },
-        cast: [{ id: 'victor', room: 'cabin', x: 330, y: 268 }, { id: 'tom', room: 'outside', x: 2660, y: 1500 }, { id: 'moira', room: 'cabin', x: 190, y: 185 }],
-        talks: { victor_contingency: 'victor' }, calls: { cheapest_bid: 'victor' },
-        memo: { room: 'outside', x: 340, y: 1585 }, note: { x: 1845, y: 1296 }, hall: 'HARVEST SUPPER · SATURDAY' },
-      { spawn: { room: 'outside', x: 2548, y: 1160 },
-        cast: [{ id: 'tom', room: 'outside', x: 1900, y: 902 }, { id: 'amara', room: 'outside', x: 3160, y: 1045 }, { id: 'hana', room: 'outside', x: 2200, y: 960 }, { id: 'moira', room: 'cabin', x: 190, y: 185 }],
-        talks: { tom_weekends: 'tom' }, calls: { friday_4pm: 'amara' },
-        memo: { room: 'outside', x: 2262, y: 1040 }, note: { x: 2080, y: 900 }, hall: 'CONSTRUCTION TRAFFIC · Q&A' },
-      { spawn: { room: 'cabin', x: 260, y: 290 },
-        cast: [{ id: 'amara', room: 'cabin', x: 360, y: 270 }, { id: 'hana', room: 'outside', x: 3120, y: 1070 }, { id: 'elaine', room: 'hall', x: 380, y: 205 }, { id: 'moira', room: 'cabin', x: 190, y: 185 }],
-        talks: { amara_tired: 'amara' }, calls: { nobody_hurt: 'hana', green_amber_red: 'elaine' },
-        memo: { room: 'outside', x: PIER4X() - 50, y: 1170 }, note: { x: 3200, y: 902 }, hall: 'BOARD BRIEFING · PRIVATE' },
-      { spawn: { room: 'outside', x: 1240, y: 1150 },
-        cast: [{ id: 'priya', room: 'outside', x: 1335, y: 1045 }, { id: 'elaine', room: 'outside', x: 1250, y: 1048 }, { id: 'tom', room: 'outside', x: 1190, y: 1062 }, { id: 'moira', room: 'outside', x: 1410, y: 1052 }],
-        talks: { priya_headline: 'priya' }, calls: { opening_day: 'elaine' }, crowd: true,
-        memo: { room: 'outside', x: 1625, y: 590 }, note: { x: 1402, y: 1002 }, hall: 'OPENING CELEBRATION · ALL WELCOME' },
-      { spawn: { room: 'outside', x: 2548, y: 1160 },
-        cast: [{ id: 'victor', room: 'cabin', x: 330, y: 268 }, { id: 'moira', room: 'hall', x: 380, y: 205 }, { id: 'amara', room: 'hall', x: 300, y: 205 }, { id: 'tom', room: 'hall', x: 335, y: 212 }, { id: 'hana', room: 'hall', x: 450, y: 205 }, { id: 'priya', room: 'hall', x: 500, y: 212 }],
-        talks: {}, calls: { the_claim: 'victor', lessons: 'moira' },
-        memo: { room: 'outside', x: 2440, y: 360 }, note: { x: 1300, y: 1060 }, hall: 'LESSONS LEARNED · THE WHOLE TEAM' }
-    ],
-
-    // Why the build happens in this order. One note per chapter, placed where the work is.
-    engineering: [
-      { title: 'Structural survey', text: `Step one on any old structure: find out what you've actually got. A laser scan and a hands-on inspection of all eleven arches, before anyone designs a thing. Until it's assessed, the deck stays fenced off — so for now you cross the valley on foot.` },
-      { title: 'Ground investigation', text: `The rig is drilling beside Pier 4 to find out what's under it. Cheap now, ruinous later: you can't design foundations for ground you haven't seen.` },
-      { title: 'Temporary works design', text: `Before you repair an arch, you design how to hold it up while you do it: scaffold, props, the order of work. Many failures during repairs happen in the temporary works, not the permanent ones.` },
-      { title: 'Enabling works', text: `Nothing big starts without access. A haul road, a temporary bridge over the beck for plant, a bigger compound, power and welfare. Get these wrong and every trade after you waits.` },
-      { title: 'Deck waterproofing', text: `Water is what killed this viaduct. The deck is stripped back and a waterproof membrane goes on before any ballast or track, because you only get one chance before it's buried. The edge protection is up, so with PPE the deck is now a place you can work.` },
-      { title: 'The junction tie-in', text: `Track goes onto a finished structure. Then new points join the branch to the main line — the riskiest interface on the job, because the main line never stops. That work happens in short, tightly planned closures.` },
-      { title: 'Testing and commissioning', text: `Empty trains first: gauging runs to check clearances, then driver training, then trial running. The deck is a live railway now, so nobody walks on it — use the valley path or the footbridge.` },
-      { title: 'Handover', text: `The operator runs the railway now. What's left for you is the defects list, the as-built drawings and the maintenance records that let someone look after this for the next century.` }
-    ],
-    blocked: {
-      deck_closed: `The viaduct is fenced off: the structure hasn't been assessed and repaired yet. Cross the valley on foot — by the stepping stones or the packhorse bridge.`,
-      deck_ppe: `Site rules: hard hat and hi-vis on the viaduct. Pick up your PPE from the locker in the site office.`,
-      deck_live: `It's a live railway now. No walking on the viaduct — take the valley path.`,
-      track_live: `Live railway. Cross the line at the footbridge.`
+    town,
+    c1: {
+      spawn: { room: 'outside', x: 1290, y: 1100 },
+      // Where the team stand. Rooms use their own coordinates.
+      cast: [
+        { id: 'helen', room: 'outside', x: 1226, y: 1050, face: 'down' },
+        { id: 'moira', room: 'outside', x: 1338, y: 1052, face: 'down' },
+        { id: 'hannah', room: 'office', x: 440, y: 158, face: 'down' },
+        { id: 'jo', room: 'office', x: 262, y: 150, face: 'down' },
+        { id: 'steve', room: 'office', x: 120, y: 232, face: 'right' },
+        { id: 'tom', room: 'outside', x: 1462, y: 902, face: 'down' },
+        { id: 'gaz', room: 'shed', x: 540, y: 300, face: 'left' },
+        { id: 'priya', room: 'hall', x: 318, y: 208, face: 'down' },
+        { id: 'brian', room: 'hall', x: 448, y: 206, face: 'down' }
+      ],
+      // Who holds each task
+      holders: { induction: 'hannah', walk: 'tom', health: 'gaz', plan: 'jo', forecast: 'steve', date: 'helen', dropin: 'priya' },
+      panelCast: [{ id: 'sue', room: 'hall', x: 312, y: 186 }, { id: 'helen', room: 'hall', x: 380, y: 182 }, { id: 'raj', room: 'hall', x: 448, y: 186 }],
+      notes: [
+        { id: 'n_ppe', x: 1392, y: 962, title: 'A closed line is still a railway',
+          text: `On the real UK railway nobody goes “on or near the line” without a safety briefing and PPE. It doesn't matter if trains haven't run for years: old rail can shift, sleepers give way underfoot, and the Crag Lane crossing still gets cars. The hi-vis is the least interesting thing you'll wear and the most important.` },
+        { id: 'n_bridge', x: 1716, y: 866, title: 'Bridges: look under, not just at',
+          text: `On a working railway, bridges get a visual exam every year and a detailed hands-on one every six. Beck Bridge hasn't had either since 2009. The worrying part of an old bridge is often underwater: “scour” is fast water eating away the ground round a pier, where nobody can see it.` },
+        { id: 'n_junction', x: 3150, y: 1046, title: 'The main line never stops',
+          text: `Kestrel Junction joins our branch to the main line. The national infrastructure manager runs it, and it never stops for us. Any work near it needs their permission, their planning and a “possession” (a booked closure) arranged months ahead. You need them on side long before you need them on site.` }
+      ],
+      memo: { room: 'outside', x: 1624, y: 598 },
+      memoText: `MARJORIE: LOG. First Sunday of the month, as ever. Turned both engines over by hand. Topped up the oil and wiped the cab windows. Told her the news: there's talk of reopening. She didn't say much. She never does. — M.K.`,
+      catSpots: [[70, 334], [842, 250], [720, 392]],
+      hallBanner: 'DROP-IN · KESTREL VALE LINE · THURSDAY 7PM',
+      panelBanner: 'FUNDING PANEL · PLEASE USE THE GOOD CUPS'
     },
 
-    // Moira won't give answers. She tells you what to think about.
-    hints: [
-      `Everyone will want certainty from you this week. Ask yourself what you actually know yet — and what you'd be pretending to know.`,
-      `When something under the ground is a question mark, the cheapest time to answer it is before anyone pours concrete.`,
-      `Two sorts of pressure this month: people asking for more, and experts who disagree. Both go better with a written-down "how we'll decide".`,
-      `A bid that's miles below everyone else's is telling you something. Find out what.`,
-      `Plans are made of effort you've already spent. Decisions should be made of what happens next.`,
-      `The dark months are when people cut corners and reports turn green. Watch for both.`,
-      `"Done" is a word you agree with the people who'll run the thing for forty years. Not a word you announce.`,
-      `Nearly there. Be fair with the money and honest with the room — especially about yourself.`
-    ],
+    blocked: {
+      line_closed: `The old line is closed and unsafe: rotten sleepers and loose rail. Get your induction and PPE from Hannah at the project office first.`,
+      track_live: `Live railway. Cross at the level crossing.`
+    },
 
-    // Idle lines for the team when they have nothing pending
+    // Moira won't give you answers. She tells you what to think about, based on what's next.
+    hints: {
+      induction: `Go and see Hannah in the project office first. Nobody walks my old railway without a briefing. Not even me, and I've walked it since 1979.`,
+      walk: `Look at the track, then look at the train. They're more alike than you'd think: both have been standing still too long.`,
+      health: `Gaz is in the depot. Let him talk. He knows that railcar better than he knows his own car.`,
+      dropin: `The drop-in's at the hall. They'll ask the questions they've been saving since 2009. Answer the one they asked, not the one you wished they had.`,
+      plan: `The trick with a plan isn't knowing what to do. It's knowing what has to wait.`,
+      forecast: `When a number makes your case look wonderful, that's exactly the moment to check it.`,
+      date: `Helen wants a date because dates feel like certainty. Give her something true instead. She'll thank you next year.`,
+      panel: `Panels aren't looking for perfect. They're looking for someone who knows what they don't know.`,
+      done: `Off you go. And don't slurp the good cups.`
+    },
+
+    // What each person says when you've nothing pending with them
     idle: {
-      amara: [`I'm drawing. If I stop drawing, something's wrong.`, `Coffee's terrible, drawings are good. Balance.`, `Pier 4 keeps me up at night. In a professional way.`],
-      tom: [`Mind your footing, boss. The deck's greasy when it's damp.`, `The lads are asking if you'll be at the Kestrel on Friday.`, `She's a beauty, this viaduct. Stubborn, mind.`],
-      hana: [`Hard hat on the deck, please. Yes, even you.`, `I'd rather be annoying than right in an inquiry.`, `Lookouts are doubled on the junction side.`],
-      victor: [`Every pound has a job. Most of them are overworked.`, `I've costed your tea breaks. Joking. Mostly.`],
+      helen: [`The Authority is watching this one closely, {name}. So is my mum. She lives in Harrowby.`, `I've already written “historic day” in my speech. I just need the day.`],
+      jo: [`Sticky notes are a planning methodology. Don't let anyone tell you otherwise.`, `If you see my coffee, tell it I miss it.`],
+      tom: [`Mind your footing on the sleepers, boss. The soft ones don't warn you.`, `The lads are asking if you'll be at the Kestrel Arms on Friday.`],
+      hannah: [`Hard hat on the trackbed, please. Yes, even you.`, `I'd rather be annoying now than right at an inquiry later.`],
+      steve: [`Every pound has a job. Most of them are overworked.`, `I've costed your tea breaks. I'm joking. Mostly.`],
       priya: [`Half the village has my mobile number now. It's fine. It's fine.`, `June at the bakery is our best comms channel. Don't tell anyone.`],
-      elaine: [`The Authority is watching this one closely, {name}.`, `Don't make me regret choosing you. I'm joking. Partly.`],
+      gaz: [`She's a lovely old girl. Stubborn, mind. Takes after me.`, `The radio only gets one station in here. It's mostly Bonnie Tyler.`],
+      brian: [`Hobnobs are a sign of respect in this parish.`, `I chaired the bypass consultation in 1998. I still have the bruises.`],
       moira: []
     },
 
-    // The town reacts to the project. `lines[chapter]` + reactive lines when metrics are poor.
+    // The town's attitude changes with Town support: [below 50%, 50% and above]
     townLines: {
-      len: [`Signalled on this line for thirty year. Last train out, April '87. I was on the platform. Don't let 'em promise what they can't do, lad.`,
-            `They've got the radar out on Pier 4. Always was the awkward one, Pier 4. Kept us all guessing.`,
-            `Meeting at the hall about lorries. Folk round here'll moan about a railway they've wanted for forty year. That's Harrowby.`,
-            `Tenders, is it? In my day the cheapest gang did the worst job and the best gang did the job twice. Choose careful.`,
-            `Saw the crane from the pub. Proper job. Tell 'em to mind the junction — main line doesn't wait for anyone.`,
-            `Cold one. Frost on the rails makes men careless. Seen it happen.`,
-            `I heard her. The first one. Across the viaduct at six in the morning. I'm not ashamed to say I sat down on the bench and wept.`,
-            `Grandson takes the 07:12 to the city now. Every day. You don't know what that means round here.`],
-      june: [`A railway? I'll believe it when I sell a croissant to a commuter. Shop's shut three days a week now.`,
-             `You've got surveyors buying pasties. That's the best week I've had since Christmas.`,
-             `I've reopened Thursdays! On the strength of your railway. Don't make a fool of me.`,
-             `Your builders eat like horses. I've taken on a Saturday girl.`,
-             `Muddy boots in my shop every morning. I'm not complaining. Well — I am, but happily.`,
-             `Hot sausage rolls for the night crew. On the house. Somebody's got to look after them.`,
-             `Queue out the door since six! I've run out of bunting AND butter.`,
-             `Five days a week, open all hours. The railway did that. You did that.`],
-      dev: [`Two buses a day to the city. Miss the 07:40 and that's college gone for the day.`,
-            `If the train comes, I can do the engineering course in the city. If it doesn't… I don't know.`,
-            `Everyone's arguing at the hall about ramps. My nan's in a wheelchair. Ramps matter, yeah?`,
-            `Applied for college. Put "train" as how I'll get there. Bit of a gamble.`,
-            `Is it true you might get an apprenticeship on the site? Asking for me.`,
-            `Offer letter came. Starts in April. So, you know. No pressure.`,
-            `First day of college tomorrow. On a TRAIN. From HARROWBY.`,
-            `Second-year project's on the viaduct. I'm going to ask you loads of questions.`],
-      jess: [`I grew up here. Half my class moved away. I'd like my kids to have a reason to stay.`,
-             `The kids think the orange flags on the viaduct are for a party.`,
-             `Please tell me the lorries won't use the school road at 3pm. Please.`,
-             `The school's doing a project on the old line. Could someone come and talk?`,
-             `Lorries went round by the bypass this week. Thank you. Genuinely.`,
-             `Dark at four. Just glad to see the site lights on the hill — feels like something's happening.`,
-             `The kids made signs. "HELLO TRAIN." It's the best thing I've ever seen.`,
-             `We're staying. We were going to move. We're staying.`]
+      len: [`Signalled this line thirty-one year. They closed it “temporarily” in 2009. I've been temporarily retired ever since.`,
+            `Heard you were straight with folk at the hall. Makes a change. I've still got my signalling cap, if you ever need it.`],
+      june: [`I bake sixty loaves on a Saturday and sell forty. The rest go to the ducks. The ducks are thriving. Harrowby isn't.`,
+             `If the trains come back, I'm doing a Marjorie bun. Iced, with a little face. Don't tell anyone, it's a secret.`],
+      dev: [`I want to do engineering at college in the city. That's two buses and an hour and a half each way. Or I could just… not.`,
+            `Is it true you might need apprentices? Asking for a friend. The friend is me.`],
+      jess: [`The school run's fine. It's everything else. The doctor's is in Kestrelford now. No car, no doctor.`,
+             `The kids have started drawing trains again. My youngest drew Marjorie with wings. I didn't have the heart to say.`]
     },
-    townReact: {
-      safety: `Heard someone nearly got hit down at the junction. Is that true? People are talking.`,
-      morale: `Your lot looked miserable in the Kestrel last night. Everything alright up there?`,
-      schedule: `Paper says the railway's running late. Folk are starting to say "told you so".`,
-      budget: `Council tax up and your project over budget, they say. Not a good look.`,
-      quality: `My brother-in-law's on your site. Says corners are being cut. Just passing it on.`
-    },
-
-    workerLines: [`Morning, boss.`, `Mind the edge — it's a long way down.`, `Tea's in the welfare cabin if you want one.`, `Maureen's swinging well today.`, `Nearly got this bay done.`],
-    crowdLines: [`We've waited forty years for this!`, `My dad worked on this line.`, `Look at it. Just look at it.`, `First train since 1987!`],
 
     inspect: {
-      noticeboard: m => m.morale >= 65
-        ? `Harrowby noticeboard. A council leaflet about the railway has "YES!!" written on it in felt tip. Someone has pinned a child's drawing of a train next to it.`
-        : `Harrowby noticeboard. The railway leaflet has been half torn down. Someone has scrawled "believe it when we see it" across the corner.`,
-      station: b => b >= 5 ? `Harrowby Station. Fresh paint, a working clock, and a new sign. Somebody has already left flowers in the tubs.`
-        : b >= 3 ? `Harrowby Station. Scaffold on the canopy, the ticket office stripped back to brick. It smells of new timber and old soot.`
-        : `Harrowby Station. Boarded windows and a sign that reads "HARR  BY" — the O fell off in 1994, Len says. The platform is a meadow.`,
-      pier4: b => b >= 5 ? `You lean over the parapet. Pier 4 stands clean and pointed, sixty metres down to the beck. Hard to believe anyone ever worried about it.`
-        : b >= 3 ? `Scaffolding cages Pier 4 from the beck to the deck. Rope-access engineers are working their way down it like climbers.`
-        : b >= 1 ? `An orange X has been sprayed on Pier 4, far below. The survey tripod beside you is pointed straight at it.`
-        : `You lean over the old parapet. Far below, Pier 4 is streaked dark with water. A hairline crack runs up it like a vein.`,
-      crane: `Maureen the tower crane swings a bundle of steel over the deck. Somebody has painted her name on the counterweight in pink.`,
-      signalbox: `Kestrel Junction signal box. The main line to the city rushes past every twenty minutes. This is where your branch will join it — no second chances here.`,
-      urn: `The village hall tea urn. It's older than the railway closure and twice as reliable.`,
-      desk: `Your desk. The inbox can wait. Your list for this week is pinned to the monitor.`,
-      crag: `Kestrel Crag. The whole valley lies below you: Harrowby's chimneys, the viaduct striding across the beck, the lights of the compound. From up here the project looks small. It isn't.`,
-      cottage: `Beck Cottage. Moira's. Seed trays on the windowsill, a very old railway lamp beside the door, and a view straight up the valley to the viaduct.`,
-      packhorse: `The old packhorse bridge. It has carried people over Kestrel Beck for three hundred years without anyone writing a risk assessment.`
-    },
-
-    // Moira's notebook, 1986–87. One page per chapter, hidden somewhere in the world.
-    memos: [
-      `12 March 1986. Walked the viaduct with Mr Haldane. Hairline cracks in the parapet above Pier 4. He says they've been there since the war.`,
-      `2 April 1986. Measured the Pier 4 crack again: 3mm wider. Wrote to the Area Engineer. Polite. Very polite.`,
-      `May 1986. No reply. Haldane says don't make waves — the line is "under review" and bad news will close it.`,
-      `September 1986. Budget cut again. The repair gang's halved. We patch what we can see and hope about the rest.`,
-      `14 November 1986. Wet Friday. Worked through the night to get the relay done. Nobody wanted to be the one to stop it. I didn't either.`,
-      `January 1987. A lengthman stepped out in front of the 06:40. The lookout caught him. Haldane said leave it out of the book. I did.`,
-      `14 March 1987. Parapet section fell onto the down line at 04:10. Empty track, thank God. My memo was in the file all along.`,
-      `April 1987. Last train. The whole of Harrowby on the platform. I didn't go. I couldn't face them.`
-    ],
-    memoFinale: `You found every page of my notebook. So you already knew. Thank you for not saying anything — and for doing everything differently.`
+      station: `Harrowby station. The sign on the gate reads: “Station temporarily closed. We apologise for any inconvenience.” It's dated 2009. The inconvenience has been considerable.`,
+      noticeboard: m => m.town >= 50
+        ? `Parish noticeboard. “Lost: one cat (ginger, answers to nothing).” “Yoga, Tuesdays.” Someone has crossed out the “AGAIN?” on the railway poster and written “FINALLY?”. Progress.`
+        : `Parish noticeboard. “Lost: one cat (ginger, answers to nothing).” “Yoga, Tuesdays.” And a poster for the railway drop-in, with “AGAIN?” written across it in biro.`,
+      depot: `Harrowby Depot, built 1911. Brick, draughty, and home to exactly one train and one cat.`,
+      signalbox: `Kestrel Junction signal box, still working for the main line. The signaller waves. You wave back. It's the most British thing that'll happen to you all week.`,
+      cottage: `Beck Cottage, Moira's place. There's a railway lamp by the door, polished to within an inch of its life, and a pair of oily overalls on the washing line.`,
+      packhorse: `The old packhorse bridge. It's carried people over the beck for three hundred years without once asking for funding.`,
+      crag: `Kestrel Crag. From up here you can trace the whole line: station, depot, Beck Bridge, the crossing, the junction. Three miles that used to hold a valley together.`,
+      buffer: `The buffer stop at the end of the line. Someone has left a single red rose on it. Every year, according to Len.`,
+      lockers: `Your locker. The spare hard hat has “VISITOR” written on it in marker pen, and “NOT YOU, STEVE” underneath.`,
+      board: `The project board: tasks, risks and a drawing of Marjorie that Jo swears she didn't do.`,
+      urn: `The village hall tea urn. It has been on since 1987.`,
+      workbench: `Gaz's workbench. A radio, a torque wrench, a mug that says WORLD'S OKAYEST FITTER, and a well-thumbed 1961 maintenance manual.`,
+      cushions: `A pile of old seat cushions from Marjorie's saloon. They smell faintly of 1970s holidays.`
+    }
   };
-  function PIER4X() { return 1450 + 4 * (700 / 11); }
 })();
