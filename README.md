@@ -43,7 +43,7 @@ The world obeys engineering logic: the closed line needs PPE, the depot needs PP
 
 - **The project dashboard, in real units**: schedule float (weeks), contingency (£k), safety culture, evidence, team morale and town support (%). Outcomes move it, and outcomes include luck.
 - **Judgment Points (JP) and a career rank** (Graduate PM → Assistant PM → Project Manager → Senior PM → Programme Director). JP reward the quality of each decision (expert-graded) and, on the Calls, **calibration**: confidence that matches the quality of your call earns a bonus, and being certain about a weak call costs you. Luck never earns JP.
-- **13 achievements** that unlock in fun ways: *Kettle's On*, *Peep Peep*, *Pigeon Whisperer*, *Where's Sleeper?* (the depot cat), *Eagle Eye*, *Order, Order!*, *Biscuit Diplomacy*, *Measure Twice*, *Range Rover*, *Local*, *Anorak*, *First Page* and *Green Light*.
+- **13 achievements** that unlock in fun ways: *Kettle's On*, *Peep Peep*, *Pigeon Whisperer*, *Where's Sleeper?* (the depot cat), *Eagle Eye*, *Order, Order!*, *Biscuit Diplomacy*, *Measure Twice*, *Home on the Range*, *Local*, *Anorak*, *First Page* and *Green Light*.
 
 ### The cast
 

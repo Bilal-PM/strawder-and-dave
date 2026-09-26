@@ -62,7 +62,17 @@ drop-in (any time) ────────────────────�
 
 Ranks: Graduate PM (0) → Assistant PM (200) → Project Manager (500) → Senior PM (800) → Programme Director (1600). Excellent play in Chapter 1 reaches Senior PM; Programme Director needs the whole game.
 
-**Achievements (13)**: Kettle's On, Peep Peep, Pigeon Whisperer, Where's Sleeper?, Eagle Eye, Order Order!, Biscuit Diplomacy, Measure Twice, Range Rover, Local, Anorak, First Page, Green Light. They persist across playthroughs; hints show for locked ones.
+**Achievements (13)**: Kettle's On, Peep Peep, Pigeon Whisperer, Where's Sleeper?, Eagle Eye, Order Order!, Biscuit Diplomacy, Measure Twice, Home on the Range, Local, Anorak, First Page, Green Light. They persist across playthroughs; hints show for locked ones.
+
+## The Director (unpredictability)
+
+A small, rule-based "AI director" (in `game.js`, with data in `PACK.c1.events`) throws up to three surprises per chapter, drawn from a seeded random stream so every playthrough differs. Each event has a `weight(S)` that reacts to the world: a wet week makes the flood event likely, low town support makes rumours likely, a weak level-crossing judgment makes trespass likely, thin evidence makes cost holes likely. Events are graded decisions (JP 40/20/0); some carry `luck`, where the dice decide the outcome. The game then points out when a good decision got an unlucky result, or the other way round, because JP judge the decision, not the dice.
+
+Why rules rather than a language model in the browser: a local model is a 1–4 GB download, runs slowly on phones and school laptops, can say things that are wrong about safety, and can't be graded consistently. A cloud-hosted AI coach for free-text debriefs is a possible later add-on, but it needs a server and content guardrails.
+
+## Content rules
+
+No real suppliers, infrastructure managers, operators, regulators or brands are named. Generic terms are used instead ("the national infrastructure manager", "the regulator", "a heritage railway").
 
 ## Cast
 

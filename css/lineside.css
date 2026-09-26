@@ -517,3 +517,14 @@ button.metric{cursor:pointer}
   .plan .pcard{font-size:12.5px;padding:7px 9px}
   .plan .pcard small{display:none}
 }
+.cause{margin:12px 0 0;padding:9px 12px;border-radius:10px;background:rgba(216,100,58,.1);color:#8a3a1c;font-size:13px;font-weight:600}
+.luck{margin:14px 0 6px;padding:14px 16px;border-radius:14px;border:2px solid var(--line);background:#fff}
+.luck.good{border-color:rgba(47,125,91,.45)}.luck.bad{border-color:rgba(184,67,63,.4)}
+.luck p{font-family:var(--serif);font-size:calc(17px*var(--fs));line-height:1.55;margin-top:6px}
+.luck small{display:block;margin-top:10px;font-size:12.5px;color:var(--muted);line-height:1.5}
+.edu .lead{font-family:var(--serif);font-size:calc(18px*var(--fs));line-height:1.55;color:var(--ink2)}
+.uses{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0 6px}
+.use{padding:14px;border-radius:14px;background:#fff;border:1px solid var(--line)}
+.use .ic{font-size:24px;display:block;margin-bottom:6px}
+.use b{font-size:15px}.use p{font-size:13.5px!important;margin-top:4px;line-height:1.5}
+@media (max-width:720px){.uses{grid-template-columns:1fr}}

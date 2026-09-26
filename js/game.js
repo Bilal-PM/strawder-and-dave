@@ -46,7 +46,7 @@
   const GSCORE = { best: 1, ok: 0.5, poor: 0 };
   const CONF = [{ v: 0.5, ic: '🪙', lb: 'Coin flip', pc: '50% sure' }, { v: 0.7, ic: '👍', lb: 'Fairly sure', pc: '70% sure' }, { v: 0.9, ic: '🎯', lb: 'Certain', pc: '90% sure' }];
   // Judgment Points per graded decision
-  const JP = { talk: { best: 20, ok: 10, poor: 0 }, defect: { best: 30, ok: 15, poor: 0 }, dropin: { best: 30, ok: 10, poor: 0 }, planQ: { best: 25, ok: 12, poor: 0 }, panelQ: { best: 25, ok: 10, poor: 0 }, call: { best: 100, ok: 60, poor: 20 } };
+  const JP = { event: { best: 40, ok: 20, poor: 0 }, talk: { best: 20, ok: 10, poor: 0 }, defect: { best: 30, ok: 15, poor: 0 }, dropin: { best: 30, ok: 10, poor: 0 }, planQ: { best: 25, ok: 12, poor: 0 }, panelQ: { best: 25, ok: 10, poor: 0 }, call: { best: 100, ok: 60, poor: 20 } };
   // Calibration bonus on the Calls: confidence that matches the quality of the call earns points; overconfidence costs.
   const CAL = { 0.9: { best: 20, ok: 0, poor: -20 }, 0.7: { best: 10, ok: 5, poor: -5 }, 0.5: { best: 0, ok: 5, poor: 10 } };
   const WEEKS = [1, 1, 2, 3, 3, 4, 5, 6, 6];
@@ -60,7 +60,7 @@
     trust: Object.fromEntries(PACK.team.concat(['helen']).map(t => [t, 2])),
     jp: 0, jpLog: [], graded: [], judgment: [], ripples: [], trade: {}, talks: [],
     done: {}, flags: {}, defects: {}, hotspots: {}, plan: null, dropin: [], panel: null,
-    chats: {}, notes: [], memo: false, ppe: false, ach: [], introDone: false, tutorial: 0, pos: null, started: Date.now()
+    chats: {}, notes: [], memo: false, events: [], seed: Math.floor(Math.random() * 1e9), ppe: false, ach: [], introDone: false, tutorial: 0, pos: null, started: Date.now()
   });
   let S = fresh();
   const SET = Object.assign({ sound: true, reduced: matchMedia('(prefers-reduced-motion: reduce)').matches, large: false, instant: false },
@@ -453,6 +453,8 @@
       { k: 'date', nm: 'Opening date', tx: !d ? '—' : d.grade === 'best' ? 'A range, narrowing at each stage' : d.grade === 'ok' ? 'No date yet' : 'A fixed date: the bank holiday', s: d ? (d.grade === 'best' ? 1 : d.grade === 'ok' ? 0.6 : 0.2) : 0, w: 10 },
       { k: 'town', nm: 'Community', tx: `${S.m.town}% town support`, s: clamp((S.m.town - 30) / 40, 0, 1), w: 12 }
     ];
+    const ev = S.graded.filter(g => g.kind === 'event');
+    if (ev.length) rows.push({ k: 'events', nm: 'Handling surprises', tx: `${ev.filter(g => g.grade === 'best').length} of ${ev.length} handled like an expert`, s: ev.reduce((a, g) => a + GSCORE[g.grade], 0) / ev.length, w: 0 });
     return rows;
   }
   async function panelReview() {
@@ -473,9 +475,10 @@
       record('panelQ', q.who, `Panel: ${first(q.who)}'s question`, o.grade); gainJP(jp, `Panel · ${first(q.who)}`);
       await say(q.who, o.reply, o.grade === 'best' ? 'smile' : o.grade === 'poor' ? 'concern' : 'neutral', null, `<div class="chips">${chips(null, jp)}</div>`);
     }
-    const score = Math.round(rows.reduce((a, r) => a + r.s * r.w, 0) + qs);
+    const evB = S.graded.filter(g => g.kind === 'event' && g.grade === 'best').length;
+    const score = clamp(Math.round(rows.reduce((a, r) => a + r.s * r.w, 0) + qs + evB * 2), 0, 100);
     const key = score >= 75 ? 'approved' : score >= 50 ? 'conditions' : 'deferred', out = PN.outcomes[key];
-    const weakest = rows.slice().sort((a, b) => a.s - b.s)[0];
+    const weakest = rows.filter(r => r.w).sort((a, b) => a.s - b.s)[0];
     const COND = { track: 'a specialist track survey', train: 'a full condition report on Marjorie', plan: 'a re-baselined works plan with the critical path shown', forecast: 'an independent check of the ridership forecast', date: 'a published date range instead of a single date', town: 'a community engagement plan' };
     S.panel = { score, outcome: key, weakest: weakest.k }; S.done.panel = true;
     apply(out.e, false); gainJP(out.jp, 'Funding Panel · ' + out.title);
@@ -672,7 +675,9 @@
         if (e.to && !(e.id === 'door_shed' && !S.ppe)) { world.enter(e.to.room, e.to.x, e.to.y); LS.audio.sfx('page'); return; }
         world.paused = true; pad(false);
         try { await handle(e); } catch (err) { console.error(err); }
-        hide('talk'); hide('panel'); refreshWorld(); updateWeek(); refreshWorld(); save();
+        hide('talk'); hide('panel'); refreshWorld(); updateWeek(); refreshWorld();
+        if (!S.done.panel && !e.to) { try { await director(); } catch (err) { console.error(err); } hide('panel'); refreshWorld(); }
+        save();
         if (S.done.panel) { world.onInteract = null; resolve(); return; }
         world.paused = false; pad(true);
       };
@@ -766,6 +771,55 @@
   }
   let boardDone = null;
 
+  // ---------- The Director: surprises that react to the world ----------
+  // A seeded random stream per playthrough, so every run differs. Events are weighted by state
+  // (weather, town mood, earlier choices). Max 3 per chapter; at least 2 before the panel.
+  function rand() { S.seed = (S.seed + 0x6D2B79F5) | 0; let t = S.seed; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; }
+  async function director() {
+    if (S.done.panel || S.events.length >= 3) return;
+    const doneN = C1.tasks.filter(t => S.done[t.id]).length;
+    if (doneN < 1 || S.events.length >= Math.min(3, 1 + Math.floor(doneN / 3))) return;
+    const force = avail(task('panel')) && S.events.length < 2;
+    if (!force && rand() > (S.events.length === 0 && doneN >= 3 ? 0.75 : 0.4)) return;
+    const pool = C1.events.filter(ev => !S.events.some(x => x.id === ev.id) && ev.after.every(a => S.done[a])).map(ev => [ev, ev.weight(S)]).filter(([, w]) => w > 0);
+    if (!pool.length) return;
+    let r = rand() * pool.reduce((a, [, w]) => a + w, 0), ev = pool[0][0];
+    for (const [e, w] of pool) { if ((r -= w) <= 0) { ev = e; break; } }
+    await runEvent(ev);
+  }
+  async function runEvent(ev) {
+    LS.audio.sfx('ripple'); toast(`📡 ${ev.channel} · something's come up`); await wait(700);
+    const order = shuffle(ev.choices.map((_, i) => i));
+    const hd = tag => `<div class="call-head"><span class="tag ${tag || 'rose'}">Out of the blue · ${esc(ev.channel)}</span><span class="when">Week ${S.week} of 6<br>A surprise from the Director</span></div>`;
+    const el = layer('panel', `<div class="center-wrap"><div class="card call event">${hd()}<div class="call-body">
+      <div class="from"><div class="mini">${face(ev.who, 'concern')}</div>${esc(cast(ev.who).name)} · ${esc(cast(ev.who).role)}</div>
+      <h2>${esc(ev.title)}</h2><p class="sit">${fill(ev.text)}</p><div class="cause">🎲 ${esc(ev.cause(S))}</div>
+      <div class="q">What do you do?</div>${order.map((i, n) => `<button class="opt" data-k="${n + 1}" data-c="${i}"><span class="l">${'ABC'[n]}</span><span><div class="t">${esc(ev.choices[i].t)}</div></span></button>`).join('')}
+    </div></div></div>`);
+    el.querySelector('.call').scrollTop = 0;
+    const ci = await new Promise(res => { onKey = true; el.querySelectorAll('.opt').forEach(b => b.onclick = () => res(+b.dataset.c)); });
+    onKey = null; LS.audio.sfx('select');
+    const o = ev.choices[ci], jp = JP.event[o.grade];
+    apply(o.e, true); record('event', ev.id, ev.title, o.grade); gainJP(jp, 'Surprise · ' + ev.title);
+    if (o.ripple) S.ripples.push({ title: o.ripple.title, text: o.ripple.text, from: ev.title, choice: o.t });
+    let luck = null;
+    if (o.luck) { const hit = rand() < o.luck.p; luck = Object.assign({ hit }, hit ? o.luck.good : o.luck.bad); }
+    S.events.push({ id: ev.id, grade: o.grade, luck: luck ? luck.hit : null });
+    LS.audio.sfx('stamp'); setTimeout(() => LS.audio.sfx(o.grade === 'best' ? 'good' : o.grade === 'poor' ? 'bad' : 'tap'), 250);
+    const best = ev.choices.find(x => x.grade === 'best');
+    const lucky = luck && ((luck.hit && o.grade !== 'best') || (!luck.hit && o.grade === 'best'));
+    const el2 = layer('panel', `<div class="center-wrap"><div class="card call event">${hd(o.grade === 'best' ? 'teal' : o.grade === 'poor' ? 'rose' : 'gold')}<div class="call-body">
+      <div class="verdict"><span class="stamp ${o.grade}">${GRADE[o.grade].toUpperCase()}</span><span class="your">You chose: <b>${esc(o.t)}</b></span></div>
+      <div class="chips">${chips(o.e, jp)}</div>
+      <div class="mentor"><div class="face">${face('moira', o.grade === 'best' ? 'smile' : o.grade === 'poor' ? 'concern' : 'neutral')}</div><div><div class="nm">Moira's take</div><div class="say">“${esc(o.why)}”</div>${o.grade !== 'best' ? `<div class="alt">My call: <b>${esc(best.t)}</b></div>` : ''}</div></div>
+      ${luck ? `<div class="luck ${luck.hit ? 'good' : 'bad'}"><div class="eyebrow">🎲 What happened next</div><p>${esc(luck.text)}</p><div class="chips">${chips(luck.e)}</div>${lucky ? `<small>${o.grade === 'best' ? 'A good decision with a bad outcome. That happens: your JP are for the decision, not the dice.' : 'A lucky outcome from a risky decision. Enjoy it, but don’t count on it next time: JP judge the decision, not the dice.'}</small>` : ''}</div>` : ''}
+      ${o.ripple ? `<div class="pending">⏳ This will echo in Chapter 2…</div>` : ''}
+      <div class="cta"><button class="btn dark" data-go>Back to work <span class="kbd" style="color:#fff">↵</span></button></div></div></div></div>`);
+    el2.querySelector('.call').scrollTop = 0;
+    if (luck) apply(luck.e, false);
+    await clickGo(el2);
+  }
+
   // ---------- Chapter end: report, then what's next ----------
   async function chapterEnd() {
     pad(false); world.paused = true; world.objective = null;
@@ -811,7 +865,7 @@
       <div class="card rcard" style="margin-bottom:16px"><h3>Your decisions</h3>
         ${drow('Conversations with the team', byKind('talk'))}${drow('Track walk: judging the defects', byKind('defect'))}${drow('Works plan: sequence & critical path', byKind('plan').concat(byKind('planQ')))}${drow('The drop-in: answering Harrowby', byKind('dropin'))}
         ${S.judgment.map(x => { const cf = CONF.find(c => c.v === x.conf); return `<div class="callrow"><span class="tt">The Call: ${esc(x.title)}</span><span class="cf">${cf ? cf.ic + ' ' + cf.lb : ''}</span><span class="gchip ${x.grade}">${GRADE[x.grade].toUpperCase()}</span></div>`; }).join('')}
-        ${drow('The Funding Panel’s questions', byKind('panelQ'))}</div>
+        ${drow('Surprises from the Director', byKind('event'))}${drow('The Funding Panel’s questions', byKind('panelQ'))}</div>
       <div class="card rcard" style="margin-bottom:16px"><h3>Achievements · ${S.ach.length} of ${PACK.achievements.length} this run</h3><div class="badges">${PACK.achievements.map(a => `<div class="badge ${S.ach.includes(a.id) ? 'on' : ACHG[a.id] ? 'old' : ''}"><span class="ic">${S.ach.includes(a.id) || ACHG[a.id] ? a.ic : '🔒'}</span><b>${esc(a.name)}</b><small>${esc(S.ach.includes(a.id) || ACHG[a.id] ? a.desc : a.hint)}</small></div>`).join('')}</div></div>
       <div class="card rcard" style="margin-bottom:16px"><h3>Take these to your next project</h3>${lessons().map(([n, t]) => `<div class="lesson"><div class="pn">${esc(n)}</div><p>${esc(t)}</p></div>`).join('')}</div>
       ${S.ripples.length ? `<div class="card rcard echoes" style="margin-bottom:16px"><h3>⏳ Echoes: these will come back in Chapter 2</h3>${S.ripples.map(r => `<div class="lesson"><div class="pn">${esc(r.title)}</div><p>From ${esc(r.from)}: “${esc(r.choice)}”</p></div>`).join('')}</div>` : ''}
@@ -821,6 +875,7 @@
         <li><b>Sequencing.</b> Why must the drainage come before the new track, and the bogies before the brakes? Where have you seen work done in the wrong order?</li>
         <li><b>The critical path.</b> Marjorie had four weeks of float. What should you do with float, and who should know it exists?</li>
         ${S.judgment.map(x => `<li><b>${esc(x.title)}.</b> ${esc(PACK.calls[x.id].discuss)}</li>`).join('')}
+        <li><b>Surprises.</b> Which surprise did you handle well but get an unlucky outcome from, or the other way round? Why is it important to judge the decision, not the outcome?</li>
         <li><b>The drop-in.</b> When is “I don't know yet” the strongest answer you can give?</li></ol></details>
       <div class="report-actions">
         <button class="btn primary" id="rNext">What's next →</button>
@@ -953,7 +1008,7 @@
     layer('title', `<div class="brandmark">Groundwork Studio presents</div><div class="logo">LINESIDE</div><div class="tagline">A game about judgment.</div>
       <p class="packline">${esc(PACK.title)}: ${esc(PACK.blurb)}</p>
       <div class="title-actions"><button class="btn primary" id="tNew">${sv ? 'New game' : 'Begin Chapter 1'}</button>${sv ? `<button class="btn ghost" id="tCont">Continue · Week ${sv.week} of 6</button>` : ''}</div>
-      <div class="title-foot"><button id="tEdu">For educators & teams</button><button id="tSet">Settings</button><span>Chapter 1 · about 15–20 minutes · best with sound</span></div>`);
+      <div class="title-foot"><button id="tEdu">Use it with your team</button><button id="tSet">Settings</button><span>Chapter 1 · about 15–20 minutes · best with sound</span></div>`);
     $('#tNew').onclick = () => { LS.audio.init(); LS.audio.sfx('select'); setup(); };
     if (sv) $('#tCont').onclick = () => { LS.audio.init(); S = Object.assign(fresh(), sv); hide('title'); runChapter(); };
     $('#tEdu').onclick = educators;
@@ -974,16 +1029,24 @@
     setTimeout(() => $('#pname').focus(), 400);
   }
   function educators() {
-    const el = layer('panel', `<div class="center-wrap"><div class="card edu"><div class="eyebrow">For educators, L&D and teams</div><h2>Judgment you can practise.</h2>
-      <p>LINESIDE turns the hardest part of professional work, making calls under uncertainty, into a story people actually want to finish, followed by a debrief that sticks. Chapter 1 takes 15–20 minutes.</p>
+    const uses = [
+      ['🎓', 'Internal training', 'Give new starters and graduates the experience of a real delivery before they are responsible for one: sequencing, safety, stakeholders and gate reviews.'],
+      ['🤝', 'Team building', 'Play in pairs or small teams, then compare. Why did one team get approved and another deferred? It makes for a lively 30-minute debrief.'],
+      ['🧭', 'Scenario analysis', 'Every run is different. The Director throws surprises weighted by what is happening, so teams can rehearse “what would we do if…” safely.'],
+      ['📚', 'Practice after a course', 'Learn project management on a course, then practise judgment here. Choices are graded against expert reasoning and named principles.']
+    ];
+    const el = layer('panel', `<div class="center-wrap"><div class="card edu"><div class="eyebrow">For organisations, trainers & teams</div><h2>Judgment you can practise.</h2>
+      <p class="lead">LINESIDE is a serious game: fun enough to finish, and built so people take real learning away. Chapter 1 takes 15–20 minutes, runs in any browser, and needs no install and no login.</p>
+      <div class="uses">${uses.map(([i, t, d]) => `<div class="use"><span class="ic">${i}</span><b>${t}</b><p>${d}</p></div>`).join('')}</div>
       <h4>How it teaches</h4><ul>
-        <li><b>Go and see.</b> Players walk the track, inspect the train and hear from the town before they commit to anything.</li>
-        <li><b>Real sequencing.</b> Players order the works (drainage before track, bogies before brakes) and find the critical path.</li>
+        <li><b>Go and see.</b> Players walk the track, inspect the train and listen to the town before they commit to anything.</li>
+        <li><b>Real sequencing.</b> Drainage before track, bogies before brakes, tests before opening. Players find the critical path themselves.</li>
         <li><b>No numbers on the buttons.</b> Learners weigh the situation, not the scoreboard.</li>
         <li><b>Confidence ratings.</b> Calibration is scored, so overconfidence is visible and correctable.</li>
-        <li><b>Echoes.</b> Some promises come back in later chapters, which teaches learners to judge decisions, not outcomes.</li>
-        <li><b>A gate review.</b> The Funding Panel judges the whole case, like a real stage gate.</li></ul>
-      <h4>What's measured</h4><p>Judgment Points and career rank (decision quality plus calibration), a real-unit project dashboard, a decision-style profile and a discussion guide.</p>
+        <li><b>The Director.</b> Surprises react to the world (weather, town mood, earlier choices), and some outcomes involve luck. Learners learn to judge decisions, not outcomes.</li>
+        <li><b>A real gate review.</b> The Funding Panel judges the whole body of evidence, just like a stage gate.</li></ul>
+      <h4>What you get at the end</h4><p>Judgment Points and a career rank, a Judgment score (decision quality plus calibration), a real-unit project dashboard, a decision-style profile, achievements, the key lessons, a facilitator discussion guide and a CSV export.</p>
+      <h4>Beyond rail</h4><p>The engine runs on scenario packs. The same mechanics carry over to construction, healthcare, public services, IT delivery and more, and bespoke packs can be built around your own projects and processes.</p>
       <h4>Privacy</h4><p>Everything runs in the browser. No data leaves the device unless the learner exports or shares it.</p>
       <div class="cta"><button class="btn dark" data-go>Close</button></div></div></div>`);
     clickGo(el);

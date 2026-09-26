@@ -76,7 +76,7 @@ LS.PACKS['kestrel-vale'] = {
     intro: [
       ['narrator', `Harrowby, in the Kestrel Vale. The branch line closed “temporarily” in 2009. The sign on the station gate still says so.`],
       ['narrator', `Since then the bank has gone, the Saturday market has gone, and anyone under twenty-five catches the 41 bus. It comes twice a day, if it's feeling generous.`],
-      ['helen', `{name}! Helen Walsh, Vale Transport Authority. Welcome to the most optimistic job in the county. There's £4.8 million on the table from the Reconnecting Communities Fund to reopen the line to Kestrel Junction.`],
+      ['helen', `{name}! Helen Walsh, Vale Transport Authority. Welcome to the most optimistic job in the county. There's £4.8 million on the table from the Valley Connections Fund to reopen the line to Kestrel Junction.`],
       ['helen', `In six weeks a Funding Panel decides whether we get it. Your job is to make the case. A real one, with facts in. I've been to three launch events for this railway. I'd like the next one to have a train at it.`],
       ['moira', `Moira Kell. I was Harrowby's last station master. Helen thinks I'm here to show you round. I'm actually here because I'm nosy.`],
       ['moira', `Free advice: look at things before you promise things. The track, the train, the town. Go and see them with your own eyes.`]
@@ -226,7 +226,7 @@ LS.PACKS['kestrel-vale'] = {
     dropin: {
       intro: [
         ['priya', `Priya Nair, community. Welcome to the drop-in! About forty people came, which in Harrowby counts as a festival. They've heard promises before, so tell them the truth, even when it's “I don't know yet”.`],
-        ['brian', `Councillor Brian Pike, parish council. I've done the biscuits. Custard creams for the public, Hobnobs for the speaker. Earn your Hobnob.`]
+        ['brian', `Councillor Brian Pike, parish council. I've done the biscuits. Custard creams for the public, chocolate digestives for the speaker. Earn your digestive.`]
       ],
       questions: [
         { who: 'june', text: `Will it actually open this time? We've had three launch events and a commemorative mug.`,
@@ -250,7 +250,7 @@ LS.PACKS['kestrel-vale'] = {
               ripple: { title: `The first lorry`, text: `Ballast arrives by lorry, as ballast does. Jess photographs it outside the school gate and tags the Authority.` } }
           ] }
       ],
-      outroAll: `Well! That's the least shouty drop-in we've had since the bypass. Have a Hobnob. Have two.`,
+      outroAll: `Well! That's the least shouty drop-in we've had since the bypass. Have a chocolate digestive. Have two.`,
       outroSome: `Not bad at all. A few eyebrows went up, mind. Have a custard cream.`
     },
 
@@ -281,6 +281,71 @@ LS.PACKS['kestrel-vale'] = {
       }
     },
 
+    // THE DIRECTOR: surprises drawn each playthrough, weighted by what's going on in the world.
+    // weight(S) = 0 means not eligible. `cause` tells the player why this happened now.
+    // A choice may carry `luck`: the decision is graded, then the dice decide the outcome (outcomes never change JP).
+    events: [
+      { id: 'storm', who: 'tom', channel: 'Radio call', title: 'Rain on the way', after: ['walk'],
+        weight: S => S.week >= 4 ? 4 : 1,
+        cause: S => S.defects.drain ? 'Because you logged the blocked drain, Tom is watching the beck.' : 'A wet week in the Vale.',
+        text: `Heavy rain's forecast tonight. The beck's rising, and that blocked drain by the bridge will back up. Do we go and look?`,
+        choices: [
+          { t: `At first light: two of us, with a lookout and a plan, and stay off the bridge if the water's over the footings.`, grade: 'best', e: { safety: 3, evidence: 2 },
+            why: `Checking a structure after a flood is right. Doing it in the dark, alone and in a hurry is how people get hurt. Plan it, pair up, go at first light.`,
+            luck: { p: 0.6, good: { text: `At dawn you find a fallen branch jammed against the middle pier. Tom's crew clears it from the bank. Scour avoided, for now.`, e: { evidence: 3 } },
+              bad: { text: `Overnight the water washed out a chunk of embankment by the drain. Because you found it early, it's a repair, not a closure.`, e: { money: -30 } } } },
+          { t: `Leave it. The structural exam is booked anyway.`, grade: 'ok', e: {},
+            why: `The exam is weeks away, and floods are exactly when things change. A planned look after the storm is cheap.`,
+            luck: { p: 0.5, good: { text: `The rain passes and the beck drops. Nothing moved. You were lucky.`, e: {} },
+              bad: { text: `A branch jams under the bridge and the water scours round the pier. The exam now has rather more to examine.`, e: { money: -40, time: -1 } } } },
+          { t: `Tonight, now. Someone go and have a look with a torch.`, grade: 'poor', e: { safety: -5 },
+            why: `Keen, but a lone person on a wet, rotten trackbed at night, next to a flooded beck, is the biggest risk on the whole job.`,
+            luck: { p: 0.5, good: { text: `Nobody gets hurt, but Hannah has words with you. Loud ones.`, e: { team: -2 } },
+              bad: { text: `Tom slips on the wet sleepers. It's only a sprained wrist, and a very long form.`, e: { team: -4, safety: -3, time: -1 } } } }
+        ] },
+      { id: 'gazette', who: 'priya', channel: 'Phone call', title: 'The Gazette has a scoop', after: ['dropin'],
+        weight: S => 1 + (S.m.town < 45 ? 2 : 0) + (S.judgment.some(j => j.id === 'date' && j.grade === 'poor') ? 3 : 0),
+        cause: S => S.judgment.some(j => j.id === 'date' && j.grade === 'poor') ? 'Because a fixed date is already doing the rounds.' : S.m.town < 45 ? 'Rumours travel fast when trust is low.' : 'Somebody at the pub has been talking.',
+        text: `The Harrowby Gazette has heard the line "opens in August". They're printing it tomorrow unless someone tells them otherwise.`,
+        choices: [
+          { t: `Ring them back today: say where we really are and give the honest range.`, grade: 'best', e: { town: 4 }, why: `Get the truth out before the rumour sets. Local press would much rather have a straight quote than a guess.` },
+          { t: `“No comment until after the panel.”`, grade: 'ok', e: { town: -3 }, why: `Safe for you, but a “no comment” next to “opens in August” reads like a yes.` },
+          { t: `Let them print it. All publicity is good publicity.`, grade: 'poor', e: { town: 5 }, why: `It feels great for a week. Then August becomes the date everyone measures you against.`,
+            ripple: { title: 'The Gazette headline', text: `“TRAINS BY AUGUST!” is pinned up in the Kestrel Arms. Len has underlined it.` } }
+        ] },
+      { id: 'trespass', who: 'hannah', channel: 'Radio call', title: 'Visitors on the bridge', after: ['induction'],
+        weight: S => 1 + (S.defects.crossing && S.defects.crossing !== 'best' ? 2 : 0) + (S.m.safety < 60 ? 1 : 0),
+        cause: S => S.m.safety < 60 ? 'Safety culture is shaky, and people can tell.' : 'The line has looked abandoned for seventeen years.',
+        text: `Some teenagers are filming videos on the Beck Bridge parapet. They got in through a gap in the fence where Crag Lane meets the line.`,
+        choices: [
+          { t: `Go and talk to them calmly, get them off safely, fix the fence gap today, and ask Priya to set up a school safety talk.`, grade: 'best', e: { safety: 5, town: 2 }, why: `Deal with the person, then the hole in the fence, then the habit. That's the full fix.` },
+          { t: `Put a “Keep Out” sign on the gap.`, grade: 'ok', e: { safety: 1 }, why: `A sign is better than nothing, but a sign next to a hole in a fence is really an invitation.` },
+          { t: `Not our problem until the works start.`, grade: 'poor', e: { safety: -4 }, why: `It's your land and your risk the moment you're responsible for it. That's now.`,
+            luck: { p: 0.7, good: { text: `Nothing happens. This time.`, e: {} }, bad: { text: `One of them slips and grazes a knee. His mum rings the Authority. Helen rings you.`, e: { town: -5, safety: -2 } } } }
+        ] },
+      { id: 'wheelsets', who: 'gaz', channel: 'Knock at the door', title: 'A bargain from down the road', after: ['health'],
+        weight: S => 2,
+        cause: S => 'Because word has got round that Marjorie needs wheels.',
+        text: `A heritage railway sixty miles away is selling two spare wheelsets from a sister railcar. £18k the pair, half the new price. There's just no paperwork showing where they've been.`,
+        choices: [
+          { t: `Interested, but only after an independent inspection and proof of their history.`, grade: 'best', e: { evidence: 3 }, why: `Wheels are safety-critical. With no history there's no certification. Check first, then buy.`,
+            luck: { p: 0.6, good: { text: `The inspection passes. You buy them and save weeks on the train workstream.`, e: { money: -18, time: 1 } }, bad: { text: `The inspection finds hidden cracks. You walk away £1k poorer for the test, and very glad.`, e: { money: -1 } } } },
+          { t: `No thanks. We'll stick with new ones.`, grade: 'ok', e: {}, why: `Safe, but you might have walked past a real saving. An inspection costs very little.` },
+          { t: `Snap them up before someone else does.`, grade: 'poor', e: { money: -18 }, why: `Buying safety-critical parts with no history is a gamble on something you can't use until it's proven anyway.`,
+            luck: { p: 0.4, good: { text: `They turn out to be fine after testing. You got lucky.`, e: { time: 1 } }, bad: { text: `No history means no certification. They can't be used. That's £18k of very heavy doorstops.`, e: { time: -1 } } } }
+        ] },
+      { id: 'costhole', who: 'steve', channel: 'Knock at the door', title: 'A hole in the spreadsheet', after: ['plan'],
+        weight: S => 2 + (S.m.evidence < 60 ? 2 : 0),
+        cause: S => S.m.evidence < 60 ? 'Thin evidence means gaps. Here is one.' : 'Steve has been checking everything twice.',
+        text: `Nobody priced the power supply for the new level crossing. It's about £60k. Steve's gone a funny colour.`,
+        choices: [
+          { t: `Put it in the plan properly and tell Helen today.`, grade: 'best', e: { evidence: 4, team: 2 }, why: `Bad news doesn't get better with age. Sponsors forgive surprises they hear about early.` },
+          { t: `Wait for a firm quote before telling anyone.`, grade: 'ok', e: { evidence: 1 }, why: `Reasonable, but tell Helen it's coming. “We've found a gap, and the number's on its way” is a fine update.` },
+          { t: `Quietly cover it from contingency and say nothing.`, grade: 'poor', e: { money: -60 }, why: `That contingency was for risks you haven't found yet. Hiding a known cost in it is how projects run out of road.`,
+            ripple: { title: 'The hidden £60k', text: `Someone on the panel's finance team spots the missing line in the cost plan.` } }
+        ] }
+    ],
+
     end: {
       approved: `You looked before you promised. Most people do it the other way round and call it “being decisive”.`,
       conditions: `Conditions aren't a telling-off. They're the panel telling you exactly where to look next. Listen to them.`,
@@ -303,7 +368,7 @@ LS.PACKS['kestrel-vale'] = {
         { t: `Halve it to 90,000 to be on the safe side.`, d: `Quick and cautious.`, grade: 'ok', e: { evidence: 2 },
           why: `Cautious, but it's a guess wearing a hard hat. Being pessimistic without evidence is still just guessing.` },
         { t: `Submit 180,000. It's the consultant's number, not ours.`, d: `The case looks strongest this way.`, grade: 'poor', e: { evidence: -6 },
-          why: `Big numbers win funding, and then they get found out. Optimism bias is so common that HM Treasury publishes guidance telling you to adjust for it.` }
+          why: `Big numbers win funding, and then they get found out. Optimism bias is so common that official government appraisal guidance tells you to adjust for it.` }
       ] },
     date: { title: 'Name the Date', from: 'helen', task: 'date',
       text: `Helen wants a headline for the bid and the Harrowby Gazette. “Just give me a date I can put on a poster. Everyone loves a poster.” Your plan has about 20 weeks of track work, if the funding lands, the weather behaves and the level crossing design goes through first time.`,
@@ -329,9 +394,9 @@ LS.PACKS['kestrel-vale'] = {
     { id: 'cat', ic: '🐈', name: 'Where’s Sleeper?', hint: 'The depot has a supervisor. She’s usually asleep.', desc: 'Found and fussed Sleeper, the depot cat.' },
     { id: 'eagle', ic: '🦅', name: 'Eagle Eye', hint: 'Judge the track the way Tom would.', desc: 'Judged every track defect like a track engineer.' },
     { id: 'order', ic: '🧩', name: 'Order, Order!', hint: 'Some jobs have to wait for other jobs.', desc: 'Built a perfect works plan at the first go.' },
-    { id: 'biscuit', ic: '🍪', name: 'Biscuit Diplomacy', hint: 'Tell the room the truth. Accept the Hobnob.', desc: 'Answered every drop-in question honestly.' },
+    { id: 'biscuit', ic: '🍪', name: 'Biscuit Diplomacy', hint: 'Tell the room the truth. Accept the digestive.', desc: 'Answered every drop-in question honestly.' },
     { id: 'measure', ic: '📏', name: 'Measure Twice', hint: 'A big number is a question, not an answer.', desc: 'Had the ridership forecast independently checked.' },
-    { id: 'range', ic: '📅', name: 'Range Rover', hint: 'Dates are promises. Ranges are honest.', desc: 'Gave Helen a range instead of a date.' },
+    { id: 'range', ic: '📅', name: 'Home on the Range', hint: 'Dates are promises. Ranges are honest.', desc: 'Gave Helen a range instead of a date.' },
     { id: 'local', ic: '👋', name: 'Local', hint: 'Harrowby has opinions. Go and hear them.', desc: 'Chatted with Len, June, Dev and Jess.' },
     { id: 'anorak', ic: '🧥', name: 'Anorak', hint: 'Engineers leave notes lying about.', desc: 'Read every engineering note in the valley.' },
     { id: 'page', ic: '📓', name: 'First Page', hint: 'Someone keeps a log. It isn’t Gaz.', desc: 'Found a page of a very private log.' },

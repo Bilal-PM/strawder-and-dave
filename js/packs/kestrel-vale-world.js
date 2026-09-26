@@ -77,8 +77,8 @@
       hannah: [`Hard hat on the trackbed, please. Yes, even you.`, `I'd rather be annoying now than right at an inquiry later.`],
       steve: [`Every pound has a job. Most of them are overworked.`, `I've costed your tea breaks. I'm joking. Mostly.`],
       priya: [`Half the village has my mobile number now. It's fine. It's fine.`, `June at the bakery is our best comms channel. Don't tell anyone.`],
-      gaz: [`She's a lovely old girl. Stubborn, mind. Takes after me.`, `The radio only gets one station in here. It's mostly Bonnie Tyler.`],
-      brian: [`Hobnobs are a sign of respect in this parish.`, `I chaired the bypass consultation in 1998. I still have the bruises.`],
+      gaz: [`She's a lovely old girl. Stubborn, mind. Takes after me.`, `The radio only gets one station in here. It's mostly eighties power ballads.`],
+      brian: [`Chocolate digestives are a sign of respect in this parish.`, `I chaired the bypass consultation in 1998. I still have the bruises.`],
       moira: []
     },
 
