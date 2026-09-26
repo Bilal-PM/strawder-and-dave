@@ -170,7 +170,7 @@ def K(v):
     return int(round(v * TILE / 32))
 
 
-def bricks(cv, x0, y0, w, h, rp='brick', seed=1, mask=None, mortar=None, burnt=0.12, soot=0.0, bond='english_garden',
+def bricks(cv, x0, y0, w, h, rp='brick', seed=1, mask=None, mortar=None, burnt=0.07, soot=0.0, bond='english_garden',
            course=4, L=12):
     """Brickwork: courses of (course-1)px brick + 1px mortar; stretchers L px incl. 1px perp joint, headers L/2.
     english_garden: 3 stretcher courses then a header course (common in northern engine sheds).
@@ -196,7 +196,7 @@ def bricks(cv, x0, y0, w, h, rp='brick', seed=1, mask=None, mortar=None, burnt=0
             if v == 0 and u < LL - 2: i -= 1 if (u + bid) % 3 else 0
             if v == course - 2: i += 1 if hash01(x, y, seed + 4) < 0.5 else 0
             if u == LL - 2 and v > 0: i += 1
-            if hash01(x, y, seed + 5) < 0.03: i += 1
+            if hash01(x, y, seed + 5) < 0.012: i += 1
             # chipped corner
             if u == 0 and v == 0 and hash01(bid, crs, seed + 6) < 0.15: P(cv, x, y, mcol); continue
             if soot and fbm(x, y, 16, seed + 9) < soot: i += 1
@@ -273,6 +273,26 @@ def leaf_cluster(cv, cx, cy, r, rp='ivy', seed=1, density=0.8):
             P(cv, x, y, shade(rp, lum))
 
 
+def ivy_patch(cv, x0, y0, w, h, seed=1, live=False):
+    """Ivy climbing a wall: a ragged patch, dense at the foot and thinning upward, with stems showing through.
+    Leaves are 3x3 clusters shaded by a lumpy volume (noise-based normal), lit from the upper left."""
+    for k in range(4):   # stems
+        sx = x0 + 4 + k * (w // 5)
+        for y in range(y0 + h - 1, y0 + int(h * 0.3), -1):
+            sx += (1 if hash01(k, y // 5, seed) > 0.6 else (-1 if hash01(k, y // 5, seed) < 0.3 else 0)) if y % 5 == 0 else 0
+            P(cv, sx, y, C('bark', 3)); P(cv, sx + 1, y, C('bark', 4))
+    for y in range(y0, y0 + h):
+        for x in range(x0, x0 + w):
+            t = (y - y0) / max(1, h)                     # 0 top .. 1 bottom
+            edge = (x - x0) / max(1, w)
+            dens = fbm(x, y, 14, seed) + 0.35 * t - 0.55 * edge - (0.25 if t < 0.15 else 0)
+            if dens < 0.42: continue
+            if hash01(x // 3, y // 3, seed + 1) < 0.18: continue
+            nx = fbm(x + 3, y, 7, seed + 2) - fbm(x - 3, y, 7, seed + 2)
+            ny = fbm(x, y + 3, 7, seed + 2) - fbm(x, y - 3, 7, seed + 2)
+            lum = light(nx * 4, ny * 4, 0.6) + (dens - 0.5) * 0.4
+            if x % 3 == 2 and y % 3 == 2: lum -= 0.25
+            P(cv, x, y, shade('ivy', lum))
 def flower_dots(cv, cx, cy, r, rp, seed, n=8):
     for k in range(n):
         a = hash01(k, 1, seed) * 6.283; rr = r * math.sqrt(hash01(k, 2, seed))

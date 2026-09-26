@@ -51,6 +51,7 @@ window.LS = window.LS || {};
     const rows = e.rows || ['down', 'up', 'left', 'right'], row = Math.max(0, rows.indexOf(facing));
     const col = opts.moving ? 1 + (((frame | 0) % (cols - 1)) + (cols - 1)) % (cols - 1) : 0;
     if (opts.alpha != null && opts.alpha < 1) ctx.globalAlpha = opts.alpha;
+    if (opts.shadow !== false) { ctx.fillStyle = 'rgba(42,29,50,0.28)'; ctx.beginPath(); ctx.ellipse(x, y - 0.5, 6.5, 2.2, 0, 0, Math.PI * 2); ctx.fill(); }
     ctx.drawImage(im, col * fw, row * fh, fw, fh, x - ax / R, y - ay / R, fw / R, fh / R);
     if (opts.alpha != null && opts.alpha < 1) ctx.globalAlpha = 1;
   }

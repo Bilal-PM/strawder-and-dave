@@ -75,11 +75,11 @@ def hedge_tile(mask, variant=0, flowers='may'):
             dn, ds, dw, de = dist(0, -1), dist(0, 1), dist(-1, 0), dist(1, 0)
             zh = Hh - 2 + (pnoise(x, fy, 12, T, T, 20 + variant) - 0.5) * 6
             zh -= max(0, 4 - min(dn, ds, dw, de)) * 1.5
-            nx = (-0.8 if dw < 5 else 0) + (0.8 if de < 5 else 0)
-            ny = -0.6 - (0.55 if dn < 5 else 0) + (0.3 if ds < 4 else 0)
+            nx = (-0.8 if dw < 5 else 0) + (0.9 if de < 5 else 0)
+            ny = -0.35 - (0.55 if dn < 5 else 0) + (0.45 if ds < 5 else 0)
             X, Y = img(x, fy, zh)
             r = 5.2 + hash01(ii, jj, 13 + variant) * 2.0
-            v.clump(X, Y, 0, r, rp, gn=(nx, ny, 0.85, 1.25), lw=0.85, lobes=7, lamp=0.18, seed=ii * 7 + jj * 3 + variant * 50,
+            v.clump(X, Y, 0, r, rp, gn=(nx, ny, 0.8, 1.0), lw=1.0, bias=-0.06, lobes=7, lamp=0.18, seed=ii * 7 + jj * 3 + variant * 50,
                     dz=fy + zh * 0.8, sq=0.85, jit=0.025, grp=ii * 10 + jj)
     for i in range(-3, n + 3):                          # the south face: rows of tufts down to the foot
         for k in range(5):
@@ -114,7 +114,7 @@ def hedge_tile(mask, variant=0, flowers='may'):
                 wx, wy = (x - P) % T, (y - P) % T
                 h = hash01(wx, wy, 60 + variant); L = v.lum[y, x]
                 cl = pnoise(wx, wy, 6, T, T, 61 + variant)
-                if flowers == 'may' and cl > 0.6 and h < 0.16 and L > 0.4:
+                if flowers == 'may' and cl > 0.66 and h < 0.1 and L > 0.4:
                     cv.px[x, y] = C('p_blossom', 0 if L > 0.66 else 2)
                     if L > 0.66 and h < 0.03: cv.px[x, y] = C('flower_yel', 1)
                 elif flowers == 'haws' and cl > 0.62 and h < 0.1 and L > 0.3:
@@ -125,9 +125,9 @@ def hedge_tile(mask, variant=0, flowers='may'):
 
 
 # ================================================================== gritstone dry-stone wall
-WALL_B = 20             # body height below the cope stones
+WALL_B = 24             # body height below the cope stones
 WALL_C = 7              # cope stone height
-WX0, WX1, WY0, WY1 = 15, 33, 18, 33
+WX0, WX1, WY0, WY1 = 18, 30, 22, 32
 
 
 def _seq(seed, lo, hi, period=T):
@@ -172,9 +172,10 @@ def wall_tile(mask, variant=0, rp='p_gritdk'):
     Wv, Hv = T + 2 * P, T + top + 8 + 2 * P
     cv = Canvas(Wv, Hv)
     inside = fp_mask(mask, WX0, WX1, WY0, WY1)
+    incope = fp_mask(mask, WX0 + 2, WX1 - 2, WY0 + 2, WY1 - 3)
     img = lambda x, fy, zh: (x + P, fy + top - zh + P)
     face = _courses(90 + variant)
-    copeH = _seq(120 + variant, 5, 9); copeV = _seq(140 + variant, 4, 6)
+    copeH = _seq(120 + variant, 5, 10); copeV = _seq(140 + variant, 4, 7)
     hc = bool(mask & (E | W)) or not (mask & (N | S))
 
     def orient(x, fy):   # 'h' = cope slabs across an E-W run, 'v' = across a N-S run
@@ -188,11 +189,13 @@ def wall_tile(mask, variant=0, rp='p_gritdk'):
 
     def height(x, fy):
         if not inside(x, fy): return 0
+        if not incope(x, fy): return WALL_B
         o, k, u, w = cope(x, fy)
         if u == w - 1: return WALL_B + 1                 # the gap between cope stones
         hv = int(hash01(k, 5, 150 + variant) * 2.5)
         h = Hmax - hv
         if o == 'h' and (u == 0 or u == w - 2): h -= 1   # rounded shoulders
+        if o == 'h' and not incope(x, fy + 1) and (u == 0 or u == w - 2): h -= 1
         if o == 'v' and (u == 0): h -= 1
         return h
 
@@ -207,16 +210,30 @@ def wall_tile(mask, variant=0, rp='p_gritdk'):
             for zh in range(0, h + 1):
                 X, Y = img(x, fy, zh)
                 if not (0 <= X < Wv and 0 <= Y < Hv): continue
-                if zh == h:                                  # crests seen from above
+                if zh == h and h == WALL_B:                  # the wall head either side of the cope: rubble
+                    rs = hash01(wx // 4 + (wy // 3) * 5, wy // 3, 175 + variant)
+                    L = 0.62 + (rs - 0.5) * 0.3 - (0.3 if incope(x, fy - 1) else 0) + (0.12 if not inside(x, fy - 1) else 0)
+                    if not inside(x + 1, fy): L -= 0.12
+                    if (wx % 4 == 3 and hash01(wx // 4, wy, 176) < 0.6): L -= 0.2
+                    col = shade(rp, L)
+                    if pnoise(wx, wy, 6, T, T, 99 + variant) > 0.66: col = C('p_moss', 3 if L < 0.6 else 2)
+                elif zh == h:                                  # crests seen from above
                     if h <= WALL_B + 1: col = C(rp, 5)
                     else:
-                        L = 0.8 + ctone + (0.08 if u == 0 else 0) - (0.2 if u == w - 2 else 0)
+                        # each cope stone is a rough rounded ridge: lit north-west shoulder, darker south-east
+                        L = 0.74 + ctone + (0.1 if u == 0 else 0) - (0.22 if u == w - 2 else 0)
                         if o == 'h':
-                            if not inside(x, fy - 1): L += 0.06
-                            if not inside(x, fy + 1): L -= 0.1
+                            if not inside(x, fy - 1): L += 0.1
+                            elif not inside(x, fy - 2): L += 0.05
+                            if not inside(x, fy + 1): L -= 0.14
+                            elif not inside(x, fy + 2): L -= 0.07
+                        else:
+                            if not inside(x - 1, fy): L += 0.1
+                            if not inside(x + 1, fy): L -= 0.16
+                            if u == 0: L += 0.04
                         L += (hash01(wx, wy, 98) - 0.5) * 0.12
                         col = shade(rp, L)
-                        if pnoise(wx, wy, 6, T, T, 99 + variant) > 0.7: col = C('p_moss', 1 if L > 0.72 else 2)
+                        if pnoise(wx, wy, 6, T, T, 99 + variant) > 0.72: col = C('p_moss', 2 if L > 0.72 else 3)
                         elif hash01(wx, wy, 100) < 0.05: col = C('p_lichen', 1)
                 elif zh >= WALL_B:                           # front of a cope slab
                     if h <= WALL_B + 1: col = C(rp, 5)
@@ -226,7 +243,7 @@ def wall_tile(mask, variant=0, rp='p_gritdk'):
                         if zh == WALL_B: L -= 0.14
                         L += (hash01(wx, zh, 101) - 0.5) * 0.1
                         col = shade(rp, L)
-                        if zh == h - 1 and pnoise(wx, wy, 6, T, T, 99 + variant) > 0.66: col = C('p_moss', 2)
+                        if zh == h - 1 and pnoise(wx, wy, 6, T, T, 99 + variant) > 0.7: col = C('p_moss', 3)
                 else:                                        # coursed body stones, no mortar
                     s = face(x % T, zh)
                     sid, su, sv, sw, sh_ = s
@@ -242,8 +259,8 @@ def wall_tile(mask, variant=0, rp='p_gritdk'):
                         L += (hash01(wx, zh, 102) - 0.5) * 0.12
                         col = shade(rp, L)
                         if hash01(sid, 4, 171) < 0.18: col = shade('p_grit', L - 0.05)        # paler sandy stones
-                        if pnoise(wx, zh, 6, T, 24, 103 + variant) > 0.72 and zh > 3 and sv >= sh_ - 2:
-                            col = C('p_moss', 2 if L > 0.55 else 3)
+                        if pnoise(wx, zh, 6, T, 24, 103 + variant) > 0.76 and zh > 3 and sv >= sh_ - 2:
+                            col = C('p_moss', 3 if L > 0.55 else 4)
                         elif hash01(sid, 9, 104) < 0.14 and hash01(wx, zh, 105) < 0.4:
                             col = C('p_lichen', 1 if sv > 1 else 2)
                     cv.put(X, Y, col); continue

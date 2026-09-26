@@ -219,7 +219,7 @@ def meadow_variants():
         rf = lambda p: M if (dry[int(p[1]) % T, int(p[0]) % T] > 0.7 or p[4] < 0.12) else G
 
         def ex(p, rr):
-            if p[2] > 0.9: return seedhead(rr), -1, -9 - int(rr.random() * 3)
+            if p[2] > 0.95: return seedhead(rr), -1, -9 - int(rr.random() * 3)
             return None
         clump_layer(img, L, 5.2, (6, 10, 7, 11), rf, base_i=4, tip_lit=0, tip_dark=2, nbl=(5, 8), extra=ex)
         rng = np.random.default_rng(900 + v)

@@ -1,0 +1,323 @@
+{
+ "_about": {
+  "res": 3,
+  "tile": 48,
+  "units": "art px; at = room art px where the sprite anchor lands; tile = the level.js entity tile; foot = [x, y, w, h] map tiles; fade = [x, y, w, h] tiles where the player behind the object makes it draw at half alpha; points/text_slots are sprite px"
+ },
+ "marjorie": {
+  "anchor": [
+   578,
+   229
+  ],
+  "at": [
+   768,
+   322
+  ],
+  "fade": [
+   4,
+   2,
+   24,
+   2
+  ],
+  "file": "marjorie.png",
+  "foot": [
+   4,
+   4,
+   24,
+   3
+  ],
+  "h": 234,
+  "points": {
+   "body": [
+    982,
+    114
+   ],
+   "bogie_east": [
+    890,
+    218
+   ],
+   "bogie_west": [
+    266,
+    218
+   ],
+   "brakes": [
+    454,
+    191
+   ],
+   "cab": [
+    48,
+    84
+   ],
+   "cab_east": [
+    1108,
+    84
+   ],
+   "engine": [
+    670,
+    193
+   ],
+   "exhaust": [
+    678,
+    3
+   ],
+   "pigeon": [
+    928,
+    107
+   ]
+  },
+  "room": "shed",
+  "text_slots": {
+   "nameplate": [
+    527,
+    142,
+    102,
+    13
+   ],
+   "number_east": [
+    1054,
+    142,
+    66,
+    13
+   ],
+   "number_west": [
+    36,
+    142,
+    66,
+    13
+   ]
+  },
+  "tile": [
+   16,
+   6
+  ],
+  "w": 1156
+ },
+ "shed": {
+  "floor": {
+   "file": "shed_floor.png",
+   "h": 672,
+   "w": 1536
+  },
+  "objects": {
+   "buffer_stop": {
+    "anchor": [
+     50,
+     136
+    ],
+    "at": [
+     96,
+     336
+    ],
+    "file": "shed_buffer_stop.png",
+    "foot": [
+     1,
+     5,
+     2,
+     2
+    ],
+    "h": 138,
+    "tile": [
+     1,
+     5
+    ],
+    "w": 100
+   },
+   "cushions": {
+    "anchor": [
+     50,
+     110
+    ],
+    "at": [
+     96,
+     528
+    ],
+    "file": "shed_cushions.png",
+    "foot": [
+     1,
+     9,
+     2,
+     2
+    ],
+    "h": 112,
+    "points": {
+     "cat_bed": [
+      49,
+      66
+     ]
+    },
+    "tile": [
+     1,
+     9
+    ],
+    "w": 100
+   },
+   "exit_sign": {
+    "anchor": [
+     50,
+     2
+    ],
+    "at": [
+     768,
+     624
+    ],
+    "file": "shed_exit_sign.png",
+    "foot": [
+     15,
+     13,
+     2,
+     0
+    ],
+    "glow": true,
+    "h": 30,
+    "note": "hangs over the exit gap on the south wall; draw after actors",
+    "text_slot": [
+     24,
+     10,
+     52,
+     12
+    ],
+    "tile": [
+     15,
+     13
+    ],
+    "w": 100
+   },
+   "fire_point": {
+    "anchor": [
+     26,
+     88
+    ],
+    "at": [
+     1128,
+     96
+    ],
+    "file": "shed_fire_point.png",
+    "foot": [
+     23,
+     1,
+     1,
+     1
+    ],
+    "h": 90,
+    "tile": [
+     23,
+     1
+    ],
+    "w": 52
+   },
+   "hoist": {
+    "anchor": [
+     74,
+     132
+    ],
+    "at": [
+     696,
+     96
+    ],
+    "file": "shed_hoist.png",
+    "foot": [
+     13,
+     1,
+     3,
+     1
+    ],
+    "h": 134,
+    "tile": [
+     13,
+     1
+    ],
+    "w": 148
+   },
+   "oil_drums": {
+    "anchor": [
+     50,
+     74
+    ],
+    "at": [
+     288,
+     96
+    ],
+    "file": "shed_oil_drums.png",
+    "foot": [
+     5,
+     1,
+     2,
+     1
+    ],
+    "h": 76,
+    "tile": [
+     5,
+     1
+    ],
+    "w": 106
+   },
+   "racking": {
+    "anchor": [
+     98,
+     138
+    ],
+    "at": [
+     1392,
+     96
+    ],
+    "file": "shed_racking.png",
+    "foot": [
+     27,
+     1,
+     4,
+     1
+    ],
+    "h": 140,
+    "tile": [
+     27,
+     1
+    ],
+    "w": 196
+   },
+   "workbench": {
+    "anchor": [
+     74,
+     160
+    ],
+    "at": [
+     1320,
+     528
+    ],
+    "file": "shed_workbench.png",
+    "foot": [
+     26,
+     9,
+     3,
+     2
+    ],
+    "h": 162,
+    "points": {
+     "aerial_tip": [
+      140,
+      20
+     ],
+     "radio": [
+      123,
+      53
+     ]
+    },
+    "tile": [
+     26,
+     9
+    ],
+    "w": 148
+   }
+  },
+  "overlay": {
+   "draw": "after everything",
+   "file": "shed_overlay.png",
+   "h": 672,
+   "w": 1536
+  },
+  "walls": {
+   "file": "shed_walls.png",
+   "h": 672,
+   "w": 1536
+  }
+ }
+}

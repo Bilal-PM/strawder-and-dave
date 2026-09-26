@@ -4,6 +4,9 @@ lit as volumes (sunlit tops to the north-west, dark undersides) and every leaf c
 import math
 from kit import *  # noqa
 
+K = TILE / 32          # geometry scale (the art was laid out at 32 px tiles; tiles are now 48)
+CL = 0.74             # leaf tufts grow less than the geometry: more, finer clusters at the new scale
+
 
 # ------------------------------------------------------------------ bark textures
 def bark_tex(seed, fiss=0.22, scale=0.3):
@@ -45,6 +48,7 @@ def lobe_clumps(vol, lx, ly, lz, lr, ramp, g, clr, dens, seed, ao, core=True, sq
     if core:
         vol.clump(lx, ly, lz - lr * 0.15, lr * 0.9, ramp, gs=gs, lw=0.15, bias=bias - 0.1, lobes=lobes,
                   lamp=0.12, seed=seed, ao=ao, sq=sq, jit=jit, grp=grp)
+    clr = clr * CL
     n = int(dens * (lr * lr) / (clr * clr)) + 3
     for k in range(n):
         th = R.u(0, 2 * math.pi); ph = math.acos(R.u(-0.15, 1.0))
@@ -123,9 +127,10 @@ def dome_lobes(R, cx, cy, rx, ry, n, rmin, rmax, front=True):
 # ------------------------------------------------------------------ species
 def oak(s, seed=1):
     """English oak: broad spreading lumpy crown wider than tall, short massive trunk dividing into limbs."""
+    s = s * K
     R = Rng(seed)
     rx, ry = 52 * s, 38 * s; tc = int(30 * s) + 8
-    W, H = int(rx * 2 + 16), int(ry * 2 + tc + 20 + 12 * s)
+    W, H = int(rx * 2 + 44), int(ry * 2 + tc + 20 + 12 * s)
     cx, by = W // 2, H - int(10 + 8 * s)
     cy = by - tc - ry * 0.78
     t = Tree(W, H, cx, by); v = t.v
@@ -145,9 +150,10 @@ def oak(s, seed=1):
 
 def sycamore(s, seed=2):
     """Sycamore: a big dense rounded dome, deep green, smooth grey trunk."""
+    s = s * K
     R = Rng(seed)
     rx, ry = 44 * s, 44 * s; tc = int(18 * s) + 6
-    W, H = int(rx * 2 + 16), int(ry * 2 + tc + 20 + 12 * s)
+    W, H = int(rx * 2 + 44), int(ry * 2 + tc + 20 + 12 * s)
     cx, by = W // 2, H - int(10 + 8 * s)
     cy = by - tc - ry * 0.8
     t = Tree(W, H, cx, by); v = t.v
@@ -165,9 +171,10 @@ def sycamore(s, seed=2):
 
 def ash(s, seed=3):
     """Ash: tall open dome, pale grey bark, feathery light foliage in sprays at the ends of upswept limbs."""
+    s = s * K
     R = Rng(seed)
     rx, ry = 40 * s, 46 * s; tc = int(26 * s) + 6
-    W, H = int(rx * 2 + 18), int(ry * 2 + tc + 22 + 12 * s)
+    W, H = int(rx * 2 + 46), int(ry * 2 + tc + 22 + 12 * s)
     cx, by = W // 2, H - int(10 + 8 * s)
     cy = by - tc - ry * 0.78
     t = Tree(W, H, cx, by); v = t.v
@@ -179,7 +186,7 @@ def ash(s, seed=3):
         a = math.pi * (1.1 + 0.8 * i / (6 if s > 0.7 else 4)) + R.u(-0.1, 0.1)
         tx, ty = cx + math.cos(a) * rx * 0.72, cy + math.sin(a) * ry * 0.7
         tips.append((tx, ty))
-        branch_to(v, cx, top - 6 * s, tx, ty, 2.6 * s + 1, 0.8, 'p_greyoak', z0=0, z1=R.u(-6, 2), bend=R.u(-5, 5) * s)
+        branch_to(v, cx, top - 6 * s, tx, ty, 1.9 * s + 1, 0.8, 'p_greyoak', z0=0, z1=R.u(-6, 2), bend=R.u(-5, 5) * s)
     for i, (tx, ty) in enumerate(tips):
         lobe_clumps(v, tx, ty, R.u(-2, 4), 13 * s + 4, 'p_ash', g, 3.6 * s + 1.4, 1.7, seed * 100 + i * 5, ao,
                     core=True, lobes=7, lamp=0.28, holes=0.1)
@@ -189,36 +196,47 @@ def ash(s, seed=3):
 
 
 def birch(s, seed=4):
-    """Silver birch: slender white trunk with black lenticels, a narrow airy crown of small bright clumps."""
+    """Silver birch: slender white trunk with black lenticels, a narrow airy crown of small bright drooping clumps."""
+    s = s * K
     R = Rng(seed)
-    rx, ry = 24 * s + 4, 46 * s + 6; tc = int(24 * s) + 8
-    W, H = int(rx * 2 + 16), int(ry * 2 + tc + 20 + 10 * s)
+    rx, ry = 22 * s + 4, 44 * s + 6; tc = int(26 * s) + 8
+    W, H = int(rx * 2 + 72), int(ry * 2 + tc + 20 + 10 * s)
     cx, by = W // 2, H - int(9 + 6 * s)
     cy = by - tc - ry * 0.8
     t = Tree(W, H, cx, by); v = t.v
-    g = (cx - rx * 0.15, cy, -rx * 0.1, max(rx, ry) * 0.8); ao = (cy, cy + ry, 0.22)
+    g = (cx - rx * 0.15, cy - ry * 0.1, -rx * 0.1, max(rx, ry) * 0.8); ao = (cy, cy + ry, 0.18)
     lean = R.u(-3, 3) * s
-    v.tube([(cx, by, 0), (cx + lean * 0.5, by - tc, 0), (cx + lean, cy - ry * 0.6, -2)], 2.8 * s + 1.3, 0.9,
-           'p_birchbark', tex=birch_tex(seed))
-    v.tube([(cx - 1, by - 2, 1), (cx - 4 * s - 2, by + 0.5, 2)], 1.6 * s + 0.6, 0.8, 'p_birchbark', tex=birch_tex(seed))
-    for i in range(6):
-        yy = cy - ry * 0.5 + i * ry * 0.26
+    tx = birch_tex(seed)
+    v.tube([(cx, by, 0), (cx + lean * 0.5, by - tc, 0), (cx + lean, cy - ry * 0.7, -2)], 2.6 * s + 1.3, 0.9,
+           'p_birchbark', tex=tx)
+    v.tube([(cx - 1, by - 2, 1), (cx - 3 * s - 2, by + 0.5, 2)], 1.4 * s + 0.6, 0.8, 'p_birchbark', tex=tx)
+    lob = []
+    nl = 8 if s > 1.0 else 6
+    for i in range(nl):
+        f = i / (nl - 1)
+        yy = cy - ry * 0.75 + f * ry * 1.35
         sd = -1 if i % 2 else 1
-        branch_to(v, cx + lean * 0.6, yy + 8, cx + sd * rx * 0.75, yy + R.u(-2, 6), 1.3 * s + 0.4, 0.6, 'p_birchbark',
-                  z0=-1, z1=-3, bend=sd * 2)
-    for i in range(9 if s > 0.7 else 6):
-        a = R.u(0, 2 * math.pi); d = R.u(0.25, 0.85)
-        lx, ly = cx + lean * 0.6 + math.cos(a) * rx * d * 0.85, cy + math.sin(a) * ry * d * 0.9
-        lobe_clumps(v, lx, ly, R.u(-3, 5), 9 * s + 4, 'p_birch', g, 3.0 * s + 1.3, 1.6, seed * 91 + i * 3, ao,
-                    core=R.r() < 0.7, lobes=7, lamp=0.3, holes=0.15, sq=1.05)
+        spread = rx * (0.25 + 0.55 * math.sin(f * math.pi * 0.95 + 0.2))
+        lx = cx + lean * (1 - f * 0.5) + sd * spread
+        lob.append((lx, yy, R.u(-3, 4), (8 + 3 * math.sin(f * math.pi)) * s + 3))
+        branch_to(v, cx + lean * (1 - f * 0.5), yy + 6 * s, lx * 0.8 + cx * 0.2, yy + 2, 1.1 * s + 0.4, 0.6,
+                  'p_birchbark', z0=-1, z1=-4, bend=sd * 2)
+    for i, (lx, ly, lz, lr) in enumerate(lob):
+        lobe_clumps(v, lx, ly, lz, lr, 'p_birch', g, 3.4 * s + 1.3, 1.7, seed * 91 + i * 3, ao,
+                    core=True, lobes=7, lamp=0.28, holes=0.12, sq=1.1)
+        # drooping fringe: tiny tufts hanging below each lobe
+        for k in range(3):
+            v.clump(lx + R.u(-lr * 0.6, lr * 0.6), ly + lr * 0.8 + R.u(0, 3), lz + 2, 2.2 * s * CL + 1.2, 'p_birch',
+                    gs=[(g[0], g[1], g[2], g[3], 0.7)], lw=0.8, lobes=6, lamp=0.3, seed=seed + i * 7 + k, sq=1.3)
     return t.finish((cx + rx * 0.25, by + 1, rx * 0.8, rx * 0.3 + 3))
 
 
 def hawthorn(s, seed=5, blossom=True):
     """Hawthorn in May: a small gnarled tree, twisted trunk, dense rounded crown frosted with white blossom."""
+    s = s * K
     R = Rng(seed)
     rx, ry = 30 * s + 4, 24 * s + 4; tc = int(12 * s) + 6
-    W, H = int(rx * 2 + 16), int(ry * 2 + tc + 20 + 8 * s)
+    W, H = int(rx * 2 + 44), int(ry * 2 + tc + 20 + 8 * s)
     cx, by = W // 2, H - int(9 + 6 * s)
     cy = by - tc - ry * 0.72
     t = Tree(W, H, cx, by); v = t.v
@@ -235,23 +253,29 @@ def hawthorn(s, seed=5, blossom=True):
 
     def deco(cv, vol):
         if not blossom: return
-        for y in range(cv.h):
-            for x in range(cv.w):
-                if vol.tag[y, x] != 1 or not cv.px[x, y][3]: continue
-                L = vol.lum[y, x]; h = hash01(x, y, 555)
-                cl = vnoise(x, y, 2.2, 556)
-                if cl > 0.52 and h < 0.62 and L > 0.3:
-                    i = 0 if L > 0.72 else (1 if L > 0.58 else (2 if L > 0.44 else 3))
-                    cv.put(x, y, C('p_blossom', i))
-                    if h < 0.04 and L > 0.5: cv.put(x, y, C('flower_yel', 1))
+        # florets: 2x2 creamy-white flower heads with a pink-tinged shade pixel, clustered in sprays
+        for y in range(0, cv.h - 1, 2):
+            for x in range(0, cv.w - 1, 2):
+                ox, oy = int(hash01(x, y, 557) * 2), int(hash01(y, x, 558) * 2)
+                X, Y = x + ox, y + oy
+                if X + 1 >= cv.w or Y + 1 >= cv.h: continue
+                if any(vol.tag[Y + dy, X + dx] != 1 for dx in (0, 1) for dy in (0, 1)): continue
+                if not cv.px[X, Y][3]: continue
+                L = vol.lum[Y, X]
+                if vnoise(X, Y, 5, 556) < 0.5 or hash01(X, Y, 555) > 0.55 or L < 0.28: continue
+                b0 = 0 if L > 0.72 else (1 if L > 0.55 else (2 if L > 0.42 else 3))
+                cv.put(X, Y, C('p_blossom', b0)); cv.put(X + 1, Y, C('p_blossom', min(4, b0 + 1)))
+                cv.put(X, Y + 1, C('p_blossom', min(4, b0 + 1))); cv.put(X + 1, Y + 1, C('p_blossom', min(4, b0 + 2)))
+                if b0 < 2 and hash01(X, Y, 559) < 0.25: cv.put(X + 1, Y, C('flower_yel', 1))
     return t.finish((cx + rx * 0.22, by + 1, rx * 0.8, ry * 0.3 + 2), deco)
 
 
 def rowan(s, seed=6):
     """Rowan (mountain ash): an upright oval crown of fine pinnate foliage with bunches of orange-red berries."""
+    s = s * K
     R = Rng(seed)
     rx, ry = 26 * s + 4, 34 * s + 5; tc = int(20 * s) + 6
-    W, H = int(rx * 2 + 16), int(ry * 2 + tc + 20 + 8 * s)
+    W, H = int(rx * 2 + 44), int(ry * 2 + tc + 20 + 8 * s)
     cx, by = W // 2, H - int(9 + 6 * s)
     cy = by - tc - ry * 0.75
     t = Tree(W, H, cx, by); v = t.v
@@ -265,52 +289,64 @@ def rowan(s, seed=6):
         a = R.u(0, 2 * math.pi); d = R.u(0.2, 0.7)
         lobe_clumps(v, cx + math.cos(a) * rx * d, cy + math.sin(a) * ry * d, R.u(-2, 5), 11 * s + 4, 'p_rowan', g,
                     3.2 * s + 1.3, 1.8, seed * 40 + i * 9, ao, lobes=8, lamp=0.3, holes=0.08)
-    bunches = [(cx + R.u(-rx * 0.7, rx * 0.7), cy + R.u(-ry * 0.5, ry * 0.6)) for _ in range(int(9 * s) + 4)]
+    bunches = [(cx + R.u(-rx * 0.65, rx * 0.6), cy + R.u(-ry * 0.45, ry * 0.55)) for _ in range(int(6 * s) + 4)]
+
+    UMBEL = [(0, 0), (2, -1), (4, 0), (-2, 1), (1, 2), (3, 2), (6, 1), (2, 4), (-1, 3), (5, 3)]
 
     def deco(cv, vol):
-        for bx, by_ in bunches:
-            for k in range(7):
-                x = int(bx + (k % 3) * 2 - 2 + (k // 3) % 2); y = int(by_ + (k // 3) * 2)
-                if 0 <= x < cv.w and 0 <= y < cv.h and vol.tag[y, x] == 1:
-                    cv.put(x, y, C('p_berry', 1 if k < 3 else 2)); cv.put(x + 1, y, C('p_berry', 3))
-                    if k == 0: cv.put(x, y - 1, C('p_berry', 0))
+        for bi, (bx, by_) in enumerate(bunches):
+            if not (0 <= int(by_) < cv.h and 0 <= int(bx) < cv.w) or vol.tag[int(by_), int(bx)] != 1: continue
+            lit = vol.lum[int(by_), int(bx)]
+            for k, (dx, dy) in enumerate(UMBEL[:6 + bi % 5]):
+                x, y = int(bx + dx), int(by_ + dy)
+                o = 0 if lit > 0.6 else 1
+                cv.put(x, y, C('p_berry', o)); cv.put(x + 1, y, C('p_berry', o + 1))
+                cv.put(x, y + 1, C('p_berry', o + 1)); cv.put(x + 1, y + 1, C('p_berry', o + 2))
+                if 0 <= y + 2 < cv.h and vol.tag[min(cv.h - 1, y + 2), min(cv.w - 1, x)] == 1: cv.put(x + 1, y + 2, C('p_berry', 4))
     return t.finish((cx + rx * 0.22, by + 1, rx * 0.8, rx * 0.3 + 2), deco)
 
 
 def scots_pine(s, seed=7):
-    """Scots pine: tall bare trunk glowing orange up top, an irregular flat-topped head of blue-green needle pads."""
+    """Scots pine: tall bare trunk, grey and fissured below, glowing orange-pink up top; an irregular flat-topped
+    umbrella of blue-green needle pads."""
+    s = s * K
     R = Rng(seed)
-    rx = 30 * s + 6; hgt = int(120 * s) + 20
-    W, H = int(rx * 2 + 22), hgt + int(16 + 6 * s)
+    rx = 30 * s + 6; hgt = int(118 * s) + 20
+    W, H = int(rx * 2 + 54), hgt + int(16 + 6 * s)
     cx, by = W // 2, H - int(10 + 6 * s)
     t = Tree(W, H, cx, by); v = t.v
-    lean = R.u(-4, 4) * s; top = by - hgt + 12
-    v.tube([(cx, by, 0), (cx + lean * 0.3, by - hgt * 0.45, 0), (cx + lean, top + 16, 0)], 3.4 * s + 1.8, 1.8 * s + 1,
-           'p_bark', tex=bark_tex(seed, 0.2, 0.25))
-    v.tube([(cx + lean * 0.3, by - hgt * 0.45, 0.5), (cx + lean, top + 12, 0.5)], 2.6 * s + 1.2, 1.4 * s + 0.8,
+    lean = R.u(-5, 5) * s; top = by - hgt + 12
+    mid = (cx + lean * 0.35, by - hgt * 0.5, 0)
+    v.tube([(cx, by, 0), mid], 3.4 * s + 1.8, 2.8 * s + 1.5, 'p_bark', tex=bark_tex(seed, 0.22, 0.22))
+    v.tube([mid, (cx + lean * 0.8, top + hgt * 0.2, 0), (cx + lean, top + 14, 0)], 2.8 * s + 1.5, 1.4 * s + 0.8,
            'p_pinebark', tex=pine_tex(seed))
     trunk(v, cx, by, by - 4, 3.4 * s + 1.8, 3.4 * s + 1.8, 'p_bark', seed)
-    pads = []
-    for i in range(6 if s > 0.7 else 4):
-        f = i / (5 if s > 0.7 else 3)
-        py = top + 6 + f * hgt * 0.34; sd = (-1) ** i
-        px_ = cx + lean + sd * R.u(0.2, 0.9) * rx * (0.55 + 0.45 * (1 - abs(f - 0.4)))
-        pr = (10 + 6 * (1 - abs(f - 0.35))) * s + 4
-        pads.append((px_, py, pr))
-        branch_to(v, cx + lean * (1 - f * 0.3), py + 6, px_, py + 2, 1.6 * s + 0.6, 0.8, 'p_pinebark', z0=0.5, z1=-2)
-    g = (cx + lean - rx * 0.2, top + hgt * 0.15, -4, rx * 1.1)
+    pads = [(cx + lean + R.u(-6, 6) * s, top + 10 * s, 17 * s + 4)]
+    for i in range(6 if s > 1.0 else 4):
+        f = (i + 1) / (6 if s > 1.0 else 4)
+        sd = (-1) ** i
+        px_ = cx + lean * (1 - f * 0.2) + sd * rx * R.u(0.35, 0.8)
+        py = top + 8 * s + f * hgt * 0.26 + R.u(-4, 4)
+        pads.append((px_, py, (15 - 4 * f) * s + 4))
+        branch_to(v, cx + lean * (1 - f * 0.25), py + 10 * s, px_, py + 3, 1.4 * s + 0.6, 0.8, 'p_pinebark', z0=0.5, z1=-3,
+                  bend=sd * 3)
+    for k in range(2):   # a couple of dead stubs lower down
+        yy = by - hgt * (0.3 + 0.12 * k); sd = 1 if k else -1
+        branch_to(v, cx + lean * 0.3, yy, cx + lean * 0.3 + sd * 9 * s, yy - 5 * s, 1.2 * s, 0.6, 'p_bark', z0=0.5, z1=0)
+    g = (cx + lean - rx * 0.2, top, -4, rx * 1.2)
     for i, (px_, py, pr) in enumerate(pads):
-        ao = (py - pr * 0.3, py + pr * 0.55, 0.4)
-        lobe_clumps(v, px_, py, R.u(-2, 3), pr, 'p_pine', (px_ - 3, py - 4, -2, pr * 1.2), 3.2 * s + 1.4, 1.5,
-                    seed * 60 + i * 7, ao, sq=0.5, lobes=11, lamp=0.28, core=True)
+        ao = (py - pr * 0.2, py + pr * 0.5, 0.34)
+        lobe_clumps(v, px_, py, R.u(-2, 4), pr, 'p_pine', g, 3.6 * s + 1.4, 1.5,
+                    seed * 60 + i * 7, ao, sq=0.62, lobes=11, lamp=0.24, core=True, crown_w=0.5, lobe_w=1.0)
     return t.finish((cx + rx * 0.3, by + 1, rx * 0.7, rx * 0.26 + 2))
 
 
 def spruce(s, seed=8):
     """Spruce / plantation conifer: a dark tiered cone with drooping skirts, lit on its north-west flank."""
+    s = s * K
     R = Rng(seed)
     rx = 24 * s + 5; hgt = int(92 * s) + 18
-    W, H = int(rx * 2 + 16), hgt + int(16 + 6 * s)
+    W, H = int(rx * 2 + 44), hgt + int(16 + 6 * s)
     cx, by = W // 2, H - int(9 + 5 * s)
     t = Tree(W, H, cx, by); v = t.v
     top = by - hgt
@@ -320,12 +356,12 @@ def spruce(s, seed=8):
         f = (i + 1) / tiers
         ty = top + 4 + f * (hgt - 16) * 0.95; tw = rx * (0.18 + 0.82 * f)
         ao = (ty - 6, ty + 4, 0.35)
-        n = int(tw / 2.4) + 2
+        n = int(tw / 2.0) + 2
         for k in range(n):
             u = (k / max(1, n - 1)) * 2 - 1
             x = cx + u * tw; y = ty - (1 - u * u) * 5 * s + abs(u) * 3
             nrmx = u * 0.9
-            v.clump(x, y, 6 * (1 - abs(u)) + f * 2, 3.3 * s + 1.6, 'p_spruce', g=(cx - 2, top + hgt * 0.45, -8, rx * 1.3),
+            v.clump(x, y, 6 * (1 - abs(u)) + f * 2, (3.3 * s + 1.6) * CL, 'p_spruce', g=(cx - 2, top + hgt * 0.45, -8, rx * 1.3),
                     gw=0.9, lw=0.5, lobes=9, lamp=0.3, seed=seed + i * 17 + k, ao=ao, sq=0.75, jit=0.05)
         v.clump(cx, ty - 5 * s, 3, tw * 0.55, 'p_spruce', g=(cx - 2, top + hgt * 0.45, -8, rx * 1.3), gw=1, lw=0.1,
                 bias=-0.12, seed=seed + i, sq=0.45, lobes=9, lamp=0.2)
@@ -334,134 +370,105 @@ def spruce(s, seed=8):
 
 
 # ------------------------------------------------------------------ woodland
-def _wrap_clump(v, per_x, per_y, pad, x, y, *a, **k):
-    for ox in ((-per_x, 0, per_x) if per_x else (0,)):
-        for oy in ((-per_y, 0, per_y) if per_y else (0,)):
-            X, Y = x + ox + pad, y + oy + pad * (1 if per_y else 0)
-            r = a[1]
-            if -r * 2 < X < v.w + r * 2 and -r * 2 < Y < v.h + r * 2: v.clump(X, Y, *a, **k)
+FOREST_RAMPS = ['p_syc', 'p_oak', 'p_syc', 'p_oak', 'p_ash', 'p_forest', 'p_thorn']
+FT = 4 * TILE            # woodland pieces repeat every 4 tiles (192 px)
 
 
-FOREST_RAMPS = ['p_forest', 'p_forest', 'p_forest', 'p_syc', 'p_oak', 'p_ash', 'p_forest']
+def wood_crown(v, X, Y, z, r, rp, seed, cr=None):
+    """One woodland crown built like a free-standing tree: 4-5 lobes of leaf tufts with a dark core, so the canopy
+    has the same cluster detail as the single trees."""
+    R = Rng(seed * 7 + 3)
+    g = (X - r * 0.15, Y - r * 0.12, z - r * 0.3, r * 1.1); ao = (Y - r * 0.1, Y + r, 0.2)
+    v.clump(X, Y, z - 4, r * 0.92, rp, g=g, lw=0.2, bias=-0.2, lobes=6, lamp=0.12, seed=seed, ao=ao)
+    lob = [(X + R.u(-3, 3), Y - r * 0.28, z + 3, r * 0.52)]
+    for k in range(4):
+        a = math.pi * (1.0 + 0.33 * k) + R.u(-0.2, 0.2)
+        lob.append((X + math.cos(a) * r * 0.45, Y + math.sin(a) * r * 0.4, z + R.u(-2, 3), r * R.u(0.42, 0.52)))
+    lob.append((X + R.u(-3, 3), Y + r * 0.25, z + 6, r * 0.46))
+    for i, (lx, ly, lz, lr) in enumerate(lob):
+        lobe_clumps(v, lx, ly, lz, lr, rp, g, 6.4, 1.7, seed * 13 + i * 5, ao, lobes=6, lamp=0.2, bias=0.07)
 
 
-def forest_fill(size=128, seed=11):
-    """Seamless dense woodland canopy seen from above, `size` px square: tile it for 't' woodland interiors."""
-    pad = 24; W = size + pad * 2
-    v = Vol(W, W); R = Rng(seed)
-    crowns = []
-    step = 26
+def _wrapped(v, items, px, py, pad_x, pad_y):
+    for (x, y, z, r, rp, sd) in items:
+        for ox in ((-px, 0, px) if px else (0,)):
+            for oy in ((-py, 0, py) if py else (0,)):
+                X, Y = x + ox + pad_x, y + oy + pad_y
+                if -r * 2 < X < v.w + r * 2 and -r * 2 < Y < v.h + r * 2: wood_crown(v, X, Y, z, r, rp, sd)
+
+
+def forest_fill(seed=11):
+    """Seamless dense woodland canopy seen from above, FT px square (4x4 tiles): tile it over 't' interiors."""
+    size = FT; pad = 36; W = size + pad * 2
+    v = Vol(W, W); v.amb = {1: 0.2}; R = Rng(seed)
+    step = size // 5; items = []
     for gy in range(0, size, step):
         for gx in range(0, size, step):
-            crowns.append((gx + R.u(-7, 7) + (step / 2 if (gy // step) % 2 else 0), gy + R.u(-6, 6), R.u(14, 20),
-                           R.u(-6, 6), R.pick(FOREST_RAMPS)))
-    for i, (x, y, r, z, rp) in enumerate(crowns):
-        for ox in (-size, 0, size):
-            for oy in (-size, 0, size):
-                X, Y = x + ox + pad, y + oy + pad
-                if not (-r * 2 < X < W + r * 2 and -r * 2 < Y < W + r * 2): continue
-                g = (X - r * 0.15, Y - r * 0.1, z - r * 0.3, r * 1.15); ao = (Y - r * 0.2, Y + r, 0.3)
-                v.clump(X, Y, z, r, rp, g=g, gw=1, lw=0.2, bias=-0.18, lobes=6, lamp=0.12, seed=i, ao=ao, sq=0.9)
-                R2 = Rng(seed * 1000 + i)
-                for k in range(int(r * r / 12)):
-                    th = R2.u(0, 6.283); ph = math.acos(R2.u(-0.1, 1))
-                    dx, dy, dz = math.sin(ph) * math.cos(th), math.sin(ph) * math.sin(th) * 0.9, math.cos(ph)
-                    v.clump(X + dx * r * 0.8, Y + dy * r * 0.8, z + dz * r * 0.6, R2.u(3.6, 6), rp, g=g, gw=1, lw=0.6,
-                            lobes=6, lamp=0.2, seed=i * 31 + k, ao=ao, sq=0.9, flat=0.7)
-    # the forest floor showing through the rare gaps: deep shade
-    v.contact_shadows(0.26, 3)
-    cv = v.canvas()
-    out = Canvas(size, size)
-    dk = C('p_forest', 7)
+            items.append((gx + R.u(-9, 9) + (step / 2 if (gy // step) % 2 else 0), gy + R.u(-8, 8), R.u(-8, 8),
+                          R.u(22, 30), R.pick(FOREST_RAMPS), len(items) + seed * 50))
+    _wrapped(v, items, size, size, pad, pad)
+    v.contact_shadows(0.3, 3, 0.14, 0.1)
+    cv = v.canvas(); out = Canvas(size, size); dk = C('p_forest', 7)
     for y in range(size):
         for x in range(size):
-            c = cv.px[x + pad, y + pad]
-            out.px[x, y] = c if c[3] else dk
+            c = cv.px[x + pad, y + pad]; out.px[x, y] = c if c[3] else dk
     return out
 
 
-def forest_edge_s(width=128, seed=12, H=112):
-    """Front row of woodland along a southern boundary: horizontally seamless; trunks, dark skirts, shadows.
-    Drawn over the fill; the trunk bases sit on the bottom tile row (anchor y)."""
-    pad = 30; W = width + pad * 2
-    v = Vol(W, H); R = Rng(seed)
-    base = H - 14
-    n = width // 32
-    trees = []
+def forest_edge_s(seed=12, H=168):
+    """Front row of woodland along a southern boundary, FT wide and seamless left-right: trunks, dark skirts,
+    ground shadow. Drawn over the fill; the trunk bases sit on the anchor row (base)."""
+    width = FT; pad = 40; W = width + pad * 2
+    v = Vol(W, H); v.amb = {1: 0.2}; R = Rng(seed)
+    base = H - 20; n = width // 48
+    back = [(i * 48 + R.u(-6, 6), base - 88 + R.u(-8, 8), -22, R.u(27, 33), R.pick(FOREST_RAMPS), 40 + i) for i in range(n)]
+    front = []
     for i in range(n):
-        x = i * 32 + 16 + R.u(-6, 6); r = R.u(19, 24); cy = base - 22 - r * 0.8 + R.u(-4, 4)
-        trees.append((x, cy, r, R.pick(FOREST_RAMPS), R.u(-3, 3)))
-    back = [(i * 32 + R.u(-4, 4), base - 58 + R.u(-5, 5), R.u(18, 23), R.pick(FOREST_RAMPS)) for i in range(n)]
+        x = i * 48 + 24 + R.u(-9, 9); r = R.u(28, 35); cy = base - 34 - r * 0.8 + R.u(-6, 6)
+        front.append((x, cy, 0, r, R.pick(FOREST_RAMPS), i, R.u(-4, 4)))
     for ox in (-width, 0, width):
-        for i, (x, cy, r, rp) in enumerate(back):
+        for (x, cy, z, r, rp, sd, lean) in front:
             X = x + ox + pad
-            g = (X - r * 0.15, cy - r * 0.1, -14, r * 1.1); ao = (cy, cy + r, 0.35)
-            v.clump(X, cy, -16, r, rp, g=g, lw=0.2, bias=-0.15, lobes=6, lamp=0.12, seed=i + 40, ao=ao)
-            R2 = Rng(seed * 900 + i)
-            for k in range(int(r * r / 12)):
-                th = R2.u(0, 6.283); ph = math.acos(R2.u(-0.1, 1))
-                dx, dy, dz = math.sin(ph) * math.cos(th), math.sin(ph) * math.sin(th) * 0.9, math.cos(ph)
-                v.clump(X + dx * r * 0.8, cy + dy * r * 0.8, -16 + dz * r * 0.6, R2.u(3.6, 6), rp, g=g, lw=0.6, lobes=6,
-                        lamp=0.2, seed=i * 29 + k + 400, ao=ao, flat=0.7)
-        for i, (x, cy, r, rp, lean) in enumerate(trees):
-            X = x + ox + pad
-            v.tube([(X, base, 0), (X + lean, cy + r * 0.3, -2)], 3.6, 2.6, 'p_bark', tex=bark_tex(i + 3))
-            v.tube([(X - 1, base - 2, 1), (X - 5, base + 1, 2)], 2, 1, 'p_bark')
-            v.tube([(X + 1, base - 2, 1), (X + 5, base + 0.5, 2)], 2, 1, 'p_bark')
-            g = (X - r * 0.15, cy - r * 0.1, -r * 0.2, r * 1.12); ao = (cy, cy + r, 0.3)
-            v.clump(X, cy, 0, r, rp, g=g, lw=0.2, bias=-0.15, lobes=6, lamp=0.12, seed=i, ao=ao)
-            R2 = Rng(seed * 1000 + i)
-            for k in range(int(r * r / 11)):
-                th = R2.u(0, 6.283); ph = math.acos(R2.u(-0.15, 1))
-                dx, dy, dz = math.sin(ph) * math.cos(th), math.sin(ph) * math.sin(th) * 0.9, math.cos(ph)
-                v.clump(X + dx * r * 0.82, cy + dy * r * 0.82, dz * r * 0.6, R2.u(3.8, 6.2), rp, g=g, lw=0.6, lobes=6,
-                        lamp=0.2, seed=i * 31 + k, ao=ao, flat=0.7)
-    v.contact_shadows(0.26, 3)
-    cv = v.canvas()
-    out = Canvas(width, H)
+            if not (-60 < X < W + 60): continue
+            tx = bark_tex(sd + 3)
+            v.tube([(X, base, 0), (X + lean, cy + r * 0.3, -2)], 5.2, 3.8, 'p_bark', tex=tx)
+            v.tube([(X - 1, base - 3, 1), (X - 7, base + 1, 2)], 2.8, 1.2, 'p_bark', tex=tx)
+            v.tube([(X + 1, base - 3, 1), (X + 7, base + 0.5, 2)], 2.8, 1.2, 'p_bark', tex=tx)
+    _wrapped(v, back, width, 0, pad, 0)
+    _wrapped(v, [(x, cy, z, r, rp, sd) for (x, cy, z, r, rp, sd, _) in front], width, 0, pad, 0)
+    v.contact_shadows(0.3, 3, 0.14, 0.1)
+    cv = v.canvas(); out = Canvas(width, H)
     for y in range(H):
         for x in range(width): out.px[x, y] = cv.px[x + pad, y]
-    # top rows: fill any gap to the fill behind with deep shade so it joins the interior canopy
     dk = C('p_forest', 7)
     for x in range(width):
-        for y in range(0, 30):
+        for y in range(0, 44):
             if not out.px[x, y][3]: out.px[x, y] = dk
     fin(out)
-    # outline the side edges would break seams: remove outline on x=0/x=w-1 columns if the sprite continues
     sh = Canvas(width, H)
     for x in range(width):
-        for y in range(base - 4, base + 6):
-            d = ((y + 0.5 - (base + 1)) / 5) ** 2
-            if d <= 1: sh.put(x, y, SHADOW[:3] + (70,))
+        for y in range(base - 3, base + 5):
+            if ((y + 0.5 - (base + 1)) / 4) ** 2 <= 1: sh.put(x, y, SHADOW[:3] + (48,))
+    for (x, cy, z, r, rp, sd, lean) in front:
+        for ox in (-width, 0, width): shadow_ellipse(sh, x + ox + 8, base + 2, r * 0.8, 5, 70)
     over(sh, out)
     return sh, base
 
 
-def forest_edge_side(height=128, seed=13, W=56, side='w'):
-    """West/east woodland edge: a vertical, seamless column of crowns bulging out over the neighbouring ground."""
-    pad = 30; Hh = height + pad * 2
-    v = Vol(W, Hh); R = Rng(seed + (0 if side == 'w' else 50))
-    n = height // 28
-    crowns = [(W - 20 + R.u(-4, 4) if side == 'w' else 20 + R.u(-4, 4), i * 28 + R.u(-5, 5), R.u(17, 22),
-               R.pick(FOREST_RAMPS), R.u(-5, 3)) for i in range(n)]
-    for oy in (-height, 0, height):
-        for i, (x, y, r, rp, z) in enumerate(crowns):
-            Y = y + oy + pad
-            g = (x - r * 0.15, Y - r * 0.1, z - r * 0.3, r * 1.12); ao = (Y - r * 0.2, Y + r, 0.3)
-            v.clump(x, Y, z, r, rp, g=g, lw=0.2, bias=-0.15, lobes=6, lamp=0.12, seed=i, ao=ao)
-            R2 = Rng(seed * 1000 + i)
-            for k in range(int(r * r / 11)):
-                th = R2.u(0, 6.283); ph = math.acos(R2.u(-0.1, 1))
-                dx, dy, dz = math.sin(ph) * math.cos(th), math.sin(ph) * math.sin(th) * 0.9, math.cos(ph)
-                v.clump(x + dx * r * 0.82, Y + dy * r * 0.82, z + dz * r * 0.6, R2.u(3.8, 6.2), rp, g=g, lw=0.6, lobes=6,
-                        lamp=0.2, seed=i * 31 + k, ao=ao, flat=0.7)
-    v.contact_shadows(0.26, 3)
-    cv = v.canvas()
-    out = Canvas(W, height)
+def forest_edge_side(side='w', seed=13, W=84):
+    """West/east woodland edge: a vertical, seamless (FT tall) column of crowns bulging out over the ground."""
+    height = FT; pad = 40; Hh = height + pad * 2
+    v = Vol(W, Hh); v.amb = {1: 0.2}; R = Rng(seed + (0 if side == 'w' else 50))
+    n = height // 42
+    items = [((W - 30 if side == 'w' else 30) + R.u(-6, 6), i * 42 + R.u(-7, 7), R.u(-8, 4), R.u(25, 32),
+              R.pick(FOREST_RAMPS), i + seed * 10) for i in range(n)]
+    _wrapped(v, items, 0, height, 0, pad)
+    v.contact_shadows(0.3, 3, 0.14, 0.1)
+    cv = v.canvas(); out = Canvas(W, height)
     for y in range(height):
         for x in range(W): out.px[x, y] = cv.px[x, y + pad]
     dk = C('p_forest', 7)
-    inner = range(W - 18, W) if side == 'w' else range(0, 18)
+    inner = range(W - 26, W) if side == 'w' else range(0, 26)
     for y in range(height):
         for x in inner:
             if not out.px[x, y][3]: out.px[x, y] = dk
@@ -469,45 +476,26 @@ def forest_edge_side(height=128, seed=13, W=56, side='w'):
     return out
 
 
-def forest_edge_n(width=128, seed=14, H=40):
+def forest_edge_n(seed=14, H=60):
     """Northern woodland edge: crown tops bulging up over the ground beyond; opaque below (joins the fill)."""
-    pad = 30; W = width + pad * 2
-    v = Vol(W, H + 30); R = Rng(seed)
-    n = width // 28
-    crowns = [(i * 28 + R.u(-5, 5), 24 + R.u(-4, 4), R.u(17, 22), R.pick(FOREST_RAMPS), R.u(-5, 3)) for i in range(n + 1)]
-    for ox in (-width, 0, width):
-        for i, (x, y, r, rp, z) in enumerate(crowns):
-            X = x + ox + pad
-            g = (X - r * 0.15, y - r * 0.1, z - r * 0.3, r * 1.12); ao = (y, y + r, 0.3)
-            v.clump(X, y, z, r, rp, g=g, lw=0.2, bias=-0.15, lobes=6, lamp=0.12, seed=i, ao=ao)
-            R2 = Rng(seed * 1000 + i)
-            for k in range(int(r * r / 11)):
-                th = R2.u(0, 6.283); ph = math.acos(R2.u(-0.1, 1))
-                dx, dy, dz = math.sin(ph) * math.cos(th), math.sin(ph) * math.sin(th) * 0.9, math.cos(ph)
-                v.clump(X + dx * r * 0.82, y + dy * r * 0.82, z + dz * r * 0.6, R2.u(3.8, 6.2), rp, g=g, lw=0.6, lobes=6,
-                        lamp=0.2, seed=i * 31 + k, ao=ao, flat=0.7)
-    v.contact_shadows(0.26, 3)
-    cv = v.canvas()
-    out = Canvas(width, H)
-    dk = C('p_forest', 7)
+    width = FT; pad = 40; W = width + pad * 2
+    v = Vol(W, H + 44); v.amb = {1: 0.2}; R = Rng(seed)
+    n = width // 42
+    items = [(i * 42 + R.u(-7, 7), 36 + R.u(-6, 6), R.u(-8, 4), R.u(25, 32), R.pick(FOREST_RAMPS), i + seed * 10)
+             for i in range(n + 1)]
+    _wrapped(v, items, width, 0, pad, 0)
+    v.contact_shadows(0.3, 3, 0.14, 0.1)
+    cv = v.canvas(); out = Canvas(width, H); dk = C('p_forest', 7)
     for y in range(H):
         for x in range(width):
-            c = cv.px[x + pad, y]
-            out.px[x, y] = c if c[3] else (dk if y > 26 else (0, 0, 0, 0))
+            c = cv.px[x + pad, y]; out.px[x, y] = c if c[3] else (dk if y > 40 else (0, 0, 0, 0))
     fin(out)
     return out
 
 
-def forest_clump(seed, r=22):
+def forest_clump(seed, r=32):
     """A single free-standing woodland crown (no trunk) to scatter along edges and outer corners."""
-    W = int(r * 2 + 12); v = Vol(W, W); R = Rng(seed)
-    x = y = W / 2; rp = R.pick(FOREST_RAMPS)
-    g = (x - r * 0.15, y - r * 0.1, -r * 0.3, r * 1.12); ao = (y - r * 0.2, y + r, 0.3)
-    v.clump(x, y, 0, r, rp, g=g, lw=0.2, bias=-0.15, lobes=6, lamp=0.12, seed=seed, ao=ao)
-    for k in range(int(r * r / 11)):
-        th = R.u(0, 6.283); ph = math.acos(R.u(-0.1, 1))
-        dx, dy, dz = math.sin(ph) * math.cos(th), math.sin(ph) * math.sin(th) * 0.9, math.cos(ph)
-        v.clump(x + dx * r * 0.82, y + dy * r * 0.82, dz * r * 0.6, R.u(3.8, 6.2), rp, g=g, lw=0.6, lobes=6, lamp=0.2,
-                seed=seed * 31 + k, ao=ao, flat=0.7)
-    v.contact_shadows(0.26, 3)
+    W = int(r * 2 + 16); v = Vol(W, W); v.amb = {1: 0.2}; R = Rng(seed)
+    wood_crown(v, W / 2, W / 2, 0, r, R.pick(FOREST_RAMPS), seed)
+    v.contact_shadows(0.3, 3, 0.14, 0.1)
     return fin(v.canvas())

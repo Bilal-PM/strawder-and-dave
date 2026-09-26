@@ -1,4 +1,5 @@
-"""Harrowby station: the building (closed 2009 / restored), the platform canopy and the running-in board."""
+"""Harrowby station at 48 px per tile: the building (closed 2009 / restored), the platform canopy and the
+running-in board. All layout is native to pix.TILE = 48."""
 from rp import *  # noqa
 
 T = TILE
@@ -12,194 +13,209 @@ def arch_opening(cx, top, w, spring, bottom):
     def f(x, y):
         if y >= bottom or x < cx - r or x >= cx + r: return False
         if y >= spring: return True
-        dx = (x + 0.5 - cx) / r; dy = (y + 0.5 - spring) / (spring - top)
+        dx = (x + 0.5 - cx) / r; dy = (y + 0.5 - spring) / max(1, (spring - top))
         return dx * dx + dy * dy <= 1
     return f
 
 
-def glass(cv, mask, x0, y0, w, h, grime=0.0, seed=1, lit=False):
-    """Window glass: deep blue interior, AO at the top, one clean diagonal sky reflection."""
+def glass(cv, mask, x0, y0, w, h, grime=0.0, seed=1, lit=False, curtain=None):
+    """Window glass: deep blue interior, AO at the top, one clean diagonal sky reflection (two bands)."""
     for y in range(y0, y0 + h):
         for x in range(x0, x0 + w):
             if not mask(x, y): continue
             lx, ly = x - x0, y - y0
-            i = 3 if ly > 4 else 4
-            s = (lx + (h - ly) * 0.5) % 22
-            if 4 <= s < 7: i = 1
-            elif s in (3, 7) or 8 <= s < 9: i = 2
-            if lit: col = C('warm_in', 1 + (1 if ly < 4 else 0) + (0 if i > 2 else -1 if i == 1 else 0))
-            else: col = C('glass_dk', i)
-            if grime and i > 2 and ly > h * 0.6 and hash01(x // 2, y // 2, seed) < grime * 0.5: col = C('glass_dk', 2)
+            i = 3 if ly > 5 else 4
+            s = (lx + (h - ly) * 0.55) % 30
+            if 5 <= s < 10: i = 1
+            elif s in (4, 10) or 13 <= s < 15: i = 2
+            if lit:
+                col = C('warm_in', 1 + (1 if ly < 5 else 0) + (-1 if i == 1 else 0))
+            else:
+                col = C('glass_dk', i)
+            if grime and i > 2 and ly > h * 0.55 and hash01(x // 3, y // 2, seed) < grime * 0.5: col = C('glass_dk', 2)
+            if curtain and (lx < curtain or lx >= w - curtain) and not lit:
+                col = C(('wine' if seed % 2 else 'plum'), 2 + (lx % 3 == 0) + (1 if ly < 5 else 0))
             P(cv, x, y, col)
 
 
-def sash_window(cv, cx, top, w, spring, sill, state='glass', paint='paint_cream', seed=1, peel=0.0, lit=False):
-    """Round-headed sash window with a stone surround, keystone and projecting sill.
+def sash_window(cv, cx, top, w, spring, sill, state='glass', paint='paint_cream', seed=1, peel=0.0, live=False):
+    """Round-headed two-over-two sash window: gritstone voussoirs, keystone, projecting sill.
     state: 'glass' | 'boarded' | 'cracked'."""
     r = w // 2; x0 = cx - r
-    # stone surround: voussoirs (4px ring) + keystone
-    ring = arch_opening(cx, top - 4, w + 8, spring, sill)
+    ring = arch_opening(cx, top - 6, w + 12, spring, sill)
     inner = arch_opening(cx, top, w, spring, sill)
-    for y in range(top - 5, sill):
-        for x in range(x0 - 4, x0 + w + 4):
+    for y in range(top - 7, sill):
+        for x in range(x0 - 6, x0 + w + 6):
             if ring(x, y) and not inner(x, y):
-                ang = math.atan2(y + 0.5 - spring, x + 0.5 - cx) if y < spring else 0
                 if y < spring:
-                    k = int((ang + math.pi) / math.pi * 9)
-                    edge = abs(((ang + math.pi) / math.pi * 9) - k - 0.5) > 0.42
+                    ang = math.atan2(y + 0.5 - spring, x + 0.5 - cx)
+                    kf = (ang + math.pi) / math.pi * 11
+                    edge = abs(kf - int(kf) - 0.5) > 0.44
+                    d = math.hypot((x + 0.5 - cx) / (r + 6), (y + 0.5 - spring) / (spring - top + 6))
                     i = 3 if edge else (1 if x < cx else 2)
+                    if d > 0.95 and not edge: i += 1
+                    if d < 0.86 and not edge and x < cx: i -= 1
                 else:
                     i = 1 if x < cx else 2
-                    if (y - spring) % 12 == 11: i = 3
-                P(cv, x, y, C('grit', i))
-    # keystone
-    for y in range(top - 6, top + 3):
-        for x in range(cx - 3, cx + 3):
-            P(cv, x, y, C('grit', 0 if x < cx - 1 else (1 if x < cx + 2 else 3)))
-    # frame
-    for y in range(top, sill):
+                    if (y - spring) % 18 == 17: i = 3
+                    if x in (x0 - 6, x0 + w + 5): i += 1
+                P(cv, x, y, C('grit', max(0, i)))
+    for y in range(top - 9, top + 4):   # keystone
+        for x in range(cx - 4, cx + 5):
+            P(cv, x, y, C('grit', 0 if x < cx - 2 else (1 if x < cx + 3 else 3)))
+    HL(cv, cx - 4, cx + 5, top + 4, C('grit', 4))
+    for y in range(top, sill):          # painted frame
         for x in range(x0, x0 + w):
-            if inner(x, y): P(cv, x, y, C(paint, 2))
-    # AO inside the reveal (top and right in shade)
-    gx0, gw = x0 + 2, w - 4
-    gmask = arch_opening(cx, top + 2, w - 4, spring, sill - 2)
+            if inner(x, y): P(cv, x, y, C(paint, 2 if x > x0 + 1 else 1))
+    gx0, gw = x0 + 3, w - 6
+    gmask = arch_opening(cx, top + 3, w - 6, spring, sill - 3)
     if state == 'boarded':
-        glass(cv, gmask, gx0, top + 2, gw, spring - top, grime=0.5, seed=seed)
-        # plywood sheet screwed over the lower opening, a second offcut over the head
-        by0 = spring - 3
+        glass(cv, gmask, gx0, top + 3, gw, spring - top, grime=0.5, seed=seed)
+        by0 = spring - 4
         for y in range(by0, sill - 1):
-            for x in range(x0 - 1, x0 + w + 1):
-                lx, ly = x - x0, y - by0
-                i = 1 + (1 if hash01(x // 5, y // 2, seed + 3) < 0.15 else 0)
+            for x in range(x0 - 2, x0 + w + 2):
+                ly = y - by0
+                i = 1 + (1 if hash01(x // 7, y // 2, seed + 3) < 0.15 else 0)
                 if ly == 0: i = 0
-                if x >= x0 + w - 1: i = 3
-                
-                col = C('plywood', min(4, i))
-                if fbm(x, y, 8, seed + 9) < 0.2 and ly > 3: col = C('plywood', min(4, i + 1))
-                P(cv, x, y, col)
-        for y in range(by0 + 4, sill - 2, 9):
-            for x in (x0 + 2, cx, x0 + w - 3): P(cv, x, y, C('iron', 1)); P(cv, x + 1, y, C('iron', 3))
-        HL(cv, x0 - 1, x0 + w + 1, sill - 1, C('plywood', 4))
-        # joint between two sheets
-        VL(cv, cx + 3, by0 + 1, sill - 1, C('plywood', 3))
+                if x >= x0 + w: i = 3
+                if (x + ly // 3) % 11 == 0 and hash01(x, y // 4, seed) < 0.6: i += 1   # grain
+                if fbm(x, y, 10, seed + 9) < 0.22 and ly > 4: i += 1                   # rain-darkened
+                P(cv, x, y, C('plywood', min(4, i)))
+        for y in range(by0 + 6, sill - 3, 12):
+            for x in (x0 + 2, cx - 1, x0 + w - 4):
+                P(cv, x, y, C('iron', 1)); P(cv, x + 1, y, C('iron', 3)); P(cv, x + 1, y + 1, C('rust', 3))
+                for q in range(2, 5): dark(cv, x + 1, y + q, 0.12)
+        HL(cv, x0 - 2, x0 + w + 2, sill - 1, C('plywood', 4))
+        VL(cv, cx + 5, by0 + 1, sill - 1, C('plywood', 3)); VL(cv, cx + 6, by0 + 1, sill - 1, C('plywood', 0))
     else:
-        glass(cv, gmask, gx0, top + 2, gw, sill - top - 4, grime=0.35 if state != 'clean' and not lit else 0.0,
-              seed=seed, lit=lit)
-        # glazing: 2-over-2 sashes; meeting rail at the spring line + 8
-        mr = spring + 10
-        HL(cv, x0 + 1, x0 + w - 1, mr, C(paint, 1)); HL(cv, x0 + 1, x0 + w - 1, mr + 1, C(paint, 2))
-        HL(cv, x0 + 1, x0 + w - 1, mr + 2, C(paint, 3))
+        glass(cv, gmask, gx0, top + 3, gw, sill - top - 6, grime=0.35 if not live else 0.0, seed=seed,
+              curtain=(5 if live else None))
+        mr = spring + 16   # meeting rail
+        HL(cv, x0 + 1, x0 + w - 1, mr, C(paint, 0)); HL(cv, x0 + 1, x0 + w - 1, mr + 1, C(paint, 1))
+        HL(cv, x0 + 1, x0 + w - 1, mr + 2, C(paint, 2)); HL(cv, x0 + 1, x0 + w - 1, mr + 3, C(paint, 3))
         for y in range(top + 1, sill - 1):
-            if gmask(cx, y) or y > spring: P(cv, cx, y, C(paint, 1)); P(cv, cx - 1, y, C(paint, 2))
-        HL(cv, x0 + 1, x0 + w - 1, sill - 2, C(paint, 1))
+            if gmask(cx, y) or y > spring:
+                P(cv, cx - 1, y, C(paint, 1)); P(cv, cx, y, C(paint, 2)); P(cv, cx + 1, y, C(paint, 3))
+        HL(cv, x0 + 1, x0 + w - 1, sill - 3, C(paint, 1)); HL(cv, x0 + 1, x0 + w - 1, sill - 2, C(paint, 2))
         if state == 'cracked':
-            for k, (a, b) in enumerate([(3, 0), (4, 1), (5, 3), (7, 4), (8, 6), (6, 2), (2, 2), (1, 3)]):
-                P(cv, cx + 3 + a, mr + 5 + b, C('white', 0))
+            for (a, b) in [(4, 0), (5, 1), (6, 3), (8, 4), (10, 6), (11, 8), (7, 2), (3, 2), (2, 3), (1, 5), (9, 5)]:
+                P(cv, cx + 4 + a, mr + 7 + b, C('white', 0))
         if peel:
             for y in range(top, sill):
                 for x in range(x0, x0 + w):
-                    if not inner(x, y) or gmask(x, y) and not (x in (cx, cx - 1)): continue
-                    if hash01(x, y, seed + 17) < peel: P(cv, x, y, C('wood_dark', 1))
-        # AO: reveal shadow on the top-right
-        for y in range(top + 2, sill - 2):
+                    if not inner(x, y) or (gmask(x, y) and x not in (cx - 1, cx, cx + 1) and not (mr <= y < mr + 4)): continue
+                    if hash01(x // 2, y // 2, seed + 17) < peel: P(cv, x, y, C('wood_dark', 1 + (y % 2)))
+        for y in range(top + 3, sill - 3):   # reveal shadow top/right
             for x in range(gx0, gx0 + gw):
-                if gmask(x, y) and (not gmask(x, y - 3) or x >= gx0 + gw - 2): dark(cv, x, y, 0.35)
-    # projecting sill
-    R(cv, x0 - 5, sill, w + 10, 2, C('grit', 1)); HL(cv, x0 - 5, x0 + w + 5, sill, C('grit', 0))
-    R(cv, x0 - 5, sill + 2, w + 10, 2, C('grit', 3))
-    ao_band(cv, x0 - 5, sill + 4, w + 10, (0.35, 0.18))
+                if gmask(x, y) and (not gmask(x, y - 4) or x >= gx0 + gw - 3): dark(cv, x, y, 0.35)
+        # sash horns / latch
+        P(cv, cx, mr + 1, C('gold', 0)); P(cv, cx + 1, mr + 1, C('gold', 2))
+    R(cv, x0 - 8, sill, w + 16, 3, C('grit', 1)); HL(cv, x0 - 8, x0 + w + 8, sill, C('grit', 0))
+    R(cv, x0 - 8, sill + 3, w + 16, 3, C('grit', 3)); HL(cv, x0 - 8, x0 + w + 8, sill + 5, C('grit', 4))
+    ao_band(cv, x0 - 8, sill + 6, w + 16, (0.35, 0.22, 0.1))
 
 
 def poster(cv, x0, y0, w, h, faded=False, seed=1, torn=False, scene=0):
-    """Framed railway poster: a textless travel-poster landscape."""
-    R(cv, x0, y0, w, h, C('paint_green', 3)); HL(cv, x0, x0 + w, y0, C('paint_green', 1)); VL(cv, x0, y0, y0 + h, C('paint_green', 2))
-    HL(cv, x0, x0 + w, y0 + h - 1, C('paint_green', 4))
-    ix, iy, iw, ih = x0 + 2, y0 + 2, w - 4, h - 4
+    """Framed railway poster: a textless travel-poster landscape (dales, viaduct, sun)."""
+    for y in range(y0, y0 + h):
+        for x in range(x0, x0 + w):
+            u, v = x - x0, y - y0
+            i = 2 if 0 < u < w - 1 and 0 < v < h - 1 else 3
+            if v == 0 or u == 0: i = 1
+            if v == h - 1 or u == w - 1: i = 4
+            P(cv, x, y, C('paint_green', i))
+    ix, iy, iw, ih = x0 + 3, y0 + 3, w - 6, h - 6
+    cream = hexrgb('#eadcb3')
     def put(x, y, col):
-        if faded: col = tuple(int(col[i] * 0.55 + hexrgb('#eadcb3')[i] * 0.45) for i in range(3)) + (255,)
+        if faded: col = tuple(int(col[i] * 0.55 + cream[i] * 0.45) for i in range(3)) + (255,)
         P(cv, x, y, col)
     for y in range(iy, iy + ih):
         for x in range(ix, ix + iw):
             ly = (y - iy) / ih; lx = (x - ix) / iw
             hill = 0.55 + 0.12 * math.sin(lx * 5 + seed) + 0.05 * math.sin(lx * 13 + seed * 2)
-            hill2 = 0.7 + 0.08 * math.sin(lx * 3 + 1 + seed)
-            if ly < 0.12: col = C('paint_cream', 1)                       # blank title band
-            elif ly > 0.86: col = C('paint_cream', 1)                     # blank footer band
-            elif ly > hill2: col = C('grass', 2 if scene == 0 else 1)
-            elif ly > hill: col = C('forest', 1 if lx < 0.5 else 2)
+            hill2 = 0.72 + 0.07 * math.sin(lx * 3 + 1 + seed)
+            if ly < 0.13 or ly > 0.87: col = C('paint_cream', 1)             # blank title/footer bands
+            elif ly > hill2: col = C('grass', 1 if (x + y) % 7 else 2)
+            elif ly > hill: col = C('forest', 1 if lx < 0.45 else 2)
             else:
-                col = C('paint_blue', 0 if ly < 0.3 else 1) if scene == 0 else C('mustard', 0 if ly < 0.35 else 1)
+                if scene == 0: col = C('paint_blue', 0 if ly < 0.32 else 1)
+                else: col = C('mustard', 0 if ly < 0.36 else 1)
             put(x, y, col)
-    # sun / viaduct motif
-    c = Canvas(1, 1)
     sx, sy = ix + int(iw * 0.72), iy + int(ih * 0.3)
-    for y in range(sy - 3, sy + 4):
-        for x in range(sx - 3, sx + 4):
-            if (x - sx) ** 2 + (y - sy) ** 2 <= 9: put(x, y, C('flower_yel', 0))
-    vy = iy + int(ih * 0.62)
+    for y in range(sy - 4, sy + 5):
+        for x in range(sx - 4, sx + 5):
+            if (x - sx) ** 2 + (y - sy) ** 2 <= 16: put(x, y, C('flower_yel', 0 if (x - sx) + (y - sy) < 0 else 1))
+    vy = iy + int(ih * 0.6)   # a little stone viaduct
     for x in range(ix + 2, ix + iw - 2):
-        put(x, vy, C('grit', 3))
-        if (x - ix) % 5 in (0, 4): put(x, vy + 1, C('grit', 3)); put(x, vy + 2, C('grit', 3))
+        put(x, vy, C('grit', 2)); put(x, vy + 1, C('grit', 3))
+        if (x - ix) % 7 in (0, 1, 6): put(x, vy + 2, C('grit', 3)); put(x, vy + 3, C('grit', 3)); put(x, vy + 4, C('grit', 4))
     if torn:
-        for k in range(6):
-            for j in range(6 - k): P(cv, x0 + w - 2 - j, y0 + h - 2 - k, C('paint_cream', 2 if j else 3))
-    # glass glint
-    P(cv, ix + 1, iy + 1, C('white', 0)); P(cv, ix + 2, iy + 1, C('white', 1))
+        for k in range(8):
+            for j in range(8 - k): P(cv, x0 + w - 3 - j, y0 + h - 3 - k, C('paint_cream', 2 if j else 3))
+    P(cv, ix + 1, iy + 1, C('white', 0)); P(cv, ix + 2, iy + 1, C('white', 1)); P(cv, ix + 1, iy + 2, C('white', 1))
 
 
 def panel_doors(cv, x0, y0, w, h, paint='paint_green', seed=1, weathered=0.0, notice=True, chain=True):
-    """Pair of four-panel doors."""
+    """Pair of four-panel doors with bolection mouldings, brass handles and kick plates."""
     lw = w // 2
     for leaf in range(2):
         lx0 = x0 + leaf * lw
+        panels = ((5, 6, lw - 10, h // 2 - 10), (5, h // 2 + 3, lw - 10, h // 2 - 12))
         for y in range(y0, y0 + h):
             for x in range(lx0, lx0 + lw):
                 u, v = x - lx0, y - y0
-                i = 2
-                inpanel = False
-                for (px, py, pw, ph) in ((3, 4, lw - 6, h // 2 - 7), (3, h // 2 + 2, lw - 6, h // 2 - 6)):
-                    if px <= u < px + pw and py <= v < py + ph:
-                        inpanel = True
-                        if u == px or v == py: i = 3          # moulding in shade (top-left of a recessed panel)
-                        elif u == px + pw - 1 or v == py + ph - 1: i = 1
-                        else: i = 2
-                if not inpanel:
-                    i = 1 if u < 2 else 2
-                    if u == lw - 1: i = 4
-                if weathered and fbm(x, y, 4, seed) < weathered: col = C('wood_dark', 1 + (1 if hash01(x, y, 3) < 0.3 else 0))
-                else: col = C(paint, i)
+                i = 1 if u < 3 else 2
+                if u >= lw - 2: i = 4 if u == lw - 1 else 3
+                for (px, py, pw, ph) in panels:
+                    if px - 1 <= u <= px + pw and py - 1 <= v <= py + ph:
+                        if u in (px - 1,) or v == py - 1: i = 1          # raised moulding, lit
+                        elif u == px + pw or v == py + ph: i = 4
+                        elif u == px or v == py: i = 3                  # recess in shade
+                        else: i = 2 if (v - py) > 2 else 3
+                col = C(paint, i)
+                if weathered and fbm(x, y, 6, seed) < weathered:
+                    col = C('wood_dark', 1 + (1 if hash01(x, y, 3) < 0.3 else 0))
                 P(cv, x, y, col)
-        # letterbox / handles
+        # kick plate
+        R(cv, lx0 + 3, y0 + h - 7, lw - 6, 4, C('gold', 2)); HL(cv, lx0 + 3, lx0 + lw - 3, y0 + h - 7, C('gold', 1))
     hx = x0 + lw
-    for dy in range(h // 2 - 2, h // 2 + 3): P(cv, hx - 3, y0 + dy, C('gold', 1)); P(cv, hx + 2, y0 + dy, C('gold', 2))
     VL(cv, hx, y0, y0 + h, C(paint, 4)); VL(cv, hx - 1, y0, y0 + h, C(paint, 3))
+    for dy in range(h // 2 - 3, h // 2 + 4):
+        P(cv, hx - 4, y0 + dy, C('gold', 1)); P(cv, hx + 3, y0 + dy, C('gold', 2))
+    P(cv, hx - 4, y0 + h // 2 - 3, C('gold', 0))
     if chain:
-        for k in range(10):
-            xx = hx - 5 + k; yy = y0 + h // 2 + 1 + int(1.5 * math.sin(k / 9 * math.pi))
-            P(cv, xx, yy, C('metal', 2 if k % 2 else 1)); P(cv, xx, yy + 1, C('metal', 4))
-        R(cv, hx - 2, y0 + h // 2 + 3, 5, 5, C('mustard', 2)); HL(cv, hx - 2, hx + 3, y0 + h // 2 + 3, C('mustard', 0))
-        P(cv, hx - 1, y0 + h // 2 + 2, C('metal', 2)); P(cv, hx + 1, y0 + h // 2 + 2, C('metal', 2))
-        P(cv, hx + 2, y0 + h // 2 + 5, C('mustard', 3)); P(cv, hx, y0 + h // 2 + 5, C('mustard', 4))
-    if notice:  # blank paper notice on the right leaf (the game letters "Station temporarily closed · 2009")
-        nx, ny = hx + 3, y0 + 8
-        R(cv, nx, ny, 16, 12, C('paint_cream', 0)); HL(cv, nx, nx + 16, ny + 11, C('paint_cream', 2))
-        VL(cv, nx + 15, ny, ny + 12, C('paint_cream', 2)); P(cv, nx + 15, ny + 11, C('paint_cream', 3))
-        P(cv, nx + 1, ny + 1, C('flower_red', 1)); P(cv, nx + 14, ny + 1, C('flower_red', 1))
-        for k in range(3): P(cv, nx + 13 + k, ny + 11 - k, C('paint_cream', 1))
+        for k in range(15):
+            xx = hx - 7 + k; yy = y0 + h // 2 + 1 + int(2.5 * math.sin(k / 14 * math.pi))
+            P(cv, xx, yy, C('metal', 1 if k % 2 else 2)); P(cv, xx, yy + 1, C('metal', 4))
+        R(cv, hx - 3, y0 + h // 2 + 5, 7, 7, C('mustard', 2)); HL(cv, hx - 3, hx + 4, y0 + h // 2 + 5, C('mustard', 0))
+        VL(cv, hx - 3, y0 + h // 2 + 5, y0 + h // 2 + 12, C('mustard', 1)); VL(cv, hx + 3, y0 + h // 2 + 5, y0 + h // 2 + 12, C('mustard', 3))
+        for (a, b) in ((-2, 2), (-2, 3), (-2, 4), (-1, 1), (0, 1), (1, 1), (2, 2), (2, 3), (2, 4)):
+            P(cv, hx + a, y0 + h // 2 + b, C('metal', 2))
+        P(cv, hx, y0 + h // 2 + 8, C('mustard', 4))
+        for k in range(3): P(cv, hx + 1 + k, y0 + h // 2 + 12, C('rust', 2))
+    if notice:  # blank paper notice (the game letters "Station temporarily closed · 2009")
+        nx, ny = hx + 4, y0 + 10
+        R(cv, nx, ny, 24, 17, C('paint_cream', 0)); HL(cv, nx, nx + 24, ny + 16, C('paint_cream', 2))
+        VL(cv, nx + 23, ny, ny + 17, C('paint_cream', 2)); P(cv, nx + 23, ny + 16, C('paint_cream', 3))
+        for (a, b) in ((1, 1), (22, 1)): P(cv, nx + a, ny + b, C('flower_red', 1)); P(cv, nx + a, ny + b + 1, C('flower_red', 2))
+        for k in range(4): P(cv, nx + 20 + k, ny + 16 - k, C('paint_cream', 1)); P(cv, nx + 21 + k, ny + 16 - k, C('paint_cream', 3))
+        ao_band(cv, nx + 1, ny + 17, 24, (0.3,))
 
 
-def valance(cv, x0, x1, y, depth, paint='paint_cream', seed=1, broken=()):
-    """Timber dagger-board valance: 4px boards with pointed ends."""
+def valance(cv, x0, x1, y, depth, paint='paint_cream', seed=1, broken=(), bw=6):
+    """Timber dagger-board valance: bw-px boards with pointed ends, each shaded as a board (lit left edge)."""
     for x in range(x0, x1):
-        k = (x - x0) // 4; u = (x - x0) % 4
+        k = (x - x0) // bw; u = (x - x0) % bw
         if k in broken: continue
-        tip = depth if u in (1, 2) else depth - 2
-        for v in range(tip):
-            i = 1 if u == 1 else (2 if u in (0, 2) else 3)
-            if v == tip - 1: i += 1
+        mid = (bw - 1) / 2
+        tip = depth - int(abs(u - mid) * 2 * 0.9)
+        for v in range(max(1, tip)):
+            i = 1 if u <= 1 else (2 if u < bw - 1 else 3)
+            if v >= tip - 1: i += 1
             P(cv, x, y + v, C(paint, min(4, i)))
-        if u == 3 or k in broken: pass
-    HL(cv, x0, x1, y, C(paint, 0))
+        if u == bw - 1:
+            for v in range(0, max(1, tip) - 1): P(cv, x, y + v, C(paint, 4))
+    HL(cv, x0, x1, y, C(paint, 0)); HL(cv, x0, x1, y + 1, C(paint, 1))
 
 
 def clock(cv, cx, cy, r, h1=-2.2, h2=0.5, rim='iron'):
@@ -207,276 +223,276 @@ def clock(cv, cx, cy, r, h1=-2.2, h2=0.5, rim='iron'):
         for x in range(int(cx - r - 1), int(cx + r + 2)):
             d = math.hypot(x + 0.5 - cx, y + 0.5 - cy)
             if d <= r + 0.5:
-                if d > r - 1.5: P(cv, x, y, C(rim, 1 if (x < cx and y < cy) else 3))
-                else: P(cv, x, y, C('paint_cream', 0 if (x - cx) + (y - cy) < -2 else 1))
-    for k in range(12):  # hour ticks (no numerals)
-        a = k / 12 * 6.283
-        P(cv, cx + math.sin(a) * (r - 2.6), cy - math.cos(a) * (r - 2.6), C('iron', 3))
-    for (a, L) in ((h1, r * 0.5), (h2, r * 0.78)):
+                if d > r - 2.2: P(cv, x, y, C(rim, 0 if (x < cx and y < cy and d > r - 1) else (1 if (x < cx and y < cy) else 3)))
+                else: P(cv, x, y, C('paint_cream', 0 if (x - cx) + (y - cy) < -3 else (1 if d < r - 4 else 2)))
+    for k in range(12):
+        a = k / 12 * 6.283; rr = r - 4.2
+        P(cv, cx + math.sin(a) * rr, cy - math.cos(a) * rr, C('iron', 3))
+        if k % 3 == 0: P(cv, cx + math.sin(a) * (rr - 1), cy - math.cos(a) * (rr - 1), C('iron', 3))
+    for (a, L, wd) in ((h1, r * 0.5, 2), (h2, r * 0.75, 1)):
         for s in range(int(L * 2) + 1):
-            t = s / 2; P(cv, cx + math.sin(a) * t, cy - math.cos(a) * t, C('iron', 4))
-    P(cv, cx, cy, C('paint_red', 2))
-    P(cv, cx - r * 0.5, cy - r * 0.5, C('white', 0))
+            t = s / 2; xx, yy = cx + math.sin(a) * t, cy - math.cos(a) * t
+            P(cv, xx, yy, C('iron', 4))
+            if wd == 2: P(cv, xx + 1, yy, C('iron', 3))
+    P(cv, cx, cy, C('paint_red', 2)); P(cv, cx - r * 0.45, cy - r * 0.5, C('white', 0)); P(cv, cx - r * 0.45 + 1, cy - r * 0.5, C('white', 1))
 
 
 # ------------------------------------------------------------------ the building
 
-W, FH, OV = 14 * T, 6 * T, 24          # 448 x 192 footprint, 24px of chimney above it
-H = FH + OV                            # 216
-RIDGE, EAVE, PLINTH, BASE = 50, 112, 204, H
-DOORX = 6 * T                          # door tiles at map cols 18-19 (building x0 = 12)
-DCX = DOORX + T                        # 224, door centre
-WINS = [50, 116, 332, 398]
-GX0, GX1, GAPEX = DCX - 58, DCX + 58, 64    # cross-gable over the entrance
+W, FH, OV = 14 * T, 6 * T, 36          # 672 x 288 footprint, 36px of chimney above it
+H = FH + OV                            # 324
+RIDGE, EAVE, PLINTH, BASE = 74, 168, 306, H
+DCX = 7 * T                            # door tiles at map cols 18-19 (building x0 = 12): centre x = 336
+WINS = [75, 174, 498, 597]
+WTOP, WSPR, WSILL = 192, 212, 276
+GX0, GX1, GAPEX = DCX - 87, DCX + 87, 96
 
 
 def station(live=False):
     seed = 11
     cv = Canvas(W, H)
     # ---- main roof: north slope (lit, foreshortened) + south slope
-    nmask = lambda x, y: 7 <= x < W - 7
-    slates(cv, nmask, 0, OV + 2, W, RIDGE - 2, RIDGE - 2, ch=3, sw=9, base=1, seed=seed, moss=0 if live else 0.55,
+    nmask = lambda x, y: 10 <= x < W - 10
+    slates(cv, nmask, 0, OV + 3, W, RIDGE - 3, RIDGE - 3, ch=4, sw=13, base=1, seed=seed, moss=0 if live else 0.55,
            lichen=0 if live else 0.6, fresh=live)
-    miss = set() if live else {(12, 5), (13, 5), (33, 9), (41, 12), (40, 12)}
-    slates(cv, nmask, 0, RIDGE + 2, W, EAVE, EAVE, ch=4, sw=9, base=2, seed=seed + 1, moss=0.08 if live else 0.3,
+    miss = set() if live else {(12, 5), (13, 5), (33, 9), (41, 12), (40, 12), (22, 3)}
+    slates(cv, nmask, 0, RIDGE + 3, W, EAVE, EAVE, ch=6, sw=13, base=2, seed=seed + 1, moss=0.08 if live else 0.3,
            lichen=0.1 if live else 0.8, missing=miss, fresh=live)
-    # roof lit falloff: the south slope darkens slightly towards the eaves-right (one light from upper-left)
-    for y in range(RIDGE + 2, EAVE):
-        for x in range(7, W - 7):
-            if x > W * 0.72 and hash01(x, y, 4) < (x - W * 0.72) / (W * 0.28) * 0.5: dark(cv, x, y, 0.12)
-    # ridge tiles
-    for x in range(7, W - 7):
-        seg = (x - 7) % 14
-        cols = [O, C('slate', 0), C('slate', 1), C('slate', 2), C('slate', 3), C('slate', 4), O]
-        for k, c in enumerate(cols): P(cv, x, RIDGE - 2 + k, c)
-        if seg == 0: VL(cv, x, RIDGE - 1, RIDGE + 2, C('slate', 4))
-        elif seg in (1, 2): P(cv, x, RIDGE - 1, C('slate', 0))
-    ao_band(cv, 7, RIDGE + 5, W - 14, (0.35, 0.2, 0.1))
+    for y in range(RIDGE + 3, EAVE):          # the slope falls off slightly away from the light (right)
+        for x in range(10, W - 10):
+            if x > W * 0.7 and hash01(x, y, 4) < (x - W * 0.7) / (W * 0.3) * 0.5: dark(cv, x, y, 0.1)
+    # ridge tiles (half-round, 21px long)
+    for x in range(10, W - 10):
+        seg = (x - 10) % 21
+        cols = [O, C('slate', 0), C('slate', 1), C('slate', 1), C('slate', 2), C('slate', 3), C('slate', 4), O]
+        for k, c in enumerate(cols): P(cv, x, RIDGE - 4 + k, c)
+        if seg == 0: VL(cv, x, RIDGE - 3, RIDGE + 3, C('slate', 4))
+        elif seg in (1, 2, 3): P(cv, x, RIDGE - 3, C('white', 1)) if seg == 2 else None
+    ao_band(cv, 10, RIDGE + 4, W - 20, (0.36, 0.22, 0.12, 0.05))
     # gable-end coping + kneelers
-    for (gx, side) in ((0, 0), (W - 7, 1)):
-        for y in range(OV + 2, EAVE + 2):
-            for x in range(gx, gx + 7):
+    for (gx, side) in ((0, 0), (W - 10, 1)):
+        for y in range(OV + 3, EAVE + 3):
+            for x in range(gx, gx + 10):
                 u = x - gx
-                i = (1 if u < 2 else 2) if side == 0 else (1 if u < 3 else 3)
-                if (y - OV) % 13 == 12: i = 3
-                if u == (6 if side == 0 else 0): i = 4 if side == 0 else 2
+                i = (1 if u < 3 else 2) if side == 0 else (1 if u < 4 else 3)
+                if (y - OV) % 19 == 18: i = 3
+                if u == (9 if side == 0 else 0): i = 4 if side == 0 else 2
+                if hash01(x, y, 9) < 0.04: i += 1
                 P(cv, x, y, C('grit', i))
-        R(cv, gx - (0 if side == 0 else 3), EAVE - 6, 10, 9, C('grit', 1 if side == 0 else 2))
-        HL(cv, gx - (0 if side == 0 else 3), gx + 10 - (0 if side == 0 else 3), EAVE - 6, C('grit', 0))
-        HL(cv, gx - (0 if side == 0 else 3), gx + 10 - (0 if side == 0 else 3), EAVE + 2, C('grit', 4))
-    # ---- walls
-    ashlar(cv, 0, EAVE, W, PLINTH - EAVE, 'grit', seed + 2, ch=8, soot=0 if live else 0.5)
-    # quoins (alternating long/short dressed blocks) at both corners
-    for k, y in enumerate(range(EAVE + 2, PLINTH, 12)):
-        L = 16 if k % 2 == 0 else 10
+        kx = gx - (0 if side == 0 else 5)
+        R(cv, kx, EAVE - 9, 15, 13, C('grit', 1 if side == 0 else 2))
+        HL(cv, kx, kx + 15, EAVE - 9, C('grit', 0)); HL(cv, kx, kx + 15, EAVE + 3, C('grit', 4))
+        VL(cv, kx + (14 if side == 0 else 0), EAVE - 9, EAVE + 4, C('grit', 3))
+    # ---- walls: coursed gritstone
+    ashlar(cv, 0, EAVE, W, PLINTH - EAVE, 'grit', seed + 2, ch=12, bmin=16, bmax=32, soot=0 if live else 0.5)
+    for k, y in enumerate(range(EAVE + 3, PLINTH, 18)):     # quoins
+        L = 24 if k % 2 == 0 else 15
         for (qx, fl) in ((0, 0), (W - L, 1)):
-            for yy in range(y, min(y + 12, PLINTH)):
+            for yy in range(y, min(y + 18, PLINTH)):
                 for xx in range(qx, qx + L):
                     u, v = xx - qx, yy - y
                     i = 1 if fl == 0 else 2
                     if v == 0: i -= 1
-                    if v == 11 or (fl == 0 and u == L - 1) or (fl == 1 and u == 0): i = 3
-                    if hash01(xx, yy, 77) < 0.06: i += 1
+                    if v >= 16 or (fl == 0 and u == L - 1) or (fl == 1 and u == 0): i = 3
+                    if v == 17: i = 4
+                    if hash01(xx, yy, 77) < 0.03: i += 1
                     P(cv, xx, yy, C('grit', max(0, i)))
-    # plinth: bigger, darker blocks with a chamfered top
-    ashlar(cv, 0, PLINTH, W, BASE - PLINTH, 'grit', seed + 3, ch=6, bmin=16, bmax=28, base=(2, 3),
+    ashlar(cv, 0, PLINTH, W, BASE - PLINTH, 'grit', seed + 3, ch=9, bmin=24, bmax=42, base=(2, 3),
            soot=0 if live else 0.7, joint=4)
-    HL(cv, 0, W, PLINTH - 1, C('grit', 0)); HL(cv, 0, W, PLINTH, C('grit', 3))
-    # sill band
-    for x in range(0, W):
-        P(cv, x, 186, C('grit', 0)); P(cv, x, 187, C('grit', 1)); P(cv, x, 188, C('grit', 2)); P(cv, x, 189, C('grit', 3))
-    ao_band(cv, 0, 190, W, (0.28, 0.12))
+    HL(cv, 0, W, PLINTH - 2, C('grit', 0)); HL(cv, 0, W, PLINTH - 1, C('grit', 1)); HL(cv, 0, W, PLINTH, C('grit', 3))
+    for x in range(0, W):   # sill band
+        for k, i in enumerate((0, 1, 1, 2, 3, 4)): P(cv, x, 279 + k, C('grit', i))
+    ao_band(cv, 0, 285, W, (0.3, 0.16, 0.06))
     # ---- cross gable over the entrance (stone face, fretted bargeboards, clock)
     def in_gable(x, y):
         if y >= EAVE + 1 or x < GX0 or x >= GX1: return False
         return y >= GAPEX + abs(x + 0.5 - DCX) * (EAVE - GAPEX) / (DCX - GX0)
-    # small roof wedge behind the bargeboards (valleys into the main roof)
-    def in_wedge(x, y):
-        if x < GX0 - 2 or x >= GX1 + 2: return False
-        top = GAPEX - 12 + abs(x + 0.5 - DCX) * (EAVE - GAPEX + 12) / (DCX - GX0 + 2)
-        return top <= y and not in_gable(x, y) and y < EAVE
-    for y in range(GAPEX - 14, EAVE):
-        for x in range(GX0 - 2, GX1 + 2):
-            if in_wedge(x, y):
-                d = GAPEX - 12 + abs(x + 0.5 - DCX) * (EAVE - GAPEX + 12) / (DCX - GX0 + 2)
-                u = int((y - d) / 3)
-                i = (1 if x < DCX else 3) + (1 if (y - int(d)) % 3 == 2 else 0)
+    def wedge_top(x): return GAPEX - 18 + abs(x + 0.5 - DCX) * (EAVE - GAPEX + 18) / (DCX - GX0 + 3)
+    for y in range(GAPEX - 20, EAVE):
+        for x in range(GX0 - 3, GX1 + 3):
+            if wedge_top(x) <= y and not in_gable(x, y):
+                d = wedge_top(x)
+                i = (1 if x < DCX else 3) + (1 if (y - int(d)) % 4 == 3 else 0)
+                if (x + (y // 4) * 6) % 13 == 0: i += 1
                 P(cv, x, y, C('slate', min(4, i)))
-    # cross ridge
-    for y in range(GAPEX - 13, GAPEX + 1): P(cv, DCX - 1, y, C('slate', 1)); P(cv, DCX, y, C('slate', 3))
-    ashlar(cv, GX0, GAPEX, GX1 - GX0, EAVE - GAPEX + 2, 'grit', seed + 5, ch=8, mask=in_gable, soot=0 if live else 0.3)
-    # bargeboards (5px), with fretwork and a finial
-    bb = 'paint_cream' if live else 'paint_cream'
-    for x in range(GX0 - 3, GX1 + 3):
-        yt = GAPEX + abs(x + 0.5 - DCX) * (EAVE - GAPEX) / (DCX - GX0) - 2
-        for v in range(6):
-            i = 0 if v == 0 else (1 if v < 3 else (2 if v < 5 else 3))
+    for y in range(GAPEX - 19, GAPEX + 1):
+        P(cv, DCX - 2, y, C('slate', 0)); P(cv, DCX - 1, y, C('slate', 1)); P(cv, DCX, y, C('slate', 3)); P(cv, DCX + 1, y, C('slate', 4))
+    ashlar(cv, GX0, GAPEX, GX1 - GX0, EAVE - GAPEX + 3, 'grit', seed + 5, ch=12, bmin=16, bmax=30, mask=in_gable,
+           soot=0 if live else 0.3)
+    bb = 'paint_cream'
+    for x in range(GX0 - 5, GX1 + 5):       # bargeboards (8px) with fretted quatrefoil holes and a drip edge
+        yt = GAPEX + abs(x + 0.5 - DCX) * (EAVE - GAPEX) / (DCX - GX0) - 3
+        for v in range(9):
+            i = 0 if v == 0 else (1 if v < 4 else (2 if v < 7 else 3))
             if x > DCX: i += 1
             col = C(bb, min(4, i))
-            if not live and hash01(x, int(yt) + v, 5) < 0.22: col = C('wood_dark', 1)
+            if not live and hash01(x // 2, int(yt) + v, 5) < 0.18: col = C('wood_dark', 1 + (v > 5))
             P(cv, x, yt + v, col)
-        if (x - GX0) % 6 == 3: P(cv, x, yt + 3, C('wood_dark', 3))     # fretted holes
-        P(cv, x, yt + 6, C('grit', 4))
-    for y in range(GAPEX - 16, GAPEX + 2):
-        P(cv, DCX - 1, y, C(bb, 1)); P(cv, DCX, y, C(bb, 2))
-    R(cv, DCX - 2, GAPEX - 12, 4, 3, C(bb, 1)); P(cv, DCX - 1, GAPEX - 17, C(bb, 0))
-    # clock roundel in the gable
-    ccy = 92
-    for y in range(ccy - 16, ccy + 17):
-        for x in range(DCX - 16, DCX + 17):
+        if (x - GX0) % 9 in (4, 5): P(cv, x, yt + 4, C('wood_dark', 3)); P(cv, x, yt + 5, C('wood_dark', 4))
+        if (x - GX0) % 9 == 0: P(cv, x, yt + 9, C(bb, 2)); P(cv, x, yt + 10, C(bb, 3))   # drip points
+        P(cv, x, yt + 9 + ((x - GX0) % 9 == 0) * 2, C('grit', 4))
+    for y in range(GAPEX - 24, GAPEX + 3):  # finial
+        P(cv, DCX - 1, y, C(bb, 0)); P(cv, DCX, y, C(bb, 1)); P(cv, DCX + 1, y, C(bb, 3))
+    R(cv, DCX - 3, GAPEX - 18, 6, 4, C(bb, 1)); HL(cv, DCX - 3, DCX + 3, GAPEX - 18, C(bb, 0))
+    P(cv, DCX, GAPEX - 25, C(bb, 0)); P(cv, DCX, GAPEX - 26, C(bb, 0))
+    ccy = 138   # clock roundel in the gable
+    for y in range(ccy - 24, ccy + 25):
+        for x in range(DCX - 24, DCX + 25):
             d = math.hypot(x + 0.5 - DCX, y + 0.5 - ccy)
-            if 12 < d <= 15.5:
-                k = int((math.atan2(y - ccy, x - DCX) + math.pi) / math.pi * 8)
-                P(cv, x, y, C('grit', 1 if x < DCX - 3 else (2 if x < DCX + 4 else 3)) if (k % 2 or d < 15) else C('grit', 3))
-    clock(cv, DCX, ccy, 12, h1=(-2.2 if not live else 3.6), h2=(0.5 if not live else 0.0))
-    if not live:  # clock stopped, grimy face
-        for y in range(ccy - 10, ccy + 11):
-            for x in range(DCX - 10, DCX + 11):
-                if math.hypot(x - DCX, y - ccy) < 10 and fbm(x, y, 4, 91) < 0.3: dark(cv, x, y, 0.18)
-    # ---- eaves gutter + AO
+            if 18 < d <= 23.5:
+                kk = int((math.atan2(y - ccy, x - DCX) + math.pi) / math.pi * 10)
+                joint = abs((math.atan2(y - ccy, x - DCX) + math.pi) / math.pi * 10 - kk - 0.5) > 0.44
+                i = 3 if joint or d > 23 else (1 if x < DCX - 4 else (2 if x < DCX + 6 else 3))
+                P(cv, x, y, C('grit', i))
+    clock(cv, DCX, ccy, 18, h1=(-2.2 if not live else 3.6), h2=(0.5 if not live else 0.0))
+    if not live:
+        for y in range(ccy - 15, ccy + 16):
+            for x in range(DCX - 15, DCX + 16):
+                if math.hypot(x - DCX, y - ccy) < 15 and fbm(x, y, 6, 91) < 0.3: dark(cv, x, y, 0.16)
+    # ---- eaves: cast-iron ogee gutter + brackets + AO
     for x in range(0, W):
-        if in_gable(x, EAVE - 1) and GX0 + 4 < x < GX1 - 4: continue
-        P(cv, x, EAVE, C('iron', 1)); P(cv, x, EAVE + 1, C('iron', 2)); P(cv, x, EAVE + 2, C('iron', 3)); P(cv, x, EAVE + 3, C('iron', 4))
-        if x % 40 == 20: VL(cv, x, EAVE + 4, EAVE + 7, C('iron', 3))
-    ao_band(cv, 0, EAVE + 4, W, (0.45, 0.3, 0.18, 0.08), mask=lambda x, y: not (GX0 + 6 < x < GX1 - 6))
-    if not live:  # buddleia-free, but the gutter sprouts a tuft of grass
-        for k in range(9):
-            P(cv, 300 + k, EAVE - 1 - (k % 3), C('moss', 1 + k % 3)); P(cv, 301 + k, EAVE - 2 - (k % 2), C('grass', 2))
+        if GX0 + 6 < x < GX1 - 6: continue
+        for k, i in enumerate((0, 1, 2, 3, 4)): P(cv, x, EAVE + k, C('iron', i))
+        if x % 60 == 30: VL(cv, x, EAVE + 5, EAVE + 9, C('iron', 3)); VL(cv, x + 1, EAVE + 5, EAVE + 9, C('iron', 4))
+    ao_band(cv, 0, EAVE + 5, W, (0.46, 0.32, 0.2, 0.1, 0.04), mask=lambda x, y: not (GX0 + 8 < x < GX1 - 8))
+    if not live:   # tuft of grass in the gutter
+        for k in range(14):
+            P(cv, 450 + k, EAVE - 1 - (k % 3), C('moss', 1 + k % 3)); P(cv, 451 + k, EAVE - 2 - (k % 2), C('grass', 2))
+            if k % 3 == 0: VL(cv, 452 + k, EAVE - 6 - (k % 4), EAVE - 1, C('grass', 1 + k % 2))
     # ---- windows
     states = ['glass', 'boarded', 'boarded', 'cracked'] if not live else ['glass'] * 4
     for k, cx in enumerate(WINS):
-        sash_window(cv, cx, 128, 26, 142, 184, state=states[k], seed=seed + 20 + k, peel=0 if live else 0.14,
-                    lit=False)
-        if not live:  # soot / rain streaks under the sill
-            for s in range(3):
-                sx = cx - 10 + int(hash01(k, s, 5) * 20)
-                for y in range(190, 190 + 6 + int(hash01(k, s, 6) * 10)): dark(cv, sx, y, 0.16)
-    # ---- entrance: door surround, fanlight, doors, step
-    dx0, dx1, dtop, dbot = DCX - 24, DCX + 24, 150, 210
-    for y in range(dtop - 5, dbot):
-        for x in range(dx0 - 5, dx1 + 5):
+        sash_window(cv, cx, WTOP, 40, WSPR, WSILL, state=states[k], seed=seed + 20 + k, peel=0 if live else 0.12, live=live)
+        if not live:
+            for s in range(4):
+                sx = cx - 16 + int(hash01(k, s, 5) * 32)
+                for y in range(WSILL + 6, WSILL + 10 + int(hash01(k, s, 6) * 14)): dark(cv, sx, y, 0.15)
+    # ---- entrance: surround, fanlight, doors, step
+    dx0, dx1, dtop, dbot = DCX - 33, DCX + 33, 225, 315
+    for y in range(dtop - 8, dbot):
+        for x in range(dx0 - 8, dx1 + 8):
             if dx0 <= x < dx1 and y >= dtop: continue
-            u = x - (dx0 - 5)
             i = 1 if x < DCX else 2
-            if y < dtop: i = 0 if y == dtop - 5 else (1 if x < DCX else 2)
-            if x in (dx0 - 1, dx1) : i = 3
+            if y < dtop: i = 0 if y == dtop - 8 else (1 if x < DCX else 2)
+            if y == dtop - 1: i = 3
+            if x in (dx0 - 1, dx1): i = 3
+            if x in (dx0 - 8, dx1 + 7): i += 1
+            if y >= dtop and (y - dtop) % 18 == 17 and x not in (dx0 - 1, dx1): i = 3
             P(cv, x, y, C('grit', i))
-    # fanlight
-    glass(cv, lambda x, y: True, dx0 + 1, dtop, 46, 10, grime=0.4 if not live else 0, seed=5)
-    for x in range(dx0 + 1, dx1 - 1, 6): VL(cv, x, dtop, dtop + 10, C('paint_cream', 2))
-    HL(cv, dx0, dx1, dtop + 10, C('paint_cream', 1)); HL(cv, dx0, dx1, dtop + 11, C('paint_cream', 3))
-    panel_doors(cv, dx0, dtop + 12, 48, dbot - dtop - 12, paint='paint_green', seed=9, weathered=0 if live else 0.12,
+    glass(cv, lambda x, y: True, dx0 + 1, dtop, 64, 15, grime=0.4 if not live else 0, seed=5, lit=live)
+    for x in range(dx0 + 1, dx1 - 1, 9): VL(cv, x, dtop, dtop + 15, C('paint_cream', 2)); VL(cv, x + 1, dtop, dtop + 15, C('paint_cream', 3))
+    HL(cv, dx0, dx1, dtop + 15, C('paint_cream', 1)); HL(cv, dx0, dx1, dtop + 16, C('paint_cream', 2)); HL(cv, dx0, dx1, dtop + 17, C('paint_cream', 3))
+    panel_doors(cv, dx0, dtop + 18, 66, dbot - dtop - 18, paint='paint_green', seed=9, weathered=0 if live else 0.12,
                 notice=not live, chain=not live)
-    ao_band(cv, dx0, dtop + 12, 48, (0.35, 0.2))
-    for y in range(dtop, dbot): dark(cv, dx1 - 1, y, 0.3)
-    # stone step
-    R(cv, dx0 - 8, dbot, 64, 6, C('grit', 2)); HL(cv, dx0 - 8, dx0 + 56, dbot, C('grit', 0))
-    HL(cv, dx0 - 8, dx0 + 56, dbot + 1, C('grit', 1))
-    for x in range(dx0 - 8, dx0 + 56):
-        if hash01(x, 3, 8) < 0.2: P(cv, x, dbot + 3, C('grit', 3))
-    if not live:
-        for x in range(dx0 - 4, dx0 + 50):  # worn hollow in the middle of the step
-            if abs(x - DCX) < 14: P(cv, x, dbot + 2, C('grit', 3))
+    ao_band(cv, dx0, dtop + 18, 66, (0.38, 0.22, 0.1))
+    for y in range(dtop, dbot): dark(cv, dx1 - 1, y, 0.3); dark(cv, dx1 - 2, y, 0.15)
+    R(cv, dx0 - 12, dbot, 90, 9, C('grit', 2))   # stone step
+    HL(cv, dx0 - 12, dx1 + 12, dbot, C('grit', 0)); HL(cv, dx0 - 12, dx1 + 12, dbot + 1, C('grit', 1))
+    HL(cv, dx0 - 12, dx1 + 12, dbot + 8, C('grit', 4))
+    for x in range(dx0 - 12, dx1 + 12):
+        if hash01(x, 3, 8) < 0.15: P(cv, x, dbot + 4, C('grit', 3))
+        if not live and abs(x - DCX) < 20: P(cv, x, dbot + 2, C('grit', 3)); P(cv, x, dbot + 3, C('grit', 2))
     # ---- posters
-    poster(cv, 146, 150, 24, 32, faded=not live, seed=2, torn=not live, scene=0)
-    poster(cv, 278, 150, 24, 32, faded=not live, seed=5, torn=False, scene=1)
-    # ---- entrance awning: roof strip, fascia (blank for "HARROWBY"), dagger valance, iron brackets, lamp
-    ax0, ax1 = DCX - 54, DCX + 54
-    for y in range(120, 128):
+    poster(cv, 219, 225, 36, 48, faded=not live, seed=2, torn=not live, scene=0)
+    poster(cv, 417, 225, 36, 48, faded=not live, seed=5, torn=False, scene=1)
+    # ---- entrance awning: leaded roof strip, fascia (blank for "HARROWBY"), dagger valance, iron brackets, lamp
+    ax0, ax1 = DCX - 81, DCX + 81
+    for y in range(180, 192):
         for x in range(ax0, ax1):
-            v = y - 120; i = 1 if v < 2 else 2
-            if (x - ax0) % 10 == 0: i = 3
-            if v == 0: i = 0
-            P(cv, x, y, C('lead' if v < 2 else 'slate', i))
-    ao_band(cv, ax0 + 2, 118, ax1 - ax0 - 4, (0.3, 0.2), down=False)
-    fp = 'paint_green'
-    for y in range(128, 140):
-        for x in range(ax0, ax1):
-            v = y - 128; i = 2
-            if v == 0: i = 0
-            elif v == 1: i = 1
-            elif v == 11: i = 4
-            elif x == ax0: i = 1
-            elif x == ax1 - 1: i = 4
-            col = C(fp, i)
-            if not live and hash01(x, y, 12) < 0.05: col = C(fp, 3)
+            v = y - 180
+            if v < 3: col = C('lead', 0 if v == 0 else 1)
+            else:
+                i = 2 + (1 if (x - ax0) % 15 == 0 else 0) + (1 if v == 11 else 0) - (1 if v == 3 else 0)
+                col = C('slate', i)
             P(cv, x, y, col)
-    # the blank lettering panel
-    SIGN = (ax0 + 6, 130, ax1 - ax0 - 12, 8)
+    ao_band(cv, ax0 + 2, 179, ax1 - ax0 - 4, (0.32, 0.2, 0.08), down=False)
+    fp = 'paint_green'
+    for y in range(192, 210):
+        for x in range(ax0, ax1):
+            v = y - 192; i = 2
+            if v == 0: i = 0
+            elif v in (1, 2): i = 1
+            elif v >= 16: i = 4 if v == 17 else 3
+            elif x in (ax0, ax0 + 1): i = 1
+            elif x >= ax1 - 2: i = 4
+            col = C(fp, i)
+            if not live and hash01(x // 2, y, 12) < 0.05: col = C(fp, 3)
+            P(cv, x, y, col)
+    SIGN = (ax0 + 9, 195, ax1 - ax0 - 18, 12)     # blank lettering panel
     sx, sy, sw, sh = SIGN
-    R(cv, sx, sy, sw, sh, C('paint_cream', 1 if live else 2)); HL(cv, sx, sx + sw, sy, C('paint_cream', 0))
-    HL(cv, sx, sx + sw, sy + sh - 1, C('paint_cream', 3))
+    R(cv, sx, sy, sw, sh, C('paint_cream', 1 if live else 2)); HL(cv, sx, sx + sw, sy, C('paint_cream', 3))
+    VL(cv, sx, sy, sy + sh, C('paint_cream', 3)); HL(cv, sx, sx + sw, sy + sh - 1, C('paint_cream', 0))
     if not live:
-        for x in range(sx, sx + sw):
-            for y in range(sy, sy + sh):
-                if fbm(x, y, 5, 44) < 0.2: P(cv, x, y, C('paint_cream', 3))
-    valance(cv, ax0, ax1, 140, 7, paint='paint_cream', seed=3, broken=() if live else (6, 17))
-    ao_band(cv, ax0, 146, ax1 - ax0, (0.35, 0.22, 0.1), mask=lambda x, y: not (dx0 <= x < dx1 and y >= dtop + 12))
-    for (bx, fl) in ((ax0 + 2, False), (ax1 - 16, True)):
-        iron_bracket(cv, bx, 140, 14, 16, flip=fl, rp='iron')
-    # hanging lamp
-    VL(cv, DCX, 147, 151, C('iron', 2))
-    R(cv, DCX - 3, 151, 7, 2, C('iron', 1)); R(cv, DCX - 3, 153, 7, 6, C('iron', 3))
-    R(cv, DCX - 2, 154, 5, 4, C('lamp_glow', 2) if live else C('glass_dk', 2)); P(cv, DCX - 2, 154, C('white', 0))
-    HL(cv, DCX - 2, DCX + 3, 159, C('iron', 2))
+        for x in range(sx + 1, sx + sw):
+            for y in range(sy + 1, sy + sh - 1):
+                if fbm(x, y, 7, 44) < 0.18: P(cv, x, y, C('paint_cream', 3))
+    valance(cv, ax0, ax1, 210, 11, paint='paint_cream', seed=3, broken=() if live else (6, 17, 18))
+    ao_band(cv, ax0, 219, ax1 - ax0, (0.36, 0.24, 0.12), mask=lambda x, y: not (dx0 <= x < dx1 and y >= dtop + 18))
+    iron_bracket(cv, ax0 + 3, 210, 22, 25, flip=False)
+    iron_bracket(cv, ax1 - 25, 210, 22, 25, flip=True)
+    VL(cv, DCX, 221, 227, C('iron', 2))        # hanging lamp
+    R(cv, DCX - 5, 227, 11, 3, C('iron', 1)); HL(cv, DCX - 5, DCX + 6, 227, C('iron', 0))
+    R(cv, DCX - 4, 230, 9, 9, C('iron', 3))
+    R(cv, DCX - 3, 231, 7, 7, C('lamp_glow', 2) if live else C('glass_dk', 2))
+    if live: R(cv, DCX - 1, 233, 3, 3, C('lamp_glow', 0))
+    P(cv, DCX - 3, 231, C('white', 0)); HL(cv, DCX - 4, DCX + 5, 239, C('iron', 2)); P(cv, DCX, 240, C('iron', 3))
     # ---- drainpipes
-    drainpipe(cv, 22, EAVE + 3, PLINTH + 6); drainpipe(cv, W - 26, EAVE + 3, PLINTH + 6)
+    drainpipe(cv, 33, EAVE + 4, PLINTH + 9); drainpipe(cv, W - 39, EAVE + 4, PLINTH + 9)
     # ---- planters by the doors
-    half_barrel(cv, dx0 - 26, BASE, seed=4, flowers=('flower_red', 'flower_wht') if live else ('flower_red', 'flower_yel'))
-    half_barrel(cv, dx1 + 12, BASE, seed=7, flowers=('flower_pur', 'flower_yel'))
+    half_barrel(cv, dx0 - 36, BASE, seed=4, flowers=('flower_red', 'flower_wht') if live else ('flower_red', 'flower_yel'))
+    half_barrel(cv, dx1 + 15, BASE, seed=7, flowers=('flower_pur', 'flower_yel'))
     # ---- ivy up the west corner (kept trimmed once restored)
-    top = 132 if live else 104
-    for k in range(0, 34):
-        y = BASE - 4 - k * (BASE - top) / 34
-        x = 6 + 7 * math.sin(k * 0.55) + (k % 5)
-        leaf_cluster(cv, x, y, 5 + (k % 3), 'ivy', 60 + k, 0.8)
+    top = 200 if live else 158
+    ivy_patch(cv, 0, top, 44, BASE - top, seed=60, live=live)
     if not live:
-        for k in range(8): leaf_cluster(cv, 30 + k * 4, EAVE + 2 + (k % 2) * 3, 4, 'ivy', 90 + k, 0.7)
-    # moss + weeds at the foot of the wall
+        for k in range(11): leaf_cluster(cv, 42 + k * 6, EAVE + 3 + (k % 2) * 4, 6, 'ivy', 90 + k, 0.7)
+    # ---- moss + weeds at the foot of the wall
     for x in range(0, W):
-        if fbm(x, 1, 12, 33) > (0.55 if not live else 0.75):
-            for y in range(BASE - 3, BASE):
+        if fbm(x, 1, 18, 33) > (0.55 if not live else 0.75):
+            for y in range(BASE - 4, BASE):
                 if hash01(x, y, 34) < 0.6: P(cv, x, y, C('moss', 1 + int(hash01(x, y, 35) * 3)))
     if not live:
-        for (wx, h_) in ((96, 9), (104, 6), (372, 8), (360, 5)):
+        for (wx, h_) in ((144, 13), (156, 9), (558, 12), (540, 7)):
             for k in range(h_):
-                P(cv, wx + int(math.sin(k) * 1.5), BASE - 1 - k, C('grass', 2 + (k % 2)))
-                if k % 3 == 0: P(cv, wx + 2, BASE - 1 - k, C('leaf', 1)); P(cv, wx - 2, BASE - 2 - k, C('leaf', 2))
+                P(cv, wx + int(math.sin(k * 0.7) * 2), BASE - 1 - k, C('grass', 2 + (k % 2)))
+                if k % 3 == 0: P(cv, wx + 3, BASE - 1 - k, C('leaf', 1)); P(cv, wx - 3, BASE - 2 - k, C('leaf', 2)); P(cv, wx + 2, BASE - 2 - k, C('leaf', 2))
     # ---- chimneys (drawn after the roof; cast shadows onto the slope)
-    for cxs in (80, W - 104):
-        sw_, top_ = 26, 8
-        # shadow on the roof down-right
-        for y in range(RIDGE, RIDGE + 22):
-            for x in range(cxs + sw_, cxs + sw_ + 10 - (y - RIDGE) // 3):
+    for cxs in (120, W - 159):
+        sw_, top_ = 39, 12
+        for y in range(RIDGE, RIDGE + 33):
+            for x in range(cxs + sw_, cxs + sw_ + 15 - (y - RIDGE) // 3):
                 if opaque(cv, x, y): dark(cv, x, y, 0.3)
-        for y in range(top_, RIDGE + 6):
+        for y in range(top_, RIDGE + 9):
             for x in range(cxs, cxs + sw_):
-                u = x - cxs; i = 1 if u < 3 else (2 if u < sw_ - 5 else 3)
-                if (y - top_) % 7 == 6: i += 1
-                if u in (7, 16) and (y - top_) % 14 < 7: i += 1
-                if hash01(x, y, 21) < 0.08: i += 1
-                if not live and y < top_ + 14 and fbm(x, y, 5, 22) < 0.5: i += 1
+                u = x - cxs; i = 1 if u < 4 else (2 if u < sw_ - 7 else 3)
+                v = (y - top_) % 11
+                blk = (x - cxs + (6 if ((y - top_) // 11) % 2 else 0)) // 13
+                if v == 10 or ((x - cxs + (6 if ((y - top_) // 11) % 2 else 0)) % 13 == 12): i += 1
+                if v == 0 and u < sw_ - 7: i -= 1 if i > 1 else 0
+                if hash01(x, y, 21) < 0.04: i += 1
+                if not live and y < top_ + 20 and fbm(x, y, 8, 22) < 0.5: i += 1
                 P(cv, x, y, C('grit', min(5, i)))
-        # oversailing cap
-        R(cv, cxs - 2, top_ - 1, sw_ + 4, 4, C('grit', 1)); HL(cv, cxs - 2, cxs + sw_ + 2, top_ - 1, C('grit', 0))
-        HL(cv, cxs - 2, cxs + sw_ + 2, top_ + 3, C('grit', 4))
-        # lead flashing where it meets the roof
-        HL(cv, cxs - 1, cxs + sw_ + 1, RIDGE + 6, C('lead', 1)); HL(cv, cxs - 1, cxs + sw_ + 1, RIDGE + 7, C('lead', 3))
-        # pots
-        for (px_, capped) in ((cxs + 4, False), (cxs + 15, not live)):
-            for y in range(top_ - 9, top_ - 1):
-                for x in range(px_, px_ + 7):
-                    u = x - px_; i = 1 if u < 2 else (2 if u < 5 else 3)
-                    if y == top_ - 9: i = 0
-                    P(cv, x, y, C('terracotta', i))
-            R(cv, px_ + 1, top_ - 10, 5, 1, C('terracotta', 1))
-            if capped: R(cv, px_ - 1, top_ - 12, 9, 2, C('iron', 2)); HL(cv, px_ - 1, px_ + 8, top_ - 12, C('iron', 0))
-            else: R(cv, px_ + 2, top_ - 10, 3, 1, C('interior', 3))
-        outline_where(cv, lambda x, y: y < RIDGE - 2 and cxs - 4 <= x <= cxs + sw_ + 4)
-    # ---- finishing: selective outline
-    sel_outline(cv, k=0.72, ridge_rows=[], base_rows=[BASE - 1])
-    lights = [[DCX, 156, 34]] + ([[cx, 160, 16] for cx in WINS] if live else [])
-    info = dict(sign={'fascia': list(SIGN), 'notice': [DCX + 3, 170, 16, 12] if not live else None},
+        R(cv, cxs - 3, top_ - 1, sw_ + 6, 6, C('grit', 1)); HL(cv, cxs - 3, cxs + sw_ + 3, top_ - 1, C('grit', 0))
+        HL(cv, cxs - 3, cxs + sw_ + 3, top_ + 4, C('grit', 4)); VL(cv, cxs + sw_ + 2, top_, top_ + 5, C('grit', 3))
+        ao_band(cv, cxs, top_ + 5, sw_, (0.3, 0.14))
+        for yy in (RIDGE + 9, RIDGE + 10, RIDGE + 11):  # lead flashing
+            HL(cv, cxs - 2, cxs + sw_ + 2, yy, C('lead', 1 + (yy - RIDGE - 9)))
+        for (px_, capped) in ((cxs + 6, False), (cxs + 23, not live)):
+            for y in range(top_ - 13, top_ - 1):
+                for x in range(px_, px_ + 10):
+                    u = x - px_; i = 1 if u < 3 else (2 if u < 7 else 3)
+                    if y == top_ - 13: i = 0
+                    if y in (top_ - 11,): i += 1
+                    P(cv, x, y, C('terracotta', min(4, i)))
+            R(cv, px_ - 1, top_ - 15, 12, 2, C('terracotta', 1)); HL(cv, px_ - 1, px_ + 11, top_ - 15, C('terracotta', 0))
+            if capped:
+                R(cv, px_ - 2, top_ - 19, 14, 3, C('iron', 2)); HL(cv, px_ - 2, px_ + 12, top_ - 19, C('iron', 0))
+                for x in (px_ + 1, px_ + 8): VL(cv, x, top_ - 16, top_ - 14, C('iron', 3))
+            else: R(cv, px_ + 2, top_ - 15, 6, 1, C('interior', 4))
+        outline_where(cv, lambda x, y, cxs=cxs: y < RIDGE - 4 and cxs - 6 <= x <= cxs + sw_ + 6)
+    sel_outline(cv, k=0.72, base_rows=[BASE - 1])
+    lights = [[DCX, 234, 50]] + ([[cx, 240, 24] for cx in WINS] if live else [])
+    info = dict(sign={'fascia': list(SIGN), 'notice': [DCX + 4, dtop + 28, 24, 17] if not live else None},
                 lights=lights)
     return cv, info
 
@@ -484,102 +500,101 @@ def station(live=False):
 # ------------------------------------------------------------------ the platform canopy (separate object: fades)
 
 CAN_COLS = 12
-CW, CH = CAN_COLS * T, 90
+CW, CH = CAN_COLS * T, 135
 
 
 def canopy(live=False):
     cv = Canvas(CW, CH)
-    RT, RB = 0, 40          # roof top/bottom rows
-    # roof: slate with a glazed band (patent glazing on iron bars)
-    slates(cv, lambda x, y: True, 0, RT + 3, CW, RB, RB, ch=4, sw=9, base=2, seed=71, moss=0.05 if live else 0.4,
+    RT, RB = 0, 60
+    slates(cv, lambda x, y: True, 0, RT + 4, CW, RB, RB, ch=6, sw=13, base=2, seed=71, moss=0.05 if live else 0.4,
            lichen=0 if live else 0.6, fresh=live, missing=set() if live else {(9, 2), (30, 6)})
-    broken = set() if live else {3, 7, 8, 15}
-    for y in range(RT + 12, RT + 26):
-        for x in range(4, CW - 4):
-            pane = (x - 4) // 16; u = (x - 4) % 16; v = y - (RT + 12)
-            if u in (0, 1):
-                P(cv, x, y, C('iron', 1 if u == 0 else 3)); continue
-            if pane in broken and hash01(pane, v, 3) < (0.9 if v > 3 else 0.2):
-                P(cv, x, y, C('interior', 2 + (1 if u > 12 else 0)))   # missing pane: dark gap
-                continue
-            s = u - v * 0.7
-            i = 1 if 3 < (s % 12) < 6 else 2
+    broken = set() if live else {3, 7, 8, 15, 22}
+    g0, g1 = RT + 18, RT + 39     # patent glazing band
+    for y in range(g0, g1):
+        for x in range(6, CW - 6):
+            pane = (x - 6) // 24; u = (x - 6) % 24; v = y - g0
+            if u in (0, 1, 2):
+                P(cv, x, y, C('iron', (0, 1, 3)[u])); continue
+            if pane in broken and hash01(pane, v, 3) < (0.9 if v > 4 else 0.2):
+                P(cv, x, y, C('interior', 2 + (1 if u > 18 else 0))); continue
+            s = (u - v * 0.7) % 18
+            i = 1 if 4 < s < 9 else 2
             if v == 0: i = 0
             col = C('glass', i)
-            if not live and fbm(x, y, 6, 72) < 0.35: col = C('moss', 3) if hash01(x, y, 73) < 0.4 else C('grit', 2)
+            if not live and fbm(x, y, 9, 72) < 0.3: col = C('moss', 3) if hash01(x, y, 73) < 0.4 else C('grit', 2)
             P(cv, x, y, col)
-    HL(cv, 4, CW - 4, RT + 11, C('lead', 1)); HL(cv, 4, CW - 4, RT + 26, C('lead', 3))
-    # far (north) edge: gutter + lead flashing
-    for x in range(CW):
-        P(cv, x, RT, O); P(cv, x, RT + 1, C('iron', 1)); P(cv, x, RT + 2, C('iron', 3))
-    # front fascia + valance
+    HL(cv, 6, CW - 6, g0 - 1, C('lead', 1)); HL(cv, 6, CW - 6, g0 - 2, C('lead', 0)); HL(cv, 6, CW - 6, g1, C('lead', 3))
+    ao_band(cv, 6, g1 + 1, CW - 12, (0.25, 0.12))
+    for x in range(CW):    # far edge: gutter
+        P(cv, x, RT, O); P(cv, x, RT + 1, C('iron', 1)); P(cv, x, RT + 2, C('iron', 2)); P(cv, x, RT + 3, C('iron', 4))
     fp = 'paint_green'
-    for y in range(RB, RB + 6):
+    for y in range(RB, RB + 9):   # fascia
         for x in range(CW):
-            v = y - RB; i = [0, 1, 2, 2, 3, 4][v]
+            v = y - RB; i = [0, 1, 1, 2, 2, 2, 3, 3, 4][v]
             col = C(fp, i)
-            if not live and hash01(x, y, 74) < 0.06: col = C('wood_dark', 2)
+            if not live and hash01(x // 2, y, 74) < 0.06: col = C('wood_dark', 2)
             P(cv, x, y, col)
-    valance(cv, 0, CW, RB + 6, 10, paint='paint_cream', seed=5, broken=set() if live else {11, 12, 40, 67, 68, 69})
-    ends = []
-    # columns + spandrel brackets
-    cols = [16 + 64 * k for k in range(6)]
+    valance(cv, 0, CW, RB + 9, 15, paint='paint_cream', seed=5, broken=set() if live else {11, 12, 40, 67, 68, 69})
+    cols = [24 + 96 * k for k in range(6)]
     for cx in cols:
-        top, bot = RB + 6, CH - 1
-        for y in range(top, bot):
-            for x in range(cx - 2, cx + 2):
-                u = x - (cx - 2); i = [1, 1, 2, 3][u]
-                P(cv, x, y, C('paint_green' if live else 'paint_green', i + (1 if not live and hash01(x, y, 75) < 0.1 else 0)))
-            if (y - top) % 9 == 0: HL(cv, cx - 2, cx + 2, y, C('paint_green', 0))
-        # capital + base
-        R(cv, cx - 4, top, 8, 3, C('paint_green', 1)); HL(cv, cx - 4, cx + 4, top, C('paint_green', 0))
-        R(cv, cx - 4, bot - 5, 8, 5, C('paint_green', 2)); HL(cv, cx - 4, cx + 4, bot - 5, C('paint_green', 0))
-        HL(cv, cx - 4, cx + 4, bot, O)
-        iron_bracket(cv, cx + 2, top, 18, 16, flip=False, rp='paint_green')
-        iron_bracket(cv, cx - 20, top, 18, 16, flip=True, rp='paint_green')
-    # hanging station clock (double-sided) between columns 2 and 3 + two lamps
-    ccx = (cols[2] + cols[3]) // 2
-    VL(cv, ccx, RB + 12, RB + 18, C('iron', 2))
-    clock(cv, ccx, RB + 27, 9, h1=(-2.2 if not live else 3.2), h2=(0.5 if not live else 5.8))
+        top, bot = RB + 9, CH - 1
+        for y in range(top, bot):   # fluted column
+            for x in range(cx - 3, cx + 3):
+                u = x - (cx - 3); i = [1, 0, 1, 2, 3, 4][u]
+                if not live and hash01(x, y // 2, 75) < 0.08: i = min(4, i + 1)
+                P(cv, x, y, C('paint_green', i))
+            if (y - top) % 14 == 0: HL(cv, cx - 3, cx + 3, y, C('paint_green', 0)); HL(cv, cx - 3, cx + 3, y + 1, C('paint_green', 3))
+        R(cv, cx - 6, top, 12, 5, C('paint_green', 1)); HL(cv, cx - 6, cx + 6, top, C('paint_green', 0)); HL(cv, cx - 6, cx + 6, top + 4, C('paint_green', 3))
+        for k, (wd, i) in enumerate(((5, 1), (6, 2), (6, 2), (7, 2), (7, 3), (7, 3), (8, 3), (8, 4))):
+            HL(cv, cx - wd, cx + wd, bot - 8 + k, C('paint_green', i)); P(cv, cx - wd, bot - 8 + k, C('paint_green', 0))
+        HL(cv, cx - 8, cx + 8, bot, O)
+        iron_bracket(cv, cx + 3, top, 27, 24, flip=False, rp='paint_green')
+        iron_bracket(cv, cx - 30, top, 27, 24, flip=True, rp='paint_green')
+    ccx = (cols[2] + cols[3]) // 2    # hanging double-sided clock + two lamps
+    VL(cv, ccx, RB + 18, RB + 26, C('iron', 2)); HL(cv, ccx - 3, ccx + 4, RB + 18, C('iron', 1))
+    clock(cv, ccx, RB + 40, 14, h1=(-2.2 if not live else 3.2), h2=(0.5 if not live else 5.8))
     for lx in ((cols[0] + cols[1]) // 2, (cols[4] + cols[5]) // 2):
-        VL(cv, lx, RB + 12, RB + 20, C('iron', 2))
-        R(cv, lx - 4, RB + 20, 9, 2, C('iron', 1)); R(cv, lx - 3, RB + 22, 7, 8, C('iron', 3))
-        R(cv, lx - 2, RB + 23, 5, 6, C('lamp_glow', 2) if live else C('glass_dk', 2)); P(cv, lx - 2, RB + 23, C('white', 0))
-        R(cv, lx - 3, RB + 30, 7, 1, C('iron', 2)); P(cv, lx, RB + 31, C('iron', 3))
-    if not live:  # a pigeon-friendly nest on one bracket, a hanging tendril of ivy
-        for k in range(7): P(cv, cols[4] + 4 + k, RB + 7 + (k % 2), C('thatch', 2 + k % 2))
-        for k in range(12): P(cv, 300 + (k % 3 == 0), RB + 16 + k, C('ivy', 2 + k % 2))
+        VL(cv, lx, RB + 18, RB + 30, C('iron', 2))
+        R(cv, lx - 6, RB + 30, 13, 3, C('iron', 1)); HL(cv, lx - 6, lx + 7, RB + 30, C('iron', 0))
+        R(cv, lx - 5, RB + 33, 11, 12, C('iron', 3))
+        R(cv, lx - 4, RB + 34, 9, 10, C('lamp_glow', 2) if live else C('glass_dk', 2))
+        if live: R(cv, lx - 1, RB + 37, 3, 4, C('lamp_glow', 0))
+        P(cv, lx - 4, RB + 34, C('white', 0)); VL(cv, lx, RB + 34, RB + 44, C('iron', 3))
+        R(cv, lx - 5, RB + 45, 11, 2, C('iron', 2)); P(cv, lx, RB + 47, C('iron', 3))
+    if not live:
+        for k in range(10): P(cv, cols[4] + 5 + k, RB + 10 + (k % 2), C('thatch', 2 + k % 2))
+        for k in range(18): P(cv, 450 + (k % 3 == 0), RB + 24 + k, C('ivy', 2 + k % 2))
     sel_outline(cv, k=0.72)
-    lights = [[(cols[0] + cols[1]) // 2, RB + 26, 30], [(cols[4] + cols[5]) // 2, RB + 26, 30]] if live else []
+    lights = [[(cols[0] + cols[1]) // 2, RB + 40, 45], [(cols[4] + cols[5]) // 2, RB + 40, 45]] if live else []
     return cv, dict(lights=lights, columns=cols)
 
 
 # ------------------------------------------------------------------ running-in board (blank; the game letters it)
 
 def running_in(live=False):
-    w, h = 3 * T, 54
+    w, h = 3 * T, 81
     cv = Canvas(w, h)
-    bx0, by0, bw, bh = 0, 0, w, 24
-    for y in range(by0, by0 + bh):
-        for x in range(bx0, bx0 + bw):
-            u, v = x - bx0, y - by0
-            edge = u < 3 or v < 3 or u >= bw - 3 or v >= bh - 3
-            if edge:
-                i = 1 if (u < 1 or v < 1) else (3 if (u >= bw - 1 or v >= bh - 1) else 2)
+    bh = 36
+    for y in range(bh):
+        for x in range(w):
+            u, v = x, y
+            if u < 4 or v < 4 or u >= w - 4 or v >= bh - 4:
+                i = 1 if (u < 1 or v < 1) else (4 if (u >= w - 1 or v >= bh - 1) else (2 if (u < 3 or v < 3) else 3))
                 P(cv, x, y, C('paint_green', i))
             else:
-                i = 1
-                if v == 3: i = 2
-                col = C('paint_cream', i if live else i + (1 if fbm(x, y, 5, 81) < 0.3 else 0))
-                P(cv, x, y, col)
-    for lx in (14, w - 16):
+                i = 1 if v > 4 else 2
+                if not live and fbm(x, y, 7, 81) < 0.3: i += 1
+                P(cv, x, y, C('paint_cream', i))
+    for lx in (21, w - 26):
         for y in range(bh, h):
-            for x in range(lx, lx + 4):
-                u = x - lx; P(cv, x, y, C('paint_green', [1, 2, 3, 4][u]))
-        R(cv, lx - 1, h - 3, 6, 3, C('grit', 2)); HL(cv, lx - 1, lx + 5, h - 3, C('grit', 1))
+            for x in range(lx, lx + 5):
+                P(cv, x, y, C('paint_green', [0, 1, 2, 3, 4][x - lx]))
+        R(cv, lx - 2, h - 5, 9, 5, C('grit', 2)); HL(cv, lx - 2, lx + 7, h - 5, C('grit', 1))
+        ao_band(cv, lx, bh, 5, (0.4, 0.2))
     if not live:
-        for k in range(6): P(cv, 4 + k * 2, bh + (k % 2), C('rust', 2))    # rust bleeding from bolts
-        for x in range(5, bw - 5, 11): P(cv, x, 5, C('rust', 1)); P(cv, x, 6, C('rust', 3))
+        for x in range(8, w - 8, 16):
+            P(cv, x, 7, C('rust', 1)); P(cv, x, 8, C('rust', 3))
+            for yy in range(9, 9 + int(hash01(x, 1, 2) * 6)): P(cv, x, yy, C('paint_cream', 3))
     sel_outline(cv, k=0.7, base_rows=[h - 1])
     outline(cv)
-    return cv, dict(sign={'face': [3, 3, bw - 6, bh - 6]})
+    return cv, dict(sign={'face': [4, 4, w - 8, bh - 8]})

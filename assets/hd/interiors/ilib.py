@@ -44,6 +44,7 @@ EXTRA = {
     'sticky_g':   ['#d8f5b0', '#b1e184', '#87c060', '#5f9546'],
     'sticky_o':   ['#ffd9a8', '#ffb96e', '#ec9345', '#bb6c2f'],
     'enamel_g':   ['#9ad7a0', '#62b377', '#3c8f58', '#2b6b44', '#1d4a30'],
+    'shed_conc':  ['#ece3d4', '#d3c8b8', '#b7ab9b', '#978c7f', '#746b63', '#524b48'],
     'daylight':   ['#fbfdf2', '#e3f1ee', '#c0dde2', '#97c2d0', '#739fb3'],
     'hills':      ['#c9dc9a', '#a6c47c', '#86a665', '#688851', '#4d6a40'],
 }

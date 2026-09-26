@@ -1,50 +1,497 @@
 {
+ "beck_bridge_face_closed": {
+  "anchor": [
+   0,
+   0
+  ],
+  "file": "beck_bridge_face_closed.png",
+  "h": 100,
+  "layer": "ground",
+  "map_origin": [
+   85,
+   24
+  ],
+  "note": "ground decal: top-left at map px (85*48, 24*48), drawn over the water under the south parapet",
+  "tiles": [
+   7,
+   2
+  ],
+  "w": 336
+ },
+ "beck_bridge_face_live": {
+  "anchor": [
+   0,
+   0
+  ],
+  "file": "beck_bridge_face_live.png",
+  "h": 100,
+  "layer": "ground",
+  "map_origin": [
+   85,
+   24
+  ],
+  "note": "ground decal: top-left at map px (85*48, 24*48), drawn over the water under the south parapet",
+  "tiles": [
+   7,
+   2
+  ],
+  "w": 336
+ },
+ "beck_bridge_parapet_n_closed": {
+  "anchor": [
+   0,
+   49
+  ],
+  "file": "beck_bridge_parapet_n_closed.png",
+  "h": 49,
+  "map_origin": [
+   85,
+   18
+  ],
+  "tiles": [
+   7,
+   1
+  ],
+  "w": 336
+ },
+ "beck_bridge_parapet_n_live": {
+  "anchor": [
+   0,
+   49
+  ],
+  "file": "beck_bridge_parapet_n_live.png",
+  "h": 49,
+  "map_origin": [
+   85,
+   18
+  ],
+  "tiles": [
+   7,
+   1
+  ],
+  "w": 336
+ },
+ "beck_bridge_parapet_s_closed": {
+  "anchor": [
+   0,
+   58
+  ],
+  "file": "beck_bridge_parapet_s_closed.png",
+  "h": 58,
+  "map_origin": [
+   85,
+   23
+  ],
+  "tiles": [
+   7,
+   1
+  ],
+  "w": 336
+ },
+ "beck_bridge_parapet_s_live": {
+  "anchor": [
+   0,
+   58
+  ],
+  "file": "beck_bridge_parapet_s_live.png",
+  "h": 58,
+  "map_origin": [
+   85,
+   23
+  ],
+  "tiles": [
+   7,
+   1
+  ],
+  "w": 336
+ },
+ "buffer_stop_closed": {
+  "anchor": [
+   0,
+   140
+  ],
+  "file": "buffer_stop_closed.png",
+  "h": 140,
+  "map_origin": [
+   8,
+   20
+  ],
+  "tiles": [
+   1,
+   2
+  ],
+  "w": 48
+ },
+ "buffer_stop_live": {
+  "anchor": [
+   0,
+   140
+  ],
+  "file": "buffer_stop_live.png",
+  "h": 140,
+  "map_origin": [
+   8,
+   20
+  ],
+  "tiles": [
+   1,
+   2
+  ],
+  "w": 48
+ },
+ "crossing_barrier_e_lowered": {
+  "anchor": [
+   102,
+   110
+  ],
+  "file": "crossing_barrier_e_lowered.png",
+  "h": 110,
+  "lamps": {
+   "amber": [
+    129,
+    34
+   ],
+   "red_l": [
+    137,
+    23
+   ],
+   "red_r": [
+    121,
+    23
+   ]
+  },
+  "map_origin": [
+   107,
+   17
+  ],
+  "note": "live line: half-barrier on the east verge; lowered boom covers 2 lane tiles; lamps in sprite px",
+  "tiles": [
+   1,
+   1
+  ],
+  "w": 150
+ },
+ "crossing_barrier_e_lowered_lit_a": {
+  "anchor": [
+   102,
+   110
+  ],
+  "file": "crossing_barrier_e_lowered_lit_a.png",
+  "h": 110,
+  "map_origin": [
+   107,
+   17
+  ],
+  "note": "flash frame: alternate _lit_l/_lit_r at ~1.5 Hz after _lit_a",
+  "tiles": [
+   1,
+   1
+  ],
+  "w": 150
+ },
+ "crossing_barrier_e_lowered_lit_l": {
+  "anchor": [
+   102,
+   110
+  ],
+  "file": "crossing_barrier_e_lowered_lit_l.png",
+  "h": 110,
+  "map_origin": [
+   107,
+   17
+  ],
+  "note": "flash frame: alternate _lit_l/_lit_r at ~1.5 Hz after _lit_a",
+  "tiles": [
+   1,
+   1
+  ],
+  "w": 150
+ },
+ "crossing_barrier_e_lowered_lit_r": {
+  "anchor": [
+   102,
+   110
+  ],
+  "file": "crossing_barrier_e_lowered_lit_r.png",
+  "h": 110,
+  "map_origin": [
+   107,
+   17
+  ],
+  "note": "flash frame: alternate _lit_l/_lit_r at ~1.5 Hz after _lit_a",
+  "tiles": [
+   1,
+   1
+  ],
+  "w": 150
+ },
+ "crossing_barrier_e_raised": {
+  "anchor": [
+   0,
+   180
+  ],
+  "file": "crossing_barrier_e_raised.png",
+  "h": 180,
+  "lamps": {
+   "amber": [
+    27,
+    104
+   ],
+   "red_l": [
+    35,
+    93
+   ],
+   "red_r": [
+    19,
+    93
+   ]
+  },
+  "map_origin": [
+   107,
+   17
+  ],
+  "note": "live line: half-barrier on the east verge; lowered boom covers 2 lane tiles; lamps in sprite px",
+  "tiles": [
+   1,
+   1
+  ],
+  "w": 48
+ },
+ "crossing_barrier_w_lowered": {
+  "anchor": [
+   0,
+   110
+  ],
+  "file": "crossing_barrier_w_lowered.png",
+  "h": 110,
+  "lamps": {
+   "amber": [
+    20,
+    34
+   ],
+   "red_l": [
+    12,
+    23
+   ],
+   "red_r": [
+    28,
+    23
+   ]
+  },
+  "map_origin": [
+   103,
+   24
+  ],
+  "note": "live line: half-barrier on the west verge; lowered boom covers 2 lane tiles; lamps in sprite px",
+  "tiles": [
+   1,
+   1
+  ],
+  "w": 150
+ },
+ "crossing_barrier_w_lowered_lit_a": {
+  "anchor": [
+   0,
+   110
+  ],
+  "file": "crossing_barrier_w_lowered_lit_a.png",
+  "h": 110,
+  "map_origin": [
+   103,
+   24
+  ],
+  "note": "flash frame: alternate _lit_l/_lit_r at ~1.5 Hz after _lit_a",
+  "tiles": [
+   1,
+   1
+  ],
+  "w": 150
+ },
+ "crossing_barrier_w_lowered_lit_l": {
+  "anchor": [
+   0,
+   110
+  ],
+  "file": "crossing_barrier_w_lowered_lit_l.png",
+  "h": 110,
+  "map_origin": [
+   103,
+   24
+  ],
+  "note": "flash frame: alternate _lit_l/_lit_r at ~1.5 Hz after _lit_a",
+  "tiles": [
+   1,
+   1
+  ],
+  "w": 150
+ },
+ "crossing_barrier_w_lowered_lit_r": {
+  "anchor": [
+   0,
+   110
+  ],
+  "file": "crossing_barrier_w_lowered_lit_r.png",
+  "h": 110,
+  "map_origin": [
+   103,
+   24
+  ],
+  "note": "flash frame: alternate _lit_l/_lit_r at ~1.5 Hz after _lit_a",
+  "tiles": [
+   1,
+   1
+  ],
+  "w": 150
+ },
+ "crossing_barrier_w_raised": {
+  "anchor": [
+   0,
+   180
+  ],
+  "file": "crossing_barrier_w_raised.png",
+  "h": 180,
+  "lamps": {
+   "amber": [
+    20,
+    104
+   ],
+   "red_l": [
+    12,
+    93
+   ],
+   "red_r": [
+    28,
+    93
+   ]
+  },
+  "map_origin": [
+   103,
+   24
+  ],
+  "note": "live line: half-barrier on the west verge; lowered boom covers 2 lane tiles; lamps in sprite px",
+  "tiles": [
+   1,
+   1
+  ],
+  "w": 48
+ },
+ "crossing_gate_closedline_e": {
+  "anchor": [
+   0,
+   354
+  ],
+  "file": "crossing_gate_closedline_e.png",
+  "h": 354,
+  "map_origin": [
+   107,
+   18
+  ],
+  "note": "as _w, for 'z' col 107",
+  "tiles": [
+   1,
+   6
+  ],
+  "w": 48
+ },
+ "crossing_gate_closedline_w": {
+  "anchor": [
+   0,
+   354
+  ],
+  "file": "crossing_gate_closedline_w.png",
+  "h": 354,
+  "map_origin": [
+   103,
+   18
+  ],
+  "note": "closed-line state: white gates shut across the rails, padlocked; covers 'z' col 103, posts on rows 18 and 23",
+  "tiles": [
+   1,
+   6
+  ],
+  "w": 48
+ },
+ "crossing_sign_dead": {
+  "anchor": [
+   0,
+   132
+  ],
+  "file": "crossing_sign_dead.png",
+  "h": 132,
+  "map_origin": [
+   107,
+   17
+  ],
+  "note": "St Andrew cross + dead lights (closed line); also at (103,24)",
+  "tiles": [
+   1,
+   1
+  ],
+  "w": 40
+ },
+ "crossing_sign_live": {
+  "anchor": [
+   0,
+   132
+  ],
+  "file": "crossing_sign_live.png",
+  "h": 132,
+  "map_origin": [
+   107,
+   17
+  ],
+  "tiles": [
+   1,
+   1
+  ],
+  "w": 40
+ },
  "depot": {
   "anchor": [
    0,
-   328
+   348
   ],
   "door": [
    51,
    30
   ],
   "file": "depot.png",
-  "h": 328,
+  "h": 348,
   "lights": [
    [
-    448,
-    254,
-    36
+    456,
+    237,
+    54
    ],
    [
-    448,
-    324,
-    20
+    456,
+    342,
+    30
    ]
   ],
   "map_origin": [
    42,
    25
   ],
-  "note": "east gable face = last 64 px (map cols 59-60); siding rows 27-28 run into the open doorway (siding_door, sprite px)",
+  "note": "east gable face = last 96 px (map cols 59-60); siding rows 27-28 run into the open doorway (siding_door, sprite px)",
   "siding_door": [
-   852,
-   232,
-   24,
-   96
+   870,
+   204,
+   36,
+   144
   ],
   "sign": {
    "date_tablet": [
-    404,
-    232,
-    88,
-    12
+    390,
+    204,
+    132,
+    18
    ],
    "ppe_plate": [
-    469,
-    276,
-    22,
-    16
+    494,
+    270,
+    33,
+    24
    ]
   },
   "tiles": [
@@ -53,13 +500,431 @@
   ],
   "w": 912
  },
+ "heras_h": {
+  "anchor": [
+   0,
+   104
+  ],
+  "file": "heras_h.png",
+  "h": 104,
+  "note": "one per 'k' tile in an east-west run; bottom-left on the tile's SW corner",
+  "tiles": [
+   1,
+   1
+  ],
+  "w": 48
+ },
+ "heras_v": {
+  "anchor": [
+   0,
+   144
+  ],
+  "file": "heras_v.png",
+  "h": 144,
+  "note": "one per 'k' tile in a north-south run; x-centre the 12px strip on the tile centre",
+  "tiles": [
+   1,
+   1
+  ],
+  "w": 12
+ },
+ "limit_board": {
+  "anchor": [
+   24,
+   80
+  ],
+  "file": "limit_board.png",
+  "h": 80,
+  "map_origin": [
+   116,
+   22
+  ],
+  "note": "blank \"LIMIT OF CLOSED LINE\" / \"BRANCH CLOSED\" board; centred on col 116",
+  "sign": {
+   "face": [
+    3,
+    3,
+    90,
+    34
+   ]
+  },
+  "tiles": [
+   2,
+   1
+  ],
+  "w": 96
+ },
+ "lineside_cabinet": {
+  "anchor": [
+   -4,
+   84
+  ],
+  "file": "lineside_cabinet.png",
+  "h": 84,
+  "map_origin": [
+   108,
+   24
+  ],
+  "note": "free-standing; centred in its tile",
+  "tiles": [
+   1,
+   1
+  ],
+  "w": 40
+ },
+ "mainline_underbridge": {
+  "anchor": [
+   12,
+   192
+  ],
+  "fade": {
+   "h": 212,
+   "w": 216,
+   "x": 0,
+   "y": 0
+  },
+  "file": "mainline_underbridge.png",
+  "h": 212,
+  "map_origin": [
+   119,
+   57
+  ],
+  "note": "object over the road (%), x119-122 rows 57-60: sprite x starts 12px west of col 119; fascia hangs 20px below row 60; fades",
+  "tiles": [
+   4,
+   4
+  ],
+  "w": 216
+ },
+ "milepost": {
+  "anchor": [
+   -9,
+   60
+  ],
+  "file": "milepost.png",
+  "h": 60,
+  "map_origin": [
+   60,
+   19
+  ],
+  "note": "suggested spots: cess on row 19 every ~20 tiles",
+  "sign": {
+   "plate": [
+    3,
+    2,
+    24,
+    22
+   ]
+  },
+  "tiles": [
+   1,
+   1
+  ],
+  "w": 30
+ },
+ "packhorse_face": {
+  "anchor": [
+   0,
+   0
+  ],
+  "file": "packhorse_face.png",
+  "h": 56,
+  "layer": "ground",
+  "map_origin": [
+   85,
+   75
+  ],
+  "note": "ground decal: top-left at map px (85*48, 75*48)",
+  "tiles": [
+   7,
+   1
+  ],
+  "w": 336
+ },
+ "packhorse_parapet_n": {
+  "anchor": [
+   0,
+   42
+  ],
+  "file": "packhorse_parapet_n.png",
+  "h": 42,
+  "map_origin": [
+   85,
+   72
+  ],
+  "tiles": [
+   7,
+   1
+  ],
+  "w": 336
+ },
+ "packhorse_parapet_s": {
+  "anchor": [
+   0,
+   46
+  ],
+  "file": "packhorse_parapet_s.png",
+  "h": 46,
+  "map_origin": [
+   85,
+   74
+  ],
+  "tiles": [
+   7,
+   1
+  ],
+  "w": 336
+ },
+ "ppe_gate_1_closed": {
+  "anchor": [
+   0,
+   84
+  ],
+  "file": "ppe_gate_1_closed.png",
+  "h": 84,
+  "map_origin": [
+   34,
+   23
+  ],
+  "note": "PPE gates: (34,23) is 1 wide; (77-79,23) and (50-52,34) are 3 wide",
+  "tiles": [
+   1,
+   1
+  ],
+  "w": 48
+ },
+ "ppe_gate_1_open": {
+  "anchor": [
+   0,
+   84
+  ],
+  "file": "ppe_gate_1_open.png",
+  "h": 84,
+  "map_origin": [
+   34,
+   23
+  ],
+  "note": "PPE gates: (34,23) is 1 wide; (77-79,23) and (50-52,34) are 3 wide",
+  "tiles": [
+   1,
+   1
+  ],
+  "w": 48
+ },
+ "ppe_gate_3_closed": {
+  "anchor": [
+   0,
+   84
+  ],
+  "file": "ppe_gate_3_closed.png",
+  "h": 84,
+  "map_origin": [
+   77,
+   23
+  ],
+  "note": "PPE gates: (34,23) is 1 wide; (77-79,23) and (50-52,34) are 3 wide",
+  "tiles": [
+   3,
+   1
+  ],
+  "w": 144
+ },
+ "ppe_gate_3_open": {
+  "anchor": [
+   0,
+   84
+  ],
+  "file": "ppe_gate_3_open.png",
+  "h": 84,
+  "map_origin": [
+   77,
+   23
+  ],
+  "note": "PPE gates: (34,23) is 1 wide; (77-79,23) and (50-52,34) are 3 wide",
+  "tiles": [
+   3,
+   1
+  ],
+  "w": 144
+ },
+ "ppe_plate": {
+  "anchor": [
+   0,
+   78
+  ],
+  "file": "ppe_plate.png",
+  "h": 78,
+  "note": "blank blue/white plate on a post, beside each PPE gate",
+  "sign": {
+   "face": [
+    2,
+    17,
+    56,
+    22
+   ]
+  },
+  "tiles": [
+   1,
+   1
+  ],
+  "w": 60
+ },
+ "project_office": {
+  "anchor": [
+   0,
+   252
+  ],
+  "door": [
+   62,
+   43
+  ],
+  "file": "project_office.png",
+  "h": 252,
+  "lights": [
+   [
+    50,
+    100,
+    36
+   ],
+   [
+    134,
+    100,
+    36
+   ],
+   [
+    218,
+    100,
+    36
+   ],
+   [
+    302,
+    100,
+    36
+   ],
+   [
+    386,
+    100,
+    36
+   ],
+   [
+    470,
+    100,
+    36
+   ],
+   [
+    50,
+    196,
+    36
+   ],
+   [
+    134,
+    196,
+    36
+   ],
+   [
+    218,
+    196,
+    36
+   ],
+   [
+    302,
+    196,
+    36
+   ],
+   [
+    386,
+    196,
+    36
+   ],
+   [
+    470,
+    196,
+    36
+   ],
+   [
+    312,
+    146,
+    50
+   ]
+  ],
+  "map_origin": [
+   56,
+   40
+  ],
+  "sign": {
+   "banner": [
+    60,
+    118,
+    452,
+    20
+   ]
+  },
+  "tiles": [
+   14,
+   4
+  ],
+  "w": 672
+ },
+ "road_bridge_face": {
+  "anchor": [
+   0,
+   0
+  ],
+  "file": "road_bridge_face.png",
+  "h": 80,
+  "layer": "ground",
+  "map_origin": [
+   85,
+   62
+  ],
+  "note": "ground decal: top-left at map px (85*48, 62*48)",
+  "tiles": [
+   7,
+   2
+  ],
+  "w": 336
+ },
+ "road_bridge_parapet_n": {
+  "anchor": [
+   0,
+   44
+  ],
+  "file": "road_bridge_parapet_n.png",
+  "h": 44,
+  "map_origin": [
+   85,
+   55
+  ],
+  "tiles": [
+   7,
+   1
+  ],
+  "w": 336
+ },
+ "road_bridge_parapet_s": {
+  "anchor": [
+   0,
+   52
+  ],
+  "file": "road_bridge_parapet_s.png",
+  "h": 52,
+  "map_origin": [
+   85,
+   61
+  ],
+  "tiles": [
+   7,
+   1
+  ],
+  "w": 336
+ },
  "running_in_board_closed": {
   "anchor": [
    0,
-   54
+   81
   ],
   "file": "running_in_board_closed.png",
-  "h": 54,
+  "h": 81,
   "map_origin": [
    28,
    24
@@ -67,25 +932,25 @@
   "note": "free-standing on the platform back edge, row 24, cols 28-30; not blocking",
   "sign": {
    "face": [
-    3,
-    3,
-    90,
-    18
+    4,
+    4,
+    136,
+    28
    ]
   },
   "tiles": [
    3,
    1
   ],
-  "w": 96
+  "w": 144
  },
  "running_in_board_live": {
   "anchor": [
    0,
-   54
+   81
   ],
   "file": "running_in_board_live.png",
-  "h": 54,
+  "h": 81,
   "map_origin": [
    28,
    24
@@ -93,101 +958,197 @@
   "note": "free-standing on the platform back edge, row 24, cols 28-30; not blocking",
   "sign": {
    "face": [
-    3,
-    3,
-    90,
-    18
+    4,
+    4,
+    136,
+    28
    ]
   },
   "tiles": [
    3,
    1
   ],
-  "w": 96
+  "w": 144
+ },
+ "semaphore_disused": {
+  "anchor": [
+   0,
+   200
+  ],
+  "file": "semaphore_disused.png",
+  "h": 200,
+  "map_origin": [
+   36,
+   18
+  ],
+  "tiles": [
+   1,
+   1
+  ],
+  "w": 60
+ },
+ "signal_box": {
+  "anchor": [
+   0,
+   310
+  ],
+  "door": [
+   112,
+   29
+  ],
+  "door_enterable": false,
+  "file": "signal_box.png",
+  "h": 310,
+  "lights": [
+   [
+    25,
+    136,
+    40
+   ],
+   [
+    101,
+    136,
+    40
+   ],
+   [
+    177,
+    136,
+    40
+   ]
+  ],
+  "map_origin": [
+   110,
+   25
+  ],
+  "sign": {
+   "nameboard": [
+    26,
+    164,
+    188,
+    16
+   ]
+  },
+  "tiles": [
+   5,
+   5
+  ],
+  "w": 240
+ },
+ "site_board": {
+  "anchor": [
+   96,
+   96
+  ],
+  "file": "site_board.png",
+  "h": 96,
+  "map_origin": [
+   53,
+   39
+  ],
+  "note": "anchor = SW corner of tile (53,39); board spans left over the fence line",
+  "sign": {
+   "body": [
+    5,
+    17,
+    104,
+    34
+   ],
+   "title": [
+    5,
+    4,
+    134,
+    10
+   ]
+  },
+  "tiles": [
+   1,
+   1
+  ],
+  "w": 144
  },
  "station_canopy_closed": {
   "anchor": [
    0,
-   90
+   135
   ],
   "columns": [
-   16,
-   80,
-   144,
-   208,
-   272,
-   336
+   24,
+   120,
+   216,
+   312,
+   408,
+   504
   ],
   "fade": {
-   "h": 90,
-   "w": 384,
+   "h": 135,
+   "w": 576,
    "x": 0,
    "y": 0
   },
   "file": "station_canopy_closed.png",
-  "h": 90,
+  "h": 135,
   "lights": [],
   "map_origin": [
    13,
    23
   ],
-  "note": "object, bottom edge on map y=800 (top of row 25); not blocking; fade rect in sprite px",
-  "sortY_map": 799,
+  "note": "object: sprite bottom-left at map px (13*48, 25*48); not blocking; draws over actors on the platform; fade rect in sprite px",
+  "sortY_map": 1199,
   "tiles": [
    12,
    2
   ],
-  "w": 384
+  "w": 576
  },
  "station_canopy_live": {
   "anchor": [
    0,
-   90
+   135
   ],
   "columns": [
-   16,
-   80,
-   144,
-   208,
-   272,
-   336
+   24,
+   120,
+   216,
+   312,
+   408,
+   504
   ],
   "fade": {
-   "h": 90,
-   "w": 384,
+   "h": 135,
+   "w": 576,
    "x": 0,
    "y": 0
   },
   "file": "station_canopy_live.png",
-  "h": 90,
+  "h": 135,
   "lights": [
    [
-    48,
-    66,
-    30
+    72,
+    100,
+    45
    ],
    [
-    304,
-    66,
-    30
+    456,
+    100,
+    45
    ]
   ],
   "map_origin": [
    13,
    23
   ],
-  "note": "object, bottom edge on map y=800 (top of row 25); not blocking; fade rect in sprite px",
-  "sortY_map": 799,
+  "note": "object: sprite bottom-left at map px (13*48, 25*48); not blocking; draws over actors on the platform; fade rect in sprite px",
+  "sortY_map": 1199,
   "tiles": [
    12,
    2
   ],
-  "w": 384
+  "w": 576
  },
  "station_closed": {
   "anchor": [
    0,
-   216
+   324
   ],
   "door": [
    18,
@@ -204,12 +1165,12 @@
    ]
   ],
   "file": "station_closed.png",
-  "h": 216,
+  "h": 324,
   "lights": [
    [
-    224,
-    156,
-    34
+    336,
+    234,
+    50
    ]
   ],
   "map_origin": [
@@ -218,28 +1179,28 @@
   ],
   "sign": {
    "fascia": [
-    176,
-    130,
-    96,
-    8
+    264,
+    195,
+    144,
+    12
    ],
    "notice": [
-    227,
-    170,
-    16,
-    12
+    340,
+    253,
+    24,
+    17
    ]
   },
   "tiles": [
    14,
    6
   ],
-  "w": 448
+  "w": 672
  },
  "station_live": {
   "anchor": [
    0,
-   216
+   324
   ],
   "door": [
    18,
@@ -256,32 +1217,32 @@
    ]
   ],
   "file": "station_live.png",
-  "h": 216,
+  "h": 324,
   "lights": [
    [
-    224,
-    156,
-    34
+    336,
+    234,
+    50
    ],
    [
-    50,
-    160,
-    16
+    75,
+    240,
+    24
    ],
    [
-    116,
-    160,
-    16
+    174,
+    240,
+    24
    ],
    [
-    332,
-    160,
-    16
+    498,
+    240,
+    24
    ],
    [
-    398,
-    160,
-    16
+    597,
+    240,
+    24
    ]
   ],
   "map_origin": [
@@ -290,10 +1251,10 @@
   ],
   "sign": {
    "fascia": [
-    176,
-    130,
-    96,
-    8
+    264,
+    195,
+    144,
+    12
    ],
    "notice": null
   },
@@ -301,6 +1262,102 @@
    14,
    6
   ],
-  "w": 448
+  "w": 672
+ },
+ "stores_container": {
+  "anchor": [
+   0,
+   148
+  ],
+  "file": "stores_container.png",
+  "h": 148,
+  "map_origin": [
+   71,
+   40
+  ],
+  "sign": {
+   "plate": [
+    42,
+    56,
+    60,
+    18
+   ]
+  },
+  "tiles": [
+   3,
+   3
+  ],
+  "w": 144
+ },
+ "welfare_cabin": {
+  "anchor": [
+   0,
+   144
+  ],
+  "beacon": [
+   326,
+   9
+  ],
+  "door": [
+   43,
+   42
+  ],
+  "door_enterable": false,
+  "file": "welfare_cabin.png",
+  "h": 144,
+  "lights": [
+   [
+    48,
+    82,
+    32
+   ],
+   [
+    284,
+    82,
+    32
+   ]
+  ],
+  "map_origin": [
+   40,
+   40
+  ],
+  "sign": {
+   "board": [
+    128,
+    46,
+    80,
+    12
+   ]
+  },
+  "tiles": [
+   7,
+   3
+  ],
+  "w": 336
+ },
+ "whistle_board": {
+  "anchor": [
+   -9,
+   70
+  ],
+  "file": "whistle_board.png",
+  "h": 70,
+  "map_origin": [
+   100,
+   19
+  ],
+  "sign": {
+   "face": [
+    3,
+    3,
+    24,
+    24
+   ]
+  },
+  "tiles": [
+   1,
+   1
+  ],
+  "w": 30
  }
 }

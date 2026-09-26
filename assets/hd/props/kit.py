@@ -52,7 +52,7 @@ EXTRA = {
     # stone
     'p_grit':     ['#ece2c8', '#cfc2a4', '#aca085', '#887d69', '#655c50', '#443e39'],
     'p_gritdk':   ['#c9c0ae', '#a69d8c', '#847b6d', '#645c53', '#46403c', '#2e2a29'],
-    'p_moss':     ['#dfe78e', '#b5cc62', '#88aa48', '#63873b', '#45652f'],
+    'p_moss':     ['#d3d98a', '#aab861', '#7f9447', '#5d733a', '#43552f'],
     'p_lichen':   ['#f6f0c6', '#dcd7a2', '#bcb782'],
     'p_marble':   ['#ffffff', '#eeeef0', '#d5d6dc', '#b0b2bc', '#858895', '#5c5e6c'],
     # paint / metal

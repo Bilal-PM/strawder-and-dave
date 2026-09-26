@@ -1,0 +1,237 @@
+{
+ "avatars": [
+  {
+   "bg": "#cfd8e0",
+   "hair": "#4a3222",
+   "hairStyle": "short",
+   "skin": "#f0cdb2",
+   "top": "#34506e",
+   "topStyle": "jacket"
+  },
+  {
+   "bg": "#e0cfe0",
+   "hair": "#15100d",
+   "hairStyle": "curly",
+   "skin": "#8a5a3b",
+   "top": "#7c4d7a",
+   "topStyle": "cardigan"
+  },
+  {
+   "bg": "#d2e2d4",
+   "hair": "#c98d3a",
+   "hairStyle": "long",
+   "skin": "#e7bf9c",
+   "top": "#3d6b54",
+   "topStyle": "jacket"
+  },
+  {
+   "beard": true,
+   "bg": "#ecd3c4",
+   "glasses": true,
+   "hair": "#231a16",
+   "hairStyle": "short",
+   "skin": "#c28f6a",
+   "top": "#8a3b2e",
+   "topStyle": "tee"
+  }
+ ],
+ "cast": {
+  "brian": {
+   "look": {
+    "bg": "#e3d6bf",
+    "glasses": true,
+    "hair": "#cfcac4",
+    "hairStyle": "bald",
+    "legs": "#4a4238",
+    "skin": "#f0c8a8",
+    "top": "#6b5a44",
+    "topStyle": "jacket"
+   },
+   "name": "Cllr Brian Pike",
+   "role": "Chair, Harrowby Parish Council \u00b7 biscuit monitor"
+  },
+  "dev": {
+   "look": {
+    "bg": "#cfd8e8",
+    "hair": "#15100d",
+    "hairStyle": "short",
+    "legs": "#2a2f3a",
+    "skin": "#a87450",
+    "top": "#3d5a8a",
+    "topStyle": "tee"
+   },
+   "name": "Dev Mistry",
+   "role": "17 \u00b7 wants to study engineering"
+  },
+  "gaz": {
+   "look": {
+    "beard": true,
+    "bg": "#c8d4e6",
+    "cap": "#2f4a7a",
+    "hair": "#3a2a20",
+    "hairStyle": "short",
+    "legs": "#2f4a7a",
+    "skin": "#e8b996",
+    "top": "#2f4a7a",
+    "topStyle": "tee"
+   },
+   "name": "Gaz Whitfield",
+   "role": "Depot Fitter \u00b7 Marjorie\u2019s biggest fan"
+  },
+  "hannah": {
+   "look": {
+    "bg": "#e9e2b3",
+    "hair": "#b4492a",
+    "hairStyle": "ponytail",
+    "skin": "#f3d2bb",
+    "top": "#f07a28",
+    "topStyle": "hivis"
+   },
+   "name": "Hannah Clarke",
+   "role": "Safety Lead"
+  },
+  "helen": {
+   "look": {
+    "bg": "#d6dde6",
+    "hair": "#5a3a26",
+    "hairStyle": "bob",
+    "skin": "#f0cfb4",
+    "top": "#34506e",
+    "topStyle": "suit"
+   },
+   "name": "Helen Walsh",
+   "role": "Director, Vale Transport Authority \u00b7 Sponsor"
+  },
+  "jess": {
+   "look": {
+    "bg": "#e8d2e6",
+    "hair": "#c98d3a",
+    "hairStyle": "ponytail",
+    "legs": "#34384a",
+    "skin": "#e8c0a0",
+    "top": "#7c4d7a",
+    "topStyle": "cardigan"
+   },
+   "name": "Jess Carter",
+   "role": "Parent \u00b7 school gate"
+  },
+  "jo": {
+   "look": {
+    "bg": "#efd9a8",
+    "glasses": true,
+    "hair": "#1c1412",
+    "hairStyle": "curly",
+    "skin": "#7a4a2e",
+    "top": "#d9a441",
+    "topStyle": "jacket"
+   },
+   "name": "Jo Adeyemi",
+   "role": "Engineering Lead"
+  },
+  "june": {
+   "look": {
+    "apron": "#f3ecdf",
+    "bg": "#f1d6c8",
+    "hair": "#8a5a3a",
+    "hairStyle": "bun",
+    "legs": "#3b3f4a",
+    "skin": "#f0cfb4",
+    "top": "#c7563f",
+    "topStyle": "tee"
+   },
+   "name": "June Pritchard",
+   "role": "Baker \u00b7 Pritchard\u2019s"
+  },
+  "len": {
+   "look": {
+    "bg": "#dccfbc",
+    "cap": "#4f4a3e",
+    "hair": "#d6d2cc",
+    "hairStyle": "short",
+    "legs": "#3b3a36",
+    "skin": "#e3b596",
+    "top": "#6b5a44",
+    "topStyle": "jacket"
+   },
+   "name": "Len Haworth",
+   "role": "Retired signalman \u00b7 Kestrel Arms regular"
+  },
+  "moira": {
+   "look": {
+    "bg": "#d9c9b0",
+    "glasses": true,
+    "hair": "#c9c4c0",
+    "hairStyle": "bun",
+    "skin": "#e9c3a4",
+    "top": "#3f5a4c",
+    "topStyle": "jacket"
+   },
+   "name": "Moira Kell",
+   "role": "Harrowby\u2019s last station master \u00b7 your mentor"
+  },
+  "priya": {
+   "look": {
+    "bg": "#bfe0d8",
+    "hair": "#17110f",
+    "hairStyle": "long",
+    "skin": "#b07852",
+    "top": "#2f7f7a",
+    "topStyle": "cardigan"
+   },
+   "name": "Priya Nair",
+   "role": "Community & Communications"
+  },
+  "raj": {
+   "look": {
+    "beard": true,
+    "bg": "#d0dccd",
+    "glasses": true,
+    "hair": "#1b1512",
+    "hairStyle": "short",
+    "skin": "#a87450",
+    "top": "#3a4a3a",
+    "topStyle": "jacket"
+   },
+   "name": "Raj Patel",
+   "role": "Funding Panel \u00b7 Independent reviewer"
+  },
+  "steve": {
+   "look": {
+    "bg": "#c9ced6",
+    "hair": "#9d9894",
+    "hairStyle": "short",
+    "skin": "#c89272",
+    "top": "#27354f",
+    "topStyle": "suit"
+   },
+   "name": "Steve Hale",
+   "role": "Commercial Manager"
+  },
+  "sue": {
+   "look": {
+    "bg": "#e0d0e0",
+    "hair": "#2a1d18",
+    "hairStyle": "long",
+    "skin": "#c89272",
+    "top": "#5a3a5a",
+    "topStyle": "suit"
+   },
+   "name": "Sue Bennett",
+   "role": "Funding Panel \u00b7 Finance"
+  },
+  "tom": {
+   "look": {
+    "beard": true,
+    "bg": "#f1cfae",
+    "hair": "#6b4428",
+    "hairStyle": "short",
+    "hat": "#f4f1ea",
+    "skin": "#e8b996",
+    "top": "#f07a28",
+    "topStyle": "hivis"
+   },
+   "name": "Tom Brennan",
+   "role": "Track & Site Manager"
+  }
+ }
+}

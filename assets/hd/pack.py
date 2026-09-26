@@ -12,7 +12,7 @@ import base64, json, os, sys
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 OUT = os.path.join(ROOT, 'assets', 'hd', 'out')
 DEST = os.path.join(ROOT, 'js', 'world', 'atlas_hd.js')
-AREAS = ['chars', 'terrain', 'rail', 'town', 'props', 'interiors']
+AREAS = [a for a in (sys.argv[1:] or ['chars', 'terrain', 'rail', 'town', 'props', 'interiors'])]
 
 
 def files_in(node, acc):

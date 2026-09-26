@@ -1,0 +1,1600 @@
+{
+ "animal_cat": {
+  "anchor": [
+   18,
+   26
+  ],
+  "anims": {
+   "sit_left": [
+    0,
+    2
+   ],
+   "sit_right": [
+    3,
+    2
+   ],
+   "sleep_left": [
+    2,
+    2
+   ],
+   "sleep_right": [
+    5,
+    2
+   ],
+   "walk_left": [
+    1,
+    4
+   ],
+   "walk_right": [
+    4,
+    4
+   ]
+  },
+  "cols": 4,
+  "file": "animal_cat.png",
+  "frame": [
+   36,
+   28
+  ],
+  "h": 168,
+  "id": "cat",
+  "name": "Sleeper",
+  "w": 144
+ },
+ "animal_duck": {
+  "anchor": [
+   12,
+   20
+  ],
+  "anims": {
+   "swim_left": [
+    0,
+    2
+   ],
+   "swim_right": [
+    2,
+    2
+   ],
+   "waddle_left": [
+    1,
+    4
+   ],
+   "waddle_right": [
+    3,
+    4
+   ]
+  },
+  "cols": 4,
+  "file": "animal_duck.png",
+  "frame": [
+   24,
+   22
+  ],
+  "h": 88,
+  "id": "duck",
+  "name": null,
+  "w": 96
+ },
+ "animal_pigeon": {
+  "anchor": [
+   11,
+   20
+  ],
+  "anims": {
+   "bob_left": [
+    1,
+    4
+   ],
+   "bob_right": [
+    3,
+    4
+   ],
+   "idle_left": [
+    0,
+    2
+   ],
+   "idle_right": [
+    2,
+    2
+   ]
+  },
+  "cols": 4,
+  "file": "animal_pigeon.png",
+  "frame": [
+   22,
+   22
+  ],
+  "h": 88,
+  "id": "pigeon",
+  "name": "Kevin",
+  "w": 88
+ },
+ "animal_sheep": {
+  "anchor": [
+   30,
+   44
+  ],
+  "anims": {
+   "graze_left": [
+    0,
+    2
+   ],
+   "graze_right": [
+    2,
+    2
+   ],
+   "walk_left": [
+    1,
+    4
+   ],
+   "walk_right": [
+    3,
+    4
+   ]
+  },
+  "cols": 4,
+  "file": "animal_sheep.png",
+  "frame": [
+   60,
+   46
+  ],
+  "h": 184,
+  "id": "sheep",
+  "name": null,
+  "w": 240
+ },
+ "avatar0": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "avatar0.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "avatar0",
+  "look": {
+   "bg": "#cfd8e0",
+   "hair": "#4a3222",
+   "hairStyle": "short",
+   "skin": "#f0cdb2",
+   "top": "#34506e",
+   "topStyle": "jacket"
+  },
+  "ppe": false,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "avatar0_ppe": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "avatar0_ppe.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "avatar0",
+  "look": {
+   "bg": "#cfd8e0",
+   "hair": "#4a3222",
+   "hairStyle": "short",
+   "skin": "#f0cdb2",
+   "top": "#34506e",
+   "topStyle": "jacket"
+  },
+  "ppe": true,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "avatar1": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "avatar1.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "avatar1",
+  "look": {
+   "bg": "#e0cfe0",
+   "hair": "#15100d",
+   "hairStyle": "curly",
+   "skin": "#8a5a3b",
+   "top": "#7c4d7a",
+   "topStyle": "cardigan"
+  },
+  "ppe": false,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "avatar1_ppe": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "avatar1_ppe.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "avatar1",
+  "look": {
+   "bg": "#e0cfe0",
+   "hair": "#15100d",
+   "hairStyle": "curly",
+   "skin": "#8a5a3b",
+   "top": "#7c4d7a",
+   "topStyle": "cardigan"
+  },
+  "ppe": true,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "avatar2": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "avatar2.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "avatar2",
+  "look": {
+   "bg": "#d2e2d4",
+   "hair": "#c98d3a",
+   "hairStyle": "long",
+   "skin": "#e7bf9c",
+   "top": "#3d6b54",
+   "topStyle": "jacket"
+  },
+  "ppe": false,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "avatar2_ppe": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "avatar2_ppe.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "avatar2",
+  "look": {
+   "bg": "#d2e2d4",
+   "hair": "#c98d3a",
+   "hairStyle": "long",
+   "skin": "#e7bf9c",
+   "top": "#3d6b54",
+   "topStyle": "jacket"
+  },
+  "ppe": true,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "avatar3": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "avatar3.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "avatar3",
+  "look": {
+   "beard": true,
+   "bg": "#ecd3c4",
+   "glasses": true,
+   "hair": "#231a16",
+   "hairStyle": "short",
+   "skin": "#c28f6a",
+   "top": "#8a3b2e",
+   "topStyle": "tee"
+  },
+  "ppe": false,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "avatar3_ppe": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "avatar3_ppe.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "avatar3",
+  "look": {
+   "beard": true,
+   "bg": "#ecd3c4",
+   "glasses": true,
+   "hair": "#231a16",
+   "hairStyle": "short",
+   "skin": "#c28f6a",
+   "top": "#8a3b2e",
+   "topStyle": "tee"
+  },
+  "ppe": true,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "brian": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "brian.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "brian",
+  "look": {
+   "bg": "#e3d6bf",
+   "glasses": true,
+   "hair": "#cfcac4",
+   "hairStyle": "bald",
+   "legs": "#4a4238",
+   "skin": "#f0c8a8",
+   "top": "#6b5a44",
+   "topStyle": "jacket"
+  },
+  "ppe": false,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "brian_ppe": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "brian_ppe.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "brian",
+  "look": {
+   "bg": "#e3d6bf",
+   "glasses": true,
+   "hair": "#cfcac4",
+   "hairStyle": "bald",
+   "legs": "#4a4238",
+   "skin": "#f0c8a8",
+   "top": "#6b5a44",
+   "topStyle": "jacket"
+  },
+  "ppe": true,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "dev": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "dev.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "dev",
+  "look": {
+   "bg": "#cfd8e8",
+   "hair": "#15100d",
+   "hairStyle": "short",
+   "legs": "#2a2f3a",
+   "skin": "#a87450",
+   "top": "#3d5a8a",
+   "topStyle": "tee"
+  },
+  "ppe": false,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "dev_ppe": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "dev_ppe.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "dev",
+  "look": {
+   "bg": "#cfd8e8",
+   "hair": "#15100d",
+   "hairStyle": "short",
+   "legs": "#2a2f3a",
+   "skin": "#a87450",
+   "top": "#3d5a8a",
+   "topStyle": "tee"
+  },
+  "ppe": true,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "gaz": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "gaz.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "gaz",
+  "look": {
+   "beard": true,
+   "bg": "#c8d4e6",
+   "cap": "#2f4a7a",
+   "hair": "#3a2a20",
+   "hairStyle": "short",
+   "legs": "#2f4a7a",
+   "skin": "#e8b996",
+   "top": "#2f4a7a",
+   "topStyle": "tee"
+  },
+  "ppe": false,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "gaz_ppe": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "gaz_ppe.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "gaz",
+  "look": {
+   "beard": true,
+   "bg": "#c8d4e6",
+   "cap": "#2f4a7a",
+   "hair": "#3a2a20",
+   "hairStyle": "short",
+   "legs": "#2f4a7a",
+   "skin": "#e8b996",
+   "top": "#2f4a7a",
+   "topStyle": "tee"
+  },
+  "ppe": true,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "hannah": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "hannah.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "hannah",
+  "look": {
+   "bg": "#e9e2b3",
+   "hair": "#b4492a",
+   "hairStyle": "ponytail",
+   "skin": "#f3d2bb",
+   "top": "#f07a28",
+   "topStyle": "hivis"
+  },
+  "ppe": false,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "hannah_ppe": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "hannah_ppe.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "hannah",
+  "look": {
+   "bg": "#e9e2b3",
+   "hair": "#b4492a",
+   "hairStyle": "ponytail",
+   "skin": "#f3d2bb",
+   "top": "#f07a28",
+   "topStyle": "hivis"
+  },
+  "ppe": true,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "helen": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "helen.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "helen",
+  "look": {
+   "bg": "#d6dde6",
+   "hair": "#5a3a26",
+   "hairStyle": "bob",
+   "skin": "#f0cfb4",
+   "top": "#34506e",
+   "topStyle": "suit"
+  },
+  "ppe": false,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "helen_ppe": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "helen_ppe.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "helen",
+  "look": {
+   "bg": "#d6dde6",
+   "hair": "#5a3a26",
+   "hairStyle": "bob",
+   "skin": "#f0cfb4",
+   "top": "#34506e",
+   "topStyle": "suit"
+  },
+  "ppe": true,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "jess": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "jess.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "jess",
+  "look": {
+   "bg": "#e8d2e6",
+   "hair": "#c98d3a",
+   "hairStyle": "ponytail",
+   "legs": "#34384a",
+   "skin": "#e8c0a0",
+   "top": "#7c4d7a",
+   "topStyle": "cardigan"
+  },
+  "ppe": false,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "jess_ppe": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "jess_ppe.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "jess",
+  "look": {
+   "bg": "#e8d2e6",
+   "hair": "#c98d3a",
+   "hairStyle": "ponytail",
+   "legs": "#34384a",
+   "skin": "#e8c0a0",
+   "top": "#7c4d7a",
+   "topStyle": "cardigan"
+  },
+  "ppe": true,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "jo": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "jo.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "jo",
+  "look": {
+   "bg": "#efd9a8",
+   "glasses": true,
+   "hair": "#1c1412",
+   "hairStyle": "curly",
+   "skin": "#7a4a2e",
+   "top": "#d9a441",
+   "topStyle": "jacket"
+  },
+  "ppe": false,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "jo_ppe": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "jo_ppe.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "jo",
+  "look": {
+   "bg": "#efd9a8",
+   "glasses": true,
+   "hair": "#1c1412",
+   "hairStyle": "curly",
+   "skin": "#7a4a2e",
+   "top": "#d9a441",
+   "topStyle": "jacket"
+  },
+  "ppe": true,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "june": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "june.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "june",
+  "look": {
+   "apron": "#f3ecdf",
+   "bg": "#f1d6c8",
+   "hair": "#8a5a3a",
+   "hairStyle": "bun",
+   "legs": "#3b3f4a",
+   "skin": "#f0cfb4",
+   "top": "#c7563f",
+   "topStyle": "tee"
+  },
+  "ppe": false,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "june_ppe": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "june_ppe.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "june",
+  "look": {
+   "apron": "#f3ecdf",
+   "bg": "#f1d6c8",
+   "hair": "#8a5a3a",
+   "hairStyle": "bun",
+   "legs": "#3b3f4a",
+   "skin": "#f0cfb4",
+   "top": "#c7563f",
+   "topStyle": "tee"
+  },
+  "ppe": true,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "len": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "len.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "len",
+  "look": {
+   "bg": "#dccfbc",
+   "cap": "#4f4a3e",
+   "hair": "#d6d2cc",
+   "hairStyle": "short",
+   "legs": "#3b3a36",
+   "skin": "#e3b596",
+   "top": "#6b5a44",
+   "topStyle": "jacket"
+  },
+  "ppe": false,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "len_ppe": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "len_ppe.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "len",
+  "look": {
+   "bg": "#dccfbc",
+   "cap": "#4f4a3e",
+   "hair": "#d6d2cc",
+   "hairStyle": "short",
+   "legs": "#3b3a36",
+   "skin": "#e3b596",
+   "top": "#6b5a44",
+   "topStyle": "jacket"
+  },
+  "ppe": true,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "moira": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "moira.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "moira",
+  "look": {
+   "bg": "#d9c9b0",
+   "glasses": true,
+   "hair": "#c9c4c0",
+   "hairStyle": "bun",
+   "skin": "#e9c3a4",
+   "top": "#3f5a4c",
+   "topStyle": "jacket"
+  },
+  "ppe": false,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "moira_ppe": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "moira_ppe.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "moira",
+  "look": {
+   "bg": "#d9c9b0",
+   "glasses": true,
+   "hair": "#c9c4c0",
+   "hairStyle": "bun",
+   "skin": "#e9c3a4",
+   "top": "#3f5a4c",
+   "topStyle": "jacket"
+  },
+  "ppe": true,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "priya": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "priya.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "priya",
+  "look": {
+   "bg": "#bfe0d8",
+   "hair": "#17110f",
+   "hairStyle": "long",
+   "skin": "#b07852",
+   "top": "#2f7f7a",
+   "topStyle": "cardigan"
+  },
+  "ppe": false,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "priya_ppe": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "priya_ppe.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "priya",
+  "look": {
+   "bg": "#bfe0d8",
+   "hair": "#17110f",
+   "hairStyle": "long",
+   "skin": "#b07852",
+   "top": "#2f7f7a",
+   "topStyle": "cardigan"
+  },
+  "ppe": true,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "raj": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "raj.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "raj",
+  "look": {
+   "beard": true,
+   "bg": "#d0dccd",
+   "glasses": true,
+   "hair": "#1b1512",
+   "hairStyle": "short",
+   "skin": "#a87450",
+   "top": "#3a4a3a",
+   "topStyle": "jacket"
+  },
+  "ppe": false,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "raj_ppe": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "raj_ppe.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "raj",
+  "look": {
+   "beard": true,
+   "bg": "#d0dccd",
+   "glasses": true,
+   "hair": "#1b1512",
+   "hairStyle": "short",
+   "skin": "#a87450",
+   "top": "#3a4a3a",
+   "topStyle": "jacket"
+  },
+  "ppe": true,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "steve": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "steve.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "steve",
+  "look": {
+   "bg": "#c9ced6",
+   "hair": "#9d9894",
+   "hairStyle": "short",
+   "skin": "#c89272",
+   "top": "#27354f",
+   "topStyle": "suit"
+  },
+  "ppe": false,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "steve_ppe": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "steve_ppe.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "steve",
+  "look": {
+   "bg": "#c9ced6",
+   "hair": "#9d9894",
+   "hairStyle": "short",
+   "skin": "#c89272",
+   "top": "#27354f",
+   "topStyle": "suit"
+  },
+  "ppe": true,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "sue": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "sue.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "sue",
+  "look": {
+   "bg": "#e0d0e0",
+   "hair": "#2a1d18",
+   "hairStyle": "long",
+   "skin": "#c89272",
+   "top": "#5a3a5a",
+   "topStyle": "suit"
+  },
+  "ppe": false,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "sue_ppe": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "sue_ppe.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "sue",
+  "look": {
+   "bg": "#e0d0e0",
+   "hair": "#2a1d18",
+   "hairStyle": "long",
+   "skin": "#c89272",
+   "top": "#5a3a5a",
+   "topStyle": "suit"
+  },
+  "ppe": true,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "tom": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "tom.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "tom",
+  "look": {
+   "beard": true,
+   "bg": "#f1cfae",
+   "hair": "#6b4428",
+   "hairStyle": "short",
+   "hat": "#f4f1ea",
+   "skin": "#e8b996",
+   "top": "#f07a28",
+   "topStyle": "hivis"
+  },
+  "ppe": false,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "tom_ppe": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "tom_ppe.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "tom",
+  "look": {
+   "beard": true,
+   "bg": "#f1cfae",
+   "hair": "#6b4428",
+   "hairStyle": "short",
+   "hat": "#f4f1ea",
+   "skin": "#e8b996",
+   "top": "#f07a28",
+   "topStyle": "hivis"
+  },
+  "ppe": true,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "town_farmer": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "town_farmer.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "town_farmer",
+  "look": null,
+  "ppe": false,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "town_farmer_ppe": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "town_farmer_ppe.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "town_farmer",
+  "look": null,
+  "ppe": true,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "town_pensioner": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "town_pensioner.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "town_pensioner",
+  "look": null,
+  "ppe": false,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "town_pensioner_ppe": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "town_pensioner_ppe.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "town_pensioner",
+  "look": null,
+  "ppe": true,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "town_postie": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "town_postie.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "town_postie",
+  "look": null,
+  "ppe": false,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "town_postie_ppe": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "town_postie_ppe.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "town_postie",
+  "look": null,
+  "ppe": true,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "town_shopper": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "town_shopper.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "town_shopper",
+  "look": null,
+  "ppe": false,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "town_shopper_ppe": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "town_shopper_ppe.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "town_shopper",
+  "look": null,
+  "ppe": true,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "town_teen": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "town_teen.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "town_teen",
+  "look": null,
+  "ppe": false,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "town_teen_ppe": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "town_teen_ppe.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "town_teen",
+  "look": null,
+  "ppe": true,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "town_walker": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "town_walker.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "town_walker",
+  "look": null,
+  "ppe": false,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ },
+ "town_walker_ppe": {
+  "anchor": [
+   24,
+   93
+  ],
+  "cols": 5,
+  "file": "town_walker_ppe.png",
+  "frame": [
+   48,
+   96
+  ],
+  "h": 384,
+  "id": "town_walker",
+  "look": null,
+  "ppe": true,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right"
+  ],
+  "w": 240
+ }
+}

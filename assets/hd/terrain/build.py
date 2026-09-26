@@ -29,6 +29,10 @@ def main():
         pix.manifest(os.path.join(OUT, 'manifest.json'), man)
         tot = sum(os.path.getsize(os.path.join(dp, f)) for dp, _, fs in os.walk(OUT) for f in fs
                   if f.endswith('.png') and not f.startswith('preview'))
+        if not a.no_preview:
+            import scene
+            scene.track_preview(OUT)
+            if hasattr(scene, 'scene_preview'): scene.scene_preview(OUT)
         print('assets: %d entries, %.0f KB of sheets (previews excluded)' % (len(man), tot / 1024))
 
 

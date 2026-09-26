@@ -253,3 +253,77 @@ def periodic_copies(pts, ext, w=T, h=T):
                 if x + r < 0 or x - l >= w or y + d < 0 or y - u >= h: continue
                 out.append((x, y) + tuple(p[2:5]) + (False,))
     return out
+
+
+# ------------------------------------------------------------------ shared material helpers
+def pebble(rng, rampn, rx, ry, tone=0.0, lo=0, hi=None, shadow_idx=None):
+    """A little lit stone (ellipsoid, NW light) as an RGBA sprite, plus a 1 px contact shade bottom-right.
+    tone shifts it lighter (+) or darker (-). Returns sprite (anchor = top-left)."""
+    n = len(RAMPS[rampn]); hi = n - 1 if hi is None else hi
+    w, h = int(math.ceil(rx * 2)) + 2, int(math.ceil(ry * 2)) + 2
+    a = blank(w, h)
+    cx, cy = rx + 0.5, ry + 0.5
+    # slightly irregular outline
+    wob = [1 + (rng.random() - 0.5) * 0.35 for _ in range(6)]
+    for y in range(h):
+        for x in range(w):
+            dx, dy = (x + 0.5 - cx) / max(rx, 0.5), (y + 0.5 - cy) / max(ry, 0.5)
+            ang = (math.atan2(dy, dx) / (2 * math.pi) * 6) % 6; k0 = int(ang); f = ang - k0
+            r = wob[k0] * (1 - f) + wob[(k0 + 1) % 6] * f
+            d = (dx * dx + dy * dy) / (r * r)
+            if d <= 1:
+                nz = math.sqrt(max(0.0, 1 - d)) + 0.35
+                lum = float(lambert(np.array(dx), np.array(dy), np.array(nz))) + tone
+                idx = int(round(lo + (1 - max(0, min(1, (lum - 0.25) / 0.75))) * (hi - lo)))
+                put(a, x, y, rgb(rampn, idx), False)
+    if shadow_idx is not None:
+        src = a.copy()
+        for y in range(h):
+            for x in range(w):
+                if src[y, x, 3] == 0 and ((x > 0 and y > 0 and src[y - 1, x - 1, 3]) or (y > 0 and src[y - 1, x, 3] and x >= w // 2)):
+                    put(a, x, y, shadow_idx, False)
+    return a
+
+
+def scatter_sprites(img, L, spacing, make, ext, p=1.0, interior_only=False, sort=True):
+    """Band-locked painter's-order scatter of sprites. make(point, rng) -> sprite or None; the sprite's anchor is
+    its centre-bottom-ish: drawn with top-left at (x - w//2, y - h + 1)."""
+    pts = periodic_copies(locked_pts(L, spacing, 0, ext=ext), (ext[0] + 2, ext[1] + 2, ext[2] + 2, ext[3] + 2))
+    if sort: pts.sort(key=lambda q: (q[1], q[0]))
+    for q in pts:
+        x, y, r1, r2, r3, isb = q
+        if r1 > p: continue
+        if interior_only and not (1 + ext[0] <= x <= T - 2 - ext[2] and 1 + ext[1] <= y <= T - 2 - ext[3]): continue
+        rr = np.random.default_rng(int(r2 * 1e7) + int(r3 * 1e4) + 17)
+        s = make(q, rr)
+        if s is None: continue
+        sh, sw = s.shape[:2]
+        stamp(img, s, int(math.floor(x)) - sw // 2, int(math.floor(y)) - sh + 1, False)
+
+
+def noise_idx(L, n, mid, cells=(8, 4, 2), amp=1.0, speck=0.0):
+    """Quantised fbm around ramp index `mid` (float); amp in index steps per std; speck = fraction of +-1 specks."""
+    f = L.field(cells) * amp + mid
+    if speck:
+        w = L.white(); f = f + np.where(w < speck / 2, 1, 0) - np.where(w > 1 - speck / 2, 1, 0)
+    return np.clip(np.round(f), 0, n - 1).astype(int)
+
+
+def rgba_idx(img_idx, rampn):
+    return from_idx(img_idx, rampn)
+
+
+def line_walk(rng, x, y, steps, dirx, diry, wobble=0.5):
+    """A crack / twig path: list of integer points."""
+    pts = []; ang = math.atan2(diry, dirx)
+    for _ in range(steps):
+        pts.append((int(round(x)), int(round(y))))
+        ang += (rng.random() - 0.5) * wobble
+        x += math.cos(ang); y += math.sin(ang)
+    return pts
+
+
+def draw_crack(img, pts, dark, lit=None, clip=True):
+    for (x, y) in pts:
+        put(img, x, y, dark, not clip)
+        if lit is not None: put(img, x, y + 1, lit, not clip)   # lit lower lip (the far wall catches the NW light)

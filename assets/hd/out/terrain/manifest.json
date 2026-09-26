@@ -1,0 +1,3921 @@
+{
+ "ballast_live": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ],
+   [
+    96,
+    0
+   ],
+   [
+    144,
+    0
+   ],
+   [
+    192,
+    0
+   ],
+   [
+    240,
+    0
+   ],
+   [
+    288,
+    0
+   ],
+   [
+    336,
+    0
+   ]
+  ],
+  "file": "tiles/ballast_live.png",
+  "h": 48,
+  "kind": "tile",
+  "variants": 8,
+  "w": 48,
+  "weights": [
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0
+  ],
+  "x": 0,
+  "y": 0
+ },
+ "ballast_old": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ],
+   [
+    96,
+    0
+   ],
+   [
+    144,
+    0
+   ],
+   [
+    192,
+    0
+   ],
+   [
+    240,
+    0
+   ],
+   [
+    288,
+    0
+   ],
+   [
+    336,
+    0
+   ]
+  ],
+  "file": "tiles/ballast_old.png",
+  "h": 48,
+  "kind": "tile",
+  "variants": 8,
+  "w": 48,
+  "weights": [
+   2.0,
+   2.0,
+   2.0,
+   2.0,
+   2.0,
+   2.0,
+   1.0,
+   1.0
+  ],
+  "x": 0,
+  "y": 0
+ },
+ "ballast_old_weedy": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ],
+   [
+    96,
+    0
+   ],
+   [
+    144,
+    0
+   ],
+   [
+    192,
+    0
+   ],
+   [
+    240,
+    0
+   ],
+   [
+    288,
+    0
+   ],
+   [
+    336,
+    0
+   ]
+  ],
+  "file": "tiles/ballast_old_weedy.png",
+  "h": 48,
+  "kind": "tile",
+  "variants": 8,
+  "w": 48,
+  "weights": [
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0
+  ],
+  "x": 0,
+  "y": 0
+ },
+ "bank_E": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ],
+   [
+    96,
+    0
+   ],
+   [
+    144,
+    0
+   ]
+  ],
+  "file": "tiles/bank_E.png",
+  "h": 48,
+  "kind": "overlay",
+  "note": "draw over the water tile; land side = the letters",
+  "variants": 4,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "bank_L_NE": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ]
+  ],
+  "file": "tiles/bank_L_NE.png",
+  "h": 48,
+  "kind": "overlay",
+  "note": "draw over the water tile; land side = the letters",
+  "variants": 2,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "bank_L_NW": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ]
+  ],
+  "file": "tiles/bank_L_NW.png",
+  "h": 48,
+  "kind": "overlay",
+  "note": "draw over the water tile; land side = the letters",
+  "variants": 2,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "bank_L_SE": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ]
+  ],
+  "file": "tiles/bank_L_SE.png",
+  "h": 48,
+  "kind": "overlay",
+  "note": "draw over the water tile; land side = the letters",
+  "variants": 2,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "bank_L_SW": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ]
+  ],
+  "file": "tiles/bank_L_SW.png",
+  "h": 48,
+  "kind": "overlay",
+  "note": "draw over the water tile; land side = the letters",
+  "variants": 2,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "bank_N": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ],
+   [
+    96,
+    0
+   ],
+   [
+    144,
+    0
+   ]
+  ],
+  "file": "tiles/bank_N.png",
+  "h": 48,
+  "kind": "overlay",
+  "note": "draw over the water tile; land side = the letters",
+  "variants": 4,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "bank_S": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ],
+   [
+    96,
+    0
+   ],
+   [
+    144,
+    0
+   ]
+  ],
+  "file": "tiles/bank_S.png",
+  "h": 48,
+  "kind": "overlay",
+  "note": "draw over the water tile; land side = the letters",
+  "variants": 4,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "bank_W": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ],
+   [
+    96,
+    0
+   ],
+   [
+    144,
+    0
+   ]
+  ],
+  "file": "tiles/bank_W.png",
+  "h": 48,
+  "kind": "overlay",
+  "note": "draw over the water tile; land side = the letters",
+  "variants": 4,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "bank_diag_NE": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ]
+  ],
+  "file": "tiles/bank_diag_NE.png",
+  "h": 48,
+  "kind": "overlay",
+  "note": "draw over the water tile; land side = the letters",
+  "variants": 2,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "bank_diag_NW": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ]
+  ],
+  "file": "tiles/bank_diag_NW.png",
+  "h": 48,
+  "kind": "overlay",
+  "note": "draw over the water tile; land side = the letters",
+  "variants": 2,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "bank_diag_SE": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ]
+  ],
+  "file": "tiles/bank_diag_SE.png",
+  "h": 48,
+  "kind": "overlay",
+  "note": "draw over the water tile; land side = the letters",
+  "variants": 2,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "bank_diag_SW": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ]
+  ],
+  "file": "tiles/bank_diag_SW.png",
+  "h": 48,
+  "kind": "overlay",
+  "note": "draw over the water tile; land side = the letters",
+  "variants": 2,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "cess_new": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ],
+   [
+    96,
+    0
+   ],
+   [
+    144,
+    0
+   ],
+   [
+    192,
+    0
+   ],
+   [
+    240,
+    0
+   ],
+   [
+    288,
+    0
+   ],
+   [
+    336,
+    0
+   ]
+  ],
+  "file": "tiles/cess_new.png",
+  "h": 48,
+  "kind": "tile",
+  "variants": 8,
+  "w": 48,
+  "weights": [
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0
+  ],
+  "x": 0,
+  "y": 0
+ },
+ "cess_old": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ],
+   [
+    96,
+    0
+   ],
+   [
+    144,
+    0
+   ],
+   [
+    192,
+    0
+   ],
+   [
+    240,
+    0
+   ],
+   [
+    288,
+    0
+   ],
+   [
+    336,
+    0
+   ]
+  ],
+  "file": "tiles/cess_old.png",
+  "h": 48,
+  "kind": "tile",
+  "variants": 8,
+  "w": 48,
+  "weights": [
+   2.0,
+   2.0,
+   2.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0
+  ],
+  "x": 0,
+  "y": 0
+ },
+ "concrete": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ],
+   [
+    96,
+    0
+   ],
+   [
+    144,
+    0
+   ],
+   [
+    192,
+    0
+   ],
+   [
+    240,
+    0
+   ],
+   [
+    288,
+    0
+   ],
+   [
+    336,
+    0
+   ]
+  ],
+  "file": "tiles/concrete.png",
+  "h": 48,
+  "kind": "tile",
+  "variants": 8,
+  "w": 48,
+  "weights": [
+   3.0,
+   3.0,
+   3.0,
+   3.0,
+   1.0,
+   1.0,
+   0.7,
+   0.7
+  ],
+  "x": 0,
+  "y": 0
+ },
+ "concrete_joint_H": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ]
+  ],
+  "file": "tiles/concrete_joint_H.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 1,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "concrete_joint_V": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ]
+  ],
+  "file": "tiles/concrete_joint_V.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 1,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "dirt": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ],
+   [
+    96,
+    0
+   ],
+   [
+    144,
+    0
+   ],
+   [
+    192,
+    0
+   ],
+   [
+    240,
+    0
+   ],
+   [
+    288,
+    0
+   ],
+   [
+    336,
+    0
+   ]
+  ],
+  "file": "tiles/dirt.png",
+  "h": 48,
+  "kind": "tile",
+  "variants": 8,
+  "w": 48,
+  "weights": [
+   3.0,
+   3.0,
+   3.0,
+   3.0,
+   2.0,
+   1.0,
+   1.0,
+   1.0
+  ],
+  "x": 0,
+  "y": 0
+ },
+ "flags": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ],
+   [
+    96,
+    0
+   ],
+   [
+    144,
+    0
+   ],
+   [
+    192,
+    0
+   ],
+   [
+    240,
+    0
+   ],
+   [
+    288,
+    0
+   ],
+   [
+    336,
+    0
+   ]
+  ],
+  "file": "tiles/flags.png",
+  "h": 48,
+  "kind": "tile",
+  "variants": 8,
+  "w": 48,
+  "weights": [
+   2.0,
+   2.0,
+   2.0,
+   2.0,
+   1.5,
+   1.0,
+   1.0,
+   1.0
+  ],
+  "x": 0,
+  "y": 0
+ },
+ "grass": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ],
+   [
+    96,
+    0
+   ],
+   [
+    144,
+    0
+   ],
+   [
+    192,
+    0
+   ],
+   [
+    240,
+    0
+   ],
+   [
+    288,
+    0
+   ],
+   [
+    336,
+    0
+   ]
+  ],
+  "file": "tiles/grass.png",
+  "h": 48,
+  "kind": "tile",
+  "variants": 8,
+  "w": 48,
+  "weights": [
+   3.0,
+   3.0,
+   3.0,
+   3.0,
+   1.2,
+   1.0,
+   1.0,
+   1.0
+  ],
+  "x": 0,
+  "y": 0
+ },
+ "grass_edge_E": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ],
+   [
+    96,
+    0
+   ],
+   [
+    144,
+    0
+   ]
+  ],
+  "file": "tiles/grass_edge_E.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 4,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "grass_edge_L_NE": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ]
+  ],
+  "file": "tiles/grass_edge_L_NE.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 2,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "grass_edge_L_NW": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ]
+  ],
+  "file": "tiles/grass_edge_L_NW.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 2,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "grass_edge_L_SE": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ]
+  ],
+  "file": "tiles/grass_edge_L_SE.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 2,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "grass_edge_L_SW": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ]
+  ],
+  "file": "tiles/grass_edge_L_SW.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 2,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "grass_edge_N": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ],
+   [
+    96,
+    0
+   ],
+   [
+    144,
+    0
+   ]
+  ],
+  "file": "tiles/grass_edge_N.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 4,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "grass_edge_S": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ],
+   [
+    96,
+    0
+   ],
+   [
+    144,
+    0
+   ]
+  ],
+  "file": "tiles/grass_edge_S.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 4,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "grass_edge_W": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ],
+   [
+    96,
+    0
+   ],
+   [
+    144,
+    0
+   ]
+  ],
+  "file": "tiles/grass_edge_W.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 4,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "grass_edge_diag_NE": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ]
+  ],
+  "file": "tiles/grass_edge_diag_NE.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 2,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "grass_edge_diag_NW": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ]
+  ],
+  "file": "tiles/grass_edge_diag_NW.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 2,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "grass_edge_diag_SE": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ]
+  ],
+  "file": "tiles/grass_edge_diag_SE.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 2,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "grass_edge_diag_SW": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ]
+  ],
+  "file": "tiles/grass_edge_diag_SW.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 2,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "gravel": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ],
+   [
+    96,
+    0
+   ],
+   [
+    144,
+    0
+   ],
+   [
+    192,
+    0
+   ],
+   [
+    240,
+    0
+   ],
+   [
+    288,
+    0
+   ],
+   [
+    336,
+    0
+   ]
+  ],
+  "file": "tiles/gravel.png",
+  "h": 48,
+  "kind": "tile",
+  "variants": 8,
+  "w": 48,
+  "weights": [
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0
+  ],
+  "x": 0,
+  "y": 0
+ },
+ "hoggin": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ],
+   [
+    96,
+    0
+   ],
+   [
+    144,
+    0
+   ],
+   [
+    192,
+    0
+   ],
+   [
+    240,
+    0
+   ],
+   [
+    288,
+    0
+   ],
+   [
+    336,
+    0
+   ]
+  ],
+  "file": "tiles/hoggin.png",
+  "h": 48,
+  "kind": "tile",
+  "variants": 8,
+  "w": 48,
+  "weights": [
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0
+  ],
+  "x": 0,
+  "y": 0
+ },
+ "kerb_E": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ]
+  ],
+  "file": "tiles/kerb_E.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 2,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "kerb_L_NE": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ]
+  ],
+  "file": "tiles/kerb_L_NE.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 1,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "kerb_L_NW": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ]
+  ],
+  "file": "tiles/kerb_L_NW.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 1,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "kerb_L_SE": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ]
+  ],
+  "file": "tiles/kerb_L_SE.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 1,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "kerb_L_SW": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ]
+  ],
+  "file": "tiles/kerb_L_SW.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 1,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "kerb_N": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ]
+  ],
+  "file": "tiles/kerb_N.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 2,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "kerb_S": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ]
+  ],
+  "file": "tiles/kerb_S.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 2,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "kerb_W": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ]
+  ],
+  "file": "tiles/kerb_W.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 2,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "kerb_diag_NE": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ]
+  ],
+  "file": "tiles/kerb_diag_NE.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 1,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "kerb_diag_NW": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ]
+  ],
+  "file": "tiles/kerb_diag_NW.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 1,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "kerb_diag_SE": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ]
+  ],
+  "file": "tiles/kerb_diag_SE.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 1,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "kerb_diag_SW": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ]
+  ],
+  "file": "tiles/kerb_diag_SW.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 1,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "lawn": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ],
+   [
+    96,
+    0
+   ],
+   [
+    144,
+    0
+   ],
+   [
+    192,
+    0
+   ],
+   [
+    240,
+    0
+   ],
+   [
+    288,
+    0
+   ],
+   [
+    336,
+    0
+   ]
+  ],
+  "file": "tiles/lawn.png",
+  "h": 48,
+  "kind": "tile",
+  "variants": 8,
+  "w": 48,
+  "weights": [
+   3.0,
+   3.0,
+   3.0,
+   2.0,
+   1.0,
+   1.0,
+   1.0,
+   0.6
+  ],
+  "x": 0,
+  "y": 0
+ },
+ "lawn_edge_E": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ],
+   [
+    96,
+    0
+   ],
+   [
+    144,
+    0
+   ]
+  ],
+  "file": "tiles/lawn_edge_E.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 4,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "lawn_edge_L_NE": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ]
+  ],
+  "file": "tiles/lawn_edge_L_NE.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 2,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "lawn_edge_L_NW": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ]
+  ],
+  "file": "tiles/lawn_edge_L_NW.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 2,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "lawn_edge_L_SE": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ]
+  ],
+  "file": "tiles/lawn_edge_L_SE.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 2,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "lawn_edge_L_SW": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ]
+  ],
+  "file": "tiles/lawn_edge_L_SW.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 2,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "lawn_edge_N": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ],
+   [
+    96,
+    0
+   ],
+   [
+    144,
+    0
+   ]
+  ],
+  "file": "tiles/lawn_edge_N.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 4,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "lawn_edge_S": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ],
+   [
+    96,
+    0
+   ],
+   [
+    144,
+    0
+   ]
+  ],
+  "file": "tiles/lawn_edge_S.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 4,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "lawn_edge_W": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ],
+   [
+    96,
+    0
+   ],
+   [
+    144,
+    0
+   ]
+  ],
+  "file": "tiles/lawn_edge_W.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 4,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "lawn_edge_diag_NE": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ]
+  ],
+  "file": "tiles/lawn_edge_diag_NE.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 2,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "lawn_edge_diag_NW": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ]
+  ],
+  "file": "tiles/lawn_edge_diag_NW.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 2,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "lawn_edge_diag_SE": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ]
+  ],
+  "file": "tiles/lawn_edge_diag_SE.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 2,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "lawn_edge_diag_SW": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ]
+  ],
+  "file": "tiles/lawn_edge_diag_SW.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 2,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "mark_bay_H": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ]
+  ],
+  "file": "tiles/mark_bay_H.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 1,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "mark_bay_V": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ]
+  ],
+  "file": "tiles/mark_bay_V.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 1,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "mark_centre_H": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ],
+   [
+    96,
+    0
+   ]
+  ],
+  "file": "tiles/mark_centre_H.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 3,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "mark_centre_V": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ],
+   [
+    96,
+    0
+   ]
+  ],
+  "file": "tiles/mark_centre_V.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 3,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "mark_dyellow_E": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ]
+  ],
+  "file": "tiles/mark_dyellow_E.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 1,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "mark_dyellow_N": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ]
+  ],
+  "file": "tiles/mark_dyellow_N.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 1,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "mark_dyellow_S": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ]
+  ],
+  "file": "tiles/mark_dyellow_S.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 1,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "mark_dyellow_W": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ]
+  ],
+  "file": "tiles/mark_dyellow_W.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 1,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "mark_giveway_H": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ]
+  ],
+  "file": "tiles/mark_giveway_H.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 2,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "mark_giveway_V": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ]
+  ],
+  "file": "tiles/mark_giveway_V.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 2,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "mark_syellow_E": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ]
+  ],
+  "file": "tiles/mark_syellow_E.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 1,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "mark_syellow_N": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ]
+  ],
+  "file": "tiles/mark_syellow_N.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 1,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "mark_syellow_S": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ]
+  ],
+  "file": "tiles/mark_syellow_S.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 1,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "mark_syellow_W": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ]
+  ],
+  "file": "tiles/mark_syellow_W.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 1,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "mark_triangle_E": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ]
+  ],
+  "file": "tiles/mark_triangle_E.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 1,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "mark_triangle_N": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ]
+  ],
+  "file": "tiles/mark_triangle_N.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 1,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "mark_triangle_S": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ]
+  ],
+  "file": "tiles/mark_triangle_S.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 1,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "mark_triangle_W": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ]
+  ],
+  "file": "tiles/mark_triangle_W.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 1,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "meadow": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ],
+   [
+    96,
+    0
+   ],
+   [
+    144,
+    0
+   ],
+   [
+    192,
+    0
+   ],
+   [
+    240,
+    0
+   ],
+   [
+    288,
+    0
+   ],
+   [
+    336,
+    0
+   ]
+  ],
+  "file": "tiles/meadow.png",
+  "h": 48,
+  "kind": "tile",
+  "variants": 8,
+  "w": 48,
+  "weights": [
+   3.0,
+   3.0,
+   3.0,
+   1.4,
+   1.4,
+   1.0,
+   1.2,
+   1.0
+  ],
+  "x": 0,
+  "y": 0
+ },
+ "mud": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ],
+   [
+    96,
+    0
+   ],
+   [
+    144,
+    0
+   ],
+   [
+    192,
+    0
+   ],
+   [
+    240,
+    0
+   ],
+   [
+    288,
+    0
+   ],
+   [
+    336,
+    0
+   ]
+  ],
+  "file": "tiles/mud.png",
+  "h": 48,
+  "kind": "tile",
+  "variants": 8,
+  "w": 48,
+  "weights": [
+   2.0,
+   2.0,
+   2.0,
+   1.0,
+   2.0,
+   2.0,
+   2.0,
+   2.0
+  ],
+  "x": 0,
+  "y": 0
+ },
+ "path_edge_E": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ],
+   [
+    96,
+    0
+   ],
+   [
+    144,
+    0
+   ]
+  ],
+  "file": "tiles/path_edge_E.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 4,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "path_edge_L_NE": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ]
+  ],
+  "file": "tiles/path_edge_L_NE.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 2,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "path_edge_L_NW": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ]
+  ],
+  "file": "tiles/path_edge_L_NW.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 2,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "path_edge_L_SE": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ]
+  ],
+  "file": "tiles/path_edge_L_SE.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 2,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "path_edge_L_SW": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ]
+  ],
+  "file": "tiles/path_edge_L_SW.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 2,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "path_edge_N": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ],
+   [
+    96,
+    0
+   ],
+   [
+    144,
+    0
+   ]
+  ],
+  "file": "tiles/path_edge_N.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 4,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "path_edge_S": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ],
+   [
+    96,
+    0
+   ],
+   [
+    144,
+    0
+   ]
+  ],
+  "file": "tiles/path_edge_S.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 4,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "path_edge_W": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ],
+   [
+    96,
+    0
+   ],
+   [
+    144,
+    0
+   ]
+  ],
+  "file": "tiles/path_edge_W.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 4,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "path_edge_diag_NE": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ]
+  ],
+  "file": "tiles/path_edge_diag_NE.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 2,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "path_edge_diag_NW": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ]
+  ],
+  "file": "tiles/path_edge_diag_NW.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 2,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "path_edge_diag_SE": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ]
+  ],
+  "file": "tiles/path_edge_diag_SE.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 2,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "path_edge_diag_SW": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ]
+  ],
+  "file": "tiles/path_edge_diag_SW.png",
+  "h": 48,
+  "kind": "overlay",
+  "variants": 2,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "platform": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ],
+   [
+    96,
+    0
+   ],
+   [
+    144,
+    0
+   ],
+   [
+    192,
+    0
+   ],
+   [
+    240,
+    0
+   ],
+   [
+    288,
+    0
+   ],
+   [
+    336,
+    0
+   ]
+  ],
+  "file": "tiles/platform.png",
+  "h": 48,
+  "kind": "tile",
+  "variants": 8,
+  "w": 48,
+  "weights": [
+   2.0,
+   2.0,
+   2.0,
+   2.0,
+   1.5,
+   1.0,
+   1.0,
+   1.0
+  ],
+  "x": 0,
+  "y": 0
+ },
+ "platform_edge_N": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ],
+   [
+    96,
+    0
+   ],
+   [
+    144,
+    0
+   ]
+  ],
+  "file": "tiles/platform_edge_N.png",
+  "h": 48,
+  "kind": "tile",
+  "variants": 4,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "platform_edge_S": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ],
+   [
+    96,
+    0
+   ],
+   [
+    144,
+    0
+   ]
+  ],
+  "file": "tiles/platform_edge_S.png",
+  "h": 48,
+  "kind": "tile",
+  "variants": 4,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "puddle_l": {
+  "anchor": [
+   21,
+   12
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    42,
+    0
+   ]
+  ],
+  "file": "sprites/puddle_l.png",
+  "h": 24,
+  "kind": "sprite",
+  "variants": 2,
+  "w": 42,
+  "x": 0,
+  "y": 0
+ },
+ "puddle_m": {
+  "anchor": [
+   15,
+   9
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    30,
+    0
+   ],
+   [
+    60,
+    0
+   ]
+  ],
+  "file": "sprites/puddle_m.png",
+  "h": 18,
+  "kind": "sprite",
+  "variants": 3,
+  "w": 30,
+  "x": 0,
+  "y": 0
+ },
+ "puddle_s": {
+  "anchor": [
+   10,
+   7
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    20,
+    0
+   ],
+   [
+    40,
+    0
+   ]
+  ],
+  "file": "sprites/puddle_s.png",
+  "h": 14,
+  "kind": "sprite",
+  "variants": 3,
+  "w": 20,
+  "x": 0,
+  "y": 0
+ },
+ "rail_joint_live_H": {
+  "anchor": [
+   8,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ]
+  ],
+  "file": "sprites/rail_joint_live_H.png",
+  "h": 9,
+  "kind": "sprite",
+  "variants": 1,
+  "w": 16,
+  "x": 0,
+  "y": 0
+ },
+ "rail_joint_rust_H": {
+  "anchor": [
+   8,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ]
+  ],
+  "file": "sprites/rail_joint_rust_H.png",
+  "h": 9,
+  "kind": "sprite",
+  "variants": 1,
+  "w": 16,
+  "x": 0,
+  "y": 0
+ },
+ "rail_live_H": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ]
+  ],
+  "file": "sprites/rail_live_H.png",
+  "h": 7,
+  "kind": "sprite",
+  "note": "top-left at the rail offset (24 or 60 across the 96 px band)",
+  "tiling": "x",
+  "variants": 1,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "rail_live_V": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ]
+  ],
+  "file": "sprites/rail_live_V.png",
+  "h": 48,
+  "kind": "sprite",
+  "note": "top-left at the rail offset (24 or 60 across the 96 px band)",
+  "tiling": "y",
+  "variants": 1,
+  "w": 7,
+  "x": 0,
+  "y": 0
+ },
+ "rail_rust_H": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ]
+  ],
+  "file": "sprites/rail_rust_H.png",
+  "h": 7,
+  "kind": "sprite",
+  "note": "top-left at the rail offset (24 or 60 across the 96 px band)",
+  "tiling": "x",
+  "variants": 1,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "rail_rust_V": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ]
+  ],
+  "file": "sprites/rail_rust_V.png",
+  "h": 48,
+  "kind": "sprite",
+  "note": "top-left at the rail offset (24 or 60 across the 96 px band)",
+  "tiling": "y",
+  "variants": 1,
+  "w": 7,
+  "x": 0,
+  "y": 0
+ },
+ "rail_xsec_live": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ]
+  ],
+  "file": "sprites/rail_xsec_live.png",
+  "h": 7,
+  "kind": "sprite",
+  "note": "cross-section, row 0 = lit side, last = cast shadow; stamp along the curve normal",
+  "variants": 1,
+  "w": 1,
+  "x": 0,
+  "y": 0
+ },
+ "rail_xsec_rust": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ]
+  ],
+  "file": "sprites/rail_xsec_rust.png",
+  "h": 7,
+  "kind": "sprite",
+  "note": "cross-section, row 0 = lit side, last = cast shadow; stamp along the curve normal",
+  "variants": 1,
+  "w": 1,
+  "x": 0,
+  "y": 0
+ },
+ "setts": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ],
+   [
+    96,
+    0
+   ],
+   [
+    144,
+    0
+   ],
+   [
+    192,
+    0
+   ],
+   [
+    240,
+    0
+   ],
+   [
+    288,
+    0
+   ],
+   [
+    336,
+    0
+   ]
+  ],
+  "file": "tiles/setts.png",
+  "h": 48,
+  "kind": "tile",
+  "variants": 8,
+  "w": 48,
+  "weights": [
+   2.0,
+   2.0,
+   2.0,
+   2.0,
+   1.5,
+   1.0,
+   1.0,
+   1.5
+  ],
+  "x": 0,
+  "y": 0
+ },
+ "sleeper_concrete_H": {
+  "anchor": [
+   6,
+   33
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    15,
+    0
+   ],
+   [
+    30,
+    0
+   ],
+   [
+    45,
+    0
+   ]
+  ],
+  "file": "sprites/sleeper_concrete_H.png",
+  "h": 71,
+  "kind": "sprite",
+  "note": "place every 24 px along the track, centred on the band centre line",
+  "variants": 4,
+  "w": 15,
+  "x": 0,
+  "y": 0
+ },
+ "sleeper_concrete_V": {
+  "anchor": [
+   33,
+   6
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    69,
+    0
+   ],
+   [
+    138,
+    0
+   ],
+   [
+    207,
+    0
+   ]
+  ],
+  "file": "sprites/sleeper_concrete_V.png",
+  "h": 17,
+  "kind": "sprite",
+  "note": "place every 24 px along the track, centred on the band centre line",
+  "variants": 4,
+  "w": 69,
+  "x": 0,
+  "y": 0
+ },
+ "sleeper_new_H": {
+  "anchor": [
+   6,
+   33
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    15,
+    0
+   ],
+   [
+    30,
+    0
+   ],
+   [
+    45,
+    0
+   ]
+  ],
+  "file": "sprites/sleeper_new_H.png",
+  "h": 71,
+  "kind": "sprite",
+  "note": "place every 24 px along the track, centred on the band centre line",
+  "variants": 4,
+  "w": 15,
+  "x": 0,
+  "y": 0
+ },
+ "sleeper_new_V": {
+  "anchor": [
+   33,
+   6
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    69,
+    0
+   ],
+   [
+    138,
+    0
+   ],
+   [
+    207,
+    0
+   ]
+  ],
+  "file": "sprites/sleeper_new_V.png",
+  "h": 17,
+  "kind": "sprite",
+  "note": "place every 24 px along the track, centred on the band centre line",
+  "variants": 4,
+  "w": 69,
+  "x": 0,
+  "y": 0
+ },
+ "sleeper_rotten_H": {
+  "anchor": [
+   6,
+   33
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    15,
+    0
+   ],
+   [
+    30,
+    0
+   ],
+   [
+    45,
+    0
+   ],
+   [
+    60,
+    0
+   ],
+   [
+    75,
+    0
+   ]
+  ],
+  "file": "sprites/sleeper_rotten_H.png",
+  "h": 71,
+  "kind": "sprite",
+  "note": "place every 24 px along the track, centred on the band centre line",
+  "variants": 6,
+  "w": 15,
+  "x": 0,
+  "y": 0
+ },
+ "sleeper_rotten_V": {
+  "anchor": [
+   33,
+   6
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    69,
+    0
+   ],
+   [
+    138,
+    0
+   ],
+   [
+    207,
+    0
+   ],
+   [
+    276,
+    0
+   ],
+   [
+    345,
+    0
+   ]
+  ],
+  "file": "sprites/sleeper_rotten_V.png",
+  "h": 17,
+  "kind": "sprite",
+  "note": "place every 24 px along the track, centred on the band centre line",
+  "variants": 6,
+  "w": 69,
+  "x": 0,
+  "y": 0
+ },
+ "sleeper_weathered_H": {
+  "anchor": [
+   6,
+   33
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    15,
+    0
+   ],
+   [
+    30,
+    0
+   ],
+   [
+    45,
+    0
+   ],
+   [
+    60,
+    0
+   ],
+   [
+    75,
+    0
+   ]
+  ],
+  "file": "sprites/sleeper_weathered_H.png",
+  "h": 71,
+  "kind": "sprite",
+  "note": "place every 24 px along the track, centred on the band centre line",
+  "variants": 6,
+  "w": 15,
+  "x": 0,
+  "y": 0
+ },
+ "sleeper_weathered_V": {
+  "anchor": [
+   33,
+   6
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    69,
+    0
+   ],
+   [
+    138,
+    0
+   ],
+   [
+    207,
+    0
+   ],
+   [
+    276,
+    0
+   ],
+   [
+    345,
+    0
+   ]
+  ],
+  "file": "sprites/sleeper_weathered_V.png",
+  "h": 17,
+  "kind": "sprite",
+  "note": "place every 24 px along the track, centred on the band centre line",
+  "variants": 6,
+  "w": 69,
+  "x": 0,
+  "y": 0
+ },
+ "soil": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ],
+   [
+    96,
+    0
+   ],
+   [
+    144,
+    0
+   ],
+   [
+    192,
+    0
+   ],
+   [
+    240,
+    0
+   ],
+   [
+    288,
+    0
+   ],
+   [
+    336,
+    0
+   ]
+  ],
+  "file": "tiles/soil.png",
+  "h": 48,
+  "kind": "tile",
+  "variants": 8,
+  "w": 48,
+  "weights": [
+   2.0,
+   2.0,
+   1.0,
+   1.0,
+   1.0,
+   2.0,
+   1.0,
+   1.0
+  ],
+  "x": 0,
+  "y": 0
+ },
+ "tarmac": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ],
+   [
+    96,
+    0
+   ],
+   [
+    144,
+    0
+   ],
+   [
+    192,
+    0
+   ],
+   [
+    240,
+    0
+   ],
+   [
+    288,
+    0
+   ],
+   [
+    336,
+    0
+   ]
+  ],
+  "file": "tiles/tarmac.png",
+  "h": 48,
+  "kind": "tile",
+  "variants": 8,
+  "w": 48,
+  "weights": [
+   3.0,
+   3.0,
+   3.0,
+   3.0,
+   1.0,
+   1.0,
+   0.8,
+   0.6
+  ],
+  "x": 0,
+  "y": 0
+ },
+ "tarmac_drain_E": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    144,
+    0
+   ]
+  ],
+  "file": "tiles/tarmac_specials.png",
+  "h": 48,
+  "kind": "tile",
+  "note": "single tile; tiles with any tarmac variant",
+  "variants": 1,
+  "w": 48,
+  "x": 144,
+  "y": 0
+ },
+ "tarmac_drain_N": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ]
+  ],
+  "file": "tiles/tarmac_specials.png",
+  "h": 48,
+  "kind": "tile",
+  "note": "single tile; tiles with any tarmac variant",
+  "variants": 1,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "tarmac_drain_S": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    48,
+    0
+   ]
+  ],
+  "file": "tiles/tarmac_specials.png",
+  "h": 48,
+  "kind": "tile",
+  "note": "single tile; tiles with any tarmac variant",
+  "variants": 1,
+  "w": 48,
+  "x": 48,
+  "y": 0
+ },
+ "tarmac_drain_W": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    96,
+    0
+   ]
+  ],
+  "file": "tiles/tarmac_specials.png",
+  "h": 48,
+  "kind": "tile",
+  "note": "single tile; tiles with any tarmac variant",
+  "variants": 1,
+  "w": 48,
+  "x": 96,
+  "y": 0
+ },
+ "tarmac_manhole": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    192,
+    0
+   ]
+  ],
+  "file": "tiles/tarmac_specials.png",
+  "h": 48,
+  "kind": "tile",
+  "note": "single tile; tiles with any tarmac variant",
+  "variants": 1,
+  "w": 48,
+  "x": 192,
+  "y": 0
+ },
+ "tarmac_manhole_small": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    240,
+    0
+   ]
+  ],
+  "file": "tiles/tarmac_specials.png",
+  "h": 48,
+  "kind": "tile",
+  "note": "single tile; tiles with any tarmac variant",
+  "variants": 1,
+  "w": 48,
+  "x": 240,
+  "y": 0
+ },
+ "water": {
+  "anchor": [
+   0,
+   0
+  ],
+  "animFrames": 4,
+  "cells": [
+   [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     48
+    ],
+    [
+     0,
+     96
+    ],
+    [
+     0,
+     144
+    ]
+   ],
+   [
+    [
+     48,
+     0
+    ],
+    [
+     48,
+     48
+    ],
+    [
+     48,
+     96
+    ],
+    [
+     48,
+     144
+    ]
+   ],
+   [
+    [
+     96,
+     0
+    ],
+    [
+     96,
+     48
+    ],
+    [
+     96,
+     96
+    ],
+    [
+     96,
+     144
+    ]
+   ],
+   [
+    [
+     144,
+     0
+    ],
+    [
+     144,
+     48
+    ],
+    [
+     144,
+     96
+    ],
+    [
+     144,
+     144
+    ]
+   ],
+   [
+    [
+     192,
+     0
+    ],
+    [
+     192,
+     48
+    ],
+    [
+     192,
+     96
+    ],
+    [
+     192,
+     144
+    ]
+   ],
+   [
+    [
+     240,
+     0
+    ],
+    [
+     240,
+     48
+    ],
+    [
+     240,
+     96
+    ],
+    [
+     240,
+     144
+    ]
+   ]
+  ],
+  "file": "tiles/water.png",
+  "h": 48,
+  "kind": "tile",
+  "note": "animFrames: frames go down the sheet; ~6-8 fps; flow is north->south",
+  "variants": 6,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "woodland": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ],
+   [
+    96,
+    0
+   ],
+   [
+    144,
+    0
+   ],
+   [
+    192,
+    0
+   ],
+   [
+    240,
+    0
+   ],
+   [
+    288,
+    0
+   ],
+   [
+    336,
+    0
+   ]
+  ],
+  "file": "tiles/woodland.png",
+  "h": 48,
+  "kind": "tile",
+  "variants": 8,
+  "w": 48,
+  "weights": [
+   2.0,
+   2.0,
+   2.0,
+   1.0,
+   1.0,
+   0.6,
+   1.5,
+   1.5
+  ],
+  "x": 0,
+  "y": 0
+ },
+ "xing_panel_rubber": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ],
+   [
+    96,
+    0
+   ]
+  ],
+  "file": "tiles/xing_panel_rubber.png",
+  "h": 48,
+  "kind": "tile",
+  "variants": 3,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "xing_panel_timber": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ],
+   [
+    96,
+    0
+   ]
+  ],
+  "file": "tiles/xing_panel_timber.png",
+  "h": 48,
+  "kind": "tile",
+  "variants": 3,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "xing_rubber_H": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ],
+   [
+    96,
+    0
+   ]
+  ],
+  "file": "tiles/xing_rubber_H.png",
+  "h": 96,
+  "kind": "tile",
+  "note": "48x96 slice across the whole 2-tile track band; tiles along x",
+  "variants": 3,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ },
+ "xing_timber_H": {
+  "anchor": [
+   0,
+   0
+  ],
+  "cells": [
+   [
+    0,
+    0
+   ],
+   [
+    48,
+    0
+   ],
+   [
+    96,
+    0
+   ]
+  ],
+  "file": "tiles/xing_timber_H.png",
+  "h": 96,
+  "kind": "tile",
+  "note": "48x96 slice across the whole 2-tile track band; tiles along x",
+  "variants": 3,
+  "w": 48,
+  "x": 0,
+  "y": 0
+ }
+}
