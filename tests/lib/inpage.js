@@ -23,6 +23,7 @@
   T.rnd = mulberry(CFG.policySeed == null ? 1 : CFG.policySeed);     // the test policy's own random stream
 
   // ---------- Storage diagnostics: who removes what (in this page), and changes made by other pages ----------
+  // (The save suite prints this when a save goes missing. It only logs; every call still goes through.)
   T.storageLog = [];
   try {
     const rm = Storage.prototype.removeItem, clr = Storage.prototype.clear;

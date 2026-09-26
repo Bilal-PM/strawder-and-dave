@@ -38,8 +38,11 @@ instead of letting every check time out.
 
 **smoke**: the page loads with no JS errors, no failed requests and no missing files. The title and its buttons
 render inside the viewport and can be clicked, the world canvas isn't blank, and there's no Continue on a first
-visit. A new game with the default text speed reaches free roam with an objective. Desktop and mobile. It also checks
-the **test API contract** (below) and warns if the game drifts from it.
+visit. A new game with the default text speed reaches free roam with an objective. Desktop and mobile.
+- **Touch controls** (mobile): dragging the joystick walks, tapping Ⓐ next to someone opens (and keeps open) the
+  conversation, and tapping a person on screen walks you over and starts talking.
+- **Keyboard only** (desktop): Enter and the number keys get you from the title to walking.
+- The **test API contract** (below): warns if the game drifts from it.
 
 **playthrough**: a full Chapter 1 through the real UI, on desktop (1440×900) and mobile (390×844, touch).
 - `expert` policy: always the expert-graded option (grades come from the content pack), calibrated confidence, and
@@ -47,8 +50,9 @@ the **test API contract** (below) and warns if the game drifts from it.
 - `random` policy: random options and confidence, sometimes "change my mind", plus random side trips to townsfolk,
   props, doors and the project board. It must reach the **report**.
 - Both must have no JS errors and complete every task. No task may finish before its `needs`, and the objective
-  must never point at a locked or finished task. After the report, "What's next" must open, and a reload must not
-  offer Continue for a finished chapter.
+  must never point at a locked or finished task. On the expert runs the report's actions must work: the share card
+  renders, the CSV downloads with a row per decision, and Copy confirms. After the report, "What's next" must open,
+  and a reload must not offer Continue for a finished chapter.
 
 **gating**: the world obeys engineering logic.
 - Closed line: ground that's blocked without PPE and walkable with it is found from `world.canStand`. Walking at it

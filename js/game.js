@@ -873,7 +873,7 @@
     const doneN = C1.tasks.filter(t => S.done[t.id]).length, now = Date.now();
     const force = avail(task('panel')) && S.events.length < 2;
     if (!force) {
-      if (now - (S.exploreStart || 0) < 120000 || now - (S.lastEventAt || 0) < 90000) return;
+      if (now - (S.exploreStart || 0) < 90000 || now - (S.lastEventAt || 0) < 60000) return;
       if (S.events.length >= Math.min(3, 1 + Math.floor(doneN / 3))) return;
       if (rand() > (S.events.length === 0 && doneN >= 3 ? 0.8 : 0.5)) return;
     }
@@ -1011,7 +1011,7 @@
     const st = stats(), pf = profile(), r = rankOf(S.jp);
     return `🚆 LINESIDE: a game about judgment\nChapter 1, Make the Case: ${C1.panel.outcomes[S.panel.outcome].title}\n⚖ ${S.jp} JP · ${r.name} · Judgment ${st.score}/100\n🧭 Style: ${pf.name}\n🔓 ${S.ach.length}/${PACK.achievements.length} achievements\nCan you make better calls?${shareURL() ? ' ' + shareURL() : ''}`;
   }
-  function toast(m) { const t = $('#toast'); t.textContent = m; t.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('on'), 2600); }
+  function toast(m, tries) { if (document.body.classList.contains('modal') && !$('#report').classList.contains('on') && (tries || 0) < 40) { setTimeout(() => toast(m, (tries || 0) + 1), 500); return; } const t = $('#toast'); t.textContent = m; t.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('on'), 2600); }
   function copySummary() {
     const txt = summary(), ok = () => toast('Copied. Paste it anywhere.');
     if (navigator.clipboard) navigator.clipboard.writeText(txt).then(ok, () => fallback(txt, ok)); else fallback(txt, ok);
