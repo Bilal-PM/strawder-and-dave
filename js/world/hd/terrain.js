@@ -7,8 +7,13 @@
   const M = HD.A.terrain.manifest, R = HD.R, T = HD.T;
   const hash = (x, y, s) => { let n = (x * 374761393 + y * 668265263 + (s || 0) * 982451653) | 0; n = Math.imul(n ^ (n >>> 13), 1274126177); return ((n ^ (n >>> 16)) >>> 0) / 4294967296; };
   const BASE = { ',': 'lawn', '.': 'grass', '"': 'meadow', p: 'dirt', _: 'gravel', s: 'setts', '-': 'flags', r: 'tarmac', '%': 'tarmac', c: 'tarmac',
-    a: 'concrete', v: 'soil', e: 'platform', '|': 'ballast_live', j: 'cess_old', l: 'tarmac', x: 'tarmac', b: 'cess_old', '^': 'platform_edge_N', w: 'water', ':': 'cess_old', '/': 'cess_old', z: 'cess_old', '=': 'ballast_old' };
+    a: 'concrete', v: 'soil', e: 'platform', '|': 'ballast_live', j: 'cess_old', l: 'tarmac', x: 'tarmac', b: 'cess_old', f: 'grass', '!': 'cess_old', m: 'setts', k: 'gravel', h: 'grass', '#': 'grass', g: 'dirt', '^': 'platform_edge_N', w: 'water', ':': 'cess_old', '/': 'cess_old', z: 'cess_old', '=': 'ballast_old' };
   const SOFT = ',."', HARD = 'p:-rscae_%/z';
+  function vnoise(x, y, cell, s) {   // smooth value noise 0..1
+    const gx = x / cell, gy = y / cell, x0 = Math.floor(gx), y0 = Math.floor(gy); let fx = gx - x0, fy = gy - y0; fx = fx * fx * (3 - 2 * fx); fy = fy * fy * (3 - 2 * fy);
+    const a = hash(x0, y0, s), b = hash(x0 + 1, y0, s), c = hash(x0, y0 + 1, s), d = hash(x0 + 1, y0 + 1, s);
+    return (a * (1 - fx) + b * fx) * (1 - fy) + (c * (1 - fx) + d * fx) * fy;
+  }
   function pick(e, x, y, s) {
     const n = e.cells.length, w = e.weights; if (!w) return e.cells[Math.floor(hash(x, y, s) * n)];
     let t = hash(x, y, s) * w.reduce((a, b) => a + b, 0); for (let i = 0; i < n; i++) if ((t -= w[i]) < 0) return e.cells[i]; return e.cells[n - 1];
@@ -121,8 +126,15 @@
         const X0 = tx0 - 1, Y0 = ty0 - 1, X1 = tx1 + 1, Y1 = ty1 + 1;   // one tile of margin so sprites crossing a chunk edge are complete
         for (let y = Y0; y < Y1; y++) for (let x = X0; x < X1; x++) {
           const c = at(x, y); let n = BASE[c]; if (!n) continue;
-          if (c === '=' && live) n = 'ballast_live'; else if (c === '=' && hash(x, y, 7) < 0.25) n = 'ballast_old_weedy';
-          if ((c === ':' || c === '/' || c === 'z') && live) n = 'cess_new';
+          if (c === '=' && live) n = 'ballast_live';
+          if ((c === ':' || c === '/' || c === 'z' || c === 'j') && live) n = 'cess_new';
+          else if (c === ':' || c === '/' || c === 'z' || c === 'j') n = vnoise(x, y, 4.5, 51) > 0.58 ? 'cess_old' : 'ballast_old';   // weeds in clumps, not every tile
+          if (c === '=' && !live) n = vnoise(x, y, 5, 53) > 0.62 ? 'ballast_old_weedy' : 'ballast_old';
+          if (c === 'f' || c === 'h' || c === '#') {   // under a boundary: match the ground beside it
+            const nb = [at(x, y - 1), at(x, y + 1), at(x - 1, y), at(x + 1, y)];
+            n = nb.some(k => k === ':' || k === '/' || k === 'j') ? (live ? 'cess_new' : 'cess_old') : nb.includes('|') ? 'ballast_live' : nb.includes(',') ? 'lawn' : nb.includes('"') ? 'meadow' : 'grass';
+          }
+          if (c === 'm') { const nb = [at(x - 1, y), at(x + 1, y), at(x, y + 1)].map(k => BASE[k]).filter(Boolean); n = nb[0] || 'flags'; }
           if (c === '^' && at(x, y + 1) !== 'e') n = 'platform';
           if (c === 'b' && (at(x, y - 1) === 'b' && at(x, y + 1) === 'b')) n = live ? 'ballast_live' : 'ballast_old';   // track band over the bridge
           if (c === '|' && live === false) n = 'ballast_live';
@@ -152,6 +164,15 @@
           }
         }
         drawTrack(g, rows, at, live, level);
+        // door mats: a coir mat on every 'm' tile, so entrances read at a glance
+        for (let y = Y0; y < Y1; y++) for (let x = X0; x < X1; x++) if (at(x, y) === 'm') {
+          const px = x * T, py = y * T;
+          g.fillStyle = 'rgba(42,29,50,0.28)'; g.fillRect(px + 1.6, py + 3.3, 13.4, 9);
+          g.fillStyle = '#6e4f33'; g.fillRect(px + 1.3, py + 2.7, 13.4, 9);
+          g.fillStyle = '#a8814f'; g.fillRect(px + 2, py + 3.3, 12, 7.7);
+          g.fillStyle = '#c29a62'; for (let k = 0; k < 12; k += 1.34) g.fillRect(px + 2 + k, py + 3.3, 0.34, 7.7);
+          g.fillStyle = '#8a6a40'; g.fillRect(px + 2, py + 10.3, 12, 0.67);
+        }
       });
     }
   });

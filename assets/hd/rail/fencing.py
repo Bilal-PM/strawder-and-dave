@@ -175,7 +175,28 @@ def fence(style, mask, v):
 
 # ---------- anti-trespass guards ('z' beside the crossing)
 
-RAIL_Y = {'n': 28, 's': 20}   # rail centre-lines in the two track rows (row 20 = 'n', row 21 = 's')
+RAIL_TOP = {'n': 29, 's': 17}   # rail top edges in the two track rows (band y 29 and 65); rails are 7 px strips
+
+
+def draw_sleepers(cv, band_off, closed=True):
+    """Sleepers 66x12 every 24 px (centred on x = 12 + 24k), centred on the band centre y=48; band_off maps band y
+    to this piece's y."""
+    for sx in range(6, cv.w, 24):
+        y0, y1 = 15 + band_off, 81 + band_off
+        for y in range(max(0, y0), min(cv.h, y1)):
+            for x in range(sx, sx + 12):
+                u = x - sx
+                i = (1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 4, 4)[u] + (1 if closed and hash01(x // 2, y // 5, 3) < 0.15 else 0)
+                if y in (y0, y1 - 1): i = 1 if y == y0 else 4
+                P(cv, x, y, C('sleeper', min(4, i)))
+
+
+def draw_rail(cv, top, closed=True):
+    rr = 'rust' if closed else 'rail'
+    for x in range(cv.w):
+        for k, i in enumerate((0, 1, 1, 2, 2, 3, 4)): P(cv, x, top + k, C(rr, i))
+        if x % 24 in (10, 11, 12, 13): P(cv, x, top + 7, C('iron', 2)); P(cv, x, top - 1, C('iron', 1))   # chairs on the sleepers
+        shadow_px(cv, x, top + 7)
 
 
 def guard_panel(cv, x0, y0, w, h, seed, worn=True):
@@ -203,21 +224,15 @@ def antitrespass(kind='cess', closed=True):
     if kind == 'cess':
         guard_panel(cv, 3, 6, T - 6, 34, seed, closed)
     else:
-        ry = RAIL_Y[kind[-1]]
-        for sx in range(-6, T, 16):   # sleepers under
-            R(cv, sx, 0, 10, T, C('sleeper', 2 if closed else 1)); VL(cv, sx, 0, T, C('sleeper', 1)); VL(cv, sx + 9, 0, T, C('sleeper', 4))
+        rt = RAIL_TOP[kind[-1]]; band = 0 if kind == 'track_n' else -T   # piece y -> 96px band y offset
+        draw_sleepers(cv, band, closed)
         if kind == 'track_n':
-            guard_panel(cv, 1, 2, T - 2, ry - 8, seed, closed)       # outside the north rail
-            guard_panel(cv, 1, ry + 6, T - 2, T - ry - 6, seed + 1, closed)   # four-foot
+            guard_panel(cv, 1, 2, T - 2, rt - 5, seed, closed)                  # outside the north rail
+            guard_panel(cv, 1, rt + 10, T - 2, T - rt - 10, seed + 1, closed)   # four-foot
         else:
-            guard_panel(cv, 1, 0, T - 2, ry - 6, seed, closed)       # four-foot
-            guard_panel(cv, 1, ry + 7, T - 2, T - ry - 9, seed + 1, closed)  # outside the south rail
-        rr = 'rust' if closed else 'rail'
-        for x in range(T):
-            for k, i in enumerate((0, 1, 2, 3)):
-                P(cv, x, ry - 2 + k, C(rr, i))
-            if x % 16 == 4: R(cv, x - 1, ry + 2, 4, 3, C('iron', 2))  # chairs
-            shadow_px(cv, x, ry + 2)
+            guard_panel(cv, 1, 0, T - 2, rt - 3, seed, closed)                  # four-foot
+            guard_panel(cv, 1, rt + 10, T - 2, T - rt - 12, seed + 1, closed)   # outside the south rail
+        draw_rail(cv, rt, closed)
     return cv
 
 
@@ -301,31 +316,26 @@ def trolley():
 def trap_points(closed=True):
     """Ground piece 48x96 over the 2-row siding band (x66, rows 27-28): a pair of trap switch blades set to throw a
     runaway off the siding, a stretcher bar, the rodding to a ground-frame lever, and a yellow scotch block clamped
-    on the south rail. Rails run east-west at y 28 and y 68 (same convention as the track band)."""
+    on the south rail. Rails: 7 px strips with tops at y 29 and 65; sleepers 66x12 every 24 px centred on y 48."""
     Wd, Hh = T, 2 * T
     cv = Canvas(Wd, Hh)
     rr = 'rust' if closed else 'rail'
-    for sx in range(-4, Wd, 16):   # timbers (longer switch timbers)
-        R(cv, sx, 8, 11, Hh - 16, C('sleeper', 2)); VL(cv, sx, 8, Hh - 8, C('sleeper', 1)); VL(cv, sx + 10, 8, Hh - 8, C('sleeper', 4))
-        HL(cv, sx, sx + 11, 8, C('sleeper', 1)); HL(cv, sx, sx + 11, Hh - 9, C('sleeper', 4))
-    for ry in (28, 68):   # stock rails
-        for x in range(Wd):
-            for k, i in enumerate((0, 1, 2, 3)): P(cv, x, ry - 2 + k, C(rr, i))
-            shadow_px(cv, x, ry + 2)
-    for (ry, d) in ((28, 1), (68, 1)):   # switch blades: tapering, diverging north-west (the trap throws north)
+    draw_sleepers(cv, 0, closed)
+    for top in (29, 65): draw_rail(cv, top, closed)
+    for ry in (29, 65):   # switch blades against the inside of each stock rail's north face, diverging north-west
         for x in range(4, Wd - 2):
             off = int((Wd - 2 - x) * 0.18)
-            y = ry - 4 - off
+            y = ry - 3 - off
             P(cv, x, y, C(rr, 1)); P(cv, x, y + 1, C(rr, 3))
             if x < Wd - 16: P(cv, x, y - 1, C(rr, 0))
-    R(cv, 8, 22, 4, 52, C('iron', 2)); VL(cv, 8, 22, 74, C('iron', 1))   # stretcher bar
+    R(cv, 8, 22, 4, 52, C('iron', 2)); VL(cv, 8, 22, 74, C('iron', 1))   # stretcher bar (x8, y22-74)
     for y in range(40, 44): HL(cv, 12, Wd, y, C('iron', 3 if y > 41 else 2))   # rodding to the ground frame
     # ground-frame lever (painted black, lever handle) at the east edge
     R(cv, Wd - 12, 34, 10, 14, C('paint_black', 2)); HL(cv, Wd - 12, Wd - 2, 34, C('paint_black', 0))
     for k in range(12): P(cv, Wd - 8 + k // 4, 34 - k, C('paint_black', 1 if k < 10 else 0))
     # scotch block on the south rail: yellow timber block with a hinge, padlocked
-    R(cv, 22, 62, 14, 10, C('yellow', 1 if not closed else 2)); HL(cv, 22, 36, 62, C('yellow', 0)); HL(cv, 22, 36, 71, C('yellow', 3))
-    VL(cv, 35, 62, 72, C('yellow', 3)); R(cv, 26, 72, 6, 5, C('mustard', 2)); R(cv, 36, 64, 4, 4, C('iron', 2))
+    R(cv, 22, 61, 14, 13, C('yellow', 1 if not closed else 2)); HL(cv, 22, 36, 61, C('yellow', 0)); HL(cv, 22, 36, 73, C('yellow', 3))
+    VL(cv, 35, 61, 74, C('yellow', 3)); R(cv, 26, 74, 6, 5, C('mustard', 2)); R(cv, 36, 64, 4, 4, C('iron', 2))
     if closed:
         for x in range(Wd):
             for y in range(Hh):

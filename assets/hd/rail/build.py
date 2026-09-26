@@ -183,7 +183,7 @@ def build_fencing():
             g = FN.antitrespass(kind, closed); nm = f'antitrespass_{kind}_{"closed" if closed else "live"}'
             emit(nm, g, (103, {'cess': 19, 'track_n': 20, 'track_s': 21}[kind]), (1, 1), anchor=[0, 0], origin=[0, 0], layer='ground',
                  placements=[[x, y] for x in (103, 107) for y in ({'cess': (19, 22), 'track_n': (20,), 'track_s': (21,)}[kind])],
-                 note="ground tile for 'z'; track pieces draw their own rails at y=28 (row 20) / y=20 (row 21) — align the terrain rails or ask")
+                 note="ground tile for 'z'; track pieces draw rails (7px, top y=29 in row 20 / y=17 in row 21) and sleepers (66x12 every 24px, centred x=12+24k, band y 15-81) matching the terrain")
             gs.append((nm[13:], g))
     sigs = []
     for asp in ('red', 'green'):
@@ -193,7 +193,7 @@ def build_fencing():
         sigs.append((asp, s))
     tr = FN.trolley(); emit('trolley', tr, (97, 20), (1, 1), anchor=[-3, tr.h], note='prop lying in the cess/cutting, ~[97,20]; free-standing, sort by its bottom')
     tp = FN.trap_points(True); emit('trap_points', tp, (66, 27), (1, 2), anchor=[0, 0], origin=[0, 0], layer='ground',
-                                    note='ground piece over the siding band rows 27-28 at x66; rails assumed at y 28 / 68 of the 96px band')
+                                    note='ground piece over the siding band rows 27-28 at x66; rails 7px with tops at y 29 / 65, sleepers 66x12 every 24px centred on y 48 (x centres 12+24k)')
     tl = FN.trap_points(False); emit('trap_points_live', tl, (66, 27), (1, 2), anchor=[0, 0], origin=[0, 0], layer='ground')
     prev('fence_extras', [(l, g) for l, g in gs] + [('sig ' + l, s) for l, s in sigs] + [('trolley', tr), ('trap', tp), ('trapL', tl)], scale=3, cols=11)
 

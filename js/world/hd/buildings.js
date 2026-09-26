@@ -5,7 +5,7 @@
   'use strict';
   const HD = LS.HD; if (!HD) return;
   const R = HD.R, T = HD.T;
-  const REPLACES = new Set(['building', 'canopy', 'ppe_gate', 'buffer', 'site_board', 'bridge', 'cabinet', 'signal', 'washing', 'sign']);
+  const REPLACES = new Set(['building', 'canopy', 'ppe_gate', 'buffer', 'site_board', 'bridge', 'cabinet', 'signal', 'washing', 'sign', 'trolley']);
   // words for the blank boards: area/name/sign -> text ('' = leave blank)
   const WORDS = {
     'rail/station_closed/fascia': 'HARROWBY', 'rail/station_live/fascia': 'HARROWBY',
@@ -17,7 +17,8 @@
     'town/hall/datestone': '1911'
   };
   function wanted(name, live) {
-    if (/_open$|^heras_|^ppe_plate$|^crossing_barrier_lowered|_lit$/.test(name)) return false;
+    if (/_open$|^heras_|^ppe_plate$|^crossing_barrier_lowered|_lit$|^signal_colour_red$|^(palisade|wire|timber)_\d/.test(name)) return false;
+    if (name === 'trap_points') return !live;
     if (/_closed$|_closedline|_dead$/.test(name)) return !live;
     if (/_live$|^crossing_barrier_raised$/.test(name)) return live;
     return true;
@@ -72,6 +73,15 @@
         add.push(o);
         for (const l of e.lights || []) sc.lights.push({ x: dx + l[0] / R, y: dy + l[1] / R, r: l[2] / R });
       }
+    }
+    // lineside fencing ('f'): palisade, post-and-wire or timber post-and-rail by location (rule from tileart.js fenceStyle)
+    const style = (x, y) => x >= 117 || (x >= 36 && x <= 81 && y >= 22 && y <= 34) ? 'palisade' : (x <= 36 && y >= 24 && y <= 31) ? 'timber' : 'wire';
+    if (A.manifest.palisade_0_0) for (let y = 0; y < level.rows.length; y++) for (let x = 0; x < level.rows[y].length; x++) {
+      const rw = level.rows; if (rw[y][x] !== 'f') continue;
+      const is = (xx, yy) => { const c = (rw[yy] || '')[xx]; return c === 'f' || c === '!'; };
+      const mask = (is(x, y - 1) ? 1 : 0) | (is(x + 1, y) ? 2 : 0) | (is(x, y + 1) ? 4 : 0) | (is(x - 1, y) ? 8 : 0);
+      const v = ((x * 7 + y * 13) % 5) === 0 ? 1 : 0, e = A.manifest[`${style(x, y)}_${mask}_${v}`] || A.manifest[`${style(x, y)}_${mask}_0`], im = e && HD.img(name, e.file); if (!im) continue;
+      add.push({ img: im, dx: x * T - e.origin[0] / R, dy: y * T - e.origin[1] / R, w: e.w / R, h: e.h / R, sortY: y * T + e.anchor[1] / R - e.origin[1] / R, kind: 'hd_fence' });
     }
     // Heras fencing: one panel per 'k' tile, east-west or north-south by its neighbours
     const H = A.manifest.heras_h, V = A.manifest.heras_v, rows = level.rows;
