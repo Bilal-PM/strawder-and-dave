@@ -216,4 +216,4 @@ async function settle(page, timeout) {
 
 const fmtErrors = errs => errs.slice(0, 6).map(e => '  ' + e.split('\n').join('\n  ')).join('\n') + (errs.length > 6 ? `\n  …and ${errs.length - 6} more` : '');
 
-module.exports = { serve, stopServer, fontRoute, FONT_RE, FREE_ROAM, chromium, ROOT, OUT, GAME_URL, VIEWPORTS, FAST, opts, getBrowser, closeBrowser, openPage, load, drive, until, newGame, gotoRoom, settle, dump, DriveError, BootError, fmtErrors };
+module.exports = { serve, stopServer, FREE_ROAM, chromium, ROOT, OUT, GAME_URL, VIEWPORTS, FAST, opts, getBrowser, closeBrowser, openPage, load, drive, until, newGame, gotoRoom, settle, dump, DriveError, BootError, fmtErrors };

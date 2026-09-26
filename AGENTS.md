@@ -62,20 +62,6 @@ node tests/run.js                                        # everything, about 7 m
 - One WARN is expected and fine: "stable test API contract", about undocumented entity kinds.
 - The atlas build needs Pillow: `pip install pillow`, then `python3 assets/build_atlas.py`.
 
-## Development journey screenshots (required at every stage)
-
-The owner is sharing the development journey publicly, from the first rough prototype to the finished game. `docs/journey/` holds the story so far: numbered milestones (01–11 so far), their screenshots, `milestones.json`, and a timeline in `docs/journey/README.md`.
-
-- **After each stage** (art bible, vertical slice, each district or interior, final polish), capture the build at the same views and two sizes:
-  ```sh
-  node tools/journey/capture.js 12-codex-vertical-slice      # the working tree; add --rev=<commit> for a past one
-  ```
-  The frames land in `tests/out/journey/<id>/`, with a contact sheet at `tests/out/journey/index.html`.
-- Copy the best 3–4 desktop frames and 1–2 phone frames into `docs/journey/<id>/`. Save them as JPEG (quality 88), named `desktop-<view>.jpg` or `mobile-<view>.jpg`. Reuse milestone 11's view names (`desktop-forecourt`, `desktop-beck-bridge`, `desktop-depot`, `desktop-village-hall`, `mobile-forecourt`…) so the before and after line up exactly.
-- Add the milestone to `docs/journey/milestones.json` and a section to `docs/journey/README.md`: date, what changed, a one-line title. Then rebuild the ready-to-post images with `python3 tools/journey/collage.py`. The "now" side of `then-and-now` is always the latest milestone.
-- Number on from the last milestone, and never overwrite, delete or retouch earlier milestones. The rough early shots are the point.
-- Never commit a frame marked `FLAG`: it shows a real organisation's name or a retired character name.
-
 ## Content rules (non-negotiable)
 
 - **Never name real suppliers, contractors, rail operators, infrastructure owners, regulators or brands.** That includes signs, liveries, logos, fleet numbers and uniforms. Use the fictional names already in the game.
