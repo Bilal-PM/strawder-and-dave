@@ -1432,7 +1432,7 @@ class Person:
                     th=(0.95, 0.66, 0.42, 0.2))
             for (x, y) in [(CX - 5, 15 + b), (CX - 4, 15 + b), (CX - 5, 16 + b)]: f.put(x, y, s['skin'], 0, dp)
             hp = f.part()
-            mm = [p for p in self.face_mask if p[0] > EX + 3 and 23 + b <= p[1] <= 36 + b] + \
+            mm = [p for p in self.face_mask if EX + 3 < p[0] <= EX + 11 and 24 + b <= p[1] <= 35 + b] + \
                  [p for p in self.face_mask if EX <= p[0] <= EX + 3 and 24 + b <= p[1] <= 27 + b]
             f.paint(mm, hr, hp, mode='sph', lo=1, hi=4, tex=lambda x, y: -0.14 if (x + 2 * y) % 5 == 0 else 0.03)
             self.hair_mask = set(mm)
@@ -1511,16 +1511,16 @@ class Person:
         if st == 'ponytail':
             pp = f.part()
             pm = []
-            path = [(CX + 13, 20), (CX + 14, 22), (CX + 15, 24), (CX + 16, 26), (CX + 16, 28), (CX + 16, 30),
-                    (CX + 16, 32), (CX + 15, 34), (CX + 15, 36), (CX + 14, 38), (CX + 14, 40), (CX + 13, 42), (CX + 12, 44)]
+            path = [(CX + 11, 20), (CX + 12, 22), (CX + 13, 24), (CX + 14, 26), (CX + 14, 28), (CX + 14, 30),
+                    (CX + 14, 32), (CX + 13, 34), (CX + 13, 36), (CX + 12, 38), (CX + 12, 40), (CX + 11, 42), (CX + 10, 44)]
             for k, (x, y) in enumerate(path):
                 w = 2 if k < 9 else 1
                 for yy in (y, y + 1):
                     for dx_ in range(-w, w + 1): pm.append((x + dx_, yy + b))
             f.paint(pm, hr, pp, bias=0.02, lo=0, hi=4, tex=lambda x, y: strands(x, y, CX, 8 + b, 9, 2))
             tie = f.part(); scr = s.get('scrunchie', 'teal')
-            for (x, y) in [(CX + 12, 19), (CX + 13, 19), (CX + 13, 20), (CX + 14, 20), (CX + 14, 21)]:
-                f.put(x, y + b, scr, 1 if x < CX + 13 else 2, tie)
+            for (x, y) in [(CX + 10, 19), (CX + 11, 19), (CX + 11, 20), (CX + 12, 20), (CX + 12, 21)]:
+                f.put(x, y + b, scr, 1 if x < CX + 11 else 2, tie)
 
     def side_hat(self):
         s, f, b = self.s, self.f, self.b
