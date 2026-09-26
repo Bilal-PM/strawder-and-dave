@@ -2057,12 +2057,12 @@ window.LS = window.LS || {};
     return c;
   }
   function ppeSign() { // blue & white "PPE beyond this point" plate on a short post
-    const c = cv(40, 26), g = G(c);
-    R(g, 19, 19, 2, 7, K.ttOut); P(g, 19, 20, K.s1);
-    R(g, 0, 0, 40, 20, K.ttOut); R(g, 1, 1, 38, 18, K.wh); R(g, 1, 1, 38, 6, K.bD);
+    const c = cv(40, 28), g = G(c);
+    R(g, 19, 21, 2, 7, K.ttOut); P(g, 19, 22, K.s1);
+    R(g, 0, 0, 40, 22, K.ttOut); R(g, 1, 1, 38, 20, K.wh); R(g, 1, 1, 38, 6, K.bD);
     ell(g, 14, 4, 3, 2, K.wh); R(g, 12, 4, 5, 1, K.bD); P(g, 14, 3, K.bD);
     R(g, 23, 2, 5, 4, K.wh); P(g, 25, 2, K.bD);
-    textC(g, 'PPE BEYOND', 20, 8, K.bD); textC(g, 'THIS POINT', 20, 13, K.bD);
+    textC(g, 'PPE BEYOND', 20, 8, K.bD); textC(g, 'THIS POINT', 20, 14, K.bD);
     return c;
   }
   function ppeGate(n, vertical, open) {
