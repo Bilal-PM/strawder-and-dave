@@ -90,6 +90,8 @@ window.LS = window.LS || {};
     const U = { uPlayer: { value: new THREE.Vector2(-1e5, -1e5) }, uHole: { value: new THREE.Vector3(0, 0, 1) } };
     S = R3D.S = { w, renderer, scene, camera, sun, hemi, pls, U, mobile, rooms: {}, cur: null, frame: 0, chunkKeep: mobile ? 12 : 20,
       pr: Math.min(devicePixelRatio || 1, mobile ? 2 : 2), size: [0, 0, 0], actors: [], glow: null, ft: 1 / 60, slowT: 0, quality: 2, lastT: performance.now() };
+    // a software rasteriser (no GPU) starts at the lightest quality
+    try { const ext = gl.getExtension('WEBGL_debug_renderer_info'), name = ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER); R3D.gpu = String(name); if (/swiftshader|llvmpipe|software/i.test(R3D.gpu)) S.quality = 0; } catch (e) { }
     initPost(); initActors(); initGlow(); initTrain();
     if (R3D.initUI) R3D.initUI(w);
     // the share card snapshot: the 3D frame under the UI
@@ -441,9 +443,9 @@ window.LS = window.LS || {};
       // frame time (whole frame, from rAF to rAF) and adaptive quality: drop the resolution and the lens if it runs slow
       const dt = (now - S.lastT) / 1000; S.lastT = now; S.ft = S.ft * 0.95 + Math.min(0.25, dt) * 0.05; R3D.stats.cpu = performance.now() - t0;
       R3D.stats.frames = S.frame; R3D.stats.ms = S.ft * 1000; R3D.stats.fps = 1 / S.ft; R3D.stats.quality = S.quality; R3D.stats.pr = S.size[2];
-      if (!R3D.lockQuality && S.frame > 30) {
+      if (!R3D.lockQuality && S.frame > 8) {
         if (S.ft > 1 / 40) S.slowT += dt; else S.slowT = Math.max(0, S.slowT - dt * 0.5);
-        if (S.slowT > 3 && S.quality > 0) { S.quality--; S.slowT = 0; }
+        if (S.slowT > 2 && S.quality > 0) { S.quality--; S.slowT = 0; }
       }
       return true;
     } catch (e) {
