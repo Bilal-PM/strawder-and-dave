@@ -132,7 +132,7 @@ PROF = {
     'moira': dict(prof=dict(nose='soft', chin='receding'), stride=0.72),
     'helen': dict(prof=dict(nose='straight', chin='normal')),
     'jo': dict(prof=dict(nose='button', chin='round')),
-    'tom': dict(prof=dict(nose='straight', chin='strong', brow=True)),
+    'tom': dict(prof=dict(nose='straight', chin='strong', brow=True), eye_w=2),
     'hannah': dict(prof=dict(nose='button', chin='round')),
     'steve': dict(prof=dict(nose='big', chin='strong', brow=True), stride=0.9),
     'priya': dict(prof=dict(nose='pointed', chin='normal')),

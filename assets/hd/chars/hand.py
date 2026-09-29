@@ -219,6 +219,7 @@ def render(spec, view, col, row=None):
     ts, hs = _top(s), s['hairStyle']
     hat = s.get('hat')
     k = P['key']
+    ew = s.get('eye_w', 2 if s.get('age') == 'old' else 3)       # 3x4 eyes for the younger cast, 2x4 for the older
 
     def hair(part=''):
         name = f'hair_{hs}_{v}{part}'
@@ -246,12 +247,13 @@ def render(spec, view, col, row=None):
         if s.get('satchel'): f.layer(f'satchel_{v}', dy=lag, edge=True)
         f.layer(f'head_{v}', dy=up)
         if v == 'down':
-            if P['blink']: f.layer('eyes_shut_down', dy=up)
+            f.layer(f'face_down_{ew}', dy=up)
+            if P['blink']: f.layer(f'eyes_shut_down_{ew}', dy=up)
             if s.get('beard'): f.layer('beard_down', dy=up)
         hair('')
         if hs == 'bun' and not hat and v == 'up': hair('_bun')     # seen from behind, the bun is nearest to us
         if v == 'down' and s.get('earrings') and not hat: f.layer('earrings_down', dy=up)
-        if v == 'down' and s.get('glasses'): f.layer('glasses_down', dy=up)
+        if v == 'down' and s.get('glasses'): f.layer(f'glasses_down_{ew}', dy=up)
         if hat: f.layer(f'hardhat_{v}', dy=up)
         return f.finish()
     # profile, painted facing left; the right-facing row is the mirror image
@@ -271,12 +273,13 @@ def render(spec, view, col, row=None):
     f.layer(f'torso_{ts}_left', dy=up)
     if s.get('vest') and ts != 'hivis': f.layer('vest_left', dy=up)
     f.layer('head_left', dy=up)
-    if P['blink']: f.layer('eyes_shut_left', dy=up)
+    f.layer(f'face_left_{ew}', dy=up)
+    if P['blink']: f.layer(f'eyes_shut_left_{ew}', dy=up)
     if s.get('beard'): f.layer('beard_left', dy=up)
     hair('')
     if hs == 'bun' and not hat: hair('_bun')
     if s.get('earrings') and not hat: f.layer('earrings_left', dy=up)
-    if s.get('glasses'): f.layer('glasses_left', dy=up)
+    if s.get('glasses'): f.layer(f'glasses_left_{ew}', dy=up)
     if hat: f.layer('hardhat_left', dy=up)
     f.layer(f'sarm_{na}{sl}', dy=up, edge=True)
     if s.get('satchel'): f.layer('satchel_left', dy=lag, edge=True)
@@ -291,7 +294,7 @@ def supports(spec):
     need = [f'torso_{_top(spec)}_down', f'torso_{_top(spec)}_left', f'torso_{_top(spec)}_up',
             f'hair_{spec["hairStyle"]}_down', f'hair_{spec["hairStyle"]}_left', f'hair_{spec["hairStyle"]}_up']
     if spec.get('beard'): need += ['beard_down', 'beard_left']
-    if spec.get('glasses'): need += ['glasses_down', 'glasses_left']
+    if spec.get('glasses'): need += ['glasses_down_3', 'glasses_left_3']
     if spec.get('hat') or spec.get('vest'): need += ['hardhat_down', 'hardhat_left', 'hardhat_up']
     if spec.get('satchel'): need += ['satchel_down', 'satchel_left', 'satchel_up']
     return all(has(n) for n in need)
