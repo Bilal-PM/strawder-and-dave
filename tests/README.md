@@ -96,12 +96,14 @@ setup, chapter card, narration, dialogue, choices, each room, the board, track w
 confidence, surprises, the gate review, the report and what's next) into `tests/out/screens/<viewport>/`, with a
 contact sheet at `tests/out/screens/index.html`.
 
-**learning**: plays the Project Planning module (the Learning World, `js/learn/`) end to end on desktop and mobile
-with the scripted AI classmates: "Save and leave" part-way and resume; the Board's seven beats; the Planning Table's
-three challenges (including loop protection) with the finish checked against the critical-path engine; the three
-puzzles answered correctly (plus the tamper follow-up); the Brew with chips and free text, where "the critical path is
-just the longest task" must be detected and countered, a partial answer probed, and the teach-back to Dev hit at least
-three key points; Hour Eight's expert path must reach Gold, a replay that cuts the crossing tests must be refused by
+**learning**: plays the Project Planning module (the Learning World, `js/learn/`) end to end on desktop and mobile.
+Everything is authored: the game must not load the AI tutor and nothing may mention AI or models. "Save and leave"
+part-way and resume; the Board's seven beats; the Planning Table's three challenges (including loop protection) with
+the finish checked against the critical-path engine; the three puzzles answered correctly (plus the tamper follow-up);
+the Brew's panel of three voices, where picking "the biggest job is critical" must be countered and then corrected,
+the veteran shares a trick of the trade, and the teach-back hits all four key points; on the line, help from the
+three voices (the veteran's costs the one favour) and Hannah's answer on the crossing tests; Hour Eight's expert path
+must reach Gold, a replay that cuts the crossing tests must be refused by
 Hannah and capped at "Not yet"; the Logbook lights the lamp and books lamp checks. Then, in Chapter 1, the office
 board must offer the module and show the Planning Lens, and leaving must hand the world back. Progress must be in
 `lineside_learn_v1`, never the chapter save. Every screen is layout-audited (mobile FAILs, desktop WARNs) and saved to

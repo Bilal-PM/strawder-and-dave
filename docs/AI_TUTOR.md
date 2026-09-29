@@ -1,6 +1,6 @@
 # AI tutor: NPC classmates and tutors on a small in-browser model
 
-> Status: design plus working code (`js/ai/`), with tests (`tests/ai/`). **Wired in for the Learning World** (`js/learn/`, Module 1: Project Planning): `index.html` loads `worker.js` and `tutor.js`, the game calls `LS.AI.init({provider:'scripted'})` at boot, the Brew uses `say`/`followUp`/`classify` on a module concept (`planning-m1`, built on this card), and Hour Eight uses `coach`. Chapter 1's own talks don't use it yet (see §9).
+> Status: design plus working code (`js/ai/`), with tests (`tests/ai/`). **The game doesn't load it.** The user decided against on-device AI (2026-09-29): the Learning World (`js/learn/`) uses fully authored dialogue instead. This document is kept for reference.
 > Last updated: 2026-09-29.
 
 ## 1. The recommendation

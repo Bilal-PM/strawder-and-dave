@@ -284,11 +284,11 @@ LS.MODULES.planning = {
   talk: {
     host: 'jo',
     panel: [
-      { id: 'callum', level: 'newcomer', label: 'Six months in', name: 'Callum Okafor', role: 'Trainee in Tom’s gang · joined from the ambulance service',
+      { id: 'callum', level: 'newcomer', label: 'Six months in', seat: 'New to rail', name: 'Callum Okafor', role: 'Trainee in Tom’s gang · joined from the ambulance service',
         look: { skin: '#6b4430', hair: '#15100d', hairStyle: 'short', beard: true, top: '#3d6a5a', topStyle: 'tee', bg: '#d3e2da' } },
-      { id: 'amira', level: 'mid', label: 'Five years in', name: 'Amira Shah', role: 'Planner · knows the textbook by heart',
+      { id: 'amira', level: 'mid', label: 'Five years in', seat: 'Five years in', name: 'Amira Shah', role: 'Planner · knows the textbook by heart',
         look: { skin: '#b07852', hair: '#1d1512', hairStyle: 'long', top: '#6b8f7a', topStyle: 'cardigan', bg: '#d6e6dc' } },
-      { id: 'pat', level: 'veteran', label: 'Thirty-four years on the railway', name: 'Pat Doyle', role: 'Possession planner · has planned hundreds of weekends',
+      { id: 'pat', level: 'veteran', label: 'Thirty-four years on the railway', seat: '34 years in', name: 'Pat Doyle', role: 'Possession planner · has planned hundreds of weekends',
         look: { skin: '#f0cfb4', hair: '#8a3b2a', hairStyle: 'bob', top: '#46557a', topStyle: 'jacket', bg: '#e6dcc6' } }
     ],
     intro: [

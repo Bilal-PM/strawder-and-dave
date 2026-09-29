@@ -16,7 +16,7 @@ window.LS = window.LS || {};
     const seats = [host].concat(panel.map(p => p.id));
     const stage = L.stage(`<div class="lr">
       <div class="lr-head"><div><div class="eyebrow">The Brew · the kettle corner</div><h2>Settle it round the table</h2></div>
-        <div class="lr-table" id="lrTable">${seats.map(id => { const p = panel.find(x => x.id === id); return `<div class="lr-seat" data-seat="${id}"><div class="lw-face">${L.face(id, 'smile', mod)}</div><span>${esc(L.person(id, mod).name.split(' ')[0])}</span><em>${esc(p ? p.label : 'Host')}</em></div>`; }).join('')}</div></div>
+        <div class="lr-table" id="lrTable">${seats.map(id => { const p = panel.find(x => x.id === id); return `<div class="lr-seat" data-seat="${id}"><div class="lw-face">${L.face(id, 'smile', mod)}</div><span>${esc(L.person(id, mod).name.split(' ')[0])}</span><em>${esc(p ? (p.seat || p.label) : 'Host')}</em></div>`; }).join('')}</div></div>
       <div class="lr-log" id="lrLog" role="log" aria-live="polite"></div>
       <div class="lr-compose" id="lrCompose"></div></div>`);
     stage.classList.add('fill');   // the transcript scrolls; the choices stay put underneath it
