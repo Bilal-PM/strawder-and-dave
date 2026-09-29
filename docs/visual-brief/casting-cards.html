@@ -1,0 +1,232 @@
+<title>LINESIDE Casting Cards</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400&display=swap">
+<style>
+/* Layout: a single reading column of casting cards, like a stack of staff ID cards on a depot noticeboard. */
+:root {
+  --ground: #eef0ea; --paper: #fbfcf8; --ink: #1f2a2e; --muted: #5c6a6c; --rule: #d3d9d0;
+  --accent: #d9621f; --accent-ink: #ffffff; --line-green: #2f5a47; --chip: #e3e9e1; --code: #f2f4ee;
+  --display: "Archivo", "Arial Narrow", system-ui, sans-serif;
+  --body: "Source Sans 3", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --ground: #151b1c; --paper: #1d2526; --ink: #e6ebe6; --muted: #9aa8a6; --rule: #2f3a3a;
+  --accent: #f08a45; --accent-ink: #1a1208; --line-green: #7fb89c; --chip: #263030; --code: #182021; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --ground: #151b1c; --paper: #1d2526; --ink: #e6ebe6; --muted: #9aa8a6; --rule: #2f3a3a;
+  --accent: #f08a45; --accent-ink: #1a1208; --line-green: #7fb89c; --chip: #263030; --code: #182021; color-scheme: dark }
+* { box-sizing: border-box }
+body { background: var(--ground); color: var(--ink); font: 16px/1.55 var(--body); padding-inline: 16px; padding-block: 28px 64px }
+main { max-width: 760px; margin: 0 auto; display: grid; gap: 28px }
+h1, h2, h3 { font-family: var(--display); font-stretch: 85%; line-height: 1.1; text-wrap: balance; margin: 0 }
+h1 { font-size: clamp(30px, 6vw, 44px); font-weight: 800 }
+h2 { font-size: 24px; font-weight: 700; margin-top: 8px }
+h3 { font-size: 21px; font-weight: 700 }
+p { margin: 0; max-width: 65ch }
+.eyebrow { font: 600 12px/1 var(--display); letter-spacing: .12em; text-transform: uppercase; color: var(--line-green) }
+header { display: grid; gap: 12px; padding-bottom: 20px; border-bottom: 3px solid var(--ink) }
+.steps { display: grid; gap: 14px; counter-reset: s; padding: 0; margin: 0; list-style: none }
+.steps li { display: grid; grid-template-columns: 34px 1fr; gap: 12px; align-items: start }
+.steps li::before { counter-increment: s; content: counter(s); width: 34px; height: 34px; border-radius: 50%; background: var(--ink); color: var(--paper); font: 700 16px/34px var(--display); text-align: center }
+.steps li > div { min-width: 0; display: grid; gap: 6px }
+.box { background: var(--paper); border: 1px solid var(--rule); border-radius: 10px; padding: 18px; display: grid; gap: 12px }
+.progress { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-variant-numeric: tabular-nums; color: var(--muted) }
+.bar { flex: 1 1 200px; height: 8px; background: var(--chip); border-radius: 4px; overflow: hidden }
+.bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .3s }
+.batch { display: grid; gap: 14px }
+.batch > p { color: var(--muted) }
+.card { background: var(--paper); border: 1px solid var(--rule); border-left: 6px solid var(--swatch, var(--rule)); border-radius: 10px; padding: 18px; display: grid; gap: 12px }
+.card.done { opacity: .62 }
+.top { display: flex; gap: 12px; align-items: baseline; justify-content: space-between; flex-wrap: wrap }
+.role { color: var(--muted); font-size: 15px }
+.chips { display: flex; gap: 6px; flex-wrap: wrap }
+.chip { background: var(--chip); border-radius: 999px; padding: 3px 10px; font: 600 12px/1.5 var(--display); letter-spacing: .04em }
+.chip.ppe { background: var(--accent); color: var(--accent-ink) }
+.look { font-size: 15.5px }
+.btns { display: flex; gap: 8px; flex-wrap: wrap }
+button { font: 600 14px/1 var(--display); letter-spacing: .02em; border: 1.5px solid var(--ink); background: transparent; color: var(--ink); border-radius: 8px; padding: 10px 14px; cursor: pointer; min-height: 40px }
+button.primary { background: var(--ink); color: var(--paper) }
+button:focus-visible, summary:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px }
+button.ok { border-color: var(--line-green); color: var(--line-green); background: transparent }
+details summary { cursor: pointer; color: var(--muted); font-size: 14px }
+pre { background: var(--code); border: 1px solid var(--rule); border-radius: 8px; padding: 12px; font: 12.5px/1.55 var(--mono); white-space: pre-wrap; word-break: break-word; margin: 8px 0 0; max-height: 320px; overflow: auto }
+label.done-toggle { display: inline-flex; gap: 8px; align-items: center; font-size: 14px; color: var(--muted); cursor: pointer }
+.note { font-size: 14.5px; color: var(--muted) }
+@media (prefers-reduced-motion: reduce) { .bar i { transition: none } }
+</style>
+
+<main>
+  <header>
+    <div class="eyebrow">LINESIDE · Chapter 1 · Character art</div>
+    <h1>Casting cards for the Kestrel Vale Line</h1>
+    <p>Everyone in the game, with ready-made ChatGPT prompts in the style of your own reference picture. Copy a prompt, paste it into ChatGPT, and send the images back to Claude in the chat. Claude cleans them up to the game's pixel grid, matches the colours and animates the walk.</p>
+  </header>
+
+  <section class="box" aria-labelledby="how">
+    <h2 id="how">How to do it</h2>
+    <ol class="steps">
+      <li><div><b>Start one ChatGPT chat per batch.</b><p>Attach your own character picture (the one with the mug), paste the style prompt below, and send it. This fixes the look for everything that follows in that chat.</p>
+        <div class="btns"><button class="primary" data-copy="style">Copy style prompt</button></div>
+        <details><summary>Show the style prompt</summary><pre id="style-text"></pre></details></div></li>
+      <li><div><b>For each character, copy the turnaround prompt.</b><p>One image with the character four times: front, left side, back, right side. This is the one that matters most. If the four views don't look like the same person, ask ChatGPT to try again.</p></div></li>
+      <li><div><b>Then copy the portrait prompt</b> for the dialogue box: head and shoulders, with three expressions.</div></li>
+      <li><div><b>Orange "Needs PPE" chip?</b> Also copy the PPE prompt, the same character in site safety gear.</div></li>
+      <li><div><b>Send the images to Claude in this chat,</b> with the character's name. Batch 1 first. Tick each card off as you go (the ticks are saved on this device).</div></li>
+    </ol>
+    <p class="note">Checks before you send: no writing or logos anywhere, the whole body in frame from head to toe, a plain background, and all four views at the same size. Real brands, operators and uniforms must never appear.</p>
+  </section>
+
+  <div class="progress" aria-live="polite"><span id="count">0 of 0 done</span><div class="bar" aria-hidden="true"><i id="fill"></i></div></div>
+
+  <div id="batches"></div>
+</main>
+
+<script>
+const STYLE = `For every image in this chat, match the art style of the attached reference picture exactly:
+- pixel art with clearly visible, square, evenly sized pixels (no blur, no painterly smoothing, no anti-aliased gradients)
+- a crisp 1-pixel near-black outline around the whole figure and its main shapes (hair, beard, ears, sleeves, hands)
+- semi-realistic adult proportions with a slightly large head, a real neck, shoulders, elbows and hands with a thumb
+- faces like the reference: thick eyebrows, eyes with whites and a dark iris with a tiny highlight, a nose shaped by shading, a small mouth, warm friendly expression
+- warm, soft shading with 3 to 4 tones per colour, light from the top left
+- modern British people in everyday UK clothes, in a cosy small-town railway setting
+Rules for every image: no text, no letters, no numbers, no logos, no brand names, no badges with writing, no watermarks. Plain background. Say "ready" and wait for my next message.`;
+
+const TURN = (d) => `Draw a pixel art character turnaround sheet of this character, in exactly the same style as the reference picture.
+Show the SAME character four times in one row, left to right, all the same height and size, feet on the same baseline, evenly spaced, with a gap between them:
+1) facing the viewer, 2) facing left in a true side profile, 3) facing away (back view), 4) facing right in a true side profile.
+Standing neutral pose, arms relaxed at the sides, full body from the top of the hair to the soles of the shoes, nothing cropped. The face, hair, clothes and colours must match exactly across all four views.
+Plain flat white background, no ground shadow, no props, no text, no logos. Landscape image.
+Character: ${d}`;
+
+const PORT = (d, extra) => `Now draw a pixel art head-and-shoulders portrait of the same character, same style as the reference picture, for a game dialogue box.
+Three versions side by side, same size and framing, facing mostly towards the viewer: 1) neutral and calm, 2) a warm, genuine smile, 3) gently concerned (brows slightly raised, small flat mouth).
+Plain flat white background, no text, no logos. Landscape image.${extra ? '\n' + extra : ''}
+Character: ${d}`;
+
+const PPE = (d) => `Now draw the same turnaround sheet again (front, left side, back, right side, same sizes and baseline), but with the character dressed for work on the railway track:
+a plain orange high-visibility vest with two horizontal silver reflective bands around the body and two over the shoulders, a plain white safety helmet with a chin strap, safety boots, and their own clothes underneath where they show.
+Absolutely no writing, logos or badges on the vest or helmet. Plain flat white background, no text.
+Character: ${d}`;
+
+const BATCHES = [
+  { name: 'Batch 1 · Player characters and the first faces you meet', note: 'Do these first. They are on screen the most.', people: [
+    { id: 'avatar4', name: 'You', role: 'Player character', age: 'as in your picture', sw: '#737165', ppe: true,
+      look: `the man in the attached reference picture, exactly: his face, short black spiky hair swept up, short full black beard, warm tan skin, plain grey T-shirt, charcoal trousers, grey trainers. No mug in the turnaround.`,
+      portExtra: 'In all three portraits he holds a plain white mug with no writing on it.' },
+    { id: 'avatar0', name: 'Player option A', role: 'Player character', age: 'early 30s', sw: '#34506e', ppe: true,
+      look: `white British man in his early 30s, short tousled brown hair, clean-shaven, friendly open face, navy casual blazer over a white T-shirt, blue jeans, brown leather boots.` },
+    { id: 'avatar1', name: 'Player option B', role: 'Player character', age: 'late 20s', sw: '#7c4d7a', ppe: true,
+      look: `Black British woman in her late 20s, full rounded natural afro, warm brown skin, small gold stud earrings, plum knitted cardigan over a white top, grey trousers, brown boots.` },
+    { id: 'avatar2', name: 'Player option C', role: 'Player character', age: '30s', sw: '#3d6b54', ppe: true,
+      look: `white British woman in her 30s, long straight honey-blonde hair past the shoulders, forest-green casual jacket over a cream top, blue jeans, brown boots.` },
+    { id: 'avatar3', name: 'Player option D', role: 'Player character', age: 'mid 30s', sw: '#8a3b2e', ppe: true,
+      look: `British South Asian man in his mid 30s, short dark textured hair, short neat full dark beard, thin dark-rimmed rectangular glasses, rust-red crew-neck jumper, blue jeans, brown boots.` },
+    { id: 'moira', name: 'Moira Kell', role: 'Harrowby’s last station master · your mentor', age: 'about 40', sw: '#3f5a4c', ppe: true,
+      look: `white British woman about 40, dark auburn hair with a side parting tied in a low ponytail, capable and warm with a slight knowing smile, smart olive-green work coat with two rows of brass buttons and a belt, brown leather satchel worn across the body, charcoal trousers, brown boots.` },
+    { id: 'tom', name: 'Tom Brennan', role: 'Track and site manager', age: 'early 40s', sw: '#f07a28', ppe: false,
+      look: `white British man in his early 40s, short brown hair, short full brown beard, always dressed for site: plain white safety helmet, plain orange high-visibility vest with silver reflective bands (no writing) over a navy long-sleeved top, dark grey work trousers, brown safety boots. Steady and practical.` },
+    { id: 'jo', name: 'Jo Adeyemi', role: 'Engineering lead', age: 'mid 30s', sw: '#d9a441', ppe: true,
+      look: `Black British woman of Nigerian heritage in her mid 30s, natural curly afro, deep brown skin, round thin gold-rimmed glasses, small gold earrings, mustard-yellow jacket over a cream top, blue jeans, brown boots. Bright and sharp.` }
+  ]},
+  { name: 'Batch 2 · The project team and the panel', note: 'The people in meetings, the depot and the Funding Panel.', people: [
+    { id: 'helen', name: 'Helen Walsh', role: 'Director, Vale Transport Authority · sponsor', age: 'late 40s', sw: '#34506e', ppe: true,
+      look: `white British woman in her late 40s, chin-length brown bob, small earrings, composed and businesslike, navy trouser suit with a white blouse, black shoes.` },
+    { id: 'hannah', name: 'Hannah Clarke', role: 'Safety lead', age: '30s', sw: '#f07a28', ppe: false,
+      look: `white British woman in her 30s, copper-red hair in a high ponytail, freckles, alert and kind, plain orange long-sleeved high-visibility jacket with silver reflective bands (no writing), navy work trousers, black safety boots.` },
+    { id: 'steve', name: 'Steve Hale', role: 'Commercial manager', age: '50s', sw: '#27354f', ppe: false,
+      look: `British man of mixed heritage in his 50s, light brown skin, short neat silver-grey hair, clean-shaven, a slight tummy, navy suit, white shirt, plain wine-red tie, black shoes. Cheerful salesman energy.` },
+    { id: 'priya', name: 'Priya Nair', role: 'Community and communications', age: 'late 20s', sw: '#2f7f7a', ppe: false,
+      look: `British Indian woman in her late 20s, long straight black hair, warm brown skin, teal cardigan over a cream top, dark jeans, ankle boots.` },
+    { id: 'gaz', name: 'Gaz Whitfield', role: 'Depot fitter · the railcar’s biggest fan', age: 'late 30s', sw: '#2f4a7a', ppe: true,
+      look: `white British man in his late 30s, short dark hair under a plain navy baseball cap (no logo), short dark beard, plain navy T-shirt, navy work trousers, black work boots, a rag in his back pocket. Enthusiastic grin.` },
+    { id: 'brian', name: 'Cllr Brian Pike', role: 'Chair, Harrowby Parish Council · biscuit monitor', age: 'early 50s', sw: '#6b5a44', ppe: false,
+      look: `white British man in his early 50s, short greying brown hair, round glasses, rosy cheeks, brown jacket over a beige shirt, dark trousers, brown shoes. Friendly and a little fussy.` },
+    { id: 'sue', name: 'Sue Bennett', role: 'Funding Panel · finance', age: '40s', sw: '#5a3a5a', ppe: false,
+      look: `Black British woman in her 40s, long dark hair in soft waves, plum trouser suit with a cream top, black shoes. Precise and fair.` },
+    { id: 'raj', name: 'Raj Patel', role: 'Funding Panel · independent reviewer', age: '40s', sw: '#3a4a3a', ppe: false,
+      look: `British Indian man in his 40s, short black hair, short neat beard, rectangular glasses, forest-green jacket over a white shirt, charcoal trousers, black shoes. Thoughtful.` }
+  ]},
+  { name: 'Batch 3 · The Planning module voices', note: 'The newcomer, the mid-career planner and the veteran from the learning room.', people: [
+    { id: 'callum', name: 'Callum Okafor', role: 'Newcomer · trainee in Tom’s gang, joined from the ambulance service', age: '30s', sw: '#3d6a5a', ppe: true,
+      look: `Black British man in his 30s, short black hair, short beard, dark brown skin, green T-shirt, dark work trousers, black boots. Keen and open.` },
+    { id: 'amira', name: 'Amira Shah', role: 'Mid-career planner · knows the textbook by heart', age: '30s', sw: '#6b8f7a', ppe: false,
+      look: `British Pakistani woman in her 30s, long dark hair, light brown skin, sage-green cardigan over a white top, grey trousers, flat shoes. Organised and confident.` },
+    { id: 'pat', name: 'Pat Doyle', role: 'Veteran possession planner · 34 years on the railway', age: 'mid 50s', sw: '#46557a', ppe: true,
+      look: `white Irish woman in her mid 50s, copper-brown bob, a few laughter lines, denim-blue jacket over a striped top, dark trousers, sturdy brown boots. Warm, dry sense of humour, unflappable.` }
+  ]},
+  { name: 'Batch 4 · The townsfolk', note: 'People around Harrowby. Lower priority.', people: [
+    { id: 'june', name: 'June Pritchard', role: 'Baker', age: '40s', sw: '#c7563f', ppe: false,
+      look: `white British woman in her 40s, brown hair in a neat bun, a white apron over a red-orange T-shirt, a dusting of flour on the apron, dark trousers, comfortable shoes.` },
+    { id: 'dev', name: 'Dev Mistry', role: 'Seventeen · wants to study engineering', age: '17', sw: '#3d5a8a', ppe: false,
+      look: `British Indian teenager aged 17, short black hair, blue T-shirt, jeans, white trainers, a dark rucksack on both shoulders.` },
+    { id: 'jess', name: 'Jess Carter', role: 'Parent at the school gate', age: '30s', sw: '#7c4d7a', ppe: false,
+      look: `white British woman in her 30s, strawberry-blonde ponytail, plum cardigan, jeans, trainers.` },
+    { id: 'len', name: 'Len Haworth', role: 'Retired signalman · regular at the Kestrel Arms', age: 'late 60s', sw: '#6b5a44', ppe: false,
+      look: `white British man in his late 60s, short silver hair, a plain brown flat cap, brown tweed jacket, dark trousers, brown shoes.` },
+    { id: 'town_shopper', name: 'Shopper', role: 'Townsperson', age: '40s', sw: '#7a2f3a', ppe: false,
+      look: `Black British woman in her 40s, short natural hair, wine-red wool coat, dark trousers, a plain canvas shopping bag.` },
+    { id: 'town_teen', name: 'Teenager', role: 'Townsperson', age: '15', sw: '#c9a032', ppe: false,
+      look: `mixed-heritage British teenager aged about 15, messy brown hair, plain mustard hoodie, jeans, trainers.` },
+    { id: 'town_farmer', name: 'Farmer', role: 'Townsperson', age: '40s', sw: '#5a5236', ppe: false,
+      look: `white British farmer in her 40s, ginger hair under a plain flat cap, olive waxed jacket, green wellington boots, dark trousers.` },
+    { id: 'town_postie', name: 'Postal worker', role: 'Townsperson', age: '30s', sw: '#3f6fa8', ppe: false,
+      look: `Black British man in his 30s, short hair, plain blue polo shirt, dark shorts, a plain grey shoulder bag (no logos or badges), trainers.` },
+    { id: 'town_walker', name: 'Hill walker', role: 'Townsperson', age: '20s', sw: '#2f7f7a', ppe: false,
+      look: `white British woman in her 20s, blonde hair in a short plait, teal waterproof anorak, walking trousers, walking boots, a small rucksack.` },
+    { id: 'town_pensioner', name: 'Neighbour', role: 'Townsperson', age: '70s', sw: '#3a3a3e', ppe: false,
+      look: `British Caribbean man in his 70s, short grey hair, charcoal jacket over a knitted jumper, dark trousers, polished shoes, a cheerful smile.` }
+  ]}
+];
+
+const store = { get(k) { try { return JSON.parse(localStorage.getItem(k) || '{}'); } catch (e) { return {}; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
+const KEY = 'lineside_casting_done';
+let done = store.get(KEY);
+const texts = { style: STYLE };
+document.getElementById('style-text').textContent = STYLE;
+
+const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const wrap = document.getElementById('batches');
+let total = 0;
+BATCHES.forEach((b, bi) => {
+  const sec = document.createElement('section'); sec.className = 'batch'; sec.setAttribute('aria-labelledby', 'b' + bi);
+  sec.innerHTML = `<h2 id="b${bi}">${esc(b.name)}</h2><p>${esc(b.note)}</p>`;
+  b.people.forEach(p => {
+    total++;
+    texts[p.id + ':turn'] = TURN(p.look);
+    texts[p.id + ':port'] = PORT(p.look, p.portExtra);
+    if (p.ppe) texts[p.id + ':ppe'] = PPE(p.look);
+    const c = document.createElement('article'); c.className = 'card' + (done[p.id] ? ' done' : ''); c.style.setProperty('--swatch', p.sw); c.id = 'card-' + p.id;
+    c.innerHTML = `<div class="top"><div><h3>${esc(p.name)}</h3><div class="role">${esc(p.role)}</div></div>
+        <div class="chips"><span class="chip">${esc(p.age)}</span>${p.ppe ? '<span class="chip ppe">Needs PPE</span>' : ''}</div></div>
+      <p class="look">${esc(p.look.charAt(0).toUpperCase() + p.look.slice(1))}</p>
+      <div class="btns"><button class="primary" data-copy="${p.id}:turn">Copy turnaround prompt</button><button data-copy="${p.id}:port">Copy portrait prompt</button>${p.ppe ? `<button data-copy="${p.id}:ppe">Copy PPE prompt</button>` : ''}</div>
+      <details><summary>Show the prompts</summary><pre>${esc(texts[p.id + ':turn'])}</pre><pre>${esc(texts[p.id + ':port'])}</pre>${p.ppe ? `<pre>${esc(texts[p.id + ':ppe'])}</pre>` : ''}</details>
+      <label class="done-toggle"><input type="checkbox" id="done-${p.id}" ${done[p.id] ? 'checked' : ''}> Images sent to Claude</label>`;
+    sec.appendChild(c);
+  });
+  wrap.appendChild(sec);
+});
+
+function tally() {
+  const n = Object.values(done).filter(Boolean).length;
+  document.getElementById('count').textContent = `${n} of ${total} done`;
+  document.getElementById('fill').style.width = (100 * n / total) + '%';
+}
+tally();
+
+document.addEventListener('change', e => {
+  const t = e.target; if (!t.id || !t.id.startsWith('done-')) return;
+  const id = t.id.slice(5); done[id] = t.checked; store.set(KEY, done);
+  document.getElementById('card-' + id).classList.toggle('done', t.checked); tally();
+});
+
+document.addEventListener('click', e => {
+  const b = e.target.closest('button[data-copy]'); if (!b) return;
+  const txt = texts[b.dataset.copy], label = b.textContent;
+  const ok = () => { b.textContent = 'Copied'; b.classList.add('ok'); setTimeout(() => { b.textContent = label; b.classList.remove('ok'); }, 1600); };
+  const fallback = () => { const d = b.closest('.box, .card').querySelector('details'); if (d) { d.open = true; const k = (b.dataset.copy.split(':')[1] || ''); const pre = d.querySelectorAll('pre')[{ turn: 0, port: 1, ppe: 2 }[k] || 0]; const r = document.createRange(); r.selectNodeContents(pre); const s = getSelection(); s.removeAllRanges(); s.addRange(r); } b.textContent = 'Selected, copy it'; setTimeout(() => { b.textContent = label; }, 2400); };
+  try { navigator.clipboard.writeText(txt).then(ok, fallback); } catch (err) { fallback(); }
+});
+</script>
