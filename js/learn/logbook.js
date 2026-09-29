@@ -50,12 +50,13 @@ window.LS = window.LS || {};
       <div class="lk-grid">
         <section class="lk-card"><h3>Your morning against an expert’s</h3><div class="lk-two"><div><div class="eyebrow">You</div>${tl(st.actions, 'you')}</div><div><div class="eyebrow">An expert</div>${tl(expert, 'exp')}</div></div>
           <p class="lk-p">${foundPipe ? `You found the pipe at ${esc(hm(foundPipe.at))}.` : 'You never found out what was holding up the dig.'} You chose: ${st.decisions.length ? st.decisions.map(id => `<b>${esc(dec(id))}</b>`).join('; ') : 'nothing'}.</p>
-          <p class="lk-p dim">An expert would: ${esc(LB.expertLine)}</p></section>
+          <p class="lk-p dim">An expert would: ${esc(LB.expertLine)}</p>
+          <p class="lk-p">${(st.help || []).length ? `You asked for help ${st.help.length} time${st.help.length > 1 ? 's' : ''}: ${st.help.map(h => `${esc(who(h.who))} (${esc(h.stage)})`).join(', ')}.${st.help.some(h => h.cost) ? ' You spent your favour with Pat.' : ''} That’s independence, not a mark against you.` : 'You worked it out without asking anyone. Next time, don’t be shy: Pat’s favour is there to be used.'}</p></section>
         <section class="lk-card"><h3>Confidence against results</h3><p class="lk-cal">${esc(calLine)}</p><ul class="lk-conf">${conf.map(c => `<li class="${c.ok ? 'ok' : 'no'}"><span>${esc(where[c.where] || c.where)}</span><em>${esc(confLabel[c.id] || '')}</em><b>${c.ok ? '✓' : '✗'}</b></li>`).join('')}</ul><p class="lk-p dim">${esc(calNote)}</p></section>
         <section class="lk-card"><h3>Luck and judgement</h3><p class="lk-p">${esc(st.luck || D.luck[0].t)}</p><p class="lk-p dim">Your grade is for your decisions, never the dice.</p>
           <div class="lk-score"><b>${g.total}</b><span>/ 100 on your last Hour Eight${P.lineBest && P.lineBest.total !== g.total ? ` · best ${P.lineBest.total}` : ''}</span></div><ul class="lk-dims">${(g.dims || []).map(d => `<li><span>${esc(d.dim)}</span><i><b style="width:${100 * d.got / d.points}%"></b></i><em>${d.got}/${d.points}</em></li>`).join('')}</ul></section>
         <section class="lk-card"><h3>Your takeaway</h3><blockquote>“${esc(P.takeaway || mod.talk.takeaways[0])}”</blockquote>
-          ${P.brew && P.brew.teach ? `<p class="lk-p">Teach-back to Dev: ${P.brew.teach.hit.length} of ${P.brew.teach.of} key points.</p>` : ''}
+          ${P.brew && P.brew.teach ? `<p class="lk-p">Teach-back to ${esc(L.person(mod.talk.teachBack.who, mod).name.split(' ')[0])}: ${P.brew.teach.hit.length} of ${P.brew.teach.of} key points.</p>` : ''}
           ${flagged.length ? `<p class="lk-p">Still worth a look: ${flagged.map(id => esc((L.mcById(mod, id) || {}).short || id)).join(', ')}. A lamp check is booked for it.</p>` : '<p class="lk-p dim">No misconceptions left flagged.</p>'}</section>
         <section class="lk-card wide"><h3>${lit ? 'In Harrowby now' : 'When the lamp is lit'}</h3><ul class="lk-unlocks">
           <li class="${lit ? 'on' : ''}"><span class="lw-lampicon ${lit ? 'lit' : ''}"></span><b>${esc(mod.lamp.label)}</b><small>${lit ? 'Lit ' + esc(mod.lamp.where) + '.' : 'Score 45 or more on Hour Eight, with no unsafe choices.'}</small></li>

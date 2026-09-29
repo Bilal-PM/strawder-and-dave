@@ -3,8 +3,8 @@
  * You're dropped into the middle of something already going on: Saturday, 06:10, hour eight of a 56-hour road
  * closure at the Crag Lane crossing. The clock moves only when you act (so it's calm and accessible). Find out,
  * put the new times on the cabin board, diagnose, decide, then make the 07:00 status call from sentence chips.
- * Jo is on the phone as a coach (LS.AI.coach: a hint ladder that never gives the answer; safety questions always
- * get Hannah's authored line). The rubric is deterministic and never AI-marked; unsafe choices cap it at "Not yet".
+ * Help comes from the Brew's three voices: authored hints at three levels for each stage (the veteran's costs your
+ * one favour), and a straight answer from Hannah on the crossing tests. Nothing here is generated. The rubric is deterministic; unsafe choices cap it at "Not yet".
  */
 window.LS = window.LS || {};
 (function () {
@@ -85,12 +85,12 @@ window.LS = window.LS || {};
   L.steps.line = async function (mod, P) {
     const D = mod.do, V = P.variant ? (D.variants || []).find(v => v.id === P.variant) : null;
     const say = (id, dflt) => (V && V.say && V.say[id]) || dflt;
-    const st = P.line = { actions: [], clock: D.clock.startMin, found: {}, board: {}, diag: {}, decisions: [], call: null, coach: 0, variant: P.variant || null, started: Date.now() };
+    const st = P.line = { actions: [], clock: D.clock.startMin, found: {}, board: {}, diag: {}, decisions: [], call: null, help: [], stage: 'find', variant: P.variant || null, started: Date.now() };
     L.save();
     // 1) dropped in
     let el = L.stage(`<div class="lo-intro"><div class="lo-clock big"><span>${esc(D.when)}</span><b>${esc(D.clock.start)}</b><small>Hour ${D.clock.nowHour} of ${D.plan.wall}</small></div>
       <div class="eyebrow">${esc(D.where)}${V ? ' · replay: ' + esc(V.note) : ''}</div><h2>${esc(D.title)}</h2><p class="lo-setup">${esc(D.setup)}</p><p class="lo-arrive"><i>${esc(D.arrive)}</i></p>
-      <div class="lo-rules"><div><b>50 minutes</b><small>until the 07:00 call</small></div><div><b>The clock</b><small>moves when you act, not while you think</small></div><div><b>Jo’s on the phone</b><small>as your coach, if you want her</small></div></div>
+      <div class="lo-rules"><div><b>50 minutes</b><small>until the 07:00 call</small></div><div><b>The clock</b><small>moves when you act, not while you think</small></div><div><b>Ask for help</b><small>Callum’s on site; Amira and Pat are a phone call away (Pat’s costs a favour)</small></div></div>
       <div class="lw-cta"><button class="btn dark" data-primary>Step into the cabin →</button></div></div>`);
     await L.go(el);
 
@@ -98,7 +98,8 @@ window.LS = window.LS || {};
     const ev = D.evidence;
     const avail = e => (e.until == null || st.clock < e.until) && (e.after == null || st.clock >= e.after) && !st.found[e.id] && !(e.id === 'sheet' && st.found.tom);
     const timeLeft = () => D.clock.callMin - st.clock;
-    const coachBtn = `<button class="lo-coach" data-coach aria-label="Ring Jo for a hint"><span>📞</span> Ring Jo <small data-coachn>${st.coach ? st.coach + ' call' + (st.coach > 1 ? 's' : '') : 'coach'}</small></button>`;
+    const favoursLeft = () => D.help.favours - st.help.filter(h => h.cost).length;
+    const coachBtn = `<button class="lo-coach" data-coach aria-label="Ask for help"><span class="lo-faces">${D.help.voices.map(v => `<i>${L.face(v.id, 'smile', mod)}</i>`).join('')}</span> Ask for help <small data-coachn>${st.help.length ? st.help.length + ' asked' : favoursLeft() + ' favour'}</small></button>`;
     const bar = () => `<div class="lo-bar"><div class="lo-clock"><b>${hm(st.clock)}</b><small>Sat · hour ${Math.floor(D.clock.nowHour + (st.clock - D.clock.startMin + 10) / 60)} of ${D.plan.wall}</small></div><div class="lo-left ${timeLeft() <= 10 ? 'low' : ''}"><b>${Math.max(0, timeLeft())} min</b><small>to the 07:00 call</small></div>${coachBtn}</div>`;
     const mapPins = () => ev.map((e, i) => `<span class="lo-pin ${st.found[e.id] ? 'seen' : ''} ${avail(e) ? '' : 'gone'}" style="left:${e.map[0]}%;top:${e.map[1]}%" aria-hidden="true">${i + 1}</span>`).join('');
     const notebook = () => ev.filter(e => st.found[e.id]).map(e => `<li><b>${esc(e.label)}</b> <small>${esc(hm(st.found[e.id].at))}</small><p>${esc(say(e.id, e.say))}</p></li>`).join('') || '<li class="empty">Nothing yet. Choose what to check first.</li>';
@@ -106,27 +107,31 @@ window.LS = window.LS || {};
       <ol class="lo-ev">${ev.map((e, i) => { const a = avail(e), f = st.found[e.id]; return `<li><button class="lo-evb ${f ? 'seen' : ''}" data-ev="${e.id}" ${a ? '' : 'disabled'}><span class="lo-n">${i + 1}</span><span><b>${esc(e.label)}</b><small>${esc(e.where)}${e.id === 'tom' ? ' · until 06:30' : e.id === 'sheet' ? ' · after 06:30' : ''}</small></span><span class="lo-cost">${f ? 'Checked' : !a ? (e.id === 'tom' ? 'Gone home' : '—') : e.cost + ' min'}</span></button></li>`; }).join('')}</ol></div>
       <div class="lo-note"><div class="eyebrow">Your notebook</div><ul>${notebook()}</ul>
       <div class="lw-cta"><button class="btn dark" data-board data-primary>Open the cabin board →</button></div></div></div>`;
-    const coachUI = async host => {
-      st.coach++; L.save();
-      const lvl = Math.min(3, st.coach);
-      let r = null; try { r = LS.AI ? await LS.AI.coach({ concept: mod.talk.ai && mod.talk.ai.concept, question: 'hourEight', answer: st.diag.q1 ? (D.diagnose.q1.options.find(o => o.id === st.diag.q1) || {}).t : '', hintsGiven: lvl - 1, persona: 'jo' }) : null; } catch (e) { }
-      const text = (r && r.text) || D.coach.ladder[lvl - 1];
-      const box = L.modal(`<div class="lo-callin"><div class="eyebrow">📞 Jo, on the phone · hint ${lvl} of 3</div>${L.lineHTML('jo', text, { mood: 'neutral', noRole: true })}
-        <div class="lr-free"><input id="loAsk" class="field" maxlength="200" aria-label="Ask Jo something" placeholder="Ask Jo something (optional)"><button class="btn line small" data-askjo>Ask</button></div><div class="lo-answer"></div>
-        <div class="lw-cta"><button class="btn dark small" data-hang>Thanks, Jo</button></div></div>`, 'lo-call');
-      box.querySelector('[data-askjo]').onclick = async () => {
-        const q = box.querySelector('#loAsk').value.trim(); if (!q) return;
-        const safe = /\b(cut|skip|shorten|reduce|drop)\b[^.?!]{0,20}\b(tests?|checks?|inspection)\b|\b(stay on|extra shift|longer shift|work (through|on)|keep (them|the gang|tom))\b|\bbarriers?\b|\blights?\b/i.test(q) || (LS.AI && LS.AI.safetyTopic && LS.AI.safetyTopic(q));
-        let a;
-        if (safe) a = L.lineHTML(D.coach.safety.who, D.coach.safety.say, { mood: 'neutral', noRole: true });
-        else { let rr = null; try { rr = LS.AI ? await LS.AI.coach({ concept: mod.talk.ai && mod.talk.ai.concept, question: 'hourEight', answer: q, hintsGiven: lvl - 1 }) : null; } catch (e) { } a = L.lineHTML('jo', (rr && rr.text) || D.coach.ladder[Math.min(2, lvl)], { mood: 'neutral', noRole: true }); }
-        box.querySelector('.lo-answer').innerHTML = a;
-      };
+    // Help: the three voices from the Brew. Each has an authored hint for the stage you're at; the veteran's is the
+    // most insightful and costs your one favour. There's also a straight answer from Hannah on the crossing tests.
+    const coachUI = async () => {
+      const voiceHTML = v => { const p = L.person(v.id, mod), used = st.help.some(h => h.who === v.id && h.stage === st.stage), out = v.cost && favoursLeft() < v.cost && !used;
+        return `<button class="lo-voice lv${v.level}" data-voice="${v.id}" ${out ? 'disabled' : ''}><span class="lw-face">${L.face(v.id, 'smile', mod)}</span><span class="lo-vt"><b>${esc(p.name)}</b><small>${esc((mod.talk.panel.find(x => x.id === v.id) || {}).label || '')} · ${esc(v.how)}</small></span><span class="lo-vc">${v.cost ? (out ? 'Favour used' : used ? 'Asked' : `${v.cost} favour`) : used ? 'Asked' : 'Free'}</span></button>`; };
+      const box = L.modal(`<div class="lo-callin"><div class="eyebrow">Ask for help · ${favoursLeft()} favour left</div><h3>Who do you turn to?</h3>
+        <div class="lo-voices">${D.help.voices.map(voiceHTML).join('')}</div>
+        <button class="lo-safe" data-safe>🦺 ${esc(D.help.safety.ask)}</button>
+        <div class="lo-answer" aria-live="polite"></div>
+        <div class="lw-cta"><button class="btn dark small" data-hang>Back to it</button></div></div>`, 'lo-call');
+      const answer = box.querySelector('.lo-answer');
+      box.querySelectorAll('[data-voice]').forEach(b => b.onclick = () => {
+        const v = D.help.voices.find(x => x.id === b.dataset.voice), again = st.help.some(h => h.who === v.id && h.stage === st.stage);
+        if (!again) { st.help.push({ who: v.id, level: v.level, stage: st.stage, cost: v.cost || 0, at: st.clock }); L.save(); }
+        answer.innerHTML = L.lineHTML(v.id, v.hints[st.stage] || v.hints.find, { mood: 'smile', noRole: true, cls: v.level === 3 ? 'vet' : '' });
+        box.querySelector('.eyebrow').textContent = `Ask for help · ${favoursLeft()} favour left`;
+        box.querySelectorAll('[data-voice]').forEach(x => { const vv = D.help.voices.find(y => y.id === x.dataset.voice); if (vv.cost && favoursLeft() < vv.cost && !st.help.some(h => h.who === vv.id && h.stage === st.stage)) { x.disabled = true; x.querySelector('.lo-vc').textContent = 'Favour used'; } if (x === b) x.querySelector('.lo-vc').textContent = 'Asked'; });
+        L.sfx(v.level === 3 ? 'good' : 'tap');
+        if (v.level >= 2 && st.stage === 'cabin' && onCoach) onCoach(3);
+      });
+      box.querySelector('[data-safe]').onclick = () => { st.safetyAsked = true; answer.innerHTML = L.lineHTML(D.help.safety.who, D.help.safety.say, { mood: 'neutral', noRole: true }); L.sfx('tap'); };
       await L.pick(box, '[data-hang]'); L.closeModal(box);
-      showBar(); if (onCoach) onCoach(lvl);
-      return lvl;
+      showBar();
     };
-    // the clock, the time to the call and Jo's phone sit in a bar above the step (it never scrolls away)
+    // the clock, the time to the call and the help button sit in a bar above the step (it never scrolls away)
     let onCoach = null;
     const showBar = () => { const sub = L.sub(bar()); const c = sub && sub.querySelector('[data-coach]'); if (c) c.onclick = () => { if (!document.querySelector('#learn .lw-modal')) coachUI(); }; };
     let timeUp = false;
@@ -158,18 +163,19 @@ window.LS = window.LS || {};
     el = L.stage(`<div class="lo"><div class="lo-cabin"><div class="lo-found-chips">${knowS3 ? `<button class="lo-apply" data-apply="S3">Found: S3 dig-out +3 h (the ${V ? 'cable' : 'pipe'}) · <b>Put it on the board</b></button>` : ''}${knowSheet && !knowS3 ? `<span class="lo-fc">Handover sheet: extra time on S3, “TBC”. Stretch S3 yourself.</span>` : ''}${st.found.steve ? `<button class="lo-apply" data-apply="BAL">Found: ballast now arrives 14:00 (hour 16) · <b>Put it on the board</b></button>` : ''}${st.found.crane ? `<span class="lo-fc">Crane window shown on S4: hire ends ${esc(hm(((craneTo + D.clock.startHour) % 24) * 60))}</span>` : ''}${!knowS3 && !knowSheet ? '<span class="lo-fc">You haven’t found out what’s behind yet. The board shows the original plan.</span>' : ''}</div>
       <div class="lo-tablehost"></div>${diagHTML()}<div class="lw-cta"><button class="btn dark" data-primary data-decide disabled>Decide what to do →</button></div></div></div>`);
     const table = L.Table(el.querySelector('.lo-tablehost'), tcfg, { editable: { dur: true }, toggles: ['float', 'times'], hint: 'Tap a job to stretch it. Put in what you found and watch the finish, the wall and the crane window.', onSay: (who, t) => { const n = el.querySelector('.lo-say'); if (n) n.remove(); el.querySelector('.lo-tablehost').insertAdjacentHTML('afterend', `<div class="lo-say">${L.lineHTML(who, t, { noRole: true })}</div>`); } });
-    if (st.coach >= 3) table.highlight(['S3', 'S4']);
+    st.stage = 'cabin';
     el.querySelectorAll('[data-apply]').forEach(b => b.onclick = () => { const id = b.dataset.apply; if (id === 'S3') table.setDur('S3', 9); if (id === 'BAL') table.setDur('BAL', 16); st.board[id] = true; b.disabled = true; b.classList.add('done'); L.sfx('place'); L.save(); });
     const gc = L.bindConf(el, () => upd());
     const upd = () => { el.querySelector('[data-decide]').disabled = !(st.diag.q1 && st.diag.q2 && st.diag.q3 && gc()); };
     el.querySelectorAll('[data-dq]').forEach(b => b.onclick = () => { const k = b.dataset.dq; st.diag[k] = b.dataset.do; el.querySelectorAll(`[data-dq="${k}"]`).forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', x === b); }); L.sfx('tap'); L.save(); upd(); });
-    onCoach = lv => { if (lv >= 3) table.highlight(['S3', 'S4']); };
+    onCoach = () => table.highlight(['S3', 'S4']);   // asking Amira or Pat here lights up the two jobs that matter
     await L.go(el, '[data-decide]');
     const dconf = gc(), dOk = st.diag.q1 === 'S3' && st.diag.q2 === '56' && st.diag.q3 === 'crane';
     L.recordConf(P, 'hour-eight', dconf, dOk);
     st.boardActs = table.state().acts.map(a => ({ id: a.id, dur: a.dur })); table.destroy();
 
     // 4) decide
+    st.stage = 'decide'; onCoach = null;
     const model = () => {   // the learner's own model (their board) plus the decisions' effects
       const acts = D.plan.acts.map(a => { const b = st.boardActs.find(x => x.id === a.id); return Object.assign({}, a, { dur: b ? b.dur : a.dur, preds: a.preds.slice() }); });
       if (st.decisions.includes('D1')) { const s3 = acts.find(a => a.id === 'S3'); if (s3.dur > 6) s3.dur = Math.max(6, s3.dur - 1.5); }
@@ -197,6 +203,7 @@ window.LS = window.LS || {};
     }
 
     // 5) the 07:00 call
+    st.stage = 'call';
     const out = L.hourEight(D, st.decisions, V);
     const R = D.report, chosenActs = D.decisions.filter(d => st.decisions.includes(d.id) && !d.safetyFail && !d.trap);
     const truthMargin = out.clash ? 0 : Math.max(0, out.margin);

@@ -1,8 +1,8 @@
 /* learning: plays the first Learning World module (Project Planning) end to end through the real UI, on desktop
- * and mobile, with the scripted AI classmates:
+ * and mobile. Everything is authored: the game must not load the AI tutor, and nothing may mention AI or models.
  *   title → "Learn: Project Planning" → the door (show me / new) → the Board (7 beats) → the Bench (the Planning
- *   Table's three challenges, including loop protection; three puzzles answered correctly) → the Brew (chips and
- *   free text, including a misconception that must be detected and addressed; teach-back to Dev) → Hour Eight (the
+ *   Table's three challenges, including loop protection; three puzzles answered correctly) → the Brew (three authored
+ *   voices; a misconception picked, countered and corrected; the teach-back) → Hour Eight (help from the voices; the
  *   expert path must reach Gold; a replay with an unsafe choice must be refused by Hannah and capped at "Not yet")
  *   → the Logbook (lamp lit) → back to the title.
  * Then: progress is saved in lineside_learn_v1 (not the chapter save), the office board in Chapter 1 offers the
@@ -39,8 +39,7 @@ async function play(t, r, vp) {
     await shot('title');
     await act('#tLearn');
     await page.waitForSelector('#learn.on .lw-door');
-    const ai = await page.evaluate(() => LS.AI && LS.AI.status().provider);
-    r.ok(ai === 'scripted', `the AI tutor should start on the scripted provider (got ${ai})`);
+    r.ok(await page.evaluate(() => !(window.LS && LS.AI) && !document.querySelector('script[src*="js/ai/"]')), 'the game should not load the AI tutor any more');
     await shot('door');
     await act('[data-style="show"]'); await act('[data-level="new"]'); await act('#lwBegin');
 
@@ -116,33 +115,31 @@ async function play(t, r, vp) {
     await act('.lp-wend [data-next]');
     await page.waitForSelector('.lw-between [data-primary]'); await act('.lw-between [data-primary]');
 
-    // ---- the Brew ----
+    // ---- the Brew: three authored voices ----
     const chip = async i => { await page.waitForSelector('#lrCompose [data-chip]', { timeout: 20000 }); await act(`#lrCompose [data-chip="${i}"]`); };
-    const say = async s => { await page.waitForSelector('#lrText', { timeout: 20000 }); await page.fill('#lrText', s); await act('#lrCompose [data-send]'); };
-    await page.waitForSelector('#lrText', { timeout: 20000 });
+    await page.waitForSelector('#lrCompose [data-chip]', { timeout: 20000 });
+    r.ok(/remembers the bench/i.test(await text('#lrLog')), 'the Brew did not remember how you did at the Bench');
     await shot('brew');
-    await say('I think the critical path is just the longest task');
-    await page.waitForSelector('.lr-tag.mc', { timeout: 10000 }).catch(() => r.fail('the Brew did not detect the “longest task” misconception in free text'));
-    const mcLine = await text('.lr-msg:has(.lr-tag.mc) .lw-tx');
-    r.ok(/chain|A, C and D|float/i.test(mcLine), `the misconception was not addressed with a counter-example (got "${mcLine.slice(0, 80)}")`);
+    await chip(1);                                                   // b1: the misconception ("the biggest job is critical")
+    await page.waitForSelector('.lr-tag.mc', { timeout: 10000 }).catch(() => r.fail('picking “the biggest job is critical” was not flagged as a misconception'));
+    const counter = await text('#lrLog');
+    r.ok(/A-C-D|add up the chains|chain wins/i.test(counter), 'the misconception was not countered by the other voices');
     await shot('brew-misconception');
-    await chip(0);
-    await page.waitForFunction(() => /shift from earlier|shift|got there|better/i.test(document.querySelector('#lrLog').innerText), null, { timeout: 10000 }).catch(() => r.warn('no “that’s a shift from earlier” acknowledgement after correcting the misconception'));
-    await chip(0);                                                   // s2: logic vs dates
-    await say('They belong to the project. It is shared float, so if the supplier uses it the pipes go critical and everyone needs to know.');  // s3
-    await say('Supervision');                                        // s4: a partial answer gets a follow-up and a probe
-    await page.waitForFunction(() => /PROBE/i.test(document.querySelector('#lrLog').innerText), null, { timeout: 10000 }).catch(() => r.fail('a partial free-text answer was not probed'));
-    await chip(0); await chip(0);                                    // s4 settled, s5
-    await page.waitForSelector('#lrTB', { timeout: 20000 });
-    await page.fill('#lrTB', 'Jobs link up into a chain where one waits for another. The longest chain sets when you finish: that is the critical path. The other jobs have float, so they can slip a bit. And it can change if another chain gets longer.');
+    await chip(0);                                                   // then the best answer
+    await page.waitForFunction(() => /shift from where you started/i.test(document.querySelector('#lrLog').innerText), null, { timeout: 10000 }).catch(() => r.fail('no “that’s a shift” acknowledgement after correcting the misconception'));
+    r.ok(/trick of the trade/i.test(await text('#lrLog')), 'the veteran never shared a trick of the trade');
+    for (let i = 0; i < 4; i++) await chip(0);                       // b2–b5: the best answers
+    await page.waitForSelector('[data-tbc="K3"]', { timeout: 20000 });
+    for (const k of ['K3', 'K4', 'K5', 'K7']) await act(`[data-tbc="${k}"]`);
     await shot('brew-teachback');
     await act('[data-tbsend]');
     await page.waitForSelector('.lr-kp', { timeout: 10000 });
-    const kp = await page.$$eval('.lr-kp li.on', l => l.length); r.ok(kp >= 3, `the teach-back hit only ${kp} of 4 key points`);
-    await page.waitForSelector('[data-tksave]', { timeout: 20000 }); await act('[data-tksave]');
+    const kp = await page.$$eval('.lr-kp li.on', l => l.length); r.ok(kp === 4, `the teach-back hit only ${kp} of 4 key points`);
+    await chip(0);                                                   // the takeaway
     await page.waitForSelector('[data-out]', { timeout: 20000 }); await shot('brew-end');
     const flags = await page.evaluate(() => JSON.parse(localStorage.getItem('lineside_learn_v1')).modules.planning.flags);
-    r.ok((flags.M1 || 0) <= 1, `the M1 flag should have fallen after it was corrected (flags ${JSON.stringify(flags)})`);
+    r.ok((flags.M1 || 0) === 0, `the M1 flag should have fallen after it was corrected (flags ${JSON.stringify(flags)})`);
+    const words = await text('#learn'); r.ok(!/\b(AI|model|download)\b/i.test(words), 'the Brew mentions AI, models or downloads');
     await act('[data-out]');
     await page.waitForSelector('.lw-between [data-primary]'); await act('.lw-between [data-primary]');
 
@@ -151,14 +148,20 @@ async function play(t, r, vp) {
     await act('.lo-intro [data-primary]');
     await page.waitForSelector('[data-ev="tom"]'); await shot('line-find');
     for (const id of ['tom', 'dig', 'crane', 'permit', 'hannah', 'gaz']) { await act(`[data-ev="${id}"]`); if (id === 'dig') await shot('line-evidence'); await act('.lo-found [data-ok]'); }
-    await act('[data-coach]'); await page.waitForSelector('.lo-call');
-    await page.fill('#loAsk', 'Should I cut the tests to save time?'); await act('[data-askjo]');
-    await page.waitForSelector('.lo-answer .lw-line');
-    r.ok(/Hannah/i.test(await text('.lo-answer .lw-nm')), 'asking the coach about cutting the tests did not get Hannah’s authored line');
-    await shot('line-coach');
+    // help from the three voices: the newcomer's nudge is free, the veteran's costs the one favour; Hannah on the tests
+    await act('[data-coach]'); await page.waitForSelector('.lo-call [data-voice="callum"]');
+    await act('[data-voice="callum"]'); r.ok(/trench|waiting/i.test(await text('.lo-answer')), 'Callum gave no hint');
+    await act('[data-voice="pat"]'); r.ok(/Loud problems|half six/i.test(await text('.lo-answer')), 'Pat gave no hint');
+    r.ok(/0 favour/.test(await text('.lo-call .eyebrow')), 'asking Pat did not use the favour');
+    await act('[data-safe]'); r.ok(/Hannah/i.test(await text('.lo-answer .lw-nm')), 'asking about the crossing tests did not get Hannah’s line');
+    await shot('line-help');
     await act('[data-hang]');
     await act('[data-board]');
     await page.waitForSelector('.lo-cabin'); await act('[data-apply="S3"]');
+    await act('[data-coach]'); await page.waitForSelector('.lo-call [data-voice="amira"]');
+    r.ok(await page.$eval('[data-voice="pat"]', b => b.disabled), 'Pat can still be asked after the favour was used');
+    await act('[data-voice="amira"]'); r.ok(/crane/i.test(await text('.lo-answer')), 'Amira gave no hint at the cabin board');
+    await act('[data-hang]');
     const fin8 = await text('.lo-tablehost .lt-finish b'); r.ok(/06:00/.test(fin8), `with S3 +3 h the cabin board should finish at 06:00 Mon (hour 56), shows ${fin8}`);
     await act('[data-dq="q1"][data-do="S3"]'); await act('[data-dq="q2"][data-do="56"]'); await act('[data-dq="q3"][data-do="crane"]'); await act('.lo-diag [data-conf="certain"]');
     await shot('line-cabin');
@@ -213,8 +216,6 @@ async function play(t, r, vp) {
     const sc = await page.evaluate(() => LS.Learn.selfCheck(LS.MODULES.planning));
     for (const c of sc) r.ok(c.ok, `numbers disagree with the critical-path engine: ${c.what}: ${c.bad.join(', ')}`);
 
-    const stats = await page.evaluate(() => LS.AI.status().stats);
-    r.ok(stats.lines > 0, 'the Brew never asked the AI tutor (LS.AI.say) for a line');
     // ---- in the world: the office board offers the module, and the Planning Lens is live ----
     await H.newGame(page, { name: 'Lamp' });
     await H.gotoRoom(page, 'office');
@@ -242,14 +243,14 @@ async function play(t, r, vp) {
 
     for (const i of found.values()) { const m = `${TYPES[i.type] || i.type}: ${i.el ? i.el + ' ' : ''}${i.msg} [on: ${i.screens.join('; ')}]`; if (mobile) r.fail(m); else r.warn(m); }
     r.ok(P.errors.length === 0, 'JS errors:\n' + H.fmtErrors(P.errors));
-    r.note(`${n} screens · Hour Eight ${g1.total}/100 ${g1.band}, unsafe replay ${g2.band} · AI lines ${stats.lines} (model ${stats.model}) · ${found.size ? found.size + ' layout issues' : 'layout clean'}`);
+    r.note(`${n} screens · Hour Eight ${g1.total}/100 ${g1.band}, unsafe replay ${g2.band} · ${found.size ? found.size + ' layout issues' : 'layout clean'}`);
   } catch (e) { if (P.errors.length) r.log('JS errors so far:\n' + H.fmtErrors(P.errors)); throw e; }
   finally { await P.close(); }
 }
 
 module.exports = {
   name: 'learning',
-  about: 'Plays the Project Planning module end to end (Board, Bench, Brew, Hour Eight, Logbook) with the scripted AI; audits every screen.',
+  about: 'Plays the Project Planning module end to end (Board, Bench, Brew, Hour Eight, Logbook) (all authored, no AI); audits every screen.',
   async run(t) {
     for (const vp of ['desktop', 'mobile']) await t.check('Project Planning module, end to end', vp, r => play(t, r, vp));
   }

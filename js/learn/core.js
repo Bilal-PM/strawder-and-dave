@@ -6,7 +6,7 @@
  *   · progress, saved separately from the chapter save, in localStorage 'lineside_learn_v1' (saved at every step);
  *   · the #learn overlay (a card over the living world, with the loop strip and "Save and leave");
  *   · portraits and dialogue lines, confidence ratings, keyboard handling;
- *   · the AI classmates (LS.AI, scripted by default; an on-device model only if the player opts in);
+ *   · everything the characters say is authored in the module data (no generated text, nothing downloaded);
  *   · world integration: backdrops for each step, the lit Planning lamp and the Planning Lens.
  *
  * Nothing here runs unless the player chooses to learn: Chapter 1 is unchanged. Classic script, works from file://.
@@ -51,7 +51,7 @@ window.LS = window.LS || {};
   const PACK = () => LS.PACKS && LS.PACKS['kestrel-vale'];
   L.person = (id, mod) => {
     const P = PACK() || {}, c = (P.cast || {})[id], town = P.world && P.world.town && P.world.town[id];
-    const mp = mod && mod.talk && (mod.talk.personas || []).find(p => p.id === id);
+    const mp = mod && mod.talk && (mod.talk.panel || []).find(p => p.id === id);
     const look = (mp && mp.look) || (c && c.look) || (town && town.look) || null;
     return { id, name: (mp && mp.name) || (c && c.name) || (town && town.name) || id, role: (mp && mp.role) || (c && c.role) || (town && town.role) || '', look };
   };
@@ -132,57 +132,6 @@ window.LS = window.LS || {};
   };
   L.recordConf = (P, where, conf, ok) => { P.conf = (P.conf || []).filter(c => c.where !== where); P.conf.push({ where, conf: conf ? conf.v : null, id: conf ? conf.id : null, ok: !!ok }); };
 
-  // ---------- AI classmates ----------
-  let aiReady = false;
-  L.aiInit = function () {
-    if (!LS.AI) return;
-    const want = (L.store.settings && L.store.settings.ai) === 'model';
-    try {
-      if (want) { LS.AI.optIn(true); LS.AI.init({ provider: (navigator && navigator.gpu) ? 'webllm' : 'auto', optIn: true, onStatus: s => { L.aiStatus = s; const el = $('#lwAiStatus'); if (el) el.textContent = L.aiLabel(); } }); }
-      else LS.AI.init({ provider: 'scripted' });   // never awaited: the tutor never blocks play
-    } catch (e) { /* the scripted lines in the module still play */ }
-    aiReady = true;
-  };
-  L.aiLabel = () => { const s = LS.AI && LS.AI.status ? LS.AI.status() : null; if (!s) return 'Scripted classmates'; if (s.state === 'ready') return 'On-device model ready'; if (s.state === 'downloading') return `Downloading the model… ${Math.round((s.progress || 0) * 100)}%`; if (s.state === 'checking') return 'Checking this device…'; if (s.state === 'failed') return 'Model unavailable here: using scripted classmates'; return (L.store.settings.ai === 'model') ? 'Scripted classmates (' + (s.reason || 'no model') + ')' : 'Scripted classmates'; };
-  L.setAI = function (mode) {
-    L.store.settings = L.store.settings || {}; L.store.settings.ai = mode === 'model' ? 'model' : 'off'; L.save();
-    if (LS.AI) { try { LS.AI.optIn(mode === 'model'); } catch (e) { } }
-    L.aiInit();
-  };
-  // Register this module's grounding with the tutor: a concept built on the tutor's own card, plus its personas.
-  L.registerAI = function (mod) {
-    const A = LS.AI, ai = mod.talk && mod.talk.ai; if (!A || !ai || !A.concepts || !A.concepts['project-planning']) return;
-    const base = A.concepts['project-planning'];
-    const mcs = {}; Object.keys(base.misconceptions).forEach(k => { mcs[k] = Object.assign({}, base.misconceptions[k], ai.probes && ai.probes[k] ? { probes: ai.probes[k] } : {}, ai.examples && ai.examples[k] ? { example: ai.examples[k] } : {}); });
-    const disc = mod.talk.prompts.map((p, i) => ({ id: 'm' + i, facet: p.facet in base.followUps ? p.facet : 'critical_path', kind: 'question', text: p.text }));
-    const coachQ = { hourEight: { ask: 'What’s the critical problem at Crag Lane?', correct: [/\b(S3|dig|pipe|culvert)\b/i], wrong: [/\bballast\b[^.?!]{0,20}\bcritical\b/i], hints: (mod.do.coach.ladder || []).slice(0, 3), leaks: [/\bhour\s*56\b/i, /\b56\b/, /\bD[1-8]\b/, /\bsecond gang\b/i, /\bpre-?assembl\w*/i] } };
-    A.concepts[ai.concept] = Object.assign({}, base, {
-      id: ai.concept, title: 'Project planning', misconceptions: mcs,
-      followUps: Object.assign({}, base.followUps, ai.followUps || {}), teachBack: Object.assign({}, base.teachBack, ai.teachBack || {}),
-      discussion: disc, scenario: Object.assign({}, base.scenario, { questions: Object.assign({}, base.scenario.questions, coachQ) })
-    });
-    (mod.talk.personas || []).forEach(p => { if (!A.personas[p.id] && p.voice) A.personas[p.id] = Object.assign({ id: p.id, name: p.name, short: p.name.split(' ')[0], role: p.role, stance: p.stance }, p); });
-  };
-
-  // ---------- Misconception listening (module cues + the tutor's classifier) ----------
-  L.listen = function (mod, text) {
-    const out = { mc: [], understood: [], confidence: 0.2, safety: null, source: 'rules' };
-    const t = String(text || '');
-    if (!t.trim()) return out;
-    if (LS.AI && LS.AI.safetyTopic) out.safety = LS.AI.safetyTopic(t) || null;
-    (mod.concept.misconceptions || []).forEach(m => {
-      if ((m.cues || []).some(c => { const re = new RegExp(c, 'i'), mm = re.exec(t); return mm && !/\b(not|isn'?t|isn’t|doesn'?t|doesn’t|never|rather than|instead of)\b/i.test(t.slice(Math.max(0, mm.index - 24), mm.index)); })) out.mc.push(m.id);
-    });
-    if (LS.AI && LS.AI.classify) {
-      try {
-        const c = LS.AI.classify(t, (mod.talk.ai && LS.AI.concepts[mod.talk.ai.concept]) ? mod.talk.ai.concept : 'project-planning');
-        out.understood = c.understood || []; out.confidence = Math.max(out.confidence, c.confidence || 0); out.ai = c;
-        (c.misconceptions || []).forEach(id => { if ((c.scores[id] || 0) < 0.5) return; const m = mod.concept.misconceptions.find(x => x.ai === id); if (m && !out.mc.includes(m.id)) out.mc.push(m.id); });
-      } catch (e) { }
-    }
-    if (out.mc.length) out.confidence = Math.max(out.confidence, 0.85);
-    return out;
-  };
   L.mcById = (mod, id) => (mod.concept.misconceptions || []).find(m => m.id === id);
 
   // ---------- World integration ----------
@@ -265,14 +214,6 @@ window.LS = window.LS || {};
   // Called by game.js after the board drawer closes, if the player chose to learn. Resolves when they leave.
   L.startFromWorld = function (w) { const id = pending; pending = null; return L.start(id, { from: 'world', world: w }); };
 
-  // Settings rows (game.js puts these in the Settings tab of the project board).
-  L.settingsHTML = function () {
-    const m = (L.store.settings && L.store.settings.ai) === 'model';
-    return `<div class="set lw-set"><span>AI classmates<small>Off uses the scripted classmates (no download). The on-device model downloads about 0.4–1 GB once and needs WebGPU. It never blocks play and falls back silently.</small><small id="lwAiStatus">${esc(L.aiLabel())}</small></span>
-      <div class="lw-seg" role="radiogroup" aria-label="AI classmates"><button role="radio" aria-checked="${!m}" class="${!m ? 'on' : ''}" data-ai="off">Off</button><button role="radio" aria-checked="${m}" class="${m ? 'on' : ''}" data-ai="model">On-device model</button></div></div>`;
-  };
-  L.bindSettings = function (el, rerender) { el.querySelectorAll('[data-ai]').forEach(b => b.onclick = () => { L.setAI(b.dataset.ai); L.sfx('tap'); if (rerender) rerender(); }); };
-
   // ---------- The runner ----------
   L.cur = null;
   L.start = async function (id, o) {
@@ -281,8 +222,6 @@ window.LS = window.LS || {};
     if (L.busy) return; L.busy = true;
     L.cur = mod; from = o.from || 'title'; onExitCb = o.onExit || null;
     world = o.world || W(); if (world) L.attachWorld(world);
-    if (!aiReady) L.aiInit();
-    L.registerAI(mod);
     L.selfCheck(mod);
     const w = W();
     saved = w ? { room: w.room, x: w.player.x, y: w.player.y, face: w.player.face, cfg: Object.assign({}, w.cfg), attract: w.attract, paused: w.paused, entities: w.entities, objective: w.objective } : null;

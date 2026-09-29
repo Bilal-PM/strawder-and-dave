@@ -510,3 +510,28 @@ body.reduced .lw,body.reduced .lb-note,body.reduced .lb-arrow,body.reduced .lb-c
 .lw-mini li span{width:22px;height:22px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;box-shadow:0 0 0 1.5px var(--line)}
 .lw-mini li.done{color:var(--best)}.lw-mini li.done span{background:var(--best);color:#fff;box-shadow:none}
 .lw-mini li.next{background:var(--ink);color:var(--paper)}.lw-mini li.next span{background:var(--amber);color:var(--ink);box-shadow:none}
+
+/* ---------- The panel: three voices (the Brew and the help on the line) ---------- */
+.lr-seat em{font-style:normal;font-size:9.5px;font-weight:700;letter-spacing:.04em;color:var(--muted);text-align:center;max-width:88px;line-height:1.2}
+.lr-beat{display:flex;align-items:center;gap:12px;margin:16px 0 6px;font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.lr-beat::before,.lr-beat::after{content:'';flex:1;height:1px;background:var(--line)}
+.lr-lead{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.lr-msg.vet .lw-bubble{background:linear-gradient(180deg,#fffaf0,#fff6e6);border-color:rgba(242,169,59,.55);box-shadow:0 2px 12px rgba(242,169,59,.12)}
+.lr-msg.lv-newcomer .lw-bubble{border-style:dashed}
+.lr-tag.vet{background:rgba(242,169,59,.2);color:var(--amberInk)}
+.lr-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.lr-card{display:flex;gap:10px;align-items:flex-start;text-align:left;padding:11px 13px;border-radius:14px;border:1.5px solid var(--line);background:#fff;font-size:14px;line-height:1.4;font-weight:600;transition:all .15s}
+.lr-card .bx{flex:0 0 18px;height:18px;border-radius:5px;border:1.5px solid var(--line);margin-top:1px;transition:all .15s}
+.lr-card.on{border-color:var(--teal);background:rgba(44,124,119,.06)}.lr-card.on .bx{background:var(--teal);border-color:var(--teal);box-shadow:inset 0 0 0 3px #fff}
+.lo-faces{display:inline-flex}.lo-faces i{width:22px;height:22px;border-radius:50%;overflow:hidden;margin-left:-6px;box-shadow:0 0 0 2px var(--ink);background:var(--paper2)}.lo-faces i:first-child{margin-left:0}.lo-faces svg,.lo-faces img{width:100%;height:100%;display:block}
+.lo-voices{display:flex;flex-direction:column;gap:8px;margin:12px 0}
+.lo-voice{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:10px 12px;border-radius:14px;border:1.5px solid var(--line);background:#fff;transition:all .15s}
+.lo-voice:hover:not(:disabled){border-color:var(--ink);transform:translateY(-1px)}
+.lo-voice:disabled{opacity:.5}
+.lo-voice .lw-face{width:44px;height:44px;flex-basis:44px}
+.lo-vt{flex:1;min-width:0}.lo-vt b{display:block;font-size:14.5px}.lo-vt small{display:block;color:var(--muted);font-size:12px;line-height:1.35}
+.lo-vc{font-size:12px;font-weight:800;padding:3px 9px;border-radius:999px;background:var(--soft);white-space:nowrap}
+.lo-voice.lv3{border-color:rgba(242,169,59,.55);background:#fffaf0}.lo-voice.lv3 .lo-vc{background:rgba(242,169,59,.2);color:var(--amberInk)}
+.lo-safe{display:block;width:100%;text-align:left;padding:10px 12px;border-radius:12px;background:rgba(44,124,119,.08);color:var(--teal);font-weight:700;font-size:13.5px}
+.lo-answer .lw-line{margin-top:12px}.lo-answer .lw-line.vet .lw-bubble{background:#fffaf0;border-color:rgba(242,169,59,.55)}
+@media (max-width:720px){.lr-cards{grid-template-columns:1fr}.lr-seat em{display:none}.lo-coach .lo-faces{display:none}}

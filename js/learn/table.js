@@ -1,7 +1,6 @@
 /* LINESIDE Learning World: the Planning Table (the `network_table` explorable).
  *
- * A live network on a timeline. Every change runs a forward and backward pass (LS.Learn.cpm, which uses LS.AI.cpm
- * when the tutor is loaded) and the bars ripple to their new early starts. The critical chain glows lamp amber and a
+ * A live network on a timeline. Every change runs a forward and backward pass (LS.Learn.cpm) and the bars ripple to their new early starts. The critical chain glows lamp amber and a
  * flag shows the finish. Works with a mouse and keyboard, and with taps alone on a phone (no fine dragging needed).
  *
  *   const t = LS.Learn.Table(hostEl, cfg, opts)
@@ -36,7 +35,7 @@ window.LS = window.LS || {};
   // Rounds away floating-point dust (0.1 + 0.2) so float is exactly zero on the critical chain.
   L.cpm = function (acts) {
     const clean = acts.map(a => Object.assign({}, a, { dur: Math.round((+a.dur || 0) * 1000) / 1000, preds: (a.preds || []).slice() }));
-    const r = (LS.AI && LS.AI.cpm) ? LS.AI.cpm(clean) : ownCpm(clean);
+    const r = ownCpm(clean);
     const fix = v => Math.round(v * 1000) / 1000;
     const succ = {}; Object.keys(r.acts).forEach(id => succ[id] = []);
     Object.values(r.acts).forEach(a => { ['es', 'ef', 'ls', 'lf', 'tf'].forEach(k => a[k] = fix(a[k])); a.critical = Math.abs(a.tf) < 1e-6; a.preds.forEach(p => succ[p].push(a.id)); });

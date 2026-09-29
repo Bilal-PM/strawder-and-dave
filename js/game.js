@@ -1108,16 +1108,15 @@
       settings: () => [['sound', 'Sound & music'], ['reduced', 'Reduce motion'], ['large', 'Larger text'], ['instant', 'Show text instantly']].map(([k, l]) => `<div class="set"><span>${l}</span><button class="switch ${SET[k] ? 'on' : ''}" role="switch" aria-checked="${!!SET[k]}" data-set="${k}" aria-label="${l}"></button></div>`).join('') +
         `<div style="margin-top:24px"><button class="btn line small" id="restart">Restart Chapter 1</button></div>`
     }[tab]();
-    // Learning World hook: the office board offers the Planning module; Settings gets the AI classmates option.
+    // Learning World hook: the office board offers the Planning module (and, once it's learned, the Planning Lens).
     const learnTop = LS.Learn && tab === 'project' && boardDone && world && world.room === 'office' ? LS.Learn.boardOffer() : '';
-    const learnSet = LS.Learn && tab === 'settings' ? LS.Learn.settingsHTML() : '';
     const el = layer('board', `<div class="drawer" role="dialog" aria-label="Project board"><div class="drawer-head"><h3>Project board</h3><button class="iconbtn" style="background:var(--paper2);color:var(--ink)" id="bClose" aria-label="Close">${ICON.close}</button></div>
-      <div class="tabs">${['project', 'career', 'team', 'journal', 'settings'].map(t => `<button class="${t === tab ? 'on' : ''}" data-tab="${t}">${t[0].toUpperCase() + t.slice(1)}</button>`).join('')}</div><div class="drawer-body">${learnTop}${body}${learnSet}</div></div>`);
+      <div class="tabs">${['project', 'career', 'team', 'journal', 'settings'].map(t => `<button class="${t === tab ? 'on' : ''}" data-tab="${t}">${t[0].toUpperCase() + t.slice(1)}</button>`).join('')}</div><div class="drawer-body">${learnTop}${body}</div></div>`);
     el.onclick = e => { if (e.target === el) closeBoard(); };
     $('#bClose').onclick = closeBoard;
     el.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => openBoard(b.dataset.tab));
     el.querySelectorAll('[data-set]').forEach(b => b.onclick = () => { SET[b.dataset.set] = !SET[b.dataset.set]; saveSet(); openBoard('settings'); });
-    if (LS.Learn) { LS.Learn.bindBoardOffer(el, closeBoard); LS.Learn.bindSettings(el, () => openBoard('settings')); }
+    if (LS.Learn) LS.Learn.bindBoardOffer(el, closeBoard);
     const rs = $('#restart'); if (rs) rs.onclick = () => { if (rs.dataset.armed) { try { localStorage.removeItem(SAVE); } catch (e) { } location.reload(); } else { rs.dataset.armed = 1; rs.textContent = 'Tap again to restart'; } };
   }
   function closeBoard() { hide('board'); if (boardDone) { const f = boardDone; boardDone = null; f(); } else if (EX && world.onInteract) world.paused = false; }
@@ -1201,7 +1200,7 @@
       world.safe = { t: Math.max(mob && hl ? hl.bottom : 0, hr ? hr.bottom : 0) + 6, l: !mob && hl ? hl.right + 6 : 0, r: 0, b: pd };
     }, 500);
     document.addEventListener('pointerdown', () => LS.audio.init(), { once: true });
-    if (LS.Learn) { LS.Learn.attachWorld(world); LS.Learn.aiInit(); }   // Learning World hook: lamp, lens, scripted AI
+    if (LS.Learn) LS.Learn.attachWorld(world);   // Learning World hook: the Planning lamp and the Planning Lens
     title();
     LS.game = { S: () => S, stats, profile, report, card, PACK, world: () => world, refreshWorld, currentTarget, avail: id => avail(task(id)), rankOf };
   }

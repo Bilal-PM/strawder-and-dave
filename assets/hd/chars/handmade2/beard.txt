@@ -1,0 +1,39 @@
+; v2 beard: sideburns running into a short jaw beard, a separate moustache with skin between it and the
+; cheeks, the lip skin showing, the mouth a dark line inside. 3 tones.
+
+== beard_down 14 26 map=hair:beard
+b..................d
+b..................d
+b..................d
+b..................d
+bb................dd
+bb................dd
+ebb..............dde
+.bbc............ddd
+.bbcc..........dddd
+.bbcc.beeeeeed.dddd
+.edcccc......cdddde
+..eccccc####ccddde
+...eccccccccdcdde
+....edccccccccde
+.....edddddddde
+......edddddde
+.......eeeeee
+
+== beard_left 13 27 map=hair:beard
+.........cd
+.........cd
+.........cd
+.........cd
+........ccd
+.......cccdd
+......ccccdddd
+.....cccccddddd
+eeee.cccccdddde
+....ccccccddde
+.bbcccdcccdde
+.ebcccccccde
+..ecdcccdce
+...eddddde
+....eddde
+.....eee

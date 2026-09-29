@@ -41,11 +41,18 @@ EXTRA = {
     'pigeon':   ['#d8dce6', '#b3b8c6', '#8e93a4', '#6b6f82', '#4b4e60'],
     'irid':     ['#b6f0c8', '#6ccaa6', '#8a78c0', '#5e4f94', '#3e3468'],
     'feet_pink':['#f7b0a8', '#e0867e', '#b8625e', '#8a4446', '#5e2e34'],
+    # v2 (the user's reference style): sampled from docs/visual-brief/reference_user_character.jpg, then hand-tuned
+    'skin_tan':    ['#f2cd8c', '#e3b673', '#c9a068', '#ab7a47', '#86532b'],
+    'hair_black':  ['#4c4a50', '#312f34', '#211f23', '#161418', '#0d0c0f'],
+    'hair_auburn': ['#b8674a', '#924c33', '#6a3424', '#4c2419', '#311610'],
+    'tee_grey':    ['#8f8c80', '#747266', '#605d53', '#4b4942', '#37362f'],
+    'trouser':     ['#4c4c50', '#38383b', '#2b2b2f', '#202024', '#16161a'],
+    'trainer_grey':['#eeebe4', '#cfccc5', '#a9a6a0', '#827f7a', '#5b5954'],
 }
 for _k, _v in EXTRA.items():
     RAMPS.setdefault(_k, _v)
 
-for _s in ('skin_fair', 'skin_light', 'skin_mid', 'skin_brown', 'skin_deep'):
+for _s in ('skin_fair', 'skin_light', 'skin_mid', 'skin_brown', 'skin_deep', 'skin_tan'):
     r = RAMPS[_s]
     # blush: the skin's own mid step warmed towards rose, so every skin tone gets cheeks, not just fair ones
     RAMPS[_s + '_blush'] = [_mix(r[0], '#f08a80', .30), _mix(r[1], '#e0707a', .30), _mix(r[2], '#c65a64', .30),

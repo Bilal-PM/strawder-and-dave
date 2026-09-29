@@ -42,17 +42,17 @@ def _mix(a, b, t):
 
 
 # ------------------------------------------------------------------ grids
-_GRIDS = None
+_GRIDS = {}
 
 
-def grids():
-    global _GRIDS
-    if _GRIDS is not None: return _GRIDS
+def grids(gdir=None):
+    gdir = gdir or GRID_DIR
+    if gdir in _GRIDS: return _GRIDS[gdir]
     g = {}
-    for fn in sorted(os.listdir(GRID_DIR)):
+    for fn in sorted(os.listdir(gdir)):
         if not fn.endswith('.txt'): continue
         cur = None
-        for raw in open(os.path.join(GRID_DIR, fn)):
+        for raw in open(os.path.join(gdir, fn)):
             line = raw.rstrip('\n').rstrip()
             if line.startswith(';'): continue
             if line.startswith('=='):
@@ -73,12 +73,12 @@ def grids():
             for c in line:
                 if c != '.' and c not in KEYS: raise ValueError(f'{fn}: {cur and name}: unknown key {c!r}')
             cur['rows'].append(line)
-    _GRIDS = g
+    _GRIDS[gdir] = g
     return g
 
 
-def has(name):
-    return name in grids()
+def has(name, gdir=None):
+    return name in grids(gdir)
 
 
 # ------------------------------------------------------------------ materials
@@ -99,15 +99,17 @@ def slot_ramp(slot, s):
 
 class Frame:
     """A figure being assembled: (x, y) -> [ramp name or None for '#', step]."""
-    def __init__(self, spec):
+    def __init__(self, spec, gdir=None, ink=None):
         self.s = spec
         self.px = {}
+        self.gdir = gdir
+        self.ink = ink            # v2: one crisp near-black outline instead of the coloured one
 
     def layer(self, name, dx=0, dy=0, dark=0, only=None, edge=False, clip=None):
         """Stamp grid `name` at its position + (dx, dy). dark: shift every step darker (far limbs).
         edge: the pixels this layer covers get a separation line (one step darker) where they border what is behind
         (an arm over a torso of the same cloth). clip(x, y): keep only pixels where it is true (hair under a hat)."""
-        g = grids().get(name)
+        g = grids(self.gdir).get(name)
         if g is None: return False
         mp = g['map']
         mine = set()
@@ -139,7 +141,7 @@ class Frame:
         cv = Canvas(W, H)
         px = self.px
         if flip: px = {(W - 1 - x, y): v for (x, y), v in px.items()}
-        OUT = hexrgb(OUTLINE)
+        OUT = hexrgb(self.ink or OUTLINE)
 
         def dark_of(rp):
             return _mix(RAMPS[rp][-1], OUTLINE, 0.55)
@@ -149,7 +151,9 @@ class Frame:
             return _mix(r[-1], r[-2], 0.35)
         for (x, y), (rp, k) in px.items():
             if not (0 <= x < W and 0 <= y < H): continue
-            if rp is None:                                  # hand-placed line: colour of the neighbouring material
+            if rp is None and self.ink:
+                cv.put(x, y, OUT)
+            elif rp is None:                                # hand-placed line: colour of the neighbouring material
                 nb = [px.get((x + dx, y + dy)) for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))]
                 nb = [n for n in nb if n and n[0]]
                 cv.put(x, y, dark_of(nb[0][0]) if nb else OUT)
@@ -164,7 +168,7 @@ class Frame:
                 cand = [n for n in (right, below, left, above) if n]
                 if not cand: continue
                 src = next((n for n in cand if n[0]), None)
-                if src is None: cv.put(x, y, OUT); continue
+                if src is None or self.ink: cv.put(x, y, OUT); continue
                 lit = (right is not None or below is not None) and left is None and above is None
                 # on the lit top-left the line is a deep tone of the material; elsewhere it sinks towards the outline
                 col = lit_of(src[0]) if lit else dark_of(src[0])

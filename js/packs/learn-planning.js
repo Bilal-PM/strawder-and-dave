@@ -35,7 +35,7 @@ LS.MODULES.planning = {
   ],
 
   // ---------------------------------------------------------------------------------------------------------------
-  // The concept card: the only facts any character (or the optional model) may state.
+  // The concept card: the only facts any character may state.
   // ---------------------------------------------------------------------------------------------------------------
   concept: {
     title: 'Project planning and the critical path',
@@ -56,19 +56,19 @@ LS.MODULES.planning = {
     // Misconceptions: cue phrases (the listener's rules), labelled examples, and the authored counter move.
     // `ai` maps to the matching misconception in the tutor's classifier (js/ai/tutor.js), when there is one.
     misconceptions: [
-      { id: 'M1', ai: 'longest_task', text: 'The longest task is the critical path', short: 'the longest job is critical',
+      { id: 'M1', text: 'The longest task is the critical path', short: 'the longest job is critical',
         cues: ['\\b(longest|biggest|largest|slowest)\\s+(single\\s+)?(task|job|activity)\\b(?![^.?!]{0,30}\\b(chain|path)\\b)'],
         examples: ['the critical path is just the longest task', 'the pipes take longest so they are critical'],
-        counter: { who: 'pat', say: 'In ’94 we had a crane job everyone swore was the long pole. It had three days in hand. The drainage chain behind it didn’t. B is the biggest job here, and it’s got two days of float. Add up A, C and D.' } },
-      { id: 'M2', ai: 'float_owned', text: 'Float belongs to the task owner, so it’s free to spend', short: 'float is the owner’s to spend',
+        counter: { who: 'pat', say: 'On the Kestrelford bridge job we had a crane lift everyone swore was the long pole. It had three days in hand. The drainage chain behind it didn’t. B is the biggest job here, and it’s got two days of float. Add up A, C and D.' } },
+      { id: 'M2', text: 'Float belongs to the task owner, so it’s free to spend', short: 'float is the owner’s to spend',
         cues: ['\\b(float|slack)\\b[^.?!]{0,40}\\b(belongs? to|is)\\b[^.?!]{0,12}\\b(supplier|tom|his|hers|theirs|the owner|whoever)\\b', '\\b(supplier|tom|owner)\\b[^.?!]{0,25}\\b(owns?|keeps?|gets?)\\b[^.?!]{0,12}\\b(float|slack)\\b'],
         examples: ['the float is the supplier’s', 'Tom’s crew can use their two days'],
         counter: { who: 'amira', say: 'Here’s the thing I love about float: it’s shared. If the supplier quietly uses the two days, the pipes go critical and nobody’s told. The project holds it, so the project decides when it’s spent.' } },
-      { id: 'M3', ai: 'more_people', text: 'Adding people always shortens it', short: 'more people always means faster',
+      { id: 'M3', text: 'Adding people always shortens it', short: 'more people always means faster',
         cues: ['\\b(more|extra|four|another)\\s+(gangs?|people|crews?|hands|fitters)\\b[^.?!]{0,30}\\b(faster|quicker|shorter|sooner|always)\\b'],
         examples: ['just add more gangs and it goes faster', 'four gangs will dig it in a day so we finish sooner'],
         counter: { who: 'tom', say: 'Four gangs in one trench is a crowd, not a plan. They get in each other’s way, somebody has to supervise them, and once the dig’s quick the pipes are the long chain anyway.' } },
-      { id: 'M4', ai: 'cp_static', text: 'The critical path never changes', short: 'the critical path never changes',
+      { id: 'M4', text: 'The critical path never changes', short: 'the critical path never changes',
         cues: ['\\bcritical path\\b[^.?!]{0,25}\\b(never|doesn’t|doesn\'t|won’t|won\'t)\\s+(change|move|shift)', '\\b(once|always)\\b[^.?!]{0,20}\\bcritical\\b[^.?!]{0,15}\\balways\\b'],
         examples: ['once you know the critical path it stays the same', 'the kettle is always the critical path'],
         counter: { who: 'jo', say: 'Remember the urn? Swap the kettle out and the mugs chain took over. Change one job and a different chain can become the longest. Keep looking.' } },
@@ -95,7 +95,7 @@ LS.MODULES.planning = {
       { id: 'M10', text: 'Margin is waste, so plan to the wall', short: 'margin is wasted time',
         cues: ['\\b(margin|contingency|buffer)\\b[^.?!]{0,20}\\b(is )?(waste|wasted|pointless)\\b', '\\bplan (right )?(up )?to the (wall|handback)\\b'],
         examples: ['margin is wasted time, plan to the handback'],
-        counter: { who: 'pat', say: 'The tamper broke at 02:00 in ’94. The margin is what saved that weekend. It’s not spare time, it’s where the faults go.' } }
+        counter: { who: 'pat', say: 'I once had a tamper break at two in the morning. The margin is what saved that weekend. It’s not spare time, it’s where the faults go.' } }
     ]
   },
 
@@ -108,9 +108,9 @@ LS.MODULES.planning = {
       who: 'jo',
       say: 'Welcome to the back room. Board, Bench, Brew, then out on the line. First, how do you like to learn?',
       styles: [
-        { id: 'show', t: 'Show me', d: 'Seven quick visual beats on the whiteboard, then a live model to poke.' },
+        { id: 'show', t: 'Show me', d: 'Seven quick visual beats on the whiteboard, then a live planning table to poke.' },
         { id: 'tell', t: 'Tell me', d: 'The same beats with Jo’s story of the tea round, told in full.' },
-        { id: 'try', t: 'Let me have a go first', d: 'Straight to the live model. Get stuck, then hear the idea.' }
+        { id: 'try', t: 'Let me have a go first', d: 'Straight to the live planning table. Get stuck, then hear the idea.' }
       ],
       levels: [
         { id: 'new', t: 'I’m new to this' },
@@ -273,124 +273,144 @@ LS.MODULES.planning = {
   ],
 
   // ---------------------------------------------------------------------------------------------------------------
-  // TALK: the Brew. Jo chairs. Pat and Amira disagree on purpose; Tom grounds them; Dev asks for the teach-back.
+  // TALK: the Brew. A panel of three voices at different stages, all authored (no generated lines):
+  //   Callum, the newcomer (a career changer, six months in): keen, takes things at face value, makes the beginner
+  //   mistakes out loud. Amira, mid-experience: knows the textbook answer, sometimes a bit rigid. Pat, the veteran:
+  //   thirty-four years on the railway, the best judgement, and the tricks of the trade. Authority comes from
+  //   experience, never age.
+  // Each beat: a setup (two voices disagree), 2–4 choices, and every voice reacts to the choice you make. Beats can
+  // branch on how you did at the Bench (`bench`), so the room remembers you. Jo hosts, briefly.
   // ---------------------------------------------------------------------------------------------------------------
   talk: {
-    chair: 'jo',
+    host: 'jo',
+    panel: [
+      { id: 'callum', level: 'newcomer', label: 'Six months in', name: 'Callum Okafor', role: 'Trainee in Tom’s gang · joined from the ambulance service',
+        look: { skin: '#6b4430', hair: '#15100d', hairStyle: 'short', beard: true, top: '#3d6a5a', topStyle: 'tee', bg: '#d3e2da' } },
+      { id: 'amira', level: 'mid', label: 'Five years in', name: 'Amira Shah', role: 'Planner · knows the textbook by heart',
+        look: { skin: '#b07852', hair: '#1d1512', hairStyle: 'long', top: '#6b8f7a', topStyle: 'cardigan', bg: '#d6e6dc' } },
+      { id: 'pat', level: 'veteran', label: 'Thirty-four years on the railway', name: 'Pat Doyle', role: 'Possession planner · has planned hundreds of weekends',
+        look: { skin: '#f0cfb4', hair: '#8a3b2a', hairStyle: 'bob', top: '#46557a', topStyle: 'jacket', bg: '#e6dcc6' } }
+    ],
     intro: [
-      ['jo', 'Kettle’s on. Pull up a chair. You’ve met Tom. This is Pat, who has planned more possessions than I’ve had hot dinners, and Amira, who joined us from the graduate scheme.'],
-      ['pat', 'Thirty-four years. I’ve a pencil for every one of them.'],
-      ['amira', 'And I’ve a laptop covered in stickers. We disagree about almost everything. It’s lovely.']
+      ['jo', 'Kettle’s on. Three people who see planning very differently, and you get the casting vote. Callum joined Tom’s gang six months ago, straight from the ambulance service. Amira plans for a living. Pat has planned more possessions than I’ve had hot dinners.'],
+      ['callum', 'I’ve read half a book about this. The first half.'],
+      ['amira', 'I’ve read all of it. Twice.'],
+      ['pat', 'I’ve lost the book. I’ve still got the pencil.']
     ],
-    personas: [
-      { id: 'pat', name: 'Pat Doyle', role: 'Possession planner · 34 years', stance: 'peer',
-        look: { skin: '#e9c3a4', hair: '#b8b3ad', hairStyle: 'short', top: '#7a6a4e', topStyle: 'jacket', glasses: true, bg: '#e6dcc6' },
-        voice: 'dry, anecdotal and warm; stories begin “In ’94 we had a tamper that…”; trusts experience and a paper bar chart',
-        openers: ['In ’94…', 'Now then.', 'Here’s a story.', 'Mm.'], praise: ['That’s the ticket.', 'Wish I’d had you in ’94.', 'Aye, that’s it.'],
-        thinking: ['I’ve seen that go both ways.', 'Let me tell you what the ballast thinks.'], tics: ['The software’s only as good as the fella feeding it.'],
-        sample: 'In ’94 we’d have asked the same. Which job’s everyone waiting on?' },
-      { id: 'amira', name: 'Amira Shah', role: 'Graduate planner · 23', stance: 'peer',
-        look: { skin: '#b07852', hair: '#1d1512', hairStyle: 'long', top: '#6b8f7a', topStyle: 'cardigan', bg: '#d6e6dc' },
-        voice: 'quick and precise; gets excited about float; “if it’s not in the logic, it’s not in the plan”',
-        openers: ['Ooh.', 'Okay, so.', 'Right!', 'Yes.'], praise: ['Yes! Exactly that.', 'That’s the logic talking.', 'Lovely.'],
-        thinking: ['Let’s check the logic.', 'Hang on, let me draw it.'], tics: ['If it’s not in the logic, it’s not in the plan.'],
-        sample: 'Okay, so. If the pipes use their float, what happens to the finish?' },
-      { id: 'tom', name: 'Tom Brennan', role: 'Track & Site Manager', stance: 'tutor', cast: true },
-      { id: 'dev', name: 'Dev Mistry', role: '17 · wants to study engineering', stance: 'peer', town: true,
-        voice: 'curious and keen, 17; asks for things to be explained simply', openers: ['Okay.', 'Right.', 'Ooh.'], praise: ['Oh, that makes sense.', 'Nice.'],
-        thinking: ['Wait, let me get this.'], tics: ['I’m writing that down.'], sample: 'So what actually sets when you finish?' }
+    // Remember the Bench: extra lines when you found a puzzle hard or easy.
+    benchLines: {
+      p1Wrong: ['callum', 'The drain job took me two goes as well, if that helps. I kept adding up the pipes.'],
+      p1Right: ['amira', 'You got the drain job first time, so you can referee this one.'],
+      p3Wrong: ['pat', 'The four gangs tempted you on the drain job. They tempt everyone, once. Hold that thought.'],
+      tamperWrong: ['pat', 'That tamper question caught you out. Good. It catches everyone, and the ones it catches remember it.']
+    },
+    beats: [
+      { id: 'b1', title: 'Is the biggest job the critical one?', targets: ['K3', 'K4', 'M1'], bench: { p1: ['p1Wrong', 'p1Right'] },
+        setup: [['callum', 'Easy one. The pipes are the biggest job on the drain, five days, so the pipes are the critical path. Yeah?'],
+                ['amira', 'No. The critical path is the longest path through the network. You calculate it. You don’t guess it from the biggest box.']],
+        ask: 'Who’s right, and why?',
+        choices: [
+          { t: 'Amira. It’s the longest chain of jobs that wait for each other, not the biggest single job.', kind: 'best',
+            react: [['callum', 'Oh. So the pipes are big, but they’re off to one side with time in hand. That’s annoying. I liked my answer.'],
+                    ['amira', 'Exactly. A, C, D, E, F is fourteen days, zero float. The pipes have two days to spare.'],
+                    ['pat', 'All true. And here’s the trick nobody writes down: circle the pipes anyway. The biggest job with only two days in hand is the one that bites you when the lorry’s late. Critical isn’t the only thing worth watching.']] },
+          { t: 'Callum. The biggest job is nearly always the one that sets the finish.', kind: 'mc', mc: 'M1',
+            react: [['callum', 'See? Two of us. That’s a majority in my house.'],
+                    ['amira', 'It isn’t, though. A-C-D takes nine days before E can start. A-B only takes seven. The chain wins.'],
+                    ['pat', 'On the Kestrelford bridge job we had a crane lift everyone swore was the long pole. It had three days in hand. The drainage behind it didn’t, and that’s what made us late. Big isn’t the same as critical. Add up the chains.']] },
+          { t: 'Neither. You can’t know until the work starts.', kind: 'ok',
+            react: [['callum', 'Ooh, that’s deep. Is it right, though?'],
+                    ['amira', 'You can know a lot before you start. That’s the point of drawing it.'],
+                    ['pat', 'Half right. Draw it first, then watch it move. A plan’s a guess you can argue with, and that’s worth more than no plan at all.']] }
+        ] },
+      { id: 'b2', title: 'Whose float is it?', targets: ['K5', 'K6', 'M2'],
+        setup: [['callum', 'If the pipes have two spare days, that’s the supplier’s two days, isn’t it? It’s their job.'],
+                ['amira', 'Float’s calculated from the network, so strictly it belongs to the network.']],
+        ask: 'Whose two days are they?',
+        choices: [
+          { t: 'The project’s. Use them up and the pipes go critical, so the whole plan needs to know.', kind: 'best',
+            react: [['callum', 'So if the supplier quietly used them, the pipes would be critical and nobody would know? That’s sneaky.'],
+                    ['amira', 'Which is why float should be managed by whoever holds the whole plan.'],
+                    ['pat', 'And the trick of the trade: never tell a supplier they’ve got float. They’ll use it, every time. Tell them the day you need the pipes, and keep the two days in your back pocket.']] },
+          { t: 'The supplier’s. It’s their job, so it’s their spare time.', kind: 'mc', mc: 'M2',
+            react: [['callum', 'That’s what I said! High five. Wait, why is Pat making that face?'],
+                    ['amira', 'If they spend it, the pipes become critical and the finish is suddenly at risk. That affects everyone after them.'],
+                    ['pat', 'I had a supplier once who treated float like a biscuit tin. Every time I looked, a bit less. Float belongs to the job, not the jobber.']] },
+          { t: 'Tom’s. He’s running the drain, so he decides.', kind: 'mc', mc: 'M2',
+            react: [['callum', 'Tom would like that. Tom likes deciding things.'],
+                    ['amira', 'Tom should know it’s there. But spending it changes the whole plan, so it isn’t only his call.'],
+                    ['pat', 'Tom’s good at this. He’d tell you himself: the float’s the plan’s. He just likes to know where it’s kept.']] }
+        ] },
+      { id: 'b3', title: 'Four gangs in one trench', targets: ['K7', 'K8', 'M3'], bench: { p3d: ['p3Wrong', null] },
+        setup: [['callum', 'Four gangs in the trench and it’s dug in a day! More people, faster. Simple maths.'],
+                ['amira', 'The textbook calls that crashing. If the activity is critical, crashing it shortens the finish.']],
+        ask: 'Tom offers four gangs. What do you do?',
+        choices: [
+          { t: 'Take two gangs. After that the pipes are the long chain, and four gangs in one trench get in each other’s way.', kind: 'best',
+            react: [['callum', 'So the third and fourth gang would just be… standing there? Holding shovels?'],
+                    ['amira', 'Right. Two gangs gets D to two days and the finish to day twelve. After that A-B-E-F is twelve days too, so it stops helping.'],
+                    ['pat', 'Two gangs, one either side of the culvert, and a good ganger in the middle. Four’s not a plan, it’s a queue for the digger. And every extra body in a trench is one more person to brief and keep safe.']] },
+          { t: 'Take all four. The fastest dig wins.', kind: 'mc', mc: 'M3',
+            react: [['callum', 'Yes! Team four gangs!'],
+                    ['amira', 'Except it doesn’t win. Once the dig takes less than five days, the pipes are the long chain. You finish on day twelve either way.'],
+                    ['pat', 'I’ve seen four gangs in one trench. Lovely photo. Nobody could swing a shovel. Crashing works until another chain takes over, and then it’s just money in a hole.']] },
+          { t: 'Take none. Adding people never helps.', kind: 'ok',
+            react: [['callum', 'That seems a bit harsh on the gangs.'],
+                    ['amira', 'It helps on critical work that can be split. The dig can be split. Up to a point.'],
+                    ['pat', '“Never” is a big word on a railway. One extra gang on the right job is the best money you’ll spend all weekend. Four on the wrong one is the worst.']] }
+        ] },
+      { id: 'b4', title: 'Zero margin before the wall', targets: ['K9', 'M6', 'M10'], bench: { p2b: ['tamperWrong', null] },
+        setup: [['callum', 'The plan finishes at six on Monday and the handback’s at six on Monday. It fits! Let’s go.'],
+                ['amira', 'Mathematically it’s feasible. Zero margin is still a valid plan.']],
+        ask: 'Would you start that possession?',
+        choices: [
+          { t: 'Not as it stands. I’d want a margin, a checkpoint and a fallback agreed first.', kind: 'best',
+            react: [['callum', 'A checkpoint like “if we’re not here by Sunday teatime, we do plan B”?'],
+                    ['amira', 'Yes. And the margin is what absorbs a fault without breaking the handback.'],
+                    ['pat', 'On one weekend of mine the tamper broke at two in the morning. The only reason we handed back on time was a go/no-go point we’d agreed on Friday. Decide it while you’re warm and fed, not at three in the morning with cold tea.']] },
+          { t: 'Start. If it runs over, we hand back a bit late.', kind: 'mc', mc: 'M6',
+            react: [['callum', 'Only a bit late though. Like when I’m late for school?'],
+                    ['amira', 'A late handback delays trains and passengers. It’s treated as a serious failure.'],
+                    ['pat', 'The handback’s a wall, not a suggestion. There’s a driver and a train full of people waiting on the other side of it. Plan inside it, with room to spare.']] },
+          { t: 'Start. Margin is wasted time anyway.', kind: 'mc', mc: 'M10',
+            react: [['callum', 'That’s efficient. I like efficient.'],
+                    ['amira', 'Margin isn’t waste. It’s where the faults go.'],
+                    ['pat', 'Spare time you plan for is margin. Spare time you didn’t plan for is a miracle, and I’ve only seen two.']] }
+        ] },
+      { id: 'b5', title: 'The loud problem', targets: ['K10', 'M4'],
+        setup: [['callum', 'The ballast train’s four hours late and everyone’s shouting about it! Rip up the plan!'],
+                ['amira', 'Or stick to the baseline. The baseline is what we agreed.']],
+        ask: 'The ballast train is four hours late. What first?',
+        choices: [
+          { t: 'Put the new time on the plan and check its float. Only re-plan if it hits the critical path.', kind: 'best',
+            react: [['callum', 'So it might not even matter? Even though everyone’s shouting?'],
+                    ['amira', 'If it’s needed after it arrives, it has float and the finish doesn’t move. The plan tells you.'],
+                    ['pat', 'Loud isn’t the same as late. Before you ring anyone, ask one question: what’s everyone waiting on right now? The answer’s usually quiet, and it’s usually in a trench.']] },
+          { t: 'Stick to the original plan. That’s what we agreed.', kind: 'mc', mc: 'M4',
+            react: [['callum', 'Rules are rules.'],
+                    ['amira', 'The baseline is for measuring against. The plan still has to show what’s actually happening.'],
+                    ['pat', 'A plan that doesn’t change when the world does is a nice picture. Re-plan from what’s true now, and write down why.']] },
+          { t: 'Re-plan everything straight away.', kind: 'ok',
+            react: [['callum', 'Yes! Action!'],
+                    ['amira', 'Re-plan the bit that’s affected. Not everything.'],
+                    ['pat', 'You’d spend your morning re-drawing the bits that were fine. Find the job that matters, then fix that.']] }
+        ] }
     ],
-    // The prompts run in order. Each has chips (with the move they trigger) and accepts free text.
-    prompts: [
-      { id: 's1', who: 'jo', good: ['\\b(chain|path|sequence|in a row|one after|add(ed)? up|waits?)\\b'], targets: ['K3', 'K4', 'M1'], facet: 'critical_path',
-        text: 'In the drain job, B was the longest job but not critical. Why is “longest job” such a tempting mistake?',
-        chips: [
-          { t: 'Big jobs feel important, but the finish is set by the longest chain of jobs that wait for each other.', move: 'correct' },
-          { t: 'It isn’t a mistake really. The longest job usually is the critical path.', move: 'M1' },
-          { t: 'Because people forget there’s float.', move: 'partial' }
-        ],
-        affirm: { who: 'amira', say: 'Yes. And that’s why the pipes need watching now: they’re the biggest job and they’ve only two days in hand.' },
-        probe: { who: 'jo', say: 'Say more. Which chain did you add up to get the finish?' } },
-      { id: 's2', who: 'pat', good: ['\\b(arrows?|logic|links?|what moves|slips?|depend\\w*|knock-?on|everyone can see|worth it|yes)\\b'], targets: ['K1', 'K2', 'M5'], facet: 'dependencies', debate: { who: 'amira', say: 'But you drew the logic in your head, Pat. Put it on paper and everyone can see what moves when something slips.' },
-        text: 'I never needed arrows. I knew what came next. Is drawing the logic worth the time on a small job?',
-        chips: [
-          { t: 'Yes. The arrows show what moves when something slips. A list of dates can’t.', move: 'correct' },
-          { t: 'Pat’s right. Just write down the dates and get on with it.', move: 'M5' },
-          { t: 'Draw it, then check it with someone like Pat who’s done it.', move: 'correct' }
-        ],
-        affirm: { who: 'pat', say: 'Hmph. Fair. The arrows would’ve saved me a Sunday in ’94. Don’t tell anyone I said so.' },
-        probe: { who: 'jo', say: 'Go on. What would a list of dates miss when the pipes turn up late?' } },
-      { id: 's3', who: 'amira', good: ['\\b(project|shared|plan|everyone|whole|nobody|not (the supplier|tom))\\b'], targets: ['K5', 'K6', 'M2'], facet: 'float',
-        text: 'The pipes have two days of float. Whose two days are they: the supplier’s, Tom’s or the project’s?',
-        chips: [
-          { t: 'The project’s. Use them up and the pipes go critical, so the whole plan needs to know.', move: 'correct' },
-          { t: 'The supplier’s. It’s their job, so it’s their spare time.', move: 'M2' },
-          { t: 'Tom’s. He’s in charge of the drain.', move: 'M2' }
-        ],
-        affirm: { who: 'amira', say: 'Yes! It’s shared. Spend it quietly and somebody else’s job goes critical without being told.' },
-        probe: { who: 'jo', say: 'Close. If the supplier uses both days, what happens to the finish, and who should know?' } },
-      { id: 's4', who: 'tom', good: ['\\b(way|crowd|space|room|supervis\\w*|pipes?|chain|trip over|too many|safety|split)\\b'], targets: ['K7', 'K8', 'M3'], facet: 'resources',
-        text: 'Four gangs in one trench. What goes wrong that the plan doesn’t show?',
-        chips: [
-          { t: 'They get in each other’s way and need supervising, and the pipes become the long chain anyway.', move: 'correct' },
-          { t: 'Nothing. More hands, faster finish.', move: 'M3' },
-          { t: 'It costs more, but it’s quicker.', move: 'partial' }
-        ],
-        affirm: { who: 'tom', say: 'Right. Two gangs was worth it. Four’s a crowd, and the plan wouldn’t have finished a day sooner.' },
-        probe: { who: 'tom', say: 'Picture the trench. Sixty metres, one digger. Where do the extra gangs stand?' } },
-      { id: 's5', who: 'tom', good: ['\\b(margin|checkpoint|fallback|plan b|not start|wouldn|no\\b|buffer|contingency)\\b'], targets: ['K9', 'M6', 'M10'], facet: 'change',
-        text: 'A plan with zero margin before the handback. Would you start that possession? What would you want first?',
-        chips: [
-          { t: 'Not as it stands. I’d want a margin, a checkpoint and a fallback agreed before we start.', move: 'correct' },
-          { t: 'Yes. If it runs over we hand back a bit late.', move: 'M6' },
-          { t: 'Yes. Margin’s wasted time anyway.', move: 'M10' }
-        ],
-        affirm: { who: 'tom', say: 'That’s what I’d want. A plan that only works if nothing goes wrong isn’t a plan. It’s a hope.' },
-        probe: { who: 'pat', say: 'And if the tamper breaks at 02:00, what’s your plan then?' } }
-    ],
-    teachBack: { who: 'dev', text: 'Can you explain critical path to me like I’ve never seen a plan?',
-      keyPoints: [
-        { id: 'K3', label: 'Jobs link into chains', re: '\\b(chain|path|sequence|order|depend\\w*|wait\\w* (for|on)|after|before|one after)\\b' },
-        { id: 'K4', label: 'The longest chain sets the finish', re: '\\b(longest|long)\\b[^.?!]{0,30}\\b(chain|path|sequence|route|string)\\b|\\bsets? (the )?(finish|end|date)\\b|\\b(chain|path)\\b[^.?!]{0,30}\\blongest\\b' },
-        { id: 'K5', label: 'Other jobs have float', re: '\\b(float|slack|spare time|leeway|in hand|can slip|room to slip)\\b' },
-        { id: 'K7', label: 'It can change', re: '\\b(change|changes|move|moves|shift|swap|switch|another chain|different chain|takes over)\\b' }
+    // The teach-back: Callum asks you to explain it like he's new. Pick the lines you'd say (three or four).
+    teachBack: { who: 'callum', text: 'Right, my turn. Explain the critical path to me like I’ve never seen a plan. I haven’t, really. Pick what you’d tell me.',
+      pick: 4,
+      cards: [
+        { id: 'K3', label: 'Jobs link into chains', t: 'Jobs link into chains: one has to finish before the next can start.', key: true },
+        { id: 'K4', label: 'The longest chain sets the finish', t: 'The longest chain sets when you finish. That chain is the critical path.', key: true },
+        { id: 'K5', label: 'Other jobs have float', t: 'Jobs that aren’t on it have float: they can slip a bit without making you late.', key: true },
+        { id: 'K7', label: 'It can change', t: 'It can change: speed one chain up, or let another slip, and a different chain can take over.', key: true },
+        { id: 'M1', t: 'The biggest single job is always the critical one.', mc: 'M1', fix: ['amira', 'Not that one: it’s the longest chain, not the biggest job. Remember the pipes.'] },
+        { id: 'M2', t: 'Float is spare time for whoever does the job.', mc: 'M2', fix: ['pat', 'Careful. Float’s the plan’s, not the jobber’s. Keep it in your back pocket.'] }
       ],
-      chips: ['Jobs link up into chains: one has to finish before the next starts.', 'The longest chain sets when you finish. That’s the critical path.', 'Jobs off it have float: they can slip a bit without making you late.', 'It can change: speed one chain up and another can take over.'] },
-    takeaways: ['The longest chain sets the finish, and the chain can change.', 'Float belongs to the plan, not to whoever owns the job.', 'The handback is a wall. Plan inside it, with room to spare.', 'Only time off the critical path comes off the finish.'],
-    // Off-topic and safety handling: the tutor's authored lines are used (never generated).
-    redirect: { who: 'tom', say: 'Good question for the pub. For now, the trench.' },
-    // Grounding for the AI tutor (js/ai/tutor.js): the module registers a concept 'planning-m1' built on the tutor's
-    // own 'project-planning' card, with its probes, examples and follow-ups re-set in this module's examples.
-    ai: {
-      concept: 'planning-m1',
-      probes: {
-        longest_task: ['Is it the longest single job, or the longest run of jobs that have to happen one after another?', 'B takes five days on its own. A, C and D take nine in a row. Which sets when E can start?', 'If the longest job had nothing waiting for it, would it still decide the finish?'],
-        more_people: ['Would four gangs make the pipes arrive any sooner?', 'If you put four gangs in one sixty-metre trench, where do they all stand?', 'Which of the drain jobs are waiting on time rather than on hands?'],
-        float_owned: ['If the supplier uses both days of float, how much is left for anyone else?', 'Who should decide when float gets spent: the person doing one job, or the person holding the whole plan?', 'If the pipes quietly use their two days, which chain is critical then?'],
-        fixed_plan: ['When Tom found the clay pipe, should the plan carry on pretending it wasn’t there?', 'What’s the difference between changing a plan and losing control of it?', 'If the plan never changed, what would it tell you about Sunday?'],
-        cp_static: ['When we swapped the kettle for the urn, which chain set the finish?', 'What would have to happen for a chain with float to become critical?', 'If you only ever watch the critical path, what might sneak up on you?']
-      },
-      examples: {
-        longest_task: 'The pipes are the longest single job at five days. But it’s the A-C-D-E-F chain, fourteen days end to end, that sets the finish.',
-        more_people: 'Four gangs got the trench down to a day, and the finish didn’t move: the pipes became the long chain.',
-        float_owned: 'The pipes had two days of float. Use them and the pipes are critical too, with nobody told.',
-        fixed_plan: 'The agreed plan is the baseline. When facts change, like a clay pipe nobody drew, you re-plan against it and say why.',
-        cp_static: 'The kettle chain was critical until the urn arrived. Then the mugs chain took over.'
-      },
-      followUps: {
-        activities: ['What separate jobs would you list for the drain before you could plan it?', 'How would you break “renew the drain” into jobs someone could actually do?'],
-        durations: ['Where would a number like “five days for the pipes” come from, and how sure are we of it?', 'Would you give a single number for a duration, or a range? Why?'],
-        dependencies: ['Pick one drain job that can’t start until another has finished. Why that one?', 'Which two drain jobs could happen at the same time, and why?'],
-        critical_path: ['How would you find the chain that sets the finish on the drain job?', 'Why do we care more about one chain than the others?', 'What would you tell Helen the critical path is, in plain words?'],
-        float: ['If the pipes slip by one day, does the finish move? Why?', 'How would you work out how far a job can slip before it hurts?', 'What does zero float tell you about a job?'],
-        change: ['What would make the critical path switch from one chain to another?', 'When would you re-plan, and who would you tell?']
-      },
-      teachBack: {
-        critical_path: 'What’s the critical path, in your own words, and why should Tom care?',
-        float: 'What does float mean on the drain job, and who does it belong to?',
-        change: 'Why might the critical path be different by Sunday?'
-      }
-    }
+      done: { all: ['callum', 'Oh, that makes sense. It’s not the biggest job, it’s the longest chain, and it can move. I’m writing that down. In pen.'],
+              some: ['callum', 'I think I’ve got most of it. Pat, can I have the rest on a sticky note?'] },
+      pat: ['pat', 'Not bad at all. I’d add one thing: the critical path tells you where to look first. It doesn’t tell you where to stop looking.'] },
+    takeaways: ['The longest chain sets the finish, and the chain can change.', 'Float belongs to the plan, not to whoever owns the job.', 'The handback is a wall. Plan inside it, with room to spare.', 'Loud isn’t the same as late: find what everyone’s waiting on.']
   },
 
   // ---------------------------------------------------------------------------------------------------------------
@@ -479,11 +499,33 @@ LS.MODULES.planning = {
     },
     expertLine: 'At risk. An unrecorded pipe at the culvert has added about 3 hours to the dig-out. We’re bringing in a second gang at 10:00 and pre-assembling the deck panels, which gets us back to about 4½ hours in hand. The ballast train is late but it isn’t on the critical path. Next update at 18:00. If the relay isn’t finished by 16:00 tomorrow we move to the temporary road surface so the buses get through on Monday.',
     expertOrder: ['tom', 'dig', 'crane', 'permit', 'hannah', 'gaz'],
-    coach: { who: 'jo', ladder: [
-      'What’s everyone waiting on right now?',
-      'Have you been down to the dig yet? And when does the crane go home?',
-      'Put the new times on the cabin board: stretch S3 by what you found, and see what S4 does against the crane window.'
-    ], safety: { who: 'hannah', say: 'That’s not a planning question, it’s mine. Tests, shifts, protection: they’re set by the safe system of work, not traded for time. Ask me, and the answer will be no.' } },
+    // Help comes from the same three voices as the Brew: people you can turn to. Authored hints at three levels for
+    // each stage. The newcomer's is a nudge, the mid-level's gives structure, the veteran's has the most insight and
+    // costs your one favour. Help is counted as independence in the Logbook, never marked down.
+    help: {
+      favours: 1,
+      voices: [
+        { id: 'callum', level: 1, how: 'On site with Tom’s gang', cost: 0,
+          hints: {
+            find: 'The gang in the trench have been stood about for an hour. They said they’re waiting on something. I didn’t like to ask what.',
+            cabin: 'Is it bad that the finish says six on Monday? That’s when the school buses need the road.',
+            decide: 'Hannah said there’s a second gang coming in at ten. Could they help? I’d help, but I’m still not allowed near the digger.',
+            call: 'If it were me, I’d want to know what’s wrong, what you’re doing about it, and when you’ll ring back.' } },
+        { id: 'amira', level: 2, how: 'On the phone', cost: 0,
+          hints: {
+            find: 'Start with what everyone’s waiting on, then the fixed things: the crane window and the road permit. Those are your walls.',
+            cabin: 'Put the extra hours on S3 and watch two things: the margin before the wall, and whether S4 still finishes inside the crane hire.',
+            decide: 'Aim for at least two hours of margin, and find the cheapest way to get it. Hours off the critical path are what count.',
+            call: 'Status, cause, action, margin, next update, and what you need from them. In that order.' } },
+        { id: 'pat', level: 3, how: 'Call in a favour', cost: 1,
+          hints: {
+            find: 'Loud problems ring you. Quiet ones sit in a trench waiting for a cutter. Catch Tom before he goes home at half six, or walk down to the dig, then find out when the crane goes home.',
+            cabin: 'Two problems, one cause. The pipe has eaten your margin and pushed the culvert lift past the crane. And the ballast? Check its float before you let it worry you.',
+            decide: 'Fix the cause, not the symptom: if the dig finishes sooner, the crane sorts itself out. Then look for work you can do off the track, in the compound. And agree your fallback before you need it, not at three in the morning.',
+            call: 'Tell them early and tell them straight. People forgive a problem. They don’t forgive a surprise.' } }
+      ],
+      safety: { who: 'hannah', ask: 'Could we save time on the crossing tests?', say: 'That’s not a planning question, it’s mine. Tests, shifts, protection: they’re set by the safe system of work, not traded for time. The answer is no, and it’ll be no at three in the morning too.' }
+    },
     rubric: [
       { dim: 'Find out', points: 20, rule: 'Heard Tom before 06:30 or went to the dig; checked the crane sheet and the permit' },
       { dim: 'Diagnose', points: 25, rule: 'Named S3 as the critical problem, gave the new finish (hour 56, zero margin) and the crane clash; did not call the ballast critical' },

@@ -159,9 +159,8 @@
   "moira": {
    "look": {
     "bg": "#d9c9b0",
-    "glasses": true,
-    "hair": "#c9c4c0",
-    "hairStyle": "bun",
+    "hair": "#6a3424",
+    "hairStyle": "ponytail",
     "skin": "#e9c3a4",
     "top": "#3f5a4c",
     "topStyle": "jacket"

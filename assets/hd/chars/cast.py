@@ -71,9 +71,9 @@ def auto_spec(look):
 # Wardrobe per character: what the role implies. Keys override the auto mapping.
 DRESS = {
     # Harrowby's last station master, the mentor: exactly the reference character.
-    'moira': dict(top='olive', topStyle='coat', hood=True, inner='cream', scarf='wine', legwear='skirt', skirt='charcoal',
-                  legs='charcoal', feet='boots', feet_ramp='leather', satchel=True, bag_ramp='leather', age='old',
-                  brow='hair_grey', brow_i=3, hem=76, hair='hair_grey', skin='skin_light', top_bias=-0.08),
+    'moira': dict(top='olive', topStyle='coat', hood=True, inner='cream', scarf='wine', legs='charcoal', feet='boots',
+                  feet_ramp='leather', satchel=True, bag_ramp='leather', hair='hair_auburn', hairStyle='ponytail',
+                  skin='skin_light', top_bias=-0.08, glasses=None, hem=74),
     'helen': dict(topStyle='suit', inner='white', legs='navy', feet='shoes', feet_ramp='paint_black', earrings=True,
                   lipstick=True, pocket_square='white', sh=11, button='navy', top='navy', top_bias=-0.16),
     'jo': dict(topStyle='jacket', inner='cream', legs='denim', feet='boots', feet_ramp='boot', earrings=True, rim='gold',
@@ -107,6 +107,17 @@ AVATAR_DRESS = [
     dict(topStyle='tee', top='rust', legs='denim', feet='trainers', accent='white', sh=12),
 ]
 
+# Extra player avatars not in the pack yet (the coordinator adds their looks to PACK.avatars).
+EXTRA_AVATARS = {
+    # the user's own reference character: short black spiky hair, a full short black beard, warm tan skin,
+    # grey tee, charcoal trousers, grey trainers
+    'avatar4': dict(skin='skin_tan', hair='hair_black', brow='hair_black', beard_ramp='hair_black', hairStyle='short',
+                    beard=True, topStyle='tee', top='tee_grey', legs='trouser', feet='trainers', feet_ramp='trainer_grey',
+                    sh=12, style=2),
+}
+EXTRA_LOOKS = {'avatar4': {'skin': '#e3b673', 'hair': '#18181a', 'hairStyle': 'short', 'beard': True, 'top': '#737165',
+                           'topStyle': 'tee', 'legs': '#333333', 'bg': '#e6e0d4'}}
+
 # Six generic townsfolk (no pack look): varied age, skin, build.
 TOWNSFOLK = {
     'town_pensioner': dict(skin='skin_fair', hair='hair_silver', hairStyle='short', flatcap='tweed', topStyle='jacket',
@@ -129,31 +140,31 @@ TOWNSFOLK = {
 
 # Profile silhouettes (people.Person.NOSES / CHINS) and stride, by age and build: nobody shares a face.
 PROF = {
-    'moira': dict(prof=dict(nose='soft', chin='receding'), stride=0.72),
-    'helen': dict(prof=dict(nose='straight', chin='normal')),
-    'jo': dict(prof=dict(nose='button', chin='round')),
+    'moira': dict(fem=True, prof=dict(nose='straight', chin='normal')),
+    'helen': dict(fem=True, prof=dict(nose='straight', chin='normal')),
+    'jo': dict(fem=True, prof=dict(nose='button', chin='round')),
     'tom': dict(prof=dict(nose='straight', chin='strong', brow=True), eye_w=2),
-    'hannah': dict(prof=dict(nose='button', chin='round')),
+    'hannah': dict(fem=True, prof=dict(nose='button', chin='round')),
     'steve': dict(prof=dict(nose='big', chin='strong', brow=True), stride=0.9),
-    'priya': dict(prof=dict(nose='pointed', chin='normal')),
+    'priya': dict(fem=True, prof=dict(nose='pointed', chin='normal')),
     'gaz': dict(prof=dict(nose='round', chin='strong', brow=True)),
     'brian': dict(prof=dict(nose='round', chin='double'), stride=0.8),
-    'sue': dict(prof=dict(nose='straight', chin='receding')),
+    'sue': dict(fem=True, prof=dict(nose='straight', chin='receding')),
     'raj': dict(prof=dict(nose='big', chin='normal', brow=True)),
     'len': dict(prof=dict(nose='big', chin='receding', brow=True), stride=0.78),
-    'june': dict(prof=dict(nose='button', chin='round')),
+    'june': dict(fem=True, prof=dict(nose='button', chin='round')),
     'dev': dict(prof=dict(nose='button', chin='round')),
-    'jess': dict(prof=dict(nose='pointed', chin='round')),
+    'jess': dict(fem=True, prof=dict(nose='pointed', chin='round')),
     'avatar0': dict(prof=dict(nose='straight', chin='normal')),
-    'avatar1': dict(prof=dict(nose='button', chin='round')),
-    'avatar2': dict(prof=dict(nose='pointed', chin='normal')),
+    'avatar1': dict(fem=True, prof=dict(nose='button', chin='round')),
+    'avatar2': dict(fem=True, prof=dict(nose='pointed', chin='normal')),
     'avatar3': dict(prof=dict(nose='soft', chin='round')),
     'town_pensioner': dict(prof=dict(nose='big', chin='receding', brow=True), stride=0.7),
-    'town_shopper': dict(prof=dict(nose='soft', chin='normal')),
+    'town_shopper': dict(fem=True, prof=dict(nose='soft', chin='normal')),
     'town_teen': dict(prof=dict(nose='button', chin='round'), stride=1.05),
     'town_farmer': dict(prof=dict(nose='round', chin='strong', brow=True)),
     'town_postie': dict(prof=dict(nose='straight', chin='strong'), stride=1.05),
-    'town_walker': dict(prof=dict(nose='pointed', chin='receding')),
+    'town_walker': dict(fem=True, prof=dict(nose='pointed', chin='receding')),
 }
 
 
@@ -174,6 +185,8 @@ def _all_specs():
     for i, lk in enumerate(data['avatars']):
         sp = auto_spec(lk); sp.update(AVATAR_DRESS[i] if i < len(AVATAR_DRESS) else {})
         out.append(('avatar%d' % i, sp, lk))
+    for aid, sp in EXTRA_AVATARS.items():
+        out.append((aid, dict(sp), EXTRA_LOOKS[aid]))
     for tid, sp in TOWNSFOLK.items():
         out.append((tid, dict(sp), None))
     return out
