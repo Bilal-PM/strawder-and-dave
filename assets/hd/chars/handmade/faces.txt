@@ -1,0 +1,95 @@
+; faces, drawn over the bare head: brows (hair ramp), eyes with a dark upper lid line, a lash flick at the
+; outer corner and a white catchlight top-left, a 2x1 blush under each eye and a small smile.
+; _3 = 3x4 eyes (the avatars and younger cast), _2 = 2x4 eyes. Rows start at the brow line (row 25).
+
+== face_down_3 15 25 map=hair:brow
+..ddd........ddd
+.d..............d
+.
+.@@@@........@@@@
+..*&&........*&&
+..&@&........&@&
+..%%&........%%&
+.
+..pp..........pp
+.
+.......v..v
+........ww
+
+== face_down_2 15 25 map=hair:brow
+...dd........dd
+..d............d
+.
+..@@@........@@@
+...*&........*&
+...&@........&@
+...%&........%&
+.
+...pp........pp
+.
+.......v..v
+........ww
+
+== eyes_shut_down_3 15 25
+.
+.
+.
+.2222........2222
+.@222........222@
+..@@@........@@@
+..222........222
+
+== eyes_shut_down_2 15 25
+.
+.
+.
+..222........222
+..@22........22@
+...@@........@@
+...22........22
+
+== face_left_3 13 25 map=hair:brow
+..ddd
+.....d
+.
+..@@@@
+..*&&
+..&@&
+..%%&
+.
+...pp
+.
+...v
+..w
+
+== face_left_2 13 25 map=hair:brow
+..dd
+....d
+.
+..@@@
+..*&
+..&@
+..%&
+.
+...pp
+.
+...v
+..w
+
+== eyes_shut_left_3 13 25
+.
+.
+.
+..2222
+..222@
+..@@@
+..222
+
+== eyes_shut_left_2 13 25
+.
+.
+.
+..222
+..22@
+..@@
+..22

@@ -1,18 +1,37 @@
-; glasses: two small round rims hugging the eyes (front), one rim and a 1px arm to the ear (profile).
-; q r s = rim ramp (lit top, mid sides, shaded bottom), + = a glint on the glass, top right.
-== glasses_down 14 28
-...qqqq......qqqq...
-rrr...+r....r...+rrr
-..r....rrrrrr....r..
-..r....r....r....r..
-...ssss......ssss...
+; glasses: two small round rims around the eyes (front); one rim and a 1px arm back to the ear (profile).
+; q r s = rim ramp (lit top, sides, shaded bottom), + = a glint on the glass. _3 / _2 match the face eye width.
 
-== glasses_left 13 28
-.qqqq.
+== glasses_down_3 13 27
+...qqqqq......qqqqq
+rrr....+r....r....+rrr
+..r.....rrrrrr.....r
+..r.....r....r.....r
+..r.....r....r.....r
+...sssss......sssss
+
+== glasses_down_2 13 27
+....qqqq......qqqq
+rr.r...+r....r...+r.rr
+...r....rrrrrr....r
+...r....r....r....r
+...r....r....r....r
+....ssss......ssss
+
+== glasses_left_3 13 27
+.qqqqq
+r....+r
+r.....rrrrr
+r.....r
+r.....r
+.sssss
+
+== glasses_left_2 13 27
+.qqqq
 r...+r
 r....rrrrrr
 r....r
-.ssss.
+r....r
+.ssss
 
 ; earrings: a small gold stud under each ear lobe
 == earrings_down 10 33
