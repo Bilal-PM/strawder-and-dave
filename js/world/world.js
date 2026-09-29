@@ -768,6 +768,8 @@ window.LS = window.LS || {};
         x.fillStyle = '#f7f1e7'; x.fillText(f.prompt, X + (key ? 12 : 0), Y + 0.5);
       }
       x.textAlign = 'left'; x.textBaseline = 'alphabetic';
+      // Learning World hook (js/learn/core.js): the lit Planning lamp and the Planning Lens draw here, in screen space.
+      if (this.onDrawUI) { try { this.onDrawUI(x, t, sx, sy, Z); } catch (e) { } x.textAlign = 'left'; x.textBaseline = 'alphabetic'; }
       // vignette and fade
       const vw = innerWidth, vh = innerHeight;
       const vg = x.createRadialGradient(vw / 2, vh / 2, Math.min(vw, vh) * 0.45, vw / 2, vh / 2, Math.max(vw, vh) * 0.8); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(8,6,14,0.3)'); x.fillStyle = vg; x.fillRect(0, 0, vw, vh);

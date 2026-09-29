@@ -14,7 +14,7 @@ const fs = require('fs');
 const path = require('path');
 const H = require('./lib/harness');
 
-const ORDER = ['smoke', 'playthrough', 'gating', 'reachability', 'save', 'layout', 'performance', 'screenshots'];
+const ORDER = ['smoke', 'playthrough', 'gating', 'reachability', 'save', 'layout', 'performance', 'screenshots', 'learning'];
 const SUITES = new Proxy({}, { get: (o, n) => typeof n === 'string' && ORDER.includes(n) ? (o[n] = o[n] || require('./suites/' + n)) : undefined, has: (o, n) => ORDER.includes(n) });
 const CHECK_TIMEOUT = +(process.env.LS_CHECK_TIMEOUT || 420000);
 

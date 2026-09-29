@@ -817,7 +817,12 @@
         return;
       }
       if (e.id === 'lockers') { if (!S.ppe) await say('hannah', `Induction first, then kit. That's the rule, and I'm the rule.`); else await say('note', I.lockers, null, 'PPE locker'); return; }
-      if (e.id === 'board') { await new Promise(res => { boardDone = res; openBoard('project'); }); return; }
+      if (e.id === 'board') {
+        await new Promise(res => { boardDone = res; openBoard('project'); });
+        // Learning World hook: if the player chose "Learn planning" on the board, run the module (js/learn/), then carry on.
+        if (LS.Learn && LS.Learn.wantsToStart()) await LS.Learn.startFromWorld(world);
+        return;
+      }
       if (e.id === 'table') { if (avail(task('panel'))) { if (S.events.length < 2) { await director(); hide('panel'); } await panelReview(); } return; }
       const txt = { noticeboard: () => I.noticeboard(S.m), station: () => I.station, depot: () => I.depot, signalbox: () => I.signalbox, cottage: () => I.cottage, packhorse: () => I.packhorse, crag: () => I.crag, buffer: () => I.buffer, urn: () => I.urn, workbench: () => I.workbench, cushions: () => I.cushions, busstop: () => I.busstop, war_memorial: () => I.war_memorial, site_board: () => I.site_board, postbox: () => I.postbox, hall_noticeboard: () => I.hall_noticeboard, trap: () => I.trap }[e.id];
       const val = txt && txt();
@@ -1103,12 +1108,16 @@
       settings: () => [['sound', 'Sound & music'], ['reduced', 'Reduce motion'], ['large', 'Larger text'], ['instant', 'Show text instantly']].map(([k, l]) => `<div class="set"><span>${l}</span><button class="switch ${SET[k] ? 'on' : ''}" role="switch" aria-checked="${!!SET[k]}" data-set="${k}" aria-label="${l}"></button></div>`).join('') +
         `<div style="margin-top:24px"><button class="btn line small" id="restart">Restart Chapter 1</button></div>`
     }[tab]();
+    // Learning World hook: the office board offers the Planning module; Settings gets the AI classmates option.
+    const learnTop = LS.Learn && tab === 'project' && boardDone && world && world.room === 'office' ? LS.Learn.boardOffer() : '';
+    const learnSet = LS.Learn && tab === 'settings' ? LS.Learn.settingsHTML() : '';
     const el = layer('board', `<div class="drawer" role="dialog" aria-label="Project board"><div class="drawer-head"><h3>Project board</h3><button class="iconbtn" style="background:var(--paper2);color:var(--ink)" id="bClose" aria-label="Close">${ICON.close}</button></div>
-      <div class="tabs">${['project', 'career', 'team', 'journal', 'settings'].map(t => `<button class="${t === tab ? 'on' : ''}" data-tab="${t}">${t[0].toUpperCase() + t.slice(1)}</button>`).join('')}</div><div class="drawer-body">${body}</div></div>`);
+      <div class="tabs">${['project', 'career', 'team', 'journal', 'settings'].map(t => `<button class="${t === tab ? 'on' : ''}" data-tab="${t}">${t[0].toUpperCase() + t.slice(1)}</button>`).join('')}</div><div class="drawer-body">${learnTop}${body}${learnSet}</div></div>`);
     el.onclick = e => { if (e.target === el) closeBoard(); };
     $('#bClose').onclick = closeBoard;
     el.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => openBoard(b.dataset.tab));
     el.querySelectorAll('[data-set]').forEach(b => b.onclick = () => { SET[b.dataset.set] = !SET[b.dataset.set]; saveSet(); openBoard('settings'); });
+    if (LS.Learn) { LS.Learn.bindBoardOffer(el, closeBoard); LS.Learn.bindSettings(el, () => openBoard('settings')); }
     const rs = $('#restart'); if (rs) rs.onclick = () => { if (rs.dataset.armed) { try { localStorage.removeItem(SAVE); } catch (e) { } location.reload(); } else { rs.dataset.armed = 1; rs.textContent = 'Tap again to restart'; } };
   }
   function closeBoard() { hide('board'); if (boardDone) { const f = boardDone; boardDone = null; f(); } else if (EX && world.onInteract) world.paused = false; }
@@ -1120,11 +1129,13 @@
     const sv = loadSave();
     layer('title', `<div class="brandmark">Groundwork Studio presents</div><div class="logo">LINESIDE</div><div class="tagline">A game about judgment.</div>
       <p class="packline">${esc(PACK.title)}: ${esc(PACK.blurb)}</p>
-      <div class="title-actions"><button class="btn primary" id="tNew">${sv ? 'New game' : 'Begin Chapter 1'}</button>${sv ? `<button class="btn ghost" id="tCont">Continue · Week ${sv.week} of 6</button>` : ''}</div>
+      <div class="title-actions"><button class="btn primary" id="tNew">${sv ? 'New game' : 'Begin Chapter 1'}</button>${sv ? `<button class="btn ghost" id="tCont">Continue · Week ${sv.week} of 6</button>` : ''}${LS.Learn ? `<button class="btn ghost" id="tLearn">Learn: Project Planning</button>` : ''}</div>
       <div class="title-foot"><button id="tEdu">Use it with your team</button><button id="tSet">Settings</button><span>Chapter 1 · about 15–20 minutes · best with sound</span></div>`);
     $('#tNew').onclick = () => { LS.audio.init(); LS.audio.sfx('select'); setup(); };
     if (sv) $('#tCont').onclick = () => { LS.audio.init(); S = Object.assign(fresh(), sv); hide('title'); runChapter(); };
     $('#tEdu').onclick = educators;
+    // Learning World hook: the Planning module from the title (progress saves separately, in lineside_learn_v1)
+    if ($('#tLearn')) $('#tLearn').onclick = () => { LS.audio.init(); LS.audio.sfx('select'); hide('title'); LS.Learn.start('planning', { from: 'title', world, onExit: title }); };
     $('#tSet').onclick = () => { LS.audio.init(); openBoard('settings'); };
   }
   function setup() {
@@ -1190,6 +1201,7 @@
       world.safe = { t: Math.max(mob && hl ? hl.bottom : 0, hr ? hr.bottom : 0) + 6, l: !mob && hl ? hl.right + 6 : 0, r: 0, b: pd };
     }, 500);
     document.addEventListener('pointerdown', () => LS.audio.init(), { once: true });
+    if (LS.Learn) { LS.Learn.attachWorld(world); LS.Learn.aiInit(); }   // Learning World hook: lamp, lens, scripted AI
     title();
     LS.game = { S: () => S, stats, profile, report, card, PACK, world: () => world, refreshWorld, currentTarget, avail: id => avail(task(id)), rankOf };
   }

@@ -15,6 +15,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/lineside.css">
+<link rel="stylesheet" href="css/learn.css">
 </head>
 <body>
 <canvas id="world" aria-label="Harrowby and the Kestrel Vale Line — walk around and explore"></canvas>
@@ -33,6 +34,7 @@
   <section id="report" class="layer"></section>
   <section id="board" class="layer"></section>
   <section id="share" class="layer"></section>
+  <section id="learn" class="layer" aria-live="polite"></section>
 </main>
 <div id="pad" aria-hidden="true"><div id="joy"><div id="knob"></div></div><button id="padA" aria-label="Interact">Ⓐ</button></div>
 <div id="toast" role="status"></div>
@@ -42,6 +44,9 @@
 <noscript><p style="color:#fff;padding:20px">LINESIDE needs JavaScript to run.</p></noscript>
 
 <script src="js/packs/kestrel-vale.js"></script>
+<script src="js/ai/worker.js"></script>
+<script src="js/ai/tutor.js"></script>
+<script src="js/packs/learn-planning.js"></script>
 <script src="js/portraits.js"></script>
 <script src="js/scene.js"></script>
 <script src="js/packs/kestrel-vale-world.js"></script>
@@ -65,6 +70,13 @@
 <script src="js/world/hd/depth_light.js"></script>
 <script src="js/world/hd/depth.js"></script>
 <script src="js/audio.js"></script>
+<script src="js/learn/table.js"></script>
+<script src="js/learn/core.js"></script>
+<script src="js/learn/board.js"></script>
+<script src="js/learn/bench.js"></script>
+<script src="js/learn/brew.js"></script>
+<script src="js/learn/line.js"></script>
+<script src="js/learn/logbook.js"></script>
 <script src="js/game.js"></script>
 </body>
 </html>
