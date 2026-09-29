@@ -25,8 +25,15 @@ Files:
 - **Scoring:** the dashboard `S.m` is in real units, with metrics revealed progressively. JP use the `JP` and `CAL` tables. `stats()` is decision quality plus Brier calibration. The panel readiness score comes from `caseRows()` (which includes a safety and approvals row) plus the answers to the questions.
 - **Save:** `localStorage.lineside_v2` is written after every interaction and before any surprise. Achievements are in `lineside_ach`. Note that headless Chromium sometimes wiped `file://` localStorage across a reload, so serve over http(s) in production.
 
+## Learning World: Module 1, Project Planning (docs/LEARNING_WORLD.md)
+- **Data:** `js/packs/learn-planning.js` (`LS.MODULES.planning`, the §5 module shape). All numbers are illustrative, awaiting rail PM sign-off; `LS.Learn.selfCheck()` re-derives them with the CPM.
+- **Engine:** `js/learn/` (`LS.Learn`). `table.js` is the Planning Table (`network_table` explorable, reused read-only everywhere) and the CPM wrapper (`LS.AI.cpm` when present); `core.js` is the runner (the #learn overlay, progress in `localStorage.lineside_learn_v1`, portraits, confidence, AI wiring, world hooks); `board.js` (beats + explorable challenges), `bench.js` (puzzles: `network`, `sequence`, `what_if`), `brew.js` (discussion via `LS.AI.say/followUp/classify`, teach-back, takeaway), `line.js` (Hour Eight: evidence, cabin board, decisions, coach via `LS.AI.coach`, status call, deterministic rubric), `logbook.js` (timeline vs expert, calibration, lamp, lamp checks). Styles: `css/learn.css`.
+- **Entry points:** the title's "Learn: Project Planning", and the office board in Chapter 1 (the board drawer shows an offer; `LS.Learn.startFromWorld`). After mastery the board drawer shows the Planning Lens view, Q (or the Lens button) lights the critical chain over Jo's whiteboard, and a lamp glows by the office door (`world.onDrawUI`, 2D renderer only).
+- **Hooks (small, commented):** `game.js` (title button, board prop, board drawer offer + AI setting, boot: `LS.Learn.attachWorld` + `LS.AI.init({provider:'scripted'})`), `world.js` (`onDrawUI` in `drawUI`), `index.html` (scripts, `css/learn.css`, `<section id="learn">`). Chapter 1 is unchanged unless the player chooses to learn.
+- **AI:** scripted by default. Settings → "AI classmates: Off / On-device model" opts in (`LS.AI.optIn` + `init`, WebLLM where WebGPU exists); it never blocks and falls back silently.
+
 ## Testing
-Run `node tests/run.js` (about 7 min; see `tests/README.md`). It runs 8 suites: smoke, playthrough (expert and random, on desktop and mobile), gating, reachability, save, layout, performance and screenshots. `--rev=HEAD` tests the last commit and `--seed=N` replays a random run.
+Run `node tests/run.js` (about 7 min; see `tests/README.md`). It runs 9 suites: smoke, playthrough (expert and random, on desktop and mobile), gating, reachability, save, layout, performance, screenshots and learning. `--rev=HEAD` tests the last commit and `--seed=N` replays a random run.
 
 ---
 

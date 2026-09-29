@@ -228,15 +228,16 @@ def render(spec, view, col, row=None):
         f.layer(name, dy=(lag if part == '_bun' else up), clip=None if name.endswith('_hat') else clip)
 
     if v in ('down', 'up'):
-        hair('_back') if v == 'down' else None
+        if hs == 'bun' and not hat and v == 'down': hair('_bun')
         if P['sit']:
             f.layer(f'sit_legs_{v}')
         else:
             lp, rp = FRONT_LEGS[k] if k is not None else ('stand', 'stand')
             if v == 'up': lp, rp = rp, lp
             f.layer(f'leg_{lp}_L'); f.layer(f'leg_{rp}_R')
-        f.layer(f'skirt_{v}', dy=up) if s.get('legwear') == 'skirt' else None
-        f.layer(f'torso_{ts}_{v}', dy=up)
+        seat = (lambda x, y: y - up <= 68) if P['sit'] else None      # seated: the hem sits on the chair
+        if s.get('legwear') == 'skirt' and not P['sit']: f.layer(f'skirt_{v}', dy=up)
+        f.layer(f'torso_{ts}_{v}', dy=up, clip=seat)
         if s.get('vest') and ts != 'hivis': f.layer(f'vest_{v}', dy=up)
         la, ra = FRONT_ARMS[k] if k is not None else ('rest', 'rest')
         if v == 'up': la, ra = ra, la
@@ -248,7 +249,8 @@ def render(spec, view, col, row=None):
             if P['blink']: f.layer('eyes_shut_down', dy=up)
             if s.get('beard'): f.layer('beard_down', dy=up)
         hair('')
-        if hs == 'bun' and not hat: hair('_bun')
+        if hs == 'bun' and not hat and v == 'up': hair('_bun')     # seen from behind, the bun is nearest to us
+        if v == 'down' and s.get('earrings') and not hat: f.layer('earrings_down', dy=up)
         if v == 'down' and s.get('glasses'): f.layer('glasses_down', dy=up)
         if hat: f.layer(f'hardhat_{v}', dy=up)
         return f.finish()
@@ -265,7 +267,7 @@ def render(spec, view, col, row=None):
     if not P['sit']:
         f.layer(far, dark=1)
         f.layer(near)
-    f.layer(f'skirt_left', dy=up) if s.get('legwear') == 'skirt' else None
+    if s.get('legwear') == 'skirt': f.layer('skirt_left', dy=up)
     f.layer(f'torso_{ts}_left', dy=up)
     if s.get('vest') and ts != 'hivis': f.layer('vest_left', dy=up)
     f.layer('head_left', dy=up)
@@ -273,6 +275,7 @@ def render(spec, view, col, row=None):
     if s.get('beard'): f.layer('beard_left', dy=up)
     hair('')
     if hs == 'bun' and not hat: hair('_bun')
+    if s.get('earrings') and not hat: f.layer('earrings_left', dy=up)
     if s.get('glasses'): f.layer('glasses_left', dy=up)
     if hat: f.layer('hardhat_left', dy=up)
     f.layer(f'sarm_{na}{sl}', dy=up, edge=True)

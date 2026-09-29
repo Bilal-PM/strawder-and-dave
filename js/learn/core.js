@@ -209,7 +209,7 @@ window.LS = window.LS || {};
       // the lamp post by the project office door
       const X = sx(64 * T + 4), Y = sy(43 * T + 2), s = Z;
       x.fillStyle = '#2a2430'; x.fillRect(X - 1.2 * s, Y - 22 * s, 2.4 * s, 22 * s); x.fillRect(X - 3 * s, Y - 1 * s, 6 * s, 2 * s);
-      glow(X, Y - 25 * s, 26 * s, 0.75 * fl);
+      glow(X, Y - 25 * s, 40 * s, 0.9 * fl);
       x.fillStyle = band === 'gold' ? '#d7a73c' : band === 'silver' ? '#c9ccd2' : '#b0784a'; x.fillRect(X - 4 * s, Y - 30 * s, 8 * s, 2 * s); x.fillRect(X - 3.5 * s, Y - 22 * s, 7 * s, 1.5 * s);
       x.fillStyle = `rgba(255,226,150,${fl})`; x.fillRect(X - 3 * s, Y - 28 * s, 6 * s, 6 * s);
     }
@@ -309,6 +309,7 @@ window.LS = window.LS || {};
         P.done[next] = true; justDone = next;
         const order = L.STEPS.map(s => s.id), i = order.indexOf(next);
         P.step = r && r.goto ? r.goto : (order[i + 1] || 'done');
+        if (P.replaying && !(r && r.goto)) { P.replaying = null; P.step = 'done'; }   // a replayed step goes back to the module card
         L.save();
         if (P.step !== 'done' && !L.leaving) { const c = await L.between(mod, P, next); if (c === 'leave') { await L.leave(true); break; } }
       }
@@ -355,7 +356,7 @@ window.LS = window.LS || {};
       <div class="lw-replay">${L.STEPS.map(s => `<button class="lw-opt" data-replay="${s.id}"><b>${s.n}. ${esc(s.name)}</b><small>${esc(s.verb)}</small></button>`).join('')}</div>
       <div class="lw-cta"><button class="btn dark" data-primary>Back to Harrowby</button></div></div>`);
     const b = await L.pick(el, '[data-primary],[data-replay],[data-check]');
-    if (b.hasAttribute('data-replay')) { P.step = b.dataset.replay; L.save(); return; }
+    if (b.hasAttribute('data-replay')) { P.step = b.dataset.replay; P.replaying = b.dataset.replay; if (P.step === 'line') P.variant = P.variant ? null : 'v2'; L.save(); return; }
     if (b.hasAttribute('data-check')) { await L.lampCheck(mod, P, due); return; }
     L.leaving = true; await L.leave(true);
   };

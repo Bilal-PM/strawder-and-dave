@@ -96,6 +96,17 @@ setup, chapter card, narration, dialogue, choices, each room, the board, track w
 confidence, surprises, the gate review, the report and what's next) into `tests/out/screens/<viewport>/`, with a
 contact sheet at `tests/out/screens/index.html`.
 
+**learning**: plays the Project Planning module (the Learning World, `js/learn/`) end to end on desktop and mobile
+with the scripted AI classmates: "Save and leave" part-way and resume; the Board's seven beats; the Planning Table's
+three challenges (including loop protection) with the finish checked against the critical-path engine; the three
+puzzles answered correctly (plus the tamper follow-up); the Brew with chips and free text, where "the critical path is
+just the longest task" must be detected and countered, a partial answer probed, and the teach-back to Dev hit at least
+three key points; Hour Eight's expert path must reach Gold, a replay that cuts the crossing tests must be refused by
+Hannah and capped at "Not yet"; the Logbook lights the lamp and books lamp checks. Then, in Chapter 1, the office
+board must offer the module and show the Planning Lens, and leaving must hand the world back. Progress must be in
+`lineside_learn_v1`, never the chapter save. Every screen is layout-audited (mobile FAILs, desktop WARNs) and saved to
+`tests/out/screens/learning/<viewport>/` (or `$LS_LEARN_SHOTS/<viewport>/`).
+
 ## How it works
 
 - `run.js` is the runner. `lib/harness.js` launches the browser and holds the viewports, error capture, font cache,

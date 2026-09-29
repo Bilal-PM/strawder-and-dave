@@ -160,7 +160,7 @@ PROF = {
 def all_specs():
     out = []
     for cid, sp, lk in _all_specs():
-        sp = dict(sp); sp.update(PROF.get(cid, {})); out.append((cid, sp, lk))
+        sp = dict(sp); sp.update(PROF.get(cid, {})); sp['id'] = cid; out.append((cid, sp, lk))
     return out
 
 

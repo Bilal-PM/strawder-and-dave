@@ -1,0 +1,22 @@
+; glasses: two small round rims hugging the eyes (front), one rim and a 1px arm to the ear (profile).
+; q r s = rim ramp (lit top, mid sides, shaded bottom), + = a glint on the glass, top right.
+== glasses_down 14 28
+...qqqq......qqqq...
+rrr...+r....r...+rrr
+..r....rrrrrr....r..
+..r....r....r....r..
+...ssss......ssss...
+
+== glasses_left 13 28
+.qqqq.
+r...+r
+r....rrrrrr
+r....r
+.ssss.
+
+; earrings: a small gold stud under each ear lobe
+== earrings_down 10 33
+U..........................U
+
+== earrings_left 25 32
+U

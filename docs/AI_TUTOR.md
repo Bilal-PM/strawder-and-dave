@@ -1,6 +1,6 @@
 # AI tutor: NPC classmates and tutors on a small in-browser model
 
-> Status: design plus working code (`js/ai/`), with tests (`tests/ai/`). **The game doesn't load it yet.** Wiring it in needs a change to `index.html` and `js/game.js`, and the owners of those files have to sign that off (see §9).
+> Status: design plus working code (`js/ai/`), with tests (`tests/ai/`). **Wired in for the Learning World** (`js/learn/`, Module 1: Project Planning): `index.html` loads `worker.js` and `tutor.js`, the game calls `LS.AI.init({provider:'scripted'})` at boot, the Brew uses `say`/`followUp`/`classify` on a module concept (`planning-m1`, built on this card), and Hour Eight uses `coach`. Chapter 1's own talks don't use it yet (see §9).
 > Last updated: 2026-09-29.
 
 ## 1. The recommendation

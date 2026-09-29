@@ -8,7 +8,18 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE); sys.path.insert(0, os.path.join(HERE, '..', 'lib'))
 import fig  # noqa: F401  (extra ramps)
 from pix import sheet, preview, manifest, save
-from people import render, W, H, PAD, NFRAMES, NW, NI, SIT_COLS
+from people import render as proc_render, W, H, PAD, NFRAMES, NW, NI, SIT_COLS
+import hand
+
+# Characters redrawn as hand-placed pixel grids (assets/hd/chars/handmade/). The rest still use the older procedural
+# painter (people.py) until their layers are drawn.
+HAND_IDS = ('avatar0', 'avatar1', 'avatar2', 'avatar3', 'tom', 'moira', 'jo')
+
+
+def render(spec, view, frame, row=None):
+    if spec.get('id') in HAND_IDS and hand.supports(spec):
+        return hand.render(spec, view, frame, row)
+    return proc_render(spec, view, frame, row)
 from cast import all_specs, ppe, ROOT
 
 OUT = os.path.join(ROOT, 'assets', 'hd', 'out', 'chars')
@@ -76,6 +87,7 @@ def main(only=None):
         moira_vs_reference()
     import profiles
     profiles.build(only, os.path.join(OUT, 'preview_profiles.png'))
+    if not only: profiles.turnaround()
     if walk_all and not only: preview(walk_all, os.path.join(OUT, 'preview_walk_all.png'), scale=2, cols=24)
     if walks: preview(walks, os.path.join(OUT, 'preview_walk.png'), scale=3, cols=NW)
     if gifs: walk_gif(gifs)
