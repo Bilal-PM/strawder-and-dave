@@ -499,6 +499,98 @@
    12
   ]
  },
+ "avatar4": {
+  "anchor": [
+   24,
+   97
+  ],
+  "cols": 17,
+  "file": "avatar4.png",
+  "frame": [
+   48,
+   102
+  ],
+  "h": 612,
+  "id": "avatar4",
+  "idle": [
+   13,
+   4
+  ],
+  "look": {
+   "beard": true,
+   "bg": "#e6e0d4",
+   "hair": "#18181a",
+   "hairStyle": "short",
+   "legs": "#333333",
+   "skin": "#e3b673",
+   "top": "#737165",
+   "topStyle": "tee"
+  },
+  "ppe": false,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right",
+   "sit_down",
+   "sit_up"
+  ],
+  "sit": [
+   0,
+   3
+  ],
+  "w": 816,
+  "walk": [
+   1,
+   12
+  ]
+ },
+ "avatar4_ppe": {
+  "anchor": [
+   24,
+   97
+  ],
+  "cols": 17,
+  "file": "avatar4_ppe.png",
+  "frame": [
+   48,
+   102
+  ],
+  "h": 612,
+  "id": "avatar4",
+  "idle": [
+   13,
+   4
+  ],
+  "look": {
+   "beard": true,
+   "bg": "#e6e0d4",
+   "hair": "#18181a",
+   "hairStyle": "short",
+   "legs": "#333333",
+   "skin": "#e3b673",
+   "top": "#737165",
+   "topStyle": "tee"
+  },
+  "ppe": true,
+  "rows": [
+   "down",
+   "up",
+   "left",
+   "right",
+   "sit_down",
+   "sit_up"
+  ],
+  "sit": [
+   0,
+   3
+  ],
+  "w": 816,
+  "walk": [
+   1,
+   12
+  ]
+ },
  "brian": {
   "anchor": [
    24,
@@ -1334,9 +1426,8 @@
   ],
   "look": {
    "bg": "#d9c9b0",
-   "glasses": true,
-   "hair": "#c9c4c0",
-   "hairStyle": "bun",
+   "hair": "#6a3424",
+   "hairStyle": "ponytail",
    "skin": "#e9c3a4",
    "top": "#3f5a4c",
    "topStyle": "jacket"
@@ -1379,9 +1470,8 @@
   ],
   "look": {
    "bg": "#d9c9b0",
-   "glasses": true,
-   "hair": "#c9c4c0",
-   "hairStyle": "bun",
+   "hair": "#6a3424",
+   "hairStyle": "ponytail",
    "skin": "#e9c3a4",
    "top": "#3f5a4c",
    "topStyle": "jacket"

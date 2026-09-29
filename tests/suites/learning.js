@@ -152,7 +152,7 @@ async function play(t, r, vp) {
     await act('[data-coach]'); await page.waitForSelector('.lo-call [data-voice="callum"]');
     await act('[data-voice="callum"]'); r.ok(/trench|waiting/i.test(await text('.lo-answer')), 'Callum gave no hint');
     await act('[data-voice="pat"]'); r.ok(/Loud problems|half six/i.test(await text('.lo-answer')), 'Pat gave no hint');
-    r.ok(/0 favour/.test(await text('.lo-call .eyebrow')), 'asking Pat did not use the favour');
+    r.ok(/0 favours left/i.test(await text('.lo-call .eyebrow')), 'asking Pat did not use the favour');
     await act('[data-safe]'); r.ok(/Hannah/i.test(await text('.lo-answer .lw-nm')), 'asking about the crossing tests did not get Hannah’s line');
     await shot('line-help');
     await act('[data-hang]');

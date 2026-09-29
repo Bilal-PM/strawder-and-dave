@@ -13,7 +13,9 @@ import hand
 
 # Characters redrawn as hand-placed pixel grids (assets/hd/chars/handmade/). The rest still use the older procedural
 # painter (people.py) until their layers are drawn.
-HAND_IDS = ('avatar0', 'avatar1', 'avatar2', 'avatar3', 'tom', 'moira', 'jo')
+# v1 hand art was rejected by the user; v2 (handmade2/, the reference style) is in review and has no walk keys yet,
+# so the game keeps the procedural sheets until v2 is complete.
+HAND_IDS = ()
 
 
 def render(spec, view, frame, row=None):

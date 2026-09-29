@@ -98,8 +98,8 @@ window.LS = window.LS || {};
     const ev = D.evidence;
     const avail = e => (e.until == null || st.clock < e.until) && (e.after == null || st.clock >= e.after) && !st.found[e.id] && !(e.id === 'sheet' && st.found.tom);
     const timeLeft = () => D.clock.callMin - st.clock;
-    const favoursLeft = () => D.help.favours - st.help.filter(h => h.cost).length;
-    const coachBtn = `<button class="lo-coach" data-coach aria-label="Ask for help"><span class="lo-faces">${D.help.voices.map(v => `<i>${L.face(v.id, 'smile', mod)}</i>`).join('')}</span> Ask for help <small data-coachn>${st.help.length ? st.help.length + ' asked' : favoursLeft() + ' favour'}</small></button>`;
+    const favoursLeft = () => D.help.favours - st.help.filter(h => h.cost).length, favLbl = () => `${favoursLeft()} favour${favoursLeft() === 1 ? '' : 's'} left`;
+    const coachBtn = `<button class="lo-coach" data-coach aria-label="Ask for help"><span class="lo-faces">${D.help.voices.map(v => `<i>${L.face(v.id, 'smile', mod)}</i>`).join('')}</span> Ask for help <small data-coachn>${st.help.length ? st.help.length + ' asked' : favLbl()}</small></button>`;
     const bar = () => `<div class="lo-bar"><div class="lo-clock"><b>${hm(st.clock)}</b><small>Sat · hour ${Math.floor(D.clock.nowHour + (st.clock - D.clock.startMin + 10) / 60)} of ${D.plan.wall}</small></div><div class="lo-left ${timeLeft() <= 10 ? 'low' : ''}"><b>${Math.max(0, timeLeft())} min</b><small>to the 07:00 call</small></div>${coachBtn}</div>`;
     const mapPins = () => ev.map((e, i) => `<span class="lo-pin ${st.found[e.id] ? 'seen' : ''} ${avail(e) ? '' : 'gone'}" style="left:${e.map[0]}%;top:${e.map[1]}%" aria-hidden="true">${i + 1}</span>`).join('');
     const notebook = () => ev.filter(e => st.found[e.id]).map(e => `<li><b>${esc(e.label)}</b> <small>${esc(hm(st.found[e.id].at))}</small><p>${esc(say(e.id, e.say))}</p></li>`).join('') || '<li class="empty">Nothing yet. Choose what to check first.</li>';
@@ -112,7 +112,7 @@ window.LS = window.LS || {};
     const coachUI = async () => {
       const voiceHTML = v => { const p = L.person(v.id, mod), used = st.help.some(h => h.who === v.id && h.stage === st.stage), out = v.cost && favoursLeft() < v.cost && !used;
         return `<button class="lo-voice lv${v.level}" data-voice="${v.id}" ${out ? 'disabled' : ''}><span class="lw-face">${L.face(v.id, 'smile', mod)}</span><span class="lo-vt"><b>${esc(p.name)}</b><small>${esc((mod.talk.panel.find(x => x.id === v.id) || {}).label || '')} · ${esc(v.how)}</small></span><span class="lo-vc">${v.cost ? (out ? 'Favour used' : used ? 'Asked' : `${v.cost} favour`) : used ? 'Asked' : 'Free'}</span></button>`; };
-      const box = L.modal(`<div class="lo-callin"><div class="eyebrow">Ask for help · ${favoursLeft()} favour left</div><h3>Who do you turn to?</h3>
+      const box = L.modal(`<div class="lo-callin"><div class="eyebrow">Ask for help · ${favLbl()}</div><h3>Who do you turn to?</h3>
         <div class="lo-voices">${D.help.voices.map(voiceHTML).join('')}</div>
         <button class="lo-safe" data-safe>🦺 ${esc(D.help.safety.ask)}</button>
         <div class="lo-answer" aria-live="polite"></div>
@@ -122,7 +122,7 @@ window.LS = window.LS || {};
         const v = D.help.voices.find(x => x.id === b.dataset.voice), again = st.help.some(h => h.who === v.id && h.stage === st.stage);
         if (!again) { st.help.push({ who: v.id, level: v.level, stage: st.stage, cost: v.cost || 0, at: st.clock }); L.save(); }
         answer.innerHTML = L.lineHTML(v.id, v.hints[st.stage] || v.hints.find, { mood: 'smile', noRole: true, cls: v.level === 3 ? 'vet' : '' });
-        box.querySelector('.eyebrow').textContent = `Ask for help · ${favoursLeft()} favour left`;
+        box.querySelector('.eyebrow').textContent = `Ask for help · ${favLbl()}`;
         box.querySelectorAll('[data-voice]').forEach(x => { const vv = D.help.voices.find(y => y.id === x.dataset.voice); if (vv.cost && favoursLeft() < vv.cost && !st.help.some(h => h.who === vv.id && h.stage === st.stage)) { x.disabled = true; x.querySelector('.lo-vc').textContent = 'Favour used'; } if (x === b) x.querySelector('.lo-vc').textContent = 'Asked'; });
         L.sfx(v.level === 3 ? 'good' : 'tap');
         if (v.level >= 2 && st.stage === 'cabin' && onCoach) onCoach(3);

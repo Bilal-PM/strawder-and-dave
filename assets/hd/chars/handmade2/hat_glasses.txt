@@ -1,0 +1,80 @@
+; v2 hard hat (dome, ridge, ribs, brim), glasses (rims, bridge, arms) and earring studs.
+
+== hardhat_down 8 6
+..........kkkkkllmklll
+.......kkkkkkkkllmkllllmm
+.....kkkkkkkkkkllmkllllmmmm
+....kkkkkkllllkllmlllllmmmmn
+...kkkkkkmllllkllmllllnmmmmnn
+...kkkkkkmllllkllmllllnmmmmnn
+..kkkkkkkmllllkllmllllnmmmmnnn
+..kkkkkkkmllllkllmllllnmmmmnnn
+..kkkkkkkmllllkllmllllnmmmmnnn
+..kkkkkkkmllllkllmllllnmmmmnnn
+..lllllllmllllkllmllllnmmmmnnn
+..lllllllmllllkllmllllnmmmmnnn
+..lllllllmllllkllmllllnmmmmnnn
+..lllllllmllllkllmllllnmmmmnnn
+..lmmmmmmmmmmmmmmmmmmmmmmmmmmn
+kkkkkkkkkkkkllllllllllllllllllll
+nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn
+..############################
+
+== hardhat_up 8 6
+..........kkkkkllmklll
+.......kkkkkkkkllmkllllmm
+.....kkkkkkkkkkllmkllllmmmm
+....kkkkkkllllkllmlllllmmmmn
+...kkkkkkmllllkllmllllnmmmmnn
+...kkkkkkmllllkllmllllnmmmmnn
+..kkkkkkkmllllkllmllllnmmmmnnn
+..kkkkkkkmllllkllmllllnmmmmnnn
+..kkkkkkkmllllkllmllllnmmmmnnn
+..kkkkkkkmllllkllmllllnmmmmnnn
+..lllllllmllllkllmllllnmmmmnnn
+..lllllllmllllkllmllllnmmmmnnn
+..lllllllmllllkllmllllnmmmmnnn
+..lllllllmllllkllmllllnmmmmnnn
+..lmmmmmmmmmmmmmmmmmmmmmmmmmmn
+kkkkkkkkkkkkllllllllllllllllllll
+nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn
+
+== hardhat_left 7 6
+............kkkkkkkkkklll
+.........kkkkkkkmmmmmkkkklmm
+.......kkkkkkmmmkkkkkmmmmkkmmm
+......kkkkkmmllllllllllllmmkmmn
+.....kkkkkkkklllllllllllllmmkknn
+.....kkkkkkkklllllllllllllmmmmkn
+....kkkkkkkkklllllllllllllmmmmmnn
+....kkkkkkkkklllllllllllllmmmmnnn
+....kkkkkkkkklllllllllllllmmmmnnn
+....kkkkkkkkklllllllllllllmmmmnnn
+....llllllllllllllllllllllmmmmnnn
+....llllllllllllllllllllllmmmmnnn
+....llllllllllllllllllllllmmmmnnn
+....llllllllllllllllllllllmmmmnnn
+....mmmmmmmmmmmmmmmmmmmmmmmmmmmmm
+kkkkkkkkkkklllllllllllllllllllllll
+nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn
+#####
+
+== glasses_down 13 27
+....qqq+......qqq+
+rrrr....r....r....rrrr
+...r....rrrrrr....r
+...r....r....r....r
+....ssss......ssss
+
+== glasses_left 13 27
+.qqqq+
+r.....rrrrrr
+r.....r
+r.....r
+.sssss
+
+== earrings_down 12 34
+U......................U
+
+== earrings_left 26 35
+U

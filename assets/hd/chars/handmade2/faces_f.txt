@@ -1,28 +1,29 @@
-; v2 faces, softer: lighter brows, lashes at the outer corners, a warm smile, a touch of blush.
+; v2 faces, softer: lighter brows set higher, open eyes with lashes at the outer corners, a warm smile.
 
-== face_down_f 15 25 map=hair:brow
+== face_down_f 15 24 map=hair:brow
 ..ddddd....ddddd
 .d..............d
-#.33333....33333.#
+.
+#................#
 .#####......#####
 ..*+@*......*+@*
-...@@...1....@@
+..*@@*..1...*@@*
 ........1.3
-........1.3
-..pp......3...pp
+..pp....1.3...pp
+..........3
 .......3333
 .
 ......v....v
 .......vvvv
 ........33
 
-== face_left_f 14 25 map=hair:brow
+== face_left_f 14 24 map=hair:brow
 ddddd
 ....d
+.
 .....#
 .####
 .*+@
-..@@
+.*@@
 .
-.
-...pp
+..pp
