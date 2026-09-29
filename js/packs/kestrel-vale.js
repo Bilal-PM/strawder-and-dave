@@ -56,8 +56,10 @@ LS.PACKS['kestrel-vale'] = {
     { skin: '#f0cdb2', hair: '#4a3222', hairStyle: 'short', top: '#34506e', topStyle: 'jacket', bg: '#cfd8e0' },
     { skin: '#8a5a3b', hair: '#15100d', hairStyle: 'curly', top: '#7c4d7a', topStyle: 'cardigan', bg: '#e0cfe0' },
     { skin: '#e7bf9c', hair: '#c98d3a', hairStyle: 'long', top: '#3d6b54', topStyle: 'jacket', bg: '#d2e2d4' },
-    { skin: '#c28f6a', hair: '#231a16', hairStyle: 'short', beard: true, top: '#8a3b2e', topStyle: 'tee', glasses: true, bg: '#ecd3c4' }
+    { skin: '#c28f6a', hair: '#231a16', hairStyle: 'short', beard: true, top: '#8a3b2e', topStyle: 'tee', glasses: true, bg: '#ecd3c4' },
+    { skin: '#e3b673', hair: '#18181a', hairStyle: 'short', beard: true, top: '#737165', topStyle: 'tee', legs: '#333333', bg: '#e6e0d4' }   // "You": drawn from the owner's own sprite sheets
   ],
+  defaultAvatar: 4,
 
   // The whole game, planned in six chapters. Only Chapter 1 is playable in this build.
   // Programme weeks: on site from week 9; Ruby weeks 9–28, track weeks 9–36; testing 37–46; opening week 54.

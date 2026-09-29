@@ -501,21 +501,17 @@
  },
  "avatar4": {
   "anchor": [
-   24,
+   32,
    97
   ],
-  "cols": 17,
+  "cols": 9,
   "file": "avatar4.png",
   "frame": [
-   48,
+   64,
    102
   ],
   "h": 612,
   "id": "avatar4",
-  "idle": [
-   13,
-   4
-  ],
   "look": {
    "beard": true,
    "bg": "#e6e0d4",
@@ -537,31 +533,27 @@
   ],
   "sit": [
    0,
-   3
+   0
   ],
-  "w": 816,
+  "w": 576,
   "walk": [
    1,
-   12
+   8
   ]
  },
  "avatar4_ppe": {
   "anchor": [
-   24,
+   32,
    97
   ],
-  "cols": 17,
+  "cols": 9,
   "file": "avatar4_ppe.png",
   "frame": [
-   48,
+   64,
    102
   ],
   "h": 612,
   "id": "avatar4",
-  "idle": [
-   13,
-   4
-  ],
   "look": {
    "beard": true,
    "bg": "#e6e0d4",
@@ -583,12 +575,12 @@
   ],
   "sit": [
    0,
-   3
+   0
   ],
-  "w": 816,
+  "w": 576,
   "walk": [
    1,
-   12
+   8
   ]
  },
  "brian": {

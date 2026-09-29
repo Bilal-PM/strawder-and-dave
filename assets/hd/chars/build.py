@@ -83,6 +83,7 @@ def main(only=None):
         import animals
         entries.update(animals.build(OUT))
         manifest(os.path.join(OUT, 'manifest.json'), entries)
+        import runpy; runpy.run_path(os.path.join(HERE, '..', 'player_src', 'build_player.py'), run_name='__main__')   # avatar4, from the owner's sheets
     preview(fronts, os.path.join(OUT, 'preview_all.png'), scale=3, cols=9)
     preview(ppe_fronts, os.path.join(OUT, 'preview_ppe.png'), scale=3, cols=9)
     if not only or 'moira' in only:
