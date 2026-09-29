@@ -15,6 +15,11 @@
  * the same LS.TileArt.drawActor / drawAnimal as 2D), the light (a sun and moon on the clock in atmos.js, sky and
  * ground ambient, the nearest lamps and lit windows as point lights, glows), fog and the post chain (depth of field
  * focused on the player, bloom, grade and vignette).
+ *
+ * Quality: starts high (the lightest level on a software rasteriser) and steps down (pixel ratio 1 -> 0.75 -> 0.5,
+ * then no lens) if frames run past 25 ms for two seconds. ?r3dq=hi (or LS.R3D.lockQuality = true) holds it.
+ * Debug toggles (console): LS.R3D.dbg = { noShadow, noDof, noBloom, noPoint, noScene, noUI, noFlap, sunDir: [x,y,z] }.
+ * LS.R3D.stats: fps, frame ms, renderer JS ms, quality, pixel ratio. LS.R3D.reason: why it fell back to 2D, if it did.
  */
 window.LS = window.LS || {};
 (function () {
@@ -70,6 +75,7 @@ window.LS = window.LS || {};
     renderer.toneMapping = THREE.NoToneMapping;
     renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap; renderer.shadowMap.autoUpdate = true;
     renderer.autoClear = true;
+    renderer.debug.onShaderError = (g, prog, vs, fs) => { R3D.shaderError = (g.getShaderInfoLog(fs) || g.getShaderInfoLog(vs) || 'shader error').slice(0, 300); };   // -> fall back to 2D
     R3D.aniso = Math.min(8, renderer.capabilities.getMaxAnisotropy());
     R3D.maxTex = renderer.capabilities.maxTextureSize;
     const mobile = Math.min(innerWidth, innerHeight) < 600 || w.touch;
@@ -87,7 +93,7 @@ window.LS = window.LS || {};
     const hemi = new THREE.HemisphereLight(0xc8dcff, 0x6a6048, 1.6); scene.add(hemi);
     const NPL = mobile ? 6 : 10, pls = [];
     for (let i = 0; i < NPL; i++) { const p = new THREE.PointLight(0xffc27a, 0, 120, 1.3); p.castShadow = false; scene.add(p); pls.push(p); }
-    const U = { uPlayer: { value: new THREE.Vector2(-1e5, -1e5) }, uHole: { value: new THREE.Vector3(0, 0, 1) } };
+    const U = { uPlayer: { value: new THREE.Vector2(-1e5, -1e5) }, uHole: { value: new THREE.Vector3(0, 0, 1) }, uLitK: { value: 0 } };
     S = R3D.S = { w, renderer, scene, camera, sun, hemi, pls, U, mobile, rooms: {}, cur: null, frame: 0, chunkKeep: mobile ? 12 : 20,
       pr: Math.min(devicePixelRatio || 1, mobile ? 2 : 2), size: [0, 0, 0], actors: [], glow: null, ft: 1 / 60, slowT: 0, quality: 2, lastT: performance.now() };
     // a software rasteriser (no GPU) starts at the lightest quality
@@ -151,7 +157,8 @@ window.LS = window.LS || {};
       c = mix(c, uHaze, uHazeTop * smoothstep(0.45, 1.0, vUv.y));
       vec2 d = vUv - 0.5; d.x *= uAspect;
       c *= 1.0 - uVig * smoothstep(0.35, 1.05, length(d));
-      gl_FragColor = vec4(max(c, 0.0), 1.0);
+      c = max(c, 0.0); vec3 hi = 0.8 + 0.2 * (1.0 - exp(-(c - 0.8) / 0.2)); c = mix(c, hi, step(0.8, c));   // a soft shoulder: lamps and lit windows roll off instead of clipping
+      gl_FragColor = vec4(c, 1.0);
       #include <colorspace_fragment>
     }`;
   function initPost() {
@@ -183,7 +190,7 @@ window.LS = window.LS || {};
   /* ------------------------------------------------------------------ characters */
   const BOX = { l: 20, r: 20, t: 42, b: 4 };   // world units round the feet that a character's card covers
   const RA = 3;                                 // art px per world unit
-  function initActors() { S.actorGeo = null; }
+  function initActors() { S.actorGeo = null; }   // the card geometry and contact-shadow blob are made with the first slot
   function slot(i) {
     let a = S.actors[i]; if (a) return a;
     const cw = (BOX.l + BOX.r) * RA, ch = (BOX.t + BOX.b) * RA, cv = document.createElement('canvas'); cv.width = cw; cv.height = ch;
@@ -200,10 +207,13 @@ window.LS = window.LS || {};
       S.blobMat = new THREE.MeshBasicMaterial({ map: bt, transparent: true, depthWrite: false, fog: true });
       S.blobGeo = new THREE.PlaneGeometry(1, 1); S.blobGeo.rotateX(-Math.PI / 2);
     }
-    const mesh = new THREE.Mesh(S.actorGeo, mat); mesh.castShadow = true; mesh.receiveShadow = true;
+    const mesh = new THREE.Mesh(S.actorGeo, mat); mesh.castShadow = false; mesh.receiveShadow = true;
+    // the shadow comes from an invisible twin card turned to face the sun, so it is the full silhouette at any sun angle
+    const sh = new THREE.Mesh(S.actorGeo, new THREE.MeshBasicMaterial({ map: tex, alphaTest: 0.5, side: THREE.DoubleSide, colorWrite: false, depthWrite: false }));
+    sh.castShadow = true; S.scene.add(sh);
     const blob = new THREE.Mesh(S.blobGeo, S.blobMat); blob.renderOrder = 1;
     S.scene.add(mesh); S.scene.add(blob);
-    a = S.actors[i] = { cv, g, tex, mat, mesh, blob };
+    a = S.actors[i] = { cv, g, tex, mat, mesh, blob, sh };
     return a;
   }
   // everything that moves: the same list, in the same order, as world.draw() makes for 2D
@@ -238,9 +248,10 @@ window.LS = window.LS || {};
       a.tex.needsUpdate = true;
       a.mesh.visible = true; a.mesh.position.set(X, it.h, Y + 0.4);
       a.mesh.rotation.y = Math.atan2(cam.x - X, cam.z - Y) * 0.85;
+      a.sh.visible = true; a.sh.position.copy(a.mesh.position); a.sh.rotation.y = Math.atan2(S.sunDir.x, S.sunDir.z);
       a.blob.visible = it.bw > 0; a.blob.position.set(X, 0.12, Y + 0.3); a.blob.scale.set(it.bw * 2.4, 1, it.bw * 1.1);
     }
-    for (let i = n; i < S.actors.length; i++) { S.actors[i].mesh.visible = false; S.actors[i].blob.visible = false; }
+    for (let i = n; i < S.actors.length; i++) { S.actors[i].mesh.visible = false; S.actors[i].blob.visible = false; S.actors[i].sh.visible = false; }
   }
 
   /* ------------------------------------------------------------------ glows (lamps and windows, for the bloom) */
@@ -256,12 +267,12 @@ window.LS = window.LS || {};
       fragmentShader: 'uniform float uK; uniform vec3 uCol; void main(){ vec2 d = gl_PointCoord - 0.5; float r = length(d) * 2.0; float a = exp(-r * r * 5.0) + 0.6 * exp(-r * r * 40.0); if (r > 1.0) discard; gl_FragColor = vec4(uCol * a * uK, 1.0); }'
     });
     const pts = new THREE.Points(geo, mat); pts.frustumCulled = false; pts.renderOrder = 5;
-    S.scene.add(pts); S.glow = pts;
+    S.glowScene = new THREE.Scene(); S.glowScene.add(pts); S.glow = pts;   // drawn in its own pass, after the scene
   }
   function setGlows(st) {
     const L = st.lights, g = S.glow.geometry, P = g.attributes.position, Z = g.attributes.aSize;
     let n = 0;
-    for (const l of L) { if (n >= 256) break; P.setXYZ(n, l.p.x, l.p.y, l.p.z + 0.5); Z.setX(n, l.win ? l.r * 0.6 : Math.max(10, l.r * 0.5)); n++; }
+    for (const l of L) { if (n >= 256) break; P.setXYZ(n, l.p.x, l.p.y, l.p.z + 0.5); Z.setX(n, l.win ? Math.min(8, 3 + l.r * 0.12) : 14); n++; }
     P.needsUpdate = true; Z.needsUpdate = true; g.setDrawRange(0, n);
   }
 
@@ -321,15 +332,17 @@ window.LS = window.LS || {};
     if (R3D.dbg && R3D.dbg.sunDir) S.sunDir = new THREE.Vector3(...R3D.dbg.sunDir).normalize();
     const sunCol = new THREE.Color(1, 0.97, 0.92).lerp(C(255, 176, 104), warm).lerp(C(140, 160, 230), night);
     sun.color.copy(sunCol);
-    sun.intensity = PI * (day * (0.78 - 0.45 * cloud) * (1 - 0.25 * warm) + night * 0.14);
+    sun.intensity = PI * (day * (0.82 - 0.5 * cloud) * (1 - 0.25 * warm) + night * 0.14);
     hemi.color.copy(new THREE.Color(0.78, 0.86, 1.0).lerp(C(255, 200, 170), warm * 0.5).lerp(C(70, 88, 160), night));
     hemi.groundColor.copy(new THREE.Color(0.5, 0.46, 0.36).lerp(C(30, 30, 50), night));
-    hemi.intensity = PI * (day * (0.46 + 0.3 * cloud) + night * 0.28);
+    hemi.intensity = PI * (day * (0.34 + 0.34 * cloud) + night * 0.28);
     S.lampK = night; S.winK = clamp(night * 1.15 + warm * 0.15, 0, 1); S.glowK = night;
     const haze = new THREE.Color(0.74, 0.82, 0.92).lerp(C(250, 196, 150), warm * 0.8).lerp(C(34, 40, 76), night).lerp(C(172, 180, 192), cur.rain || 0);
     S.fogC = haze; S.bg = new THREE.Color(0x2f6a45).lerp(C(18, 26, 38), night);
     S.gradeTint = new THREE.Vector3(tintC.r, tintC.g, tintC.b).lerp(new THREE.Vector3(1, 1, 1), 0.55);
     S.haze = 0.08 + 0.12 * (sky.mist || 0) + 0.08 * (cur.rain || 0);
+    if (R3D.dbg && R3D.dbg.hemi != null) hemi.intensity = R3D.dbg.hemi;
+    if (R3D.dbg && R3D.dbg.sun != null) sun.intensity = R3D.dbg.sun;
   }
 
   /* ------------------------------------------------------------------ one frame */
@@ -360,12 +373,18 @@ window.LS = window.LS || {};
     return [x0 - 32, y0 - 96, x1 + 32, y1 + 64];
   }
 
-  R3D.zoom = 0.62;          // on-screen size at the player, relative to the 2D renderer's zoom
+  R3D.zoomDesk = 0.62; R3D.zoomPhone = 1.0;   // on-screen size at the player, relative to the 2D renderer's zoom (a phone keeps people bigger)
+  R3D.zoom = 0.62;
   function placeCamera(w) {
-    const cam = S.camera, kpx = (w.S || 3) * R3D.zoom, H = innerHeight;
-    const dist = H / (2 * Math.tan(FOV * DEG / 2) * kpx);
-    const tx = w.camX + w.vw / 2, tz = w.camY + w.vh / 2 + 8;
-    cam.position.set(tx, dist * Math.sin(PITCH), tz + dist * Math.cos(PITCH));
+    R3D.zoom = Math.min(innerWidth, innerHeight) < 600 ? R3D.zoomPhone : R3D.zoomDesk;
+    const cam = S.camera, kpx = (w.S || 3) * R3D.zoom, H = innerHeight, pitch = w.room === 'outside' ? PITCH : 50 * DEG;   // rooms look down a little more, over the railcar to the back wall
+    const dist = H / (2 * Math.tan(FOV * DEG / 2) * kpx), hw = innerWidth / (2 * kpx);
+    let tx = w.camX + w.vw / 2, tz = w.camY + w.vh / 2 + 8;
+    if (w.room === 'outside') { const W = LS.WORLD.MAP.W; tx = W > 2 * hw ? clamp(tx, hw, W - hw) : W / 2; }
+    else {   // rooms: centred on the floor (the 2D camera centres them on the screen below the HUD), following the player across
+      const R = LS.WORLD.ROOMS[w.room]; if (R) { tx = R.w > 2 * hw - 32 ? clamp(tx, hw - 16, R.w - hw + 16) : R.w / 2; tz = R.h * 0.56; if (w._conv && w._conv.e) tx = clamp((w.player.x + w._conv.e.x) / 2, Math.min(R.w / 2, hw - 16), Math.max(R.w / 2, R.w - hw + 16)); }
+    }
+    cam.position.set(tx, dist * Math.sin(pitch), tz + dist * Math.cos(pitch));
     cam.near = dist * 0.25; cam.far = dist * 7;
     cam.lookAt(tx, 0, tz); cam.updateProjectionMatrix(); cam.updateMatrixWorld();
     S.dist = dist; S.target = [tx, tz];
@@ -389,18 +408,24 @@ window.LS = window.LS || {};
     const fogNear = S.dist * 0.95, fogFar = S.dist * (st.room === 'outside' ? 3.4 : 6);
     S.scene.fog.color.copy(S.fogC); S.scene.fog.near = fogNear; S.scene.fog.far = fogFar; S.scene.background = S.bg;
     // emissive windows, lamps
-    st.obj.mat.emissiveIntensity = S.winK * 1.25;
+    S.U.uLitK.value = S.winK;
     const lk = S.lampK, tgt = S.target;
-    const cand = lk > 0.02 ? st.lights.map(l => [l, Math.hypot(l.p.x - tgt[0], l.p.z - tgt[1]) * (l.win ? 1.5 : 1)]).sort((a, b) => a[1] - b[1]) : [];
+    // the nearest street lamps, and at most three lit windows (a pool of spill on the pavement; the glass itself glows)
+    let cand = [];
+    if (lk > 0.02) {
+      const byD = st.lights.map(l => [l, Math.hypot(l.p.x - tgt[0], l.p.z - tgt[1])]).sort((a, b) => a[1] - b[1]);
+      const wins = byD.filter(c => c[0].win).slice(0, 3), lamps = byD.filter(c => !c[0].win).slice(0, S.pls.length - wins.length);
+      cand = lamps.concat(wins);
+    }
     const plOn = lk > 0.02 && !dbg.noPoint;
     S.pls.forEach((pl, i) => {
       pl.visible = plOn;
       const c = cand[i];
       if (!c) { pl.intensity = 0; return; }
-      const l = c[0]; pl.position.copy(l.p); if (!l.win) pl.position.y += 2;
+      const l = c[0]; pl.position.copy(l.p); if (!l.win) pl.position.y += 2; else { pl.position.z += 14; pl.position.y = Math.max(6, pl.position.y * 0.6); }
       pl.distance = (st.room === 'outside' ? 3.2 : 2.4) * Math.max(24, l.r); pl.decay = 1.2;
       pl.color.setRGB(1, l.win ? 0.78 : 0.74, l.win ? 0.5 : 0.42);
-      pl.intensity = lk * (l.win ? 40 : 120) * (st.room === 'outside' ? 1 : 0.6);
+      pl.intensity = lk * (l.win ? 8 : 110) * (st.room === 'outside' ? 1 : 0.6);
     });
     S.glow.material.uniforms.uK.value = S.glowK * (st.room === 'outside' ? 1 : 0.8);
     S.glow.material.uniforms.uScale.value = S.size[1] * S.size[2] / (2 * Math.tan(FOV * DEG / 2));
@@ -413,6 +438,7 @@ window.LS = window.LS || {};
     const R = S.renderer, bw = S.rtScene.width, bh = S.rtScene.height;
     R.shadowMap.enabled = !dbg.noShadow;
     R.setRenderTarget(S.rtScene); if (dbg.noScene) R.clear(); else R.render(S.scene, cam);
+    if (S.glowK > 0.01) { R.autoClear = false; R.render(S.glowScene, cam); R.autoClear = true; }
     const night = S.glowK;
     // bloom first, straight onto the scene (so the lens blurs the glow too)
     S.bloom.strength = 0.18 + 0.75 * night; S.bloom.threshold = mix(1.1, 0.55, night); S.bloom.radius = 0.55;
@@ -438,6 +464,7 @@ window.LS = window.LS || {};
       const now = performance.now();
       const t0 = now;
       render(w, t);
+      if (R3D.shaderError) throw new Error(R3D.shaderError);
       // the 2D canvas: transparent, UI only
       x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, w.cv.width, w.cv.height);
       if (S.torch) R3D.torch(w, x);

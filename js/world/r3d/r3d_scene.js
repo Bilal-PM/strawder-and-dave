@@ -31,6 +31,28 @@ window.LS = window.LS || {};
   let THREE = null;
   R3D.BUILDINGS = BUILDINGS;
 
+  /* In 2D the ground under a lone tree ('t' tile) is never seen (the canopy covers it), so it is left flat. Standing
+   * the tree up shows it behind the trunk: fill it with the grass of a neighbouring tile. (A 3D-only HD pass.) */
+  if (LS.HD && LS.HD.pass) LS.HD.pass({
+    name: 'r3d_under_trees', room: 'outside', order: 25,
+    run(sc, level) {
+      const rows = level.rows, at = (x, y) => (rows[y] || '')[x] || '', T = 16, Rr = LS.HD.R, GR = /[.,"]/;
+      const dense = (x, y) => { let n = 0; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if ((dx || dy) && at(x + dx, y + dy) === 't') n++; return n >= 6; };
+      const cells = [];
+      for (let y = 0; y < rows.length; y++) for (let x = 0; x < rows[y].length; x++) if (at(x, y) === 't' && !dense(x, y)) cells.push([x, y]);
+      sc.paint((g, ch) => {
+        for (const [x, y] of cells) {
+          const X = x * T, Y = y * T; if (X + T <= ch.x || X >= ch.x + ch.w || Y + T <= ch.y || Y >= ch.y + ch.h) continue;
+          for (const [dx, dy] of [[0, 1], [-1, 0], [1, 0], [0, -1], [-1, 1], [1, 1], [0, 2], [-2, 0], [2, 0]]) {
+            const sx = X + dx * T, sy = Y + dy * T;
+            if (!GR.test(at(x + dx, y + dy)) || sx < ch.x || sy < ch.y || sx + T > ch.x + ch.w || sy + T > ch.y + ch.h) continue;
+            g.drawImage(g.canvas, (sx - ch.x) * Rr, (sy - ch.y) * Rr, T * Rr, T * Rr, X, Y, T, T); break;
+          }
+        }
+      });
+    }
+  });
+
   /* ---------------------------------------------------------------- texture helpers */
   function pixelTex(img, o) {
     o = o || {};
@@ -61,11 +83,14 @@ window.LS = window.LS || {};
   // Objects with a fade rect cut a soft round window round the player while the player stands inside the rect.
   function holeShader(mat, U) {
     mat.onBeforeCompile = sh => {
-      sh.uniforms.uPlayer = U.uPlayer; sh.uniforms.uHole = U.uHole;
+      sh.uniforms.uPlayer = U.uPlayer; sh.uniforms.uHole = U.uHole; sh.uniforms.uLitK = U.uLitK;
       sh.vertexShader = 'attribute vec4 aFade;\nuniform vec2 uPlayer;\nvarying float vHole;\n' + sh.vertexShader.replace('#include <begin_vertex>',
         '#include <begin_vertex>\n  vHole = (aFade.z > 0.0 && uPlayer.x > aFade.x && uPlayer.x < aFade.x + aFade.z && uPlayer.y > aFade.y && uPlayer.y < aFade.y + aFade.w) ? 1.0 : 0.0;');
-      sh.fragmentShader = 'uniform vec3 uHole;\nvarying float vHole;\n' + sh.fragmentShader.replace('void main() {',
+      sh.fragmentShader = 'uniform vec3 uHole;\nuniform float uLitK;\nvarying float vHole;\n' + sh.fragmentShader.replace('void main() {',
         'void main() {\n  if (vHole > 0.5) { float dh = distance(gl_FragCoord.xy, uHole.xy) / uHole.z; float n = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))));\n    if (dh < 1.0 && smoothstep(0.7, 1.0, dh) < n) discard; }');
+      // night overlays (lit windows): laid OVER the lit colour by their alpha, as 2D draws them, not added to it
+      sh.fragmentShader = sh.fragmentShader.replace('#include <emissivemap_fragment>', '#ifdef USE_EMISSIVEMAP\n  vec4 litT = texture2D( emissiveMap, vEmissiveMapUv );\n  totalEmissiveRadiance = vec3( 0.0 );\n#endif')
+        .replace('#include <opaque_fragment>', '#ifdef USE_EMISSIVEMAP\n  outgoingLight = mix( outgoingLight, litT.rgb * 1.05, clamp( litT.a * uLitK, 0.0, 1.0 ) );\n#endif\n#include <opaque_fragment>');
     };
     mat.customProgramCacheKey = () => 'lsHole';
   }
@@ -93,7 +118,7 @@ window.LS = window.LS || {};
     let litCv = null;
     if (anyLit) {
       litCv = document.createElement('canvas'); litCv.width = AW; litCv.height = AH;
-      const l = litCv.getContext('2d'); l.imageSmoothingEnabled = false; l.fillStyle = '#000'; l.fillRect(0, 0, AW, AH);
+      const l = litCv.getContext('2d'); l.imageSmoothingEnabled = false;
       for (const it of items) if (it.lit) l.drawImage(it.lit, it.x, it.y, it.w, it.h);
     }
     const map = pixelTex(cv, { flipY: false }), emap = litCv ? pixelTex(litCv, { flipY: false }) : null;
@@ -126,7 +151,7 @@ window.LS = window.LS || {};
       };
       const up = { x: 0, y: 1, z: 0 };
       // 1. the part below the base line: flat on the ground, in front of the card
-      if (bot > base + 0.01) {
+      if (bot > base + 0.01 && !(R3D.dbg && R3D.dbg.noFlap)) {
         const y = 0.03 + (flapK++ % 40) * 0.004;
         quad([x0, y, bot], [x1, y, bot], [x0, y, base], [x1, y, base], up, vOf(base), vOf(bot));
       }
@@ -159,6 +184,7 @@ window.LS = window.LS || {};
   function lift2D(cards, x, y, fallbackH) {
     let best = null;
     for (const c of cards) if (x >= c.x0 && x <= c.x1 && y >= c.top && y <= c.base && (!best || c.area < best.area)) best = c;
+    lift2D.card = best;
     if (!best) return new THREE.Vector3(x, fallbackH || 2, y);
     if (y >= best.eave || !best.B0) return new THREE.Vector3(x, best.base - y, best.zb + 1.5);
     const phi = best.B0.flat ? 0 : ROOF_PITCH, s = Math.cos(PITCH) / Math.sin(phi + PITCH), u = best.eave - y;
@@ -208,7 +234,9 @@ window.LS = window.LS || {};
     // lights: 3D positions for the scene's 2D light points
     const lights = (sc.lights || []).map(l => {
       const p = room === 'outside' ? lift2D(obj.cards, l.x, l.y, 2) : new THREE.Vector3(l.x, l.y < 100 && l.r >= 50 ? 46 : 14, l.y);
-      return { p, r: l.r || 30, win: !!l.win };
+      // a light painted on a building (a window, a doorway) is a window light, whatever the 2D list calls it
+      const card = room === 'outside' ? lift2D.card : null, onBuilding = !!(card && (BUILDINGS[card.o.id] || card.area > 900));
+      return { p, r: l.r || 30, win: !!l.win || onBuilding };
     });
     return { sc, room, grp, obj, ground, lights, built: 0 };
   };

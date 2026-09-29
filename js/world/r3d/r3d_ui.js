@@ -35,6 +35,13 @@ window.LS = window.LS || {};
     const vis = w.visible(), o = w.objective, f = w.focus;
     const hOf = e => (e.kind === 'npc' ? ah + 2 : (e.h || 14));
     const top = e => P3(e.x, e.y, hOf(e)) || [-999, -999];
+    // the breadcrumb path to the objective (drawCrumbs in world.js), on the ground
+    const cr = w.crumbs;
+    if (cr && !w.paused) for (let i = 1; i < cr.length; i++) {
+      const q = WORLD.tp(cr[i][0], cr[i][1]), pp = P3(q.x, q.y - 2, 0); if (!pp) continue;
+      const a = Math.max(0, 0.75 - i / cr.length * 0.6) * (0.75 + 0.25 * Math.sin(t * 4 - i * 0.6));
+      x.fillStyle = `rgba(254,231,97,${a})`; x.beginPath(); x.ellipse(pp[0], pp[1], 1.6 * Z, 1.6 * Z * 0.65, 0, 0, 7); x.fill();
+    }
     // nameplates
     x.font = `700 ${Math.round(11 * big)}px Inter, system-ui, sans-serif`; x.textAlign = 'center'; x.textBaseline = 'middle';
     for (const e of vis) if (e.kind === 'npc' && e.name && !w.attract) {
@@ -116,6 +123,5 @@ window.LS = window.LS || {};
     x.textAlign = 'left'; x.textBaseline = 'alphabetic';
     // the fade between rooms (the vignette is in the 3D grade)
     if (w.fade > 0) { x.fillStyle = `rgba(8,6,14,${w.fade})`; x.fillRect(0, 0, innerWidth, innerHeight); }
-    void Z;
   };
 })();

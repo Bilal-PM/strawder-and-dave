@@ -19,3 +19,8 @@ bakes the character bodies into palette-swappable class maps and writes `js/worl
 (no tainted canvases on file://, works in the single-file bundle).
 
 The original licence files are in `src/` (`LICENSE_kenney_*.txt`).
+
+## Code libraries
+| Library | Author | Licence | Used for |
+|---|---|---|---|
+| three.js r186 (`js/vendor/three.r3d.js`, with `examples/jsm` UnrealBloomPass) | three.js authors | MIT (full text in the file header) | The optional HD-2D renderer (`js/world/r3d/`, `?render=3d`). Built by `tools/build_three.sh` from the npm package. No art. |
