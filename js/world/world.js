@@ -542,7 +542,7 @@ window.LS = window.LS || {};
       this.fitScale(); this.update(dt);
       const t = (now - this.t0) / 1000;
       if (LS.setLight && this.P) LS.setLight(this.P, LIGHT[this.cfg.time] ?? 0.1);
-      this.draw(this.ctx, t);
+      if (!(LS.R3D && LS.R3D.active && LS.R3D.draw(this, this.ctx, t))) this.draw(this.ctx, t);   // HD-2D renderer (js/world/r3d/), when switched on
     }
 
     /* ============================== DRAWING ============================== */
