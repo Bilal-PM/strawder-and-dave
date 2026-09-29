@@ -104,7 +104,7 @@ window.LS = window.LS || {};
     const buckets = new Map(), same = new Map();
     const bucket = (x, z) => { const k = Math.floor(x / CELL) + ',' + Math.floor(z / CELL); let b = buckets.get(k); if (!b) buckets.set(k, b = { p: [], n: [], uv: [], f: [], idx: [] }); return b; };
     const cp = Math.cos(PITCH), sp = Math.sin(PITCH);
-    const wallN = new THREE.Vector3(0, 0.35, 1).normalize();
+    const wallN = new THREE.Vector3(0, 1, 0.3).normalize();   // painted sprites keep their painted shading: lit like the ground
     const cards = [];   // for lights: which card a 2D point lies on
     let flapK = 0;
     objs.forEach((o, i) => {
@@ -136,7 +136,7 @@ window.LS = window.LS || {};
       if (He > 0.01) quad([x0, 0, zb], [x1, 0, zb], [x0, He, zb], [x1, He, zb], wallN, vOf(eave), vOf(base));
       if (eave > top + 0.01) {
         const phi = B0.flat ? 0 : ROOF_PITCH, s = cp / Math.sin(phi + PITCH), ra = s * Math.sin(phi), rb = s * Math.cos(phi), u = eave - top;
-        const n = new THREE.Vector3(0, rb, ra).normalize();
+        const n = wallN;
         quad([x0, He, zb], [x1, He, zb], [x0, He + u * ra, zb - u * rb], [x1, He + u * ra, zb - u * rb], n, vOf(top), vOf(eave));
       }
       cards.push({ x0, x1, top, base, eave, He, zb, B0, o, area: ow * oh });

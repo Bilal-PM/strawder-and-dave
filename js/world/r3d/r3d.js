@@ -192,7 +192,7 @@ window.LS = window.LS || {};
     const mat = new THREE.MeshLambertMaterial({ map: tex, alphaTest: 0.5, side: THREE.DoubleSide });
     if (!S.actorGeo) {
       const geo = new THREE.PlaneGeometry(BOX.l + BOX.r, BOX.t + BOX.b); geo.translate((BOX.r - BOX.l) / 2 * 0, (BOX.t + BOX.b) / 2 - BOX.b, 0);
-      const n = geo.attributes.normal, v = new THREE.Vector3(0, 0.35, 1).normalize(); for (let k = 0; k < n.count; k++) n.setXYZ(k, v.x, v.y, v.z);
+      const n = geo.attributes.normal, v = new THREE.Vector3(0, 1, 0.3).normalize(); for (let k = 0; k < n.count; k++) n.setXYZ(k, v.x, v.y, v.z);
       S.actorGeo = geo;
       const bc = document.createElement('canvas'); bc.width = bc.height = 64; const bg = bc.getContext('2d'), rg = bg.createRadialGradient(32, 32, 0, 32, 32, 32);
       rg.addColorStop(0, 'rgba(16,10,26,0.62)'); rg.addColorStop(0.5, 'rgba(16,10,26,0.3)'); rg.addColorStop(1, 'rgba(16,10,26,0)'); bg.fillStyle = rg; bg.fillRect(0, 0, 64, 64);
@@ -311,17 +311,20 @@ window.LS = window.LS || {};
       return;
     }
     S.torch = false;
-    // sun path: rises in the east (x+), noon a little east of south (so shadows read, falling north-west), sets west
-    const hs = clamp((hour - 6) / 13.5, 0, 1), el = Math.max(10, 52 * Math.sin(PI * hs)) * DEG, az = mix(-100, 95, hs) * DEG - 22 * DEG * Math.sin(PI * hs);
-    let dir = new THREE.Vector3(-Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el));
-    const moon = new THREE.Vector3(-0.35, 0.8, 0.5).normalize();
+    // the sun follows the 2D art's light (hd/depth_light.js lightAt): from the north-west at midday, so shadows fall
+    // south-east, towards the viewer, where they read; long and raking west in the morning and east in the evening
+    const lowSun = clamp(warm, 0, 1) * (1 - night), sgn = hour > 12 ? 1 : -1;
+    const kx = mix(0.75, 2.3 * sgn, lowSun), ky = mix(0.38, 0.22, lowSun);
+    let dir = new THREE.Vector3(-kx, 1, -ky).normalize();
+    const moon = new THREE.Vector3(-0.45, 1, -0.35).normalize();
     dir.lerp(moon, night).normalize(); S.sunDir = dir;
+    if (R3D.dbg && R3D.dbg.sunDir) S.sunDir = new THREE.Vector3(...R3D.dbg.sunDir).normalize();
     const sunCol = new THREE.Color(1, 0.97, 0.92).lerp(C(255, 176, 104), warm).lerp(C(140, 160, 230), night);
     sun.color.copy(sunCol);
-    sun.intensity = PI * (day * (0.95 - 0.55 * cloud) * (1 - 0.25 * warm) + night * 0.14);
+    sun.intensity = PI * (day * (0.78 - 0.45 * cloud) * (1 - 0.25 * warm) + night * 0.14);
     hemi.color.copy(new THREE.Color(0.78, 0.86, 1.0).lerp(C(255, 200, 170), warm * 0.5).lerp(C(70, 88, 160), night));
     hemi.groundColor.copy(new THREE.Color(0.5, 0.46, 0.36).lerp(C(30, 30, 50), night));
-    hemi.intensity = PI * (day * (0.52 + 0.3 * cloud) + night * 0.28);
+    hemi.intensity = PI * (day * (0.46 + 0.3 * cloud) + night * 0.28);
     S.lampK = night; S.winK = clamp(night * 1.15 + warm * 0.15, 0, 1); S.glowK = night;
     const haze = new THREE.Color(0.74, 0.82, 0.92).lerp(C(250, 196, 150), warm * 0.8).lerp(C(34, 40, 76), night).lerp(C(172, 180, 192), cur.rain || 0);
     S.fogC = haze; S.bg = new THREE.Color(0x2f6a45).lerp(C(18, 26, 38), night);
@@ -357,7 +360,7 @@ window.LS = window.LS || {};
     return [x0 - 32, y0 - 96, x1 + 32, y1 + 64];
   }
 
-  R3D.zoom = 0.92;          // on-screen size at the player, relative to the 2D renderer's zoom
+  R3D.zoom = 0.62;          // on-screen size at the player, relative to the 2D renderer's zoom
   function placeCamera(w) {
     const cam = S.camera, kpx = (w.S || 3) * R3D.zoom, H = innerHeight;
     const dist = H / (2 * Math.tan(FOV * DEG / 2) * kpx);
@@ -412,7 +415,7 @@ window.LS = window.LS || {};
     R.setRenderTarget(S.rtScene); if (dbg.noScene) R.clear(); else R.render(S.scene, cam);
     const night = S.glowK;
     // bloom first, straight onto the scene (so the lens blurs the glow too)
-    S.bloom.strength = 0.18 + 0.75 * night; S.bloom.threshold = mix(0.92, 0.55, night); S.bloom.radius = 0.55;
+    S.bloom.strength = 0.18 + 0.75 * night; S.bloom.threshold = mix(1.1, 0.55, night); S.bloom.radius = 0.55;
     if (!dbg.noBloom) S.bloom.render(R, null, S.rtScene, 0, false);
     const u = S.dofMat.uniforms, focus = cam.position.distanceTo(new THREE.Vector3(p.x, 14, p.y)), px = S.size[2] / 2;
     const dofOn = (S.quality >= 1 || R3D.lockQuality) && !dbg.noDof;
