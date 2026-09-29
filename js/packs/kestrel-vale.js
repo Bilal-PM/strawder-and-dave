@@ -26,7 +26,7 @@ LS.PACKS['kestrel-vale'] = {
 
   cast: {
     moira:  { name: 'Moira Kell',     role: 'Harrowby’s last station master · your mentor',
-              look: { skin: '#e9c3a4', hair: '#c9c4c0', hairStyle: 'bun', top: '#3f5a4c', topStyle: 'jacket', glasses: true, bg: '#d9c9b0' } },
+              look: { skin: '#e9c3a4', hair: '#6a3424', hairStyle: 'ponytail', top: '#3f5a4c', topStyle: 'jacket', bg: '#d9c9b0' } },
     helen:  { name: 'Helen Walsh',    role: 'Director, Vale Transport Authority · Sponsor',
               look: { skin: '#f0cfb4', hair: '#5a3a26', hairStyle: 'bob', top: '#34506e', topStyle: 'suit', bg: '#d6dde6' } },
     jo:     { name: 'Jo Adeyemi',     role: 'Engineering Lead',
