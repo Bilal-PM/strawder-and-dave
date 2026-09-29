@@ -130,7 +130,9 @@ async function play(t, r, vp) {
     await page.waitForFunction(() => /shift from earlier|shift|got there|better/i.test(document.querySelector('#lrLog').innerText), null, { timeout: 10000 }).catch(() => r.warn('no “that’s a shift from earlier” acknowledgement after correcting the misconception'));
     await chip(0);                                                   // s2: logic vs dates
     await say('They belong to the project. It is shared float, so if the supplier uses it the pipes go critical and everyone needs to know.');  // s3
-    await chip(0); await chip(0);                                    // s4, s5
+    await say('Supervision');                                        // s4: a partial answer gets a follow-up and a probe
+    await page.waitForFunction(() => /PROBE/i.test(document.querySelector('#lrLog').innerText), null, { timeout: 10000 }).catch(() => r.fail('a partial free-text answer was not probed'));
+    await chip(0); await chip(0);                                    // s4 settled, s5
     await page.waitForSelector('#lrTB', { timeout: 20000 });
     await page.fill('#lrTB', 'Jobs link up into a chain where one waits for another. The longest chain sets when you finish: that is the critical path. The other jobs have float, so they can slip a bit. And it can change if another chain gets longer.');
     await shot('brew-teachback');

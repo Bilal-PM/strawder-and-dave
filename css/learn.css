@@ -193,7 +193,7 @@ body.learning #hud,body.learning #pad,body.learning #tip{display:none!important}
 .lt-wall span{position:absolute;top:100%;right:4px;white-space:nowrap;background:var(--rose);color:#fff;font-weight:800;font-size:10px;letter-spacing:.06em;padding:2px 6px;border-radius:5px;margin-top:2px}
 .lt-margin{position:absolute;top:0;bottom:0;background:repeating-linear-gradient(45deg,rgba(47,125,91,.14) 0 6px,rgba(47,125,91,.05) 6px 12px);transition:left .15s,width .15s}
 .lt-now{position:absolute;top:-6px;bottom:-4px;border-left:2px dotted var(--teal)}.lt-now span{position:absolute;bottom:100%;left:-2px;font-size:10px;font-weight:800;color:var(--teal);letter-spacing:.08em;text-transform:uppercase}
-.lt-axis{position:relative;height:20px;margin:22px 0 0 calc(30% + 10px);font-size:11px;color:var(--muted);font-weight:600}
+.lt-axis{position:relative;height:20px;margin:28px 0 0 calc(30% + 10px);font-size:11px;color:var(--muted);font-weight:600}
 .lt-axis span{position:absolute;transform:translateX(-50%);white-space:nowrap}
 .lt-axis span:first-child{transform:none}
 .lt-crit{display:flex;align-items:flex-start;gap:10px;margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(242,169,59,.1);font-size:13.5px;line-height:1.45}

@@ -104,7 +104,7 @@ window.LS = window.LS || {};
       const maxT = Math.max(cfg.max || 0, fin, wallOn ? wall : 0, ...(cfg.windows || []).map(w => w.to)) * 1.06 || 1;
       const pc = v => (100 * v / maxT);
       // axis ticks: as many as fit (about one per 56 px of track, fewer for clock labels)
-      const trackW = Math.max(160, (host.clientWidth || 600) * 0.66), room = Math.max(3, Math.floor(trackW / (cfg.clock ? 58 : 34)));
+      const trackW = Math.max(160, (host.clientWidth || 600) * 0.66), room = Math.max(3, Math.floor(trackW / (cfg.clock ? 74 : 34)));
       const tickStep = [0.5, 1, 2, 4, 6, 8, 12, 24].find(s => s >= step && maxT / s <= room) || 24;
       const ticks = []; for (let v = 0; v <= maxT + 1e-9; v += tickStep) ticks.push(Math.round(v * 100) / 100);
       const crit = R ? R.criticalIds : [];

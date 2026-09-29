@@ -104,7 +104,11 @@ window.LS = window.LS || {};
           continue;
         }
         if (j.move === 'partial') {
-          await line(pr.probe.who, (tutor && (tutor.intent === 'partial' || tutor.intent === 'socratic') && rounds === 1 ? tutor.text.replace(/\?[^?]*$/, '?') + ' ' : '') + pr.probe.say, { cls: 'ask', tag: 'probe' });
+          // a Socratic follow-up on what they actually said (LS.AI.followUp), then the authored probe for this prompt
+          let fu = null; if (ans.via === 'text' && LS.AI && LS.AI.followUp) { try { fu = await LS.AI.followUp(chair, { concept, answer: ans.text }); } catch (e) { } }
+          const lead = fu && fu.text && fu.intent !== 'safety' ? fu.text : (tutor && (tutor.intent === 'partial' || tutor.intent === 'socratic') ? tutor.text : '');
+          if (lead && rounds === 1) await line(chair, lead, { cls: 'ask', tag: 'follow-up' });
+          await line(pr.probe.who, pr.probe.say, { cls: 'ask', tag: 'probe' });
           if (rounds >= 2) { await line(pr.affirm.who, pr.affirm.say, { mood: 'smile' }); settled = true; }
           continue;
         }
