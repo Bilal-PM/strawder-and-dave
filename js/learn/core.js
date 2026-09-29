@@ -138,7 +138,7 @@ window.LS = window.LS || {};
     if (!LS.AI) return;
     const want = (L.store.settings && L.store.settings.ai) === 'model';
     try {
-      if (want) { LS.AI.optIn(true); LS.AI.init({ provider: 'webllm', optIn: true, onStatus: s => { L.aiStatus = s; const el = $('#lwAiStatus'); if (el) el.textContent = L.aiLabel(); } }); }
+      if (want) { LS.AI.optIn(true); LS.AI.init({ provider: (navigator && navigator.gpu) ? 'webllm' : 'auto', optIn: true, onStatus: s => { L.aiStatus = s; const el = $('#lwAiStatus'); if (el) el.textContent = L.aiLabel(); } }); }
       else LS.AI.init({ provider: 'scripted' });   // never awaited: the tutor never blocks play
     } catch (e) { /* the scripted lines in the module still play */ }
     aiReady = true;
@@ -290,6 +290,9 @@ window.LS = window.LS || {};
     bindKeys();
     const P = L.prog(id); L.save();
     L.leaving = false;
+    // "Save and leave" can happen at any moment: the run resolves as soon as the player leaves, whatever step it's in.
+    const left = new Promise(res => { L._left = res; });
+    const run = async () => {
     try {
       // the door: how do you like to learn? (first time only; changeable from the loop card)
       if (!P.style) { await L.door(mod, P); if (L.leaving) return; }
@@ -310,7 +313,10 @@ window.LS = window.LS || {};
         if (P.step !== 'done' && !L.leaving) { const c = await L.between(mod, P, next); if (c === 'leave') { await L.leave(true); break; } }
       }
     } catch (e) { console.error(e); }
-    finally { L.busy = false; if (!L.leaving) L.leave(true); }
+    finally { if (!L.leaving) L.leave(true); }
+    };
+    await Promise.race([run(), left]);
+    L.busy = false;
   };
   L.door = async function (mod, P) {
     L.backdrop('office'); L.shell(mod, 'board');
@@ -364,6 +370,7 @@ window.LS = window.LS || {};
     L.sfx(ok ? 'good' : 'bad'); await L.go(el);
   };
   L.leave = async function (quiet) {
+    if (!L.cur && L.leaving) return;
     L.leaving = true;
     const w = W();
     if (root) root.classList.remove('on');
@@ -375,7 +382,9 @@ window.LS = window.LS || {};
     }
     saved = null; L.cur = null;
     const cb = onExitCb; onExitCb = null;
+    L.busy = false;
     if (cb) try { cb(); } catch (e) { }
+    if (L._left) { const f = L._left; L._left = null; f(); }
   };
 
   // Re-derive the module's key numbers with the CPM; warn loudly if the data and the maths disagree.

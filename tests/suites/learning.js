@@ -44,6 +44,13 @@ async function play(t, r, vp) {
     await shot('door');
     await act('[data-style="show"]'); await act('[data-level="new"]'); await act('#lwBegin');
 
+    // ---- "Save and leave" part-way through, then pick up where you left off ----
+    await page.waitForSelector('.lb-note[data-note="kettle"]');
+    await act('#lwLeave');
+    await page.waitForFunction(() => !document.querySelector('#learn').classList.contains('on') && document.querySelector('#title.on #tLearn'), null, { timeout: 8000 }).catch(() => r.fail('“Save and leave” did not return to the title'));
+    await act('#tLearn');
+    await page.waitForSelector('#learn.on .lb', { timeout: 8000 }).catch(() => r.fail('coming back did not resume at the Board (without asking how you like to learn again)'));
+
     // ---- the Board ----
     await page.waitForSelector('.lb-note[data-note="kettle"]');
     await act('.lb-note[data-note="mugs"]');
@@ -204,6 +211,8 @@ async function play(t, r, vp) {
     const sc = await page.evaluate(() => LS.Learn.selfCheck(LS.MODULES.planning));
     for (const c of sc) r.ok(c.ok, `numbers disagree with the critical-path engine: ${c.what}: ${c.bad.join(', ')}`);
 
+    const stats = await page.evaluate(() => LS.AI.status().stats);
+    r.ok(stats.lines > 0, 'the Brew never asked the AI tutor (LS.AI.say) for a line');
     // ---- in the world: the office board offers the module, and the Planning Lens is live ----
     await H.newGame(page, { name: 'Lamp' });
     await H.gotoRoom(page, 'office');
@@ -217,13 +226,20 @@ async function play(t, r, vp) {
     await shot('world-hub');
     await act('.lw-hub [data-primary]');
     await page.waitForFunction(() => !document.querySelector('#learn').classList.contains('on') && __T.W().room === 'office' && !__T.W().paused, null, { timeout: 8000 }).catch(() => r.fail('leaving the module did not return you to the office in Chapter 1'));
+    // and "Save and leave" from inside the module must hand Chapter 1 back too
+    await page.evaluate(() => { const e = __T.W().entities.find(e => e.id === 'board' && e.room === 'office'); __T.interact(e); });
+    await act('#bLearn'); await page.waitForSelector('#learn.on .lw-hub', { timeout: 8000 });
+    await act('#lwLeave');
+    await page.waitForFunction(() => !document.querySelector('#learn').classList.contains('on') && __T.W().room === 'office' && !__T.W().paused && !!__T.W().onInteract, null, { timeout: 8000 }).catch(() => r.fail('“Save and leave” from the office did not give Chapter 1 back (world still paused)'));
     await shot('world-office-lens', false);
+    await H.gotoRoom(page, 'outside');
+    await page.evaluate(() => { const p = LS.WORLD.tp(63, 46); __T.teleport(p.x, p.y); });
+    await shot('world-lamp', false);
     const st = await page.evaluate(() => ({ done: Object.keys(__T.S().done || {}).filter(k => __T.S().done[k]), lens: LS.Learn.lens }));
     r.log(`back in Chapter 1: done=[${st.done}] lens=${st.lens}`);
 
     for (const i of found.values()) { const m = `${TYPES[i.type] || i.type}: ${i.el ? i.el + ' ' : ''}${i.msg} [on: ${i.screens.join('; ')}]`; if (mobile) r.fail(m); else r.warn(m); }
     r.ok(P.errors.length === 0, 'JS errors:\n' + H.fmtErrors(P.errors));
-    const stats = await page.evaluate(() => LS.AI.status().stats);
     r.note(`${n} screens · Hour Eight ${g1.total}/100 ${g1.band}, unsafe replay ${g2.band} · AI lines ${stats.lines} (model ${stats.model}) · ${found.size ? found.size + ' layout issues' : 'layout clean'}`);
   } catch (e) { if (P.errors.length) r.log('JS errors so far:\n' + H.fmtErrors(P.errors)); throw e; }
   finally { await P.close(); }
