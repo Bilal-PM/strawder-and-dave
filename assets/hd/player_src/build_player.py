@@ -267,8 +267,14 @@ def main():
     for ri, v in enumerate(ROWS[:4]):
         if v in ('down', 'up'):
             stand = process(src13[v][0], k13); wk = [process(c, k13) for c in src13[v][1:1 + NW]]
-        else:   # the profile stand from the actions sheet has the feet together, which the joints need
-            stand = process(src_idle[v][0], k_act); wk = [ink_rim(f) for f in puppet.walk(stand, v, NW)]
+        else:
+            # the side walk: the owner's 8-frame left-facing cycle (contact, down, passing, up, then the other leg),
+            # spread over the 12 columns (each frame shown for one or two columns) and mirrored for right
+            side = cells(os.path.join(HERE, 'sheet_side8_b.png'), 1, 8)[0]; ks = scale_for(side)
+            s8 = [process(c, ks) for c in side]
+            if v == 'right': s8 = [f[:, ::-1].copy() for f in s8]
+            wk = [s8[int(round(i * 8 / NW)) % 8] for i in range(NW)]
+            stand = process(src_idle[v][0], k_act)
         for ci, fr in enumerate([stand] + wk):
             sheet[ri * FH:(ri + 1) * FH, ci * FW:(ci + 1) * FW] = fr
     sheet = skin_tone(sheet)
