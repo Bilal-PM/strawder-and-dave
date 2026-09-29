@@ -210,7 +210,7 @@ def walk_side(stand, facing, n=12):
         thA, knA = _interp(THIGH, t), _interp(KNEE, t)
         thB, knB = _interp(THIGH, t + 0.5), _interp(KNEE, t + 0.5)
         fr = np.zeros_like(stand)
-        tw = min(9.5, legw * 0.62)
+        tw = min(10.5, max(8.0, legw * 0.8))   # each leg most of the width of the trousers seen side-on
         for (th, kn, hxx, col, sh_dark) in ((thB, knB, hx + s * 1.5, dark, True), (thA, knA, hx - s * 0.5, fill, False), (None, None, None, None, None)):
             if th is None:
                 m = body[..., 3] > 0; fr[m] = body[m]; continue

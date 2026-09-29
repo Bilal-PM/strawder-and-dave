@@ -4,7 +4,7 @@ All third-party art used by the game world is **CC0 1.0 (public domain)**. Credi
 
 | Source | Author | Licence | Used for |
 |---|---|---|---|
-| Player character "You" (`assets/hd/player_src/sheet_walk8.png`, `sheet_actions.png`) | The project owner, made with ChatGPT image generation (owner holds the output rights) | Owned by the project | The player sprite sheets avatar4 / avatar4_ppe and its portrait, cleaned and fitted by `assets/hd/player_src/build_player.py`; the PPE version is recoloured in code |
+| Player character "You" (`assets/hd/player_src/sheet_walk13_b.png`, `sheet_actions.png`; earlier drafts `sheet_walk8.png`, `sheet_walk12_a.png`, `sheet_walk13_c.png`) | The project owner, made with ChatGPT image generation (owner holds the output rights) | Owned by the project | The player sprite sheets avatar4 / avatar4_ppe and its portrait, cleaned and fitted by `assets/hd/player_src/build_player.py`; the PPE version is recoloured in code |
 | Tiny Town 1.0 (`src/kenney_tiny-town_tilemap_packed.png`) | Kenney (www.kenney.nl) | CC0 1.0 | Style anchor: grass, dirt paths, roofs, walls, windows, doors, gables, trees, forest crowns, timber fences |
 | RPG Urban Pack 1.0 (`src/kenney_rpg-urban-pack_tilemap_packed.png`) | Kenney (www.kenney.nl) | CC0 1.0 | Cast bodies (palette-swapped per character), heritage lamp, benches, bins, crate, barriers |
 

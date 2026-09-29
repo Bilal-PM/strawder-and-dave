@@ -259,11 +259,17 @@ def main():
     NC = 1 + NW   # col 0 stands, 1-12 walk; no idle columns, so the engine's own breathing (shoulders settle 1px) applies
     import puppet
     sheet = np.zeros((FH * len(ROWS), FW * NC, 4), np.uint8)
+    # the owner's 8-direction walk sheet (13 columns: col 0 stands, 1-12 walk). Its front and back walks alternate the
+    # feet cleanly, so they are used as drawn; its side walks never pass the legs, so the sides are walked on joints
+    # from its own standing profile (puppet.py).
+    w13 = cells(os.path.join(HERE, 'sheet_walk13_b.png'), 8, 13); k13 = scale_for(w13[0])
+    src13 = {'down': w13[0], 'up': w13[4], 'left': w13[2], 'right': w13[6]}
     for ri, v in enumerate(ROWS[:4]):
-        # every frame is the same drawing: the neutral stand from the actions sheet, walked on joints (see puppet.py)
-        stand = process(src_idle[v][0], k_act)
-        wk = puppet.walk(stand, v, NW)
-        for ci, fr in enumerate([stand] + [ink_rim(f) for f in wk]):
+        if v in ('down', 'up'):
+            stand = process(src13[v][0], k13); wk = [process(c, k13) for c in src13[v][1:1 + NW]]
+        else:   # the profile stand from the actions sheet has the feet together, which the joints need
+            stand = process(src_idle[v][0], k_act); wk = [ink_rim(f) for f in puppet.walk(stand, v, NW)]
+        for ci, fr in enumerate([stand] + wk):
             sheet[ri * FH:(ri + 1) * FH, ci * FW:(ci + 1) * FW] = fr
     sheet = skin_tone(sheet)
     sheet = quantize(sheet)
