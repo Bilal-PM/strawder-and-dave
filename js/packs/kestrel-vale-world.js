@@ -92,13 +92,13 @@
     // The town's attitude changes with Town support: [below 50%, 50% and above]
     townLines: {
       len: [`Signalled this line thirty-one year. They closed it “temporarily” in 2009. I've been temporarily retired ever since.`,
-            `Folk are talking about you. Mostly kindly. When Marjorie was the only train, we worked it with a staff: one train, one staff. Cheapest signalling there is. I've still got my cap.`],
+            `Folk are talking about you. Mostly kindly. When Ruby was the only train, we worked it with a staff: one train, one staff. Cheapest signalling there is. I've still got my cap.`],
       june: [`I bake sixty loaves on a Saturday and sell forty. The rest go to the ducks. The ducks are thriving. Harrowby isn't.`,
-             `If the trains come back, I'm doing a Marjorie bun. Iced, with a little face. Don't tell anyone, it's a secret.`],
+             `If the trains come back, I'm doing a Ruby bun. Iced, with a little face. Don't tell anyone, it's a secret.`],
       dev: [`I want to do engineering at college in the city. That's two buses and an hour and a half each way. Or I could just… not.`,
             `Is it true you might need apprentices? Asking for a friend. The friend is me.`],
       jess: [`The school run's fine. It's everything else. The doctor's is in Kestrelford now. No car, no doctor.`,
-             `The kids have started drawing trains again. My youngest drew Marjorie with wings. I didn't have the heart to say.`]
+             `The kids have started drawing trains again. My youngest drew Ruby with wings. I didn't have the heart to say.`]
     },
 
     inspect: {
@@ -113,10 +113,10 @@
       crag: `Kestrel Crag. From up here you can trace the whole line: station, depot, Beck Bridge, the crossing, the junction. Three miles that used to hold a valley together.`,
       buffer: `The buffer stop at the end of the line. Someone has left a single red rose on it. Every year, according to Len.`,
       lockers: `Your locker. The spare hard hat has “VISITOR” written on it in marker pen, and “NOT YOU, STEVE” underneath.`,
-      board: `The project board: tasks, risks and a drawing of Marjorie that Jo swears she didn't do.`,
+      board: `The project board: tasks, risks and a drawing of Ruby that Jo swears she didn't do.`,
       urn: `The village hall tea urn. It has been on since 1987.`,
       workbench: `Gaz's workbench. A radio, a torque wrench, a mug that says WORLD'S OKAYEST FITTER, and a well-thumbed 1961 maintenance manual.`,
-      cushions: `A pile of old seat cushions from Marjorie's saloon. They smell faintly of 1970s holidays.`,
+      cushions: `A pile of old seat cushions from Ruby's saloon. They smell faintly of 1970s holidays.`,
       busstop: `The 41: Skelby, Harrowby, Kestrelford. Twice a day, if it's feeling generous. Someone has written “ha” next to the timetable.`,
       war_memorial: `The war memorial. The names have been cleaned recently, and there's a wreath at its foot. Harrowby looks after what matters to it.`,
       site_board: `“Kestrel Vale Line reopening · Project compound · All visitors report to the site office.” Someone has added “at last?” in pencil.`,

@@ -44,7 +44,7 @@ Harrowby is both the story world and the campus. Each topic has a **host buildin
 | 4 | **Stakeholders and communication** | Village hall | Priya, with Cllr Brian | **Listening Lens**: people show their worry above their heads | Ch1 drop-in; Funding Panel |
 | 5 | **Safety and assurance on railway work** | Track safety hut at the compound gate (new) | Hannah, with Tom | **Safe System Lens**: shows who's protected and who isn't | Ch1 induction; Ch2 first possession |
 | 6 | **Change control** | Old goods shed (new interior) | Steve, with Helen | **Change Lens**: unapproved changes carry a red tag | *While you're at it* (the café); Ch2 scope creep |
-| 7 | **Cost and earned value basics** | Harrowby Depot | Gaz, with Steve | **Value Lens**: each job shows "done" against "spent" | Ch2 *Strip Down*: Marjorie's job cards |
+| 7 | **Cost and earned value basics** | Harrowby Depot | Gaz, with Steve | **Value Lens**: each job shows "done" against "spent" | Ch2 *Strip Down*: Ruby's job cards |
 | 8 | **Leading people** | School hall, apprentice evening | Tom, with Dev and Jess | **Morale Lens**: how the crew are feeling | Ch3 *The Relay*: the Friday night shift |
 
 Beck Cottage (Moira) is the **Logbook** hub for every topic. Moira doesn't teach. She asks what you'd do differently, which fits her ("never gives the answer").

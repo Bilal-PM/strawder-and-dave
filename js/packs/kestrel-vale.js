@@ -2,7 +2,7 @@
  * Sector: rail · community line reopening · Level: new → experienced project people
  *
  * The story: the Harrowby branch closed "temporarily" in 2009. The track is worn out, and
- * Marjorie — a 1961 diesel railcar — has sat in the depot ever since. You lead the reopening:
+ * Ruby — a 1961 diesel railcar — has sat in the depot ever since. You lead the reopening:
  * renew the track, restore the train, test it all, and open the line so the valley can thrive again.
  *
  * A pack is pure data. The engine (js/game.js) plays it; js/packs/kestrel-vale-world.js adds the world's
@@ -39,7 +39,7 @@ LS.PACKS['kestrel-vale'] = {
               look: { skin: '#c89272', hair: '#9d9894', hairStyle: 'short', top: '#27354f', topStyle: 'suit', bg: '#c9ced6' } },
     priya:  { name: 'Priya Nair',     role: 'Community & Communications',
               look: { skin: '#b07852', hair: '#17110f', hairStyle: 'long', top: '#2f7f7a', topStyle: 'cardigan', bg: '#bfe0d8' } },
-    gaz:    { name: 'Gaz Whitfield',  role: 'Depot Fitter · Marjorie’s biggest fan',
+    gaz:    { name: 'Gaz Whitfield',  role: 'Depot Fitter · Ruby’s biggest fan',
               look: { skin: '#e8b996', hair: '#3a2a20', hairStyle: 'short', beard: true, top: '#2f4a7a', topStyle: 'tee', cap: '#2f4a7a', legs: '#2f4a7a', bg: '#c8d4e6' } },
     brian:  { name: 'Cllr Brian Pike', role: 'Chair, Harrowby Parish Council · biscuit monitor',
               look: { skin: '#f0c8a8', hair: '#cfcac4', hairStyle: 'bald', top: '#6b5a44', topStyle: 'jacket', glasses: true, legs: '#4a4238', bg: '#e3d6bf' } },
@@ -60,13 +60,13 @@ LS.PACKS['kestrel-vale'] = {
   ],
 
   // The whole game, planned in six chapters. Only Chapter 1 is playable in this build.
-  // Programme weeks: on site from week 9; Marjorie weeks 9–28, track weeks 9–36; testing 37–46; opening week 54.
+  // Programme weeks: on site from week 9; Ruby weeks 9–28, track weeks 9–36; testing 37–46; opening week 54.
   chapters: [
     { title: 'Make the Case', phase: 'Feasibility & funding', when: 'March · Weeks 1–6', playable: true,
-      teaser: 'Walk the worn-out line, give Marjorie a health check, win over Harrowby and face the Funding Panel.',
+      teaser: 'Walk the worn-out line, give Ruby a health check, win over Harrowby and face the Funding Panel.',
       objective: 'In this chapter: gather the evidence, put the work in order, and make an honest case to the Funding Panel.' },
     { title: 'Strip Down', phase: 'Mobilisation', when: 'May · Weeks 7–14',
-      teaser: 'Marjorie comes apart, an ecologist counts nests, Tom books the first possession so the engineers’ machines can move safely, and a secret comes out of a biscuit tin.',
+      teaser: 'Ruby comes apart, an ecologist counts nests, Tom books the first possession so the engineers’ machines can move safely, and a secret comes out of a biscuit tin.',
       objective: 'In this chapter: control new scope, choose suppliers on risk as well as price, and put right promises that come back.' },
     { title: 'The Relay', phase: 'Track renewal', when: 'Summer · Weeks 15–28',
       teaser: 'Drainage, three miles of new sleepers and rail, a tamping machine the crew call Tina, and the wettest week of the summer.',
@@ -180,7 +180,7 @@ LS.PACKS['kestrel-vale'] = {
     tasks: [
       { id: 'induction', label: 'Get your site induction', where: 'Hannah · project office' },
       { id: 'walk', label: 'Walk the line with Tom', where: 'the old trackbed · judge 5 defects', needs: ['induction'] },
-      { id: 'health', label: 'Give Marjorie a health check', where: 'Gaz · Harrowby depot', needs: ['induction'] },
+      { id: 'health', label: 'Give Ruby a health check', where: 'Gaz · Harrowby depot', needs: ['induction'] },
       { id: 'dropin', label: 'Run the drop-in at the village hall', where: 'Priya & Cllr Brian', needs: ['walk'] },
       { id: 'plan', label: 'Build the works plan', where: 'Jo · project office', needs: ['walk', 'health'] },
       { id: 'forecast', label: 'The Call: The Ridership Forecast', where: 'Steve · project office', needs: ['plan'] },
@@ -210,7 +210,7 @@ LS.PACKS['kestrel-vale'] = {
             reply: `Bring it: records are a good start. It shows some lovely treetops. It doesn't show the sleepers under them, mind. Let's walk it anyway.` }
         ] },
       gaz_tour: { who: 'gaz', lo: '1.1',
-        text: `Gaz Whitfield, depot fitter. And this is Marjorie. Built 1961, last passenger run 2009, stood here ever since like she's waiting for a bus. So. Here to see her, or write her off?`,
+        text: `Gaz Whitfield, depot fitter. And this is Ruby. Built 1961, last passenger run 2009, stood here ever since like she's waiting for a bus. So. Here to see her, or write her off?`,
         choices: [
           { t: `To see her. Show me everything, the good and the bad.`, grade: 'best', e: { evidence: 4, team: 4 }, trust: 1,
             reply: `Good answer. Have a look round her: bogies, brakes, engines, cab and body. Tell me what you reckon and I'll tell you what it'll take.` },
@@ -274,7 +274,7 @@ LS.PACKS['kestrel-vale'] = {
     ],
     walkDone: `That's the walk done. Proper defects list, that: water, wood, weeds, stone and people. Page one of your risk register. Take it to Jo. She'll want it for the plan.`,
 
-    // Marjorie's health check: five hotspots in the depot (placed by level.js), then one real decision.
+    // Ruby's health check: five hotspots in the depot (placed by level.js), then one real decision.
     hotspots: [
       { id: 'cab', x: 150, label: 'Cab & electrics', title: 'Cab & electrics',
         text: `Flat batteries, and cloth wiring that crumbles if you look at it funny: full rewire. That grey board behind the heater? It's 1961, so assume asbestos till a surveyor says otherwise.`,
@@ -311,10 +311,10 @@ LS.PACKS['kestrel-vale'] = {
     // Durations are weeks from the start on site (programme week 9). `background` rows are the work that isn't on the board.
     plan: {
       lo: '1.4',
-      intro: `Jo Adeyemi, engineering. Sticky notes, a whiteboard and a mild caffeine problem. Two workstreams: Marjorie and the track. Put each in the order the work has to happen. Tap a card to place it.`,
+      intro: `Jo Adeyemi, engineering. Sticky notes, a whiteboard and a mild caffeine problem. Two workstreams: Ruby and the track. Put each in the order the work has to happen. Tap a card to place it.`,
       notReady: `Come back when you've walked the track and seen the train. I don't plan from rumours.`,
       lanes: [
-        { id: 'train', label: 'Marjorie', color: 'ember', cards: [
+        { id: 'train', label: 'Ruby', color: 'ember', cards: [
           { id: 't1', t: 'Asbestos survey, strip down & inspect', w: 3, why: `A 1961 train can hide asbestos, so she's surveyed and made safe before anyone takes a spanner to her. Then open her up: you can't fix what you haven't seen.` },
           { id: 't2', t: 'Bogies & wheelsets (body repairs alongside)', w: 7, why: `Lift her and roll the bogies out. The wheelsets go away for crack testing and new tyres, which take months to arrive, so they're ordered the week the money lands. While she's up on stands, the rust gets cut out.` },
           { id: 't3', t: 'Brake overhaul', w: 3, why: `The brake rigging hangs off the bogies, so the brakes are finished and set up once she's back on her wheels.` },
@@ -334,17 +334,17 @@ LS.PACKS['kestrel-vale'] = {
         { t: 'Test runs · driver training · trial running · sign-off', from: 28, w: 10 }
       ],
       questions: [
-        { q: `Counting from the day we start on site, Marjorie is ready in week 20 and the track in week 28. When can test runs on the line start?`,
+        { q: `Counting from the day we start on site, Ruby is ready in week 20 and the track in week 28. When can test runs on the line start?`,
           options: [
             { t: `Week 28, once the train and the track are both finished.`, grade: 'best', why: `Test runs need a working train and a working railway, so the later of the two sets the date. Then come ten more weeks before passengers: test runs, driver training, trial running and sign-off.` },
             { t: `Week 24, testing on the part of the line that's finished.`, grade: 'ok', why: `Real projects do sometimes test on a finished section, but it means extra closures, protection and risk on a half-built railway. Most wait for the whole route.` },
-            { t: `Week 20. Marjorie's ready, so let's get her out testing.`, grade: 'poor', why: `On what, the old track? The squelchy bits are still there until week 28.` }
+            { t: `Week 20. Ruby's ready, so let's get her out testing.`, grade: 'poor', why: `On what, the old track? The squelchy bits are still there until week 28.` }
           ] },
         { q: `So which workstream is on the critical path, the chain of work that sets the opening date?`,
           options: [
-            { t: `The track: 28 weeks against Marjorie's 20. Keep an eye on her float, though.`, grade: 'best', why: `Exactly, on the work we've planned. Marjorie has eight weeks of float. Don't tell Gaz, he'll take up golf. But the slowest things aren't on this board yet: the crossing approval and the junction booking. Start those now.` },
+            { t: `The track: 28 weeks against Ruby's 20. Keep an eye on her float, though.`, grade: 'best', why: `Exactly, on the work we've planned. Ruby has eight weeks of float. Don't tell Gaz, he'll take up golf. But the slowest things aren't on this board yet: the crossing approval and the junction booking. Start those now.` },
             { t: `Neither yet. It depends which one slips first, so we watch both equally.`, grade: 'ok', why: `True, a slip can move the critical path. But right now it's the track, and that's where to point your attention.` },
-            { t: `Marjorie. Her overhaul has the most unknowns, so she's the likeliest to slip.`, grade: 'poor', why: `She's the star, and she's full of unknowns, but she's got eight weeks of float. The track is the long pole. Watch the longest chain, not the most famous one.` }
+            { t: `Ruby. Her overhaul has the most unknowns, so she's the likeliest to slip.`, grade: 'poor', why: `She's the star, and she's full of unknowns, but she's got eight weeks of float. The track is the long pole. Watch the longest chain, not the most famous one.` }
           ] }
       ],
       done: `That's the build. The slow stuff isn't on it yet: approvals, the junction booking, then testing and sign-off. Those start now. Steve's by the kettle, waiting to cost it and pretending he isn't.`
@@ -369,7 +369,7 @@ LS.PACKS['kestrel-vale'] = {
           choices: [
             { t: `It's a top risk. We'll design it properly and talk to the school before any train runs.`, grade: 'best', e: { town: 5, safety: 4 }, reply: `Good. That's how we did it in my day. Tell the kids the rules and tell them why.` },
             { t: `We'll put up proper warning signs and fence off the path, so the bikes can't cut across it.`, grade: 'ok', e: { town: 1 }, reply: `Signs and a fence. Right. Kids love a fence. Gives them something to climb.` },
-            { t: `Marjorie's slow and you'll hear her coming, so it'll be safer than the road.`, grade: 'poor', e: { town: -3, safety: -4 }, reply: `Slow's still heavier than a bike, love.` }
+            { t: `Ruby's slow and you'll hear her coming, so it'll be safer than the road.`, grade: 'poor', e: { town: -3, safety: -4 }, reply: `Slow's still heavier than a bike, love.` }
           ] },
         { who: 'jess', lo: '1.6', text: `Will there be lorries going past the school while you build it?`,
           choices: [
@@ -409,13 +409,13 @@ LS.PACKS['kestrel-vale'] = {
         { who: 'raj', lo: '1.4', text: `What's the biggest risk to your opening date?`,
           choices: [
             { t: `The crossing and the junction. They need the council, the regulator and a main-line weekend.`, grade: 'best', reply: `Good. You know where your date lives.` },
-            { t: `Marjorie's engines. They're sixty-five years old, and nobody has run them properly since 2009.`, grade: 'ok', reply: `A real risk, but she has float. It isn't the one that moves your date.` },
+            { t: `Ruby's engines. They're sixty-five years old, and nobody has run them properly since 2009.`, grade: 'ok', reply: `A real risk, but she has float. It isn't the one that moves your date.` },
             { t: `Nothing major. We've covered every big risk in the plan, so the date should hold.`, grade: 'poor', reply: `That's the answer that worries me most.` }
           ] },
         { who: 'raj', lo: '1.8', text: `Where does the train actually go, and who will run it?`,
           choices: [
             { t: `A shuttle to a new platform at Kestrel Junction, run by an operator with the right safety approvals.`, grade: 'best', reply: `Good. A railway needs someone legally responsible for running it safely, and you've thought about who.` },
-            { t: `Straight through to Kestrelford on the main line, so nobody ever has to change trains.`, grade: 'ok', reply: `Lovely for passengers. But then Marjorie needs main-line train protection, radio, crash and accessibility standards, and main-line paths. That's a much bigger project.` },
+            { t: `Straight through to Kestrelford on the main line, so nobody ever has to change trains.`, grade: 'ok', reply: `Lovely for passengers. But then Ruby needs main-line train protection, radio, crash and accessibility standards, and main-line paths. That's a much bigger project.` },
             { t: `We'll pick an operator once it's built. Right now the job is getting a railway back at all.`, grade: 'poor', reply: `The operator's safety approvals take months and shape the design. That's a day-one question.` }
           ] }
       ],
@@ -430,7 +430,7 @@ LS.PACKS['kestrel-vale'] = {
     // weight(S) = 0 means not eligible. `cause` tells the player why this happened now.
     // A choice may carry `luck`: the decision is graded, then the dice decide the outcome (outcomes never change JP).
     // Money and float: only work on the critical path (the track, the crossing, the junction) costs `time`;
-    // Marjorie's lane has eight weeks of float, so her delays cost money, not weeks.
+    // Ruby's lane has eight weeks of float, so her delays cost money, not weeks.
     events: [
       { id: 'storm', who: 'tom', channel: 'Radio call', title: 'Rain on the way', after: ['walk'], lo: '1.3',
         weight: S => S.week >= 4 ? 4 : 1,
@@ -479,12 +479,12 @@ LS.PACKS['kestrel-vale'] = {
         ] },
       { id: 'wheelsets', who: 'gaz', channel: 'Knock at the door', title: 'A bargain from down the road', after: ['health'], lo: '1.3',
         weight: S => 2,
-        cause: S => 'Because word has got round that Marjorie needs wheels.',
+        cause: S => 'Because word has got round that Ruby needs wheels.',
         text: `A heritage railway sixty miles away is selling two spare wheelsets from a sister railcar. £18k the pair, half the new price. There's just no paperwork showing where they've been.`,
         choices: [
           { t: `Interested, if a qualified workshop will crack-test and overhaul them first, then certify them.`, grade: 'best', e: { evidence: 3 },
             why: `Wheels are safety-critical. With no history, they need crack testing and a full overhaul before anyone will certify them. Check first, then buy.`,
-            luck: { p: 0.6, good: { text: `They pass. After an overhaul and a fresh certificate they cost about £15k less than new. Marjorie's lane gets shorter too, but she wasn't on the critical path, so the opening date doesn't move.`, e: { money: 15 } },
+            luck: { p: 0.6, good: { text: `They pass. After an overhaul and a fresh certificate they cost about £15k less than new. Ruby's lane gets shorter too, but she wasn't on the critical path, so the opening date doesn't move.`, e: { money: 15 } },
               bad: { text: `The crack test finds a flaw in one axle. You walk away £1k poorer for the test, and very glad.`, e: { money: -1 } } } },
           { t: `No thanks. With no paperwork, it's simpler to stick with new ones from the supplier.`, grade: 'ok', e: {},
             why: `Safe, but you might have walked past a real saving. An inspection costs very little.` },
@@ -585,7 +585,7 @@ LS.PACKS['kestrel-vale'] = {
     // Optional closing beat, "Go back and tell Harrowby": keyed by June's drop-in grade, then by panel outcome.
     tell: {
       best: {
-        approved: [['june', `You came back. Go on, then. Don't make me guess.`], ['narrator', `You tell her. She's quiet for a moment. Then she takes a tray out of the window.`], ['june', `Right. Marjorie buns. Trial batch. If you tell anyone, I'll deny it.`]],
+        approved: [['june', `You came back. Go on, then. Don't make me guess.`], ['narrator', `You tell her. She's quiet for a moment. Then she takes a tray out of the window.`], ['june', `Right. Ruby buns. Trial batch. If you tell anyone, I'll deny it.`]],
         conditions: [['june', `You came back. Go on, then. Don't make me guess.`], ['june', `Approved, with homework. That's more than we've had in seventeen years. I'll get the icing out. Just in case.`]],
         deferred: [['june', `You came back. Even with a “not yet”. Nobody did that in 2009.`], ['june', `Here, take a loaf. The ducks can manage without one for a day.`]]
       },
@@ -643,7 +643,7 @@ LS.PACKS['kestrel-vale'] = {
 
   achievements: [
     { id: 'kettle', ic: '☕', name: 'Kettle’s On', hint: 'Every good project starts the same way.', desc: 'Made a round of tea. Nobody said thank you. Everybody noticed.' },
-    { id: 'peep', ic: '📯', name: 'Peep Peep', hint: 'Marjorie has something to say. Quietly.', desc: 'Tried Marjorie’s horn with an empty air tank. She did her best.' },
+    { id: 'peep', ic: '📯', name: 'Peep Peep', hint: 'Ruby has something to say. Quietly.', desc: 'Tried Ruby’s horn with an empty air tank. She did her best.' },
     { id: 'pigeon', ic: '🕊️', name: 'Pigeon Whisperer', hint: 'Someone is living rent-free in the guard’s compartment.', desc: 'Showed Kevin the pigeon the door. Well, the window.' },
     { id: 'cat', ic: '🐈', name: 'Where’s Sleeper?', hint: 'The depot has a supervisor. She’s usually asleep.', desc: 'Found and fussed Sleeper, the depot cat.' },
     { id: 'eagle', ic: '🦅', name: 'Eagle Eye', hint: 'Judge the track the way Tom would.', desc: 'Judged every track defect like a track engineer.' },

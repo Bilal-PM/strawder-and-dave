@@ -25,7 +25,7 @@
  *     UI, non-diegetic, always in the key of the score:
  *       tap, select, page, stamp, good, bad, ripple, chapter, unlock, place, rankup (promotion fanfare)
  *     World, diegetic, heard through the current room's acoustic:
- *       peep          Marjorie's horn with a flat battery (a wheezy little toot)
+ *       peep          Ruby's horn with a flat battery (a wheezy little toot)
  *       horn          a proper two-tone diesel horn, high then low (for when she runs again); echoes outside
  *       door          opts.kind 'wood' | 'heavy', or opts.to = the room being entered. Heavy (the depot's big
  *                     rolling door) is used for kind 'heavy', to 'shed', or when leaving the shed.
@@ -686,7 +686,7 @@ window.LS = window.LS || {};
       piano(t + 0.36, b + 24, 0.45, 1.2, out);
     },
     // world
-    peep(t, o, out) { hornTone(t, 330, 0.3, 0.05, out, true); },          // Marjorie with a flat battery
+    peep(t, o, out) { hornTone(t, 330, 0.3, 0.05, out, true); },          // Ruby with a flat battery
     horn(t, o, out) {                                                         // two-tone: high then low
       hornTone(t, 370, 0.55, 0.09, out); hornTone(t + 0.62, 311, 0.8, 0.085, out);
       if (A.room === 'outside') [[0.38, 0.16], [0.8, 0.07]].forEach(([d, v]) => { const dl = c.createDelay(1); dl.delayTime.value = d; out.connect(dl); dl.connect(G(v, F('lowpass', 1400, 0.5, N.world))); });   // off the valley sides

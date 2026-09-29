@@ -1,5 +1,5 @@
 /* LINESIDE — game engine.
- * Chapter 1 of "The Kestrel Vale Line" in an open world: walk the worn-out line, give Marjorie a health check,
+ * Chapter 1 of "The Kestrel Vale Line" in an open world: walk the worn-out line, give Ruby a health check,
  * build a works plan in dependency order, run a community drop-in, make two Calls, and face the Funding Panel.
  *
  * Two kinds of score, deliberately separate:
@@ -345,7 +345,7 @@
     }
   }
 
-  // ---------- Activity: Marjorie's health check ----------
+  // ---------- Activity: Ruby's health check ----------
   async function hotspot(h) {
     const firstTime = !S.hotspots[h.id];
     await say('gaz', h.text, 'smile', null, h.aside ? `<div class="trustnote"><i>${esc(h.aside)}</i></div>` : '');
@@ -370,7 +370,7 @@
         if (HD) {
           const ci = await ask(HD.who || 'gaz', HD.q, HD.options.map(o => o.t), { shuffle: true, eyebrow: 'Your call' });
           const o = HD.options[ci], jp = JP.talk[o.grade];
-          apply(o.e, true); record('talk', 'healthDecision', 'Marjorie: what first', o.grade); gainJP(jp, 'Health check · what first');
+          apply(o.e, true); record('talk', 'healthDecision', 'Ruby: what first', o.grade); gainJP(jp, 'Health check · what first');
           await say(HD.who || 'gaz', o.why, o.grade === 'best' ? 'smile' : o.grade === 'poor' ? 'concern' : 'neutral', null, `<div class="chips">${chips(o.e, jp)}</div>`);
         }
         S.done.health = true;
@@ -421,7 +421,7 @@
           const bar = (cls, from, w, label) => `<div class="trk"><i class="${cls}" style="left:${pc(from)}%;width:${Math.min(100 - pc(from), 100 * w / span)}%">${label || ''}</i></div>`;
           const gantt = `<div class="gantt">${PL.lanes.map(l => `<div class="row"><span>${l.id === 'train' ? '🚂' : '🛤️'} ${esc(l.label)}</span>${bar(l.color, 0, tot(l), tot(l) + ' wk')}</div>`).join('')}${bg.map(b => `<div class="row bgrow"><span>${esc(b.t)}</span>${bar('grey', b.from, b.w)}</div>`).join('')}<div class="row"><span></span><div class="trk axis"><span style="left:${pc(0)}%">start on site</span></div></div></div>`;
           const el = layer('panel', `<div class="center-wrap"><div class="card call plan"><div class="call-head"><span class="tag gold">Works plan · question ${qi + 1} of ${PL.questions.length}</span><span class="when">Project office<br>with Jo</span></div><div class="call-body">
-            <h2>${q.title || (qi ? 'The critical path' : 'When can Marjorie run?')}</h2>${gantt}<p class="sit">${esc(q.q)}</p>
+            <h2>${q.title || (qi ? 'The critical path' : 'When can Ruby run?')}</h2>${gantt}<p class="sit">${esc(q.q)}</p>
             ${order.map((i, n) => `<button class="opt" data-k="${n + 1}" data-c="${i}"><span class="l">${'ABC'[n]}</span><span><div class="t">${esc(q.options[i].t)}</div></span></button>`).join('')}</div></div></div>`);
           el.querySelector('.call').scrollTop = 0;
           const ci = await new Promise(res => { onKey = true; el.querySelectorAll('.opt').forEach(b => b.onclick = () => res(+b.dataset.c)); });
@@ -470,7 +470,7 @@
     const rows = [
       { k: 'safety', nm: 'Safety & approvals', tx: S.defects.crossing === 'best' ? 'Crossing treated as a top risk; council and safety regulator involved early' : 'No clear route yet to approval for the crossing', s: 0.5 * clamp((S.m.safety - 40) / 40, 0, 1) + 0.5 * GSCORE[S.defects.crossing || 'poor'], w: 10 },
       { k: 'track', nm: 'Track condition', tx: `${dBest} of 5 defects judged like an engineer`, s: (dBest + dOk * 0.5) / 5, w: 14 },
-      { k: 'train', nm: 'Marjorie', tx: (() => { const g = (S.graded.find(x => x.id === 'healthDecision') || {}).grade; return g === 'best' ? 'Health check done; long-lead parts and the asbestos survey planned first' : g === 'ok' ? 'Health check done; ordering waits for the full design' : 'Health check done; strip-down planned before an asbestos survey'; })(),
+      { k: 'train', nm: 'Ruby', tx: (() => { const g = (S.graded.find(x => x.id === 'healthDecision') || {}).grade; return g === 'best' ? 'Health check done; long-lead parts and the asbestos survey planned first' : g === 'ok' ? 'Health check done; ordering waits for the full design' : 'Health check done; strip-down planned before an asbestos survey'; })(),
         s: 0.5 * (Object.keys(S.hotspots).length / 5) + 0.5 * (GSCORE[(S.graded.find(x => x.id === 'healthDecision') || {}).grade] || 0), w: 8 },
       { k: 'plan', nm: 'Works plan', tx: `${pl.first}/${pl.of} in order first time · critical path ${cp ? 'identified' : 'unclear'}`, s: (pl.first / pl.of) * 0.55 + ((GSCORE[pl.q[0]] || 0) + (GSCORE[pl.q[1]] || 0)) * 0.225, w: 20 },
       { k: 'forecast', nm: 'Ridership forecast', tx: !f ? '—' : f.grade === 'best' ? 'Independently checked, shown as a range' : f.grade === 'ok' ? 'Halved “to be safe”, with no evidence' : 'The consultant’s headline number', s: f ? GSCORE[f.grade] : 0, w: 16 },
@@ -504,7 +504,7 @@
     const score = clamp(Math.round(rows.reduce((a, r) => a + r.s * r.w, 0) + qs + evB * 2), 0, 100);
     const key = score >= 75 ? 'approved' : score >= 50 ? 'conditions' : 'deferred', out = PN.outcomes[key];
     const weakest = rows.filter(r => r.w).sort((a, b) => a.s - b.s)[0];
-    const COND = { safety: 'a safety and approvals plan, starting with the Crag Lane crossing', track: 'a specialist track survey', train: 'a full condition report on Marjorie', plan: 'a re-baselined works plan with the critical path shown', forecast: 'an independent check of the ridership forecast', date: 'a published date range instead of a single date', town: 'a community engagement plan' };
+    const COND = { safety: 'a safety and approvals plan, starting with the Crag Lane crossing', track: 'a specialist track survey', train: 'a full condition report on Ruby', plan: 'a re-baselined works plan with the critical path shown', forecast: 'an independent check of the ridership forecast', date: 'a published date range instead of a single date', town: 'a community engagement plan' };
     S.panel = { score, outcome: key, weakest: weakest.k }; S.done.panel = true;
     apply(out.e, false); gainJP(out.jp, 'Funding Panel · ' + out.title);
     LS.audio.sfx('stamp'); setTimeout(() => LS.audio.sfx(key === 'approved' ? 'good' : key === 'deferred' ? 'bad' : 'tap'), 250);
@@ -854,7 +854,7 @@
       return;
     }
     if (id === 'health') {
-      if (!S.flags.healthOn) { await talk(C1.talks.gaz_tour, 'gaz_tour'); S.flags.healthOn = true; toast('Check five areas of Marjorie · look for ?'); }
+      if (!S.flags.healthOn) { await talk(C1.talks.gaz_tour, 'gaz_tour'); S.flags.healthOn = true; toast('Check five areas of Ruby · look for ?'); }
       else await say('gaz', `Have a proper look round her. ${5 - Object.keys(S.hotspots).length} to go.`, 'smile');
       return;
     }
@@ -990,7 +990,7 @@
       <details class="card rcard" style="margin-bottom:16px"><summary style="cursor:pointer;font-weight:700">For facilitators: discussion guide</summary><ol class="discuss" style="margin-top:12px">
         <li><b>Look before you promise.</b> What did the track walk and the health check tell you that no report could?</li>
         <li><b>Sequencing.</b> Why must the drainage come before the new track, and the bogies before the brakes? Where have you seen work done in the wrong order?</li>
-        <li><b>The critical path.</b> Marjorie had four weeks of float. What should you do with float, and who should know it exists?</li>
+        <li><b>The critical path.</b> Ruby had four weeks of float. What should you do with float, and who should know it exists?</li>
         ${S.judgment.map(x => `<li><b>${esc(x.title)}.</b> ${esc(PACK.calls[x.id].discuss)}</li>`).join('')}
         <li><b>Surprises.</b> Which surprise did you handle well but get an unlucky outcome from, or the other way round? Why is it important to judge the decision, not the outcome?</li>
         <li><b>The drop-in.</b> When is “I don't know yet” the strongest answer you can give?</li></ol></details>
@@ -1103,7 +1103,7 @@
         const d = C1.defects.filter(x => S.defects[x.id]).map(x => `<div class="jentry"><span class="gchip ${S.defects[x.id]}">${S.defects[x.id] === 'best' ? 'SPOT ON' : S.defects[x.id] === 'ok' ? 'PARTLY' : 'NOT QUITE'}</span> <b>${x.icon} ${esc(x.title)}</b><div class="pt">${esc(x.options.find(o => o.grade === S.defects[x.id]).t)}</div></div>`).join('');
         const h = C1.hotspots.filter(x => S.hotspots[x.id]).map(x => `<li>${esc(x.title)}</li>`).join('');
         const j = S.judgment.map(x => { const c = PACK.calls[x.id]; return `<div class="jentry"><span class="gchip ${x.grade}">${GRADE[x.grade].toUpperCase()}</span> <span style="font-size:12px;color:var(--muted)">${esc(x.title)}</span><div class="pn">${esc(c.principle.name)}</div><div class="pt">${esc(c.principle.text)}</div></div>`; }).join('');
-        return (d ? `<h4 class="bh">Defects list</h4>${d}` : '') + (h ? `<h4 class="bh">Marjorie: condition notes</h4><ul class="hl">${h}</ul>` : '') + (j ? `<h4 class="bh">Principles</h4>${j}` : '') || `<p class="hint">Your defects list, Marjorie's condition notes and the principles from each Call are collected here.</p>`;
+        return (d ? `<h4 class="bh">Defects list</h4>${d}` : '') + (h ? `<h4 class="bh">Ruby: condition notes</h4><ul class="hl">${h}</ul>` : '') + (j ? `<h4 class="bh">Principles</h4>${j}` : '') || `<p class="hint">Your defects list, Ruby's condition notes and the principles from each Call are collected here.</p>`;
       },
       settings: () => [['sound', 'Sound & music'], ['reduced', 'Reduce motion'], ['large', 'Larger text'], ['instant', 'Show text instantly']].map(([k, l]) => `<div class="set"><span>${l}</span><button class="switch ${SET[k] ? 'on' : ''}" role="switch" aria-checked="${!!SET[k]}" data-set="${k}" aria-label="${l}"></button></div>`).join('') +
         `<div style="margin-top:24px"><button class="btn line small" id="restart">Restart Chapter 1</button></div>`
@@ -1141,7 +1141,7 @@
     hide('title');
     let av = 0;
     const el = layer('setup', `<div class="center-wrap"><div class="card"><div class="eyebrow">${esc(PACK.sector)} · ${esc(PACK.budgetLabel)} · Chapter 1 of 6</div>
-      <h2>You've been hired to reopen the Kestrel Vale Line.</h2><p>Three miles of worn-out track, a 1961 railcar called Marjorie, and a town that has heard it all before. First job: look at everything, then make the case to the Funding Panel. There are no scores on the buttons, just the calls you make.</p>
+      <h2>You've been hired to reopen the Kestrel Vale Line.</h2><p>Three miles of worn-out track, a 1961 railcar called Ruby, and a town that has heard it all before. First job: look at everything, then make the case to the Funding Panel. There are no scores on the buttons, just the calls you make.</p>
       <div class="avatars" role="radiogroup" aria-label="Choose your portrait">${PACK.avatars.map((a, i) => `<button class="avatar ${i === 0 ? 'sel' : ''}" role="radio" aria-checked="${i === 0}" data-a="${i}" aria-label="Portrait ${i + 1}">${(LS.PORTRAIT_IMG && LS.PORTRAIT_IMG['avatar' + i]) ? `<img class="pimg" src="${LS.PORTRAIT_IMG['avatar' + i].smile || LS.PORTRAIT_IMG['avatar' + i].neutral}" alt="">` : LS.portrait(a, 'smile')}</button>`).join('')}</div>
       <label class="eyebrow" for="pname">Your name</label><input class="field" id="pname" maxlength="18" autocomplete="off" placeholder="e.g. Sam" style="margin-top:8px">
       <div class="setup-row"><button class="btn dark" id="sGo">Take the job →</button><button class="btn line small" id="sBack">Back</button></div></div></div>`);

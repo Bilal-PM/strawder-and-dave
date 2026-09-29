@@ -369,7 +369,7 @@
           /\bjust\s+(add|throw|put)\s+more\s+(people|resource|bodies|hands)\b/i
         ],
         anti: [/\b(doesn'?t|does not|won'?t|will not|not|never|isn'?t|can'?t)\b[^.?!]{0,25}\b(always|necessarily|automatically|really)?\b[^.?!]{0,20}\b(shorten|faster|quicker|speed|sooner|help)\w*/i],
-        exemplars: ['if we are late we can just add more people', 'put two gangs on it and it takes half as long', 'more fitters means Marjorie is done sooner'],
+        exemplars: ['if we are late we can just add more people', 'put two gangs on it and it takes half as long', 'more fitters means Ruby is done sooner'],
         counter: 'resources',
         probes: [
           'Would two extra fitters make the wheelsets come back from the specialist any sooner?',
@@ -387,14 +387,14 @@
           /\b(owner|team|gaz|fitter|contractor|they|he|she)\b[^.?!]{0,30}\b(owns?|has|gets|keeps|can use|can spend)\b[^.?!]{0,20}\b(the\s+|their\s+|his\s+|her\s+)?(float|slack)\b/i
         ],
         unless: /\b(project|programme|everyone|shared|whole|the chain|the path|network|together|pm|project manager)\b/i,
-        exemplars: ['Marjorie has eight weeks of float so that is Gaz’s time to use', 'the float is the fitters own buffer', 'whoever does the job gets to keep the float'],
+        exemplars: ['Ruby has eight weeks of float so that is Gaz’s time to use', 'the float is the fitters own buffer', 'whoever does the job gets to keep the float'],
         counter: 'float_shared',
         probes: [
-          'If the brakes use up four of Marjorie’s eight weeks, how much is left for the engines after them?',
+          'If the brakes use up four of Ruby’s eight weeks, how much is left for the engines after them?',
           'Who should decide when float gets spent: the person doing one job, or the person holding the whole plan?',
           'If Gaz spends the float in week three, what happens to everyone after him in the chain?'
         ],
-        example: 'Marjorie’s eight weeks of float are shared along her whole chain. Spend them on the bogies and the brakes and engines have none left.',
+        example: 'Ruby’s eight weeks of float are shared along her whole chain. Spend them on the bogies and the brakes and engines have none left.',
         teachBack: 'How would you explain to Gaz why his float isn’t just his?'
       },
       fixed_plan: {
@@ -427,27 +427,27 @@
         exemplars: ['the critical path is the track and that will not change', 'the critical path stays the same for the whole job', 'once we know the critical path we can stop watching the rest'],
         counter: 'change',
         probes: [
-          'Suppose Marjorie’s wheelsets come back ten weeks late. Which chain sets the date then?',
+          'Suppose Ruby’s wheelsets come back ten weeks late. Which chain sets the date then?',
           'What would have to happen for a chain with float to become critical?',
           'If we only ever watch the critical path, what might sneak up on us?'
         ],
-        example: 'Marjorie has eight weeks of float. Let her slip by more than that and she becomes the critical path instead of the track.',
-        teachBack: 'Explain to Tom why he still needs to keep an eye on Marjorie’s chain.'
+        example: 'Ruby has eight weeks of float. Let her slip by more than that and she becomes the critical path instead of the track.',
+        teachBack: 'Explain to Tom why he still needs to keep an eye on Ruby’s chain.'
       }
     },
     // Socratic follow-ups by facet: questions, never answers.
     followUps: {
-      activities: ['What separate jobs would we need to list for Marjorie before we could plan her?', 'How would you break “fix the track” into jobs someone could actually do?', 'What makes something a proper activity rather than a vague wish?'],
+      activities: ['What separate jobs would we need to list for Ruby before we could plan her?', 'How would you break “fix the track” into jobs someone could actually do?', 'What makes something a proper activity rather than a vague wish?'],
       durations: ['Where would a number like “nine weeks for the relay” come from, and how sure are we of it?', 'Would you give a single number for a duration, or a range? Why?', 'Which of our durations do you trust least?'],
       dependencies: ['Pick one job that can’t start until another has finished. Why that one?', 'Why can’t the new track go down before the drains are sorted?', 'Which two jobs could happen at the same time, and why?'],
       fs: ['What does finish-to-start mean for the bogies and the brakes?', 'Can you think of a pair of jobs that don’t need a strict finish-to-start link?'],
       critical_path: ['How would you find the chain that sets the opening date?', 'Why do we care more about one chain than the others?', 'What would you tell Helen the critical path is, in plain words?'],
-      float: ['If Marjorie’s work slips by three weeks, does the opening date move? Why?', 'How would you work out how far a job can slip before it hurts?', 'What does zero float tell you about a job?'],
+      float: ['If Ruby’s work slips by three weeks, does the opening date move? Why?', 'How would you work out how far a job can slip before it hurts?', 'What does zero float tell you about a job?'],
       change: ['What would make the critical path switch from one chain to another?', 'When would you re-plan, and who would you tell?', 'How do you change a plan without losing track of what was agreed?']
     },
     // Teach-back prompts: the learner explains it in their own words.
     teachBack: {
-      activities: 'How would you turn “restore Marjorie” into a list of jobs?',
+      activities: 'How would you turn “restore Ruby” into a list of jobs?',
       durations: 'Where do the week numbers on Jo’s board come from, and how far would you trust them?',
       dependencies: 'Why does the order of the jobs matter so much?',
       fs: 'What does finish-to-start mean, with an example from the board?',
@@ -457,7 +457,7 @@
     },
     // Varied discussion points for group talk: questions, claims to challenge, and computed what-ifs.
     discussion: [
-      { id: 'd1', facet: 'critical_path', kind: 'question', text: 'Marjorie gets all the attention, but is she what sets the opening date?' },
+      { id: 'd1', facet: 'critical_path', kind: 'question', text: 'Ruby gets all the attention, but is she what sets the opening date?' },
       { id: 'd2', facet: 'float', kind: 'question', text: 'If a job has float, is it safe to ignore it?' },
       { id: 'd3', facet: 'dependencies', kind: 'question', text: 'Which job on the board would you start the day the money lands, and why?' },
       { id: 'd4', facet: 'durations', kind: 'question', text: 'Ecology checks take six weeks, not three. What makes nature so slow to plan around?' },
@@ -465,16 +465,16 @@
       { id: 'd6', facet: 'activities', kind: 'question', text: 'What’s missing from the board that a real programme would need?' },
       { id: 'c1', facet: 'critical_path', kind: 'claim', mc: 'longest_task', who: 'gaz', text: 'I reckon it’s simple. Find the biggest job and that’s your critical path. Am I wrong?' },
       { id: 'c2', facet: 'resources', kind: 'claim', mc: 'more_people', who: 'gaz', text: 'If the track runs late, we just put more gangs on it. Sorted. Isn’t it?' },
-      { id: 'c3', facet: 'float', kind: 'claim', mc: 'float_owned', who: 'gaz', text: 'Eight weeks of float on Marjorie? That’s my eight weeks, that is. Right?' },
+      { id: 'c3', facet: 'float', kind: 'claim', mc: 'float_owned', who: 'gaz', text: 'Eight weeks of float on Ruby? That’s my eight weeks, that is. Right?' },
       { id: 'c4', facet: 'change', kind: 'claim', mc: 'fixed_plan', who: 'gaz', text: 'Once the panel signs the plan off, that’s it, isn’t it? No more fiddling.' },
-      { id: 'c5', facet: 'change', kind: 'claim', mc: 'cp_static', who: 'gaz', text: 'The track’s the critical path, so I can stop worrying about Marjorie. Yes?' },
+      { id: 'c5', facet: 'change', kind: 'claim', mc: 'cp_static', who: 'gaz', text: 'The track’s the critical path, so I can stop worrying about Ruby. Yes?' },
       { id: 'w1', facet: 'change', kind: 'whatif' },
       { id: 'w2', facet: 'float', kind: 'whatif' }
     ],
     // The applied scenario: Jo's works plan. Kept in step with the pack (see syncFromPack).
     scenario: {
       lanes: [
-        { id: 'train', label: 'Marjorie', cards: [
+        { id: 'train', label: 'Ruby', cards: [
           { id: 't1', t: 'Asbestos survey, strip down & inspect', w: 3 }, { id: 't2', t: 'Bogies & wheelsets', w: 7 },
           { id: 't3', t: 'Brake overhaul', w: 3 }, { id: 't4', t: 'Engines & rewire, then run up', w: 5 }, { id: 't5', t: 'Static tests in the depot', w: 2 }] },
         { id: 'track', label: 'the track', cards: [
@@ -591,12 +591,12 @@
       sample: 'Now then. If one job runs late, who else has to wait for it?'
     },
     gaz: {
-      id: 'gaz', name: 'Gaz Whitfield', short: 'Gaz', role: 'Depot Fitter, Marjorie’s biggest fan', stance: 'peer',
-      voice: 'cheerful, chatty, plain-spoken; adores Marjorie the railcar; learns out loud and sometimes gets it wrong',
+      id: 'gaz', name: 'Gaz Whitfield', short: 'Gaz', role: 'Depot Fitter, Ruby’s biggest fan', stance: 'peer',
+      voice: 'cheerful, chatty, plain-spoken; adores Ruby the railcar; learns out loud and sometimes gets it wrong',
       openers: ['Here, listen.', 'Right then.', 'Ooh.', 'Go on then.'],
       praise: ['Oh, that’s good, that.', 'Makes sense when you put it like that.', 'Nice one.'],
       thinking: ['Hang on, let me get this straight.', 'I’m with you so far.', 'Hmm, my head says one thing.'],
-      tics: ['Bless her.', 'Don’t tell Marjorie.', 'She’d agree, if she could talk.'],
+      tics: ['Bless her.', 'Don’t tell Ruby.', 'She’d agree, if she could talk.'],
       sample: 'Ooh. So if the brakes slip, do the engines have to wait too?'
     },
     tom: {
@@ -699,7 +699,7 @@
     ackPraiseEcho: ['“{echo}”. Yes.', 'Exactly: {echo}.'],
     improved: ['That’s a shift from earlier. Nice.', 'Better than your first go, that.', 'See, you got there.'],
     clarify: ['No rush.', 'Take your time.', 'Fair enough, it’s a lot at once.', 'Let’s make it smaller.'],
-    clarifyQ: ['Pick one job on the board. What has to happen before it can start?', 'Start small: which comes first, the drains or the new track?', 'Here’s an easier one: why can’t Marjorie be tested before her brakes work?'],
+    clarifyQ: ['Pick one job on the board. What has to happen before it can start?', 'Start small: which comes first, the drains or the new track?', 'Here’s an easier one: why can’t Ruby be tested before her brakes work?'],
     redirect: ['Ha. Maybe over a brew later.', 'Good question for another day.', 'Hold that one for the pub.'],
     teachBackIntro: ['Try explaining it to Gaz.', 'Teach it back to me.', 'Pretend I’ve never seen a plan.', 'Say it like you’re telling the parish council.'],
     hintIntro: ['A nudge, not an answer:', 'Here’s a thought:', 'Try this:', 'One question to help:'],
@@ -736,7 +736,7 @@
   function fill(t, slots) {
     return String(t).replace(/\{(\w+)\}/g, function (_, k) { return slots[k] != null ? slots[k] : ''; });
   }
-  var PROPER = ['I', 'Marjorie', 'Gaz', 'Jo', 'Tom', 'Moira', 'Helen', 'Hannah', 'Steve', 'Priya', 'Brian', 'Beck', 'Harrowby', 'Kestrel'];
+  var PROPER = ['I', 'Ruby', 'Gaz', 'Jo', 'Tom', 'Moira', 'Helen', 'Hannah', 'Steve', 'Priya', 'Brian', 'Beck', 'Harrowby', 'Kestrel'];
   // A short, safe quote of what the learner said, to show we listened.
   function echoOf(answer) {
     var c = String(answer || '').replace(/\s+/g, ' ').trim().split(/[.;!?\n]|,\s*(?:but|so|because)\b/)[0] || '';

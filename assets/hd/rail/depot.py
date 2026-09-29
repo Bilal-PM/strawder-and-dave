@@ -302,7 +302,7 @@ def depot(live=False):
                     P(cv, rx, yy, C('rail', 2 if k < 18 else 3)); P(cv, rx + 1, yy, C('rail', 4))
             for k in range(0, 39, 6):
                 HL(cv, x0 + 6 + k // 6, x0 + dw - 6 - k // 6, H - 2 - k, C('sleeper', 4))
-            # a glimpse of Marjorie's yellow warning end deep in the gloom
+            # a glimpse of Ruby's yellow warning end deep in the gloom
             for y in range(dtop2 + 60, H - 30):
                 for x in range(x0 + 8, x0 + dw - 8):
                     col = C('mustard', 3) if y > dtop2 + 74 else C('paint_green', 4)

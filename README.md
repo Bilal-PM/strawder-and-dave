@@ -2,7 +2,7 @@
 
 > No scores on the buttons. No right answers on screen. Just the calls you make, and what they lead to.
 
-LINESIDE is an explorable, story-driven judgment game set in an open, top-down world you walk around (in the spirit of *Stardew Valley*). The first scenario pack, **The Kestrel Vale Line**, puts you in charge of reopening a worn-out branch line in Harrowby, a valley town whose railway closed "temporarily" in 2009. The track is life-expired, and the only train, **Marjorie**, a 1961 diesel railcar, has sat in the depot ever since. Your job: renew the track, restore the train, test it all, open the line, and bring the town back to life.
+LINESIDE is an explorable, story-driven judgment game set in an open, top-down world you walk around (in the spirit of *Stardew Valley*). The first scenario pack, **The Kestrel Vale Line**, puts you in charge of reopening a worn-out branch line in Harrowby, a valley town whose railway closed "temporarily" in 2009. The track is life-expired, and the only train, **Ruby**, a 1961 diesel railcar, has sat in the depot ever since. Your job: renew the track, restore the train, test it all, open the line, and bring the town back to life.
 
 It runs in any browser (desktop, tablet or phone), with no install or login. It is built to be the first title in an education product line (working name **Groundwork Studio**): one engine, many sector packs.
 
@@ -31,7 +31,7 @@ Six in-game weeks, from March to April. It opens the Sunday before you start: at
 
 1. **Site induction** with Hannah (safety) at the project office, which gets you your PPE. Without it you can't go "on or near the line" (within 3 m of the rails) or enter the depot, and even with it you walk the line under Tom's safe system of work. The live main line beyond the junction stop board is off limits.
 2. **Walk the line** with Tom, judging five real defects: rotten sleepers, a blocked drain (with a duck in it), Beck Bridge (scour you can't see), vegetation (with nesting-season rules) and the dead Crag Lane level crossing.
-3. **Marjorie's health check** with Gaz in the depot: cab and electrics (possible asbestos, and the air horn goes *peep*), bogies and wheelsets, brakes, engines (someone has secretly been maintaining her) and the body (structural rust, slam doors, and Kevin the pigeon in residence). Then one decision: what to do first the week the money lands.
+3. **Ruby's health check** with Gaz in the depot: cab and electrics (possible asbestos, and the air horn goes *peep*), bogies and wheelsets, brakes, engines (someone has secretly been maintaining her) and the body (structural rust, slam doors, and Kevin the pigeon in residence). Then one decision: what to do first the week the money lands.
 4. **The works plan** with Jo: put both workstreams in dependency order (asbestos survey & strip down → bogies & wheelsets, with body repairs alongside → brakes → engines & rewire → static tests; ecology & clearance → drainage & Beck Bridge repairs → relay, tamp & stress → level crossing & junction), then work out when test runs can start and which workstream is the **critical path**. Grey rows show the slow work that isn't on the board: designs, approvals and the junction booking before, and test runs, driver training, trial running and sign-off after.
 5. **The drop-in** at the village hall with Priya and Cllr Brian, once you've walked the line: four questions from the town. Honest answers build support; over-promises feel good now and **echo into Chapter 2**.
 6. **Two Calls**: *The Ridership Forecast* (optimism bias) with Steve, and *Name the Date* (ranges, not points) with Helen.
@@ -49,7 +49,7 @@ The world obeys engineering logic: the closed line needs PPE, the depot needs PP
 
 ### The cast
 
-Helen Walsh (sponsor), Jo Adeyemi (engineering), Tom Brennan (track and site), Hannah Clarke (safety), Steve Hale (commercial), Priya Nair (community), Gaz Whitfield (depot fitter), Cllr Brian Pike (parish council, biscuits), Moira Kell (Harrowby's last station master, your mentor), and the townsfolk Len, June, Dev and Jess. Also Marjorie the railcar, Sleeper the cat and Kevin the pigeon. The humour is warm and relatable, never dark or rude.
+Helen Walsh (sponsor), Jo Adeyemi (engineering), Tom Brennan (track and site), Hannah Clarke (safety), Steve Hale (commercial), Priya Nair (community), Gaz Whitfield (depot fitter), Cllr Brian Pike (parish council, biscuits), Moira Kell (Harrowby's last station master, your mentor), and the townsfolk Len, June, Dev and Jess. Also Ruby the railcar, Sleeper the cat and Kevin the pigeon. The humour is warm and relatable, never dark or rude.
 
 ## The world (open world, Stardew-style 3/4 pixel art)
 
@@ -58,7 +58,7 @@ A 128×84-tile valley, laid out by the level designer to a proper town plan and 
 - **Harrowby** is built along the High Street: the village hall (you can go in), the Kestrel Arms, Pritchard's bakery, cottages, the school, a green with the bus stop, and St Oswald's church. Fingerposts stand at the junctions.
 - **The station and yard:**
   - The terminus has its platform on the track side, with a forecourt facing Station Road.
-  - Harrowby Depot stands on its own siding, off a turnout beyond the platform end. You can go in; Marjorie is inside.
+  - Harrowby Depot stands on its own siding, off a turnout beyond the platform end. You can go in; Ruby is inside.
   - The project compound has a single marked **PPE access gate**, and the project office inside it can be entered.
 - **The line** runs east with a fenced corridor and cess:
   - the three-arch **Beck Bridge**;
@@ -108,7 +108,7 @@ Judgment is choosing well **under uncertainty**, when **goods compete** and **co
 ```
 index.html              Shell: layers, HUD, fonts
 css/lineside.css        UI: editorial type (Fraunces + Inter), paper cards, responsive
-js/world/world.js       The open world: map, collision + PPE gating, y-sorted rendering, rooms (office, hall, depot + Marjorie), lighting, input
+js/world/world.js       The open world: map, collision + PPE gating, y-sorted rendering, rooms (office, hall, depot + Ruby), lighting, input
 js/world/sprites.js     In-world illustration: 4-direction characters with PPE, building facades (incl. the depot)
 js/scene.js             Palette/colour helpers (plus the older static landscape renderer)
 js/portraits.js         Flat-vector character portraits (SVG, 3 moods)
@@ -123,7 +123,7 @@ docs/DESIGN.md                  The full six-chapter design
 
 ### Pack data (Chapter 1)
 
-`PACK.c1` holds the chapter: `coldOpen` (the Sunday torch scene, Moira, Monday and Helen's first graded question), `tips` (one-line coach marks), `tasks[]` (with `needs` for dependency gating), `talks`, `defects[]` (each with graded options), `hotspots[]` (Marjorie's health check, with optional fun follow-ups) and `healthDecision`, `plan` (lanes of cards in their correct order, grey `background` rows, plus critical-path questions), `dropin`, `panel` (questions and the three outcomes), `events` (the Director's surprises, with `weight(S)`, `cause(S)` and optional `luck`) and `end`. `PACK.calls` holds the Calls (`known`, `unknown`, `principle`, `discuss`, `atWork`, graded `choices` with effects `e`, an optional `ripple` echo and `ach`). `PACK.chapters[]` carries each chapter's `objective`; `PACK.achievements` and `PACK.ranks` drive progression; `PACK.glossary`, `PACK.outcomes` and `PACK.selfCheck` support learning. Graded items carry an `lo` tag for their learning outcome. Every graded set has exactly one `best`, and the expert option must not give itself away by length (it is the longest in 9 of 30 sets).
+`PACK.c1` holds the chapter: `coldOpen` (the Sunday torch scene, Moira, Monday and Helen's first graded question), `tips` (one-line coach marks), `tasks[]` (with `needs` for dependency gating), `talks`, `defects[]` (each with graded options), `hotspots[]` (Ruby's health check, with optional fun follow-ups) and `healthDecision`, `plan` (lanes of cards in their correct order, grey `background` rows, plus critical-path questions), `dropin`, `panel` (questions and the three outcomes), `events` (the Director's surprises, with `weight(S)`, `cause(S)` and optional `luck`) and `end`. `PACK.calls` holds the Calls (`known`, `unknown`, `principle`, `discuss`, `atWork`, graded `choices` with effects `e`, an optional `ripple` echo and `ach`). `PACK.chapters[]` carries each chapter's `objective`; `PACK.achievements` and `PACK.ranks` drive progression; `PACK.glossary`, `PACK.outcomes` and `PACK.selfCheck` support learning. Graded items carry an `lo` tag for their learning outcome. Every graded set has exactly one `best`, and the expert option must not give itself away by length (it is the longest in 9 of 30 sets).
 
 ## Engine choice: do we need Godot?
 

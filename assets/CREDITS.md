@@ -9,7 +9,7 @@ All third-party art used by the game world is **CC0 1.0 (public domain)**. Credi
 
 Everything else in the world — track, ballast, turnouts, the junction, level crossing, platform coping, the beck, bridges, crag,
 hedgerows, dry-stone walls, palisade/Heras/post-and-wire fencing, signs and pixel lettering, the signal box, site cabins,
-church tower, Marjorie the 1961 railcar, interiors, animals — is drawn procedurally in `js/world/tileart.js` in the
+church tower, Ruby the 1961 railcar, interiors, animals — is drawn procedurally in `js/world/tileart.js` in the
 ENDESGA-32 palette (by Endesga, free to use) to match Tiny Town.
 
 ## Pipeline

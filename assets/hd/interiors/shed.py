@@ -1,5 +1,5 @@
 """The depot (brick engine shed, 1911) interior, 32x14 tiles at 48 art px per tile. Oily concrete, rails set in the
-floor with an inspection pit under Marjorie, a brick north wall with tall arched windows, big green doors east."""
+floor with an inspection pit under Ruby, a brick north wall with tall arched windows, big green doors east."""
 from ilib import *
 import marjorie as MJ
 
@@ -7,7 +7,7 @@ T = TILE
 TW, TH = 32, 14
 W, H = TW * T, TH * T
 WALL_H = 2 * T             # the north wall face (rows 0-1)
-FAR_RAIL, NEAR_RAIL = 5 * T + 10, 6 * T + 34      # rail head rows; Marjorie's wheels sit on the near rail
+FAR_RAIL, NEAR_RAIL = 5 * T + 10, 6 * T + 34      # rail head rows; Ruby's wheels sit on the near rail
 PIT = (7 * T, 25 * T + 24, FAR_RAIL + 12, NEAR_RAIL - 8)
 WINDOWS = [3, 10, 17, 24]
 EXIT_X = 15 * T
@@ -80,7 +80,7 @@ def floor():
                     px[x, yy] = C('warn', 2 if yy < yl + 3 else 3) if fbm(x, yy, 4, 9) > 0.42 else C('warn', 3)
     track(cv)
     pit(cv)
-    # Marjorie's shadow on the floor (under the car, pushed a touch to the lower right)
+    # Ruby's shadow on the floor (under the car, pushed a touch to the lower right)
     for y in range(NEAR_RAIL - 30, NEAR_RAIL + 16):
         t = (y - (NEAR_RAIL - 30)) / 46
         for x in range(4 * T + 14, 28 * T + 10):
@@ -358,7 +358,7 @@ def noticeboard(cv, x0, y0, w, h, seed, frame_r='oak', back='cork'):
 
 
 def pegboard(cv, x0, y0, w, h):
-    """Tool board: pegboard with painted outlines and the tools hung on them (one missing: out on Marjorie)."""
+    """Tool board: pegboard with painted outlines and the tools hung on them (one missing: out on Ruby)."""
     cv.rect(x0 + 3, y0 + 3, w, h, SHADOW[:3] + (90,))
     cv.rect(x0, y0, w, h, C('oak', 4))
     for y in range(y0 + 1, y0 + h - 1):

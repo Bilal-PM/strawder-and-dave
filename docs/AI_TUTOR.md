@@ -152,7 +152,7 @@ A custom provider is `{load(onProgress) → Promise, generate(messages, {maxToke
 - Follow-up questions per facet, teach-back prompts, and 13 discussion points. These are questions, claims that Gaz voices for the learner to challenge, and **computed what-ifs**.
 - `scenario`: Jo's works plan, synced at runtime from `LS.PACKS['kestrel-vale'].c1.plan`, so the tutor can never contradict the game.
 
-**Numbers are computed, never generated.** `LS.AI.cpm()` runs a forward and backward pass over the plan. For Kestrel Vale it gives: Marjorie 20 weeks with 8 weeks of float, the track 28 weeks, critical path k1→k2→k3→k4→test runs, finish at week 38. What-ifs delay one activity and recompute. For example, "Say *Bogies & wheelsets* runs 10 weeks late. Does the opening date move?" has the computed answer *yes, by 2 weeks, and Marjorie becomes critical*, and `checkWhatIf()` marks the learner against it.
+**Numbers are computed, never generated.** `LS.AI.cpm()` runs a forward and backward pass over the plan. For Kestrel Vale it gives: Ruby 20 weeks with 8 weeks of float, the track 28 weeks, critical path k1→k2→k3→k4→test runs, finish at week 38. What-ifs delay one activity and recompute. For example, "Say *Bogies & wheelsets* runs 10 weeks late. Does the opening date move?" has the computed answer *yes, by 2 weeks, and Ruby becomes critical*, and `checkWhatIf()` marks the learner against it.
 
 **Persona cards** (`jo`, `moira`, `gaz`, `tom`, with names taken from the pack's cast) hold role, stance (tutor or peer), a one-line voice description for the prompt, openers, praise, thinking lines, tics, and a sample line used as the one-shot example. Gaz is the *peer*: only he voices misconceptions as discussion claims. Tutors never do.
 

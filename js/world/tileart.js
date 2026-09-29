@@ -17,7 +17,7 @@
  * Scene = { w, h, ground, objects:[{ img, dx, dy, sortY, fade?, kind?, ... }], lights:[{ x, y, r }], anchors:{ name:{x,y} }, anim }
  *   Extras (optional to use): objects carry `kind` ('tree','building','lamp','bench','fingerpost','sign','canopy',
  *   'bridge','ppe_gate','furniture','marjorie', ...). PPE gates also carry `tiles` and `imgOpen` (the same gate swung open,
- *   for when the player has PPE). anchors.pigeon has `sortY` (draw Kevin after Marjorie). Outside anchors: duck, duck2,
+ *   for when the player has PPE). anchors.pigeon has `sortY` (draw Kevin after Ruby). Outside anchors: duck, duck2,
  *   duck = flooded cess by the blocked drain on the closed line (beck otherwise), duckBeck,
  *   sheep1..6 (suggested grazing spots), door_office/door_hall/door_shed (door centre). Shed: pigeon, marjorieCab,
  *   radio, cushions, cat1..3 (from cat_spots), hotspots by id, exit. Every room has anchors.exit.
@@ -2862,7 +2862,7 @@ window.LS = window.LS || {};
   }
   function buildShed(g, S, grid, parts, flags, room) {
     const H = grid.length, W = grid[0].length;
-    // rails across rows 5-6 (embedded in the concrete floor) + an inspection pit under Marjorie
+    // rails across rows 5-6 (embedded in the concrete floor) + an inspection pit under Ruby
     const ry = 5 * T;
     R(g, 1 * T, ry + 1, (W - 1) * T, 30, K.s2);
     for (let x = T; x < W * T; x += 8) R(g, x, ry + 5, 4, 22, K.s3);

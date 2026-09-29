@@ -15,10 +15,10 @@
 
 **LINESIDE** is a serious game about judgment, sold for training, team building, scenario analysis and practice after a course.
 
-- **The story:** you're the project lead reopening a worn-out UK branch railway in **Harrowby**, a small Yorkshire-style valley town. The track is life-expired. The only train, **Marjorie**, a 1961 diesel railcar in Brunswick green, has been stood in the brick depot since the line closed "temporarily" in 2009.
+- **The story:** you're the project lead reopening a worn-out UK branch railway in **Harrowby**, a small Yorkshire-style valley town. The track is life-expired. The only train, **Ruby**, a 1961 diesel railcar in Brunswick green, has been stood in the brick depot since the line closed "temporarily" in 2009.
 - **Chapter 1 ("Make the Case"):**
   - Walk the line with Tom and judge five defects.
-  - Give Marjorie a health check with Gaz.
+  - Give Ruby a health check with Gaz.
   - Plan the works with Jo.
   - Win over the town at the village hall.
   - Make two big Calls.
@@ -186,7 +186,7 @@ window.LS.TileArt = {
 - **Project office** (20×12): the planning board (sticky notes in two lanes, "MARJORIE" and "TRACK"), a kettle counter, PPE lockers (orange hi-vis visible), a meeting table, Steve's desk with a monitor, a plan chest and a sign-in desk.
 - **Village hall** (28×14): a stage, a banner area (the engine shows the banner text), a tea urn, a noticeboard, a top table, rows of chairs and stacked chairs.
 - **Depot** (32×14): brick walls with tall arched windows, rails across rows 5–6 running out through big closed doors on the east wall, a buffer stop on the west end, a workbench with a radio, seat cushions and an inspection-pit hint.
-  - **Marjorie** spans x4–27, rows 4–6. She's a 1961 diesel railcar in 3/4 side view:
+  - **Ruby** spans x4–27, rows 4–6. She's a 1961 diesel railcar in 3/4 side view:
     - Brunswick green with cream lining and yellow warning ends;
     - grey roof with exhaust stacks, underfloor engines and bogies, rust patches;
     - slam doors and a nameplate reading "MARJORIE";
@@ -219,7 +219,7 @@ window.LS.TileArt = {
 - **Animals:** Sleeper the ginger depot cat (asleep, curled, with a "z"), a mallard in the drain puddle, sheep in the pasture, and Kevin the pigeon.
 - **Portraits:** each character (and each avatar) needs a portrait in three moods: neutral, smile and concern. Use the same art style as the world, painted and warm.
 - **Key art** (optional but valuable):
-  - a title-screen illustration: Harrowby station at dusk, Marjorie's nose in the depot doorway, the town lights on;
+  - a title-screen illustration: Harrowby station at dusk, Ruby's nose in the depot doorway, the town lights on;
   - a 1080×760 hero image for the share card.
 
   Both need a small `game.js` hook, so ask and the lead engineer will add it.
@@ -281,7 +281,7 @@ window.LS.TileArt = {
   - the compound and office door;
   - the platform and depot, and Beck Bridge;
   - the level crossing, and the high street at dusk;
-  - the office interior, the depot interior with Marjorie, and the hall during the panel;
+  - the office interior, the depot interior with Ruby, and the hall during the panel;
   - the character line-up.
 
 ## 9. Hand-back

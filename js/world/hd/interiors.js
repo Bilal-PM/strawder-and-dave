@@ -1,5 +1,5 @@
 /* HD pass: interiors (assets/hd/out/interiors). Replaces each room's 16px floor, walls and furniture with the HD room,
- * places Marjorie in the shed and moves Kevin's perch to her guard's window. */
+ * places Ruby in the shed and moves Kevin's perch to her guard's window. */
 (function () {
   'use strict';
   const HD = LS.HD; if (!HD || !HD.A.interiors) return;

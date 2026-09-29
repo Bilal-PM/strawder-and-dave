@@ -48,7 +48,7 @@ test('classifier: detects each misconception from varied phrasings', () => {
   const cases = {
     longest_task: ['The critical path is the longest task.', 'Just find the job that takes the longest, that one is critical.', 'The relay is the biggest job so it must be the critical path', 'whichever activity lasts longest'],
     more_people: ['If we fall behind we can add more people and it will be quicker', 'Put extra gangs on the relay to finish early.', 'Double the crew and it takes half the time.', 'just throw more resource at it'],
-    float_owned: ['The float belongs to Gaz because he owns that job.', 'Marjorie’s eight weeks are the fitters’ float to spend.', 'The owner keeps the float for their own work'],
+    float_owned: ['The float belongs to Gaz because he owns that job.', 'Ruby’s eight weeks are the fitters’ float to spend.', 'The owner keeps the float for their own work'],
     fixed_plan: ['Once the plan is agreed it is fixed.', 'The plan is set in stone after the panel signs it.', 'Once it’s signed off, it’s final and we stick to it', 'The plan can’t change now'],
     cp_static: ['The critical path never changes.', 'The critical path stays the same the whole time', 'The track will always be the critical path.', 'critical path won’t move once we have it']
   };
@@ -83,13 +83,13 @@ test('classifier: correct answers and nonsense', () => {
   assert.ok(good.confidence >= 0.6);
   const fs = AI.classify('The brakes can’t start until the bogies are finished, that’s finish to start.');
   assert.ok(fs.understood.includes('fs') && fs.understood.includes('dependencies'));
-  const fl = AI.classify('Marjorie has float so she can slip a bit without moving the opening date.');
+  const fl = AI.classify('Ruby has float so she can slip a bit without moving the opening date.');
   assert.ok(fl.understood.includes('float'));
   const none = AI.classify('I had a lovely scone at the bakery.');
   assert.deepStrictEqual(none.misconceptions, []); assert.deepStrictEqual(none.understood, []);
   assert.ok(none.confidence < 0.5);
   // Similarity backup catches a paraphrase with no rule hit.
-  const para = AI.classify('more fitters so Marjorie done sooner');
+  const para = AI.classify('more fitters so Ruby done sooner');
   assert.ok(para.misconceptions.includes('more_people'), JSON.stringify(para));
 });
 
@@ -102,7 +102,7 @@ test('filter: blocks real organisations and the blocked first name, case-insensi
     assert.strictEqual(f.ok, false, `should block "${t}"`);
     assert.ok(f.reasons.some((r) => r.startsWith('banned')), t);
   }
-  const fine = ['The outflow from the drain is blocked.', 'Harrowby Parish Council approves.', 'Marjorie is a 1961 railcar.', 'Kestrel Vale Transport Authority', 'Plain old orr-ange', 'The caf is open'];
+  const fine = ['The outflow from the drain is blocked.', 'Harrowby Parish Council approves.', 'Ruby is a 1961 railcar.', 'Kestrel Vale Transport Authority', 'Plain old orr-ange', 'The caf is open'];
   for (const t of fine) assert.ok(AI.filter(t).ok, `should allow "${t}": ${JSON.stringify(AI.filter(t))}`);
   assert.deepStrictEqual(AI.bannedNames('Talk to Network Rail and TfL'), ['Network Rail', 'TfL']);
 });
@@ -253,7 +253,7 @@ test('coach: finds the dependency slip, escalates, and never leaks the answer', 
   const ok = await AI.coach({ lanes: { train: ['t1', 't2', 't3', 't4', 't5'] } });
   assert.strictEqual(ok.intent, 'praise');
   for (const q of ['testStart', 'criticalPath']) {
-    for (const answer of ['week 20', 'Marjorie', 'the longest task', '', 'not sure']) {
+    for (const answer of ['week 20', 'Ruby', 'the longest task', '', 'not sure']) {
       for (let h = 0; h < 3; h++) {
         const r = await AI.coach({ question: q, answer, hintsGiven: h });
         for (const re of leaks) assert.ok(!re.test(r.text), `leak ${re} in "${r.text}"`);
@@ -262,7 +262,7 @@ test('coach: finds the dependency slip, escalates, and never leaks the answer', 
   }
   assert.strictEqual((await AI.coach({ question: 'testStart', answer: 'Week 28, when both are done' })).intent, 'praise');
   assert.strictEqual((await AI.coach({ question: 'criticalPath', answer: 'The track' })).intent, 'praise');
-  assert.notStrictEqual((await AI.coach({ question: 'criticalPath', answer: 'Not the track, Marjorie' })).intent, 'praise');
+  assert.notStrictEqual((await AI.coach({ question: 'criticalPath', answer: 'Not the track, Ruby' })).intent, 'praise');
   assert.strictEqual((await AI.coach({ question: 'criticalPath', answer: 'the biggest single job', hintsGiven: 0 })).intent, 'probe');
 });
 
@@ -315,7 +315,7 @@ test('mock LLM: prompt is short, grounded, persona-specific and asks for JSON', 
 });
 
 test('mock LLM: accepts a good rephrase; parses JSON in fences and with prose around it', async () => {
-  mockProvider([() => 'Sure! ```json\n{"text": "Now then. If the brakes eat four of Marjorie’s eight weeks of float, what’s left for the engines?"}\n```']);
+  mockProvider([() => 'Sure! ```json\n{"text": "Now then. If the brakes eat four of Ruby’s eight weeks of float, what’s left for the engines?"}\n```']);
   await AI.init(Object.assign({}, BASE, { provider: 'mock', optIn: true }));
   const r = await AI.say('moira', { answer: 'The float belongs to Gaz, it is his.' });
   assert.strictEqual(r.source, 'model', JSON.stringify(r));
