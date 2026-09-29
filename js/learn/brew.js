@@ -124,14 +124,14 @@ window.LS = window.LS || {};
     let hit = [], text = '', tries = 0;
     const kp = TB.keyPoints;
     while (tries < 2) {
-      tries++;
+      tries++; comp.classList.add('tall');
       comp.innerHTML = `<div class="lr-tb"><label class="eyebrow" for="lrTB">Explain it to Dev</label><textarea id="lrTB" class="field" rows="3" maxlength="600" placeholder="Like he’s never seen a plan. Tap the lines below to borrow one, then edit.">${esc(text)}</textarea>
         <div class="lr-chips small">${TB.chips.map((c, i) => `<button class="lr-chip" data-tbc="${i}">＋ ${esc(c)}</button>`).join('')}</div>
         <div class="lw-cta"><button class="btn dark" data-tbsend data-primary>Tell Dev</button></div></div>`;
       const ta = comp.querySelector('#lrTB');
       comp.querySelectorAll('[data-tbc]').forEach(b => b.onclick = () => { ta.value = (ta.value.trim() + ' ' + TB.chips[+b.dataset.tbc]).trim(); b.disabled = true; L.sfx('tap'); });
       await new Promise(res => comp.querySelector('[data-tbsend]').onclick = () => { if (!ta.value.trim()) { ta.focus(); return; } res(); });
-      text = ta.value.trim(); comp.innerHTML = ''; mine(text);
+      text = ta.value.trim(); comp.innerHTML = ''; comp.classList.remove('tall'); mine(text);
       const h = L.listen(mod, text);
       hit = kp.filter(k => new RegExp(k.re, 'i').test(text)).map(k => k.id);
       if (h.understood.includes('critical_path') && !hit.includes('K4')) hit.push('K4');

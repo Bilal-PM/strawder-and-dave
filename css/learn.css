@@ -145,7 +145,7 @@ body.learning #hud,body.learning #pad,body.learning #tip{display:none!important}
 .lt-step button{width:30px;height:28px;border-radius:999px;font-weight:800;font-size:16px}.lt-step button:hover{background:var(--soft)}
 .lt-step b{min-width:34px;text-align:center;font-size:14px}
 .lt-step.big button{width:40px;height:36px;font-size:20px;background:var(--soft)}.lt-step.big b{min-width:44px;font-size:17px}
-.lt-body{position:relative;margin-top:18px}
+.lt-body{position:relative;margin-top:26px}
 .lt-rows{display:flex;flex-direction:column;gap:6px}
 .lt-row{display:grid;grid-template-columns:minmax(120px,30%) 1fr;align-items:center;gap:10px;min-height:44px;border-radius:12px;transition:background .2s}
 .lt-row.sel{background:#fff6e4}
@@ -303,6 +303,7 @@ body.learning #hud,body.learning #pad,body.learning #tip{display:none!important}
 .lr-mebub{max-width:560px;background:var(--ink);color:var(--paper);padding:11px 15px;border-radius:16px 4px 16px 16px;font-size:15px;line-height:1.5;overflow-wrap:anywhere}
 .lr-compose{flex:0 0 auto;max-height:52%;overflow-y:auto;border-top:1px solid var(--line);padding:12px 2px 2px}
 .lr-compose:empty{display:none}
+.lr-compose.tall{max-height:74%}
 .lr-chips{display:flex;flex-direction:column;gap:7px}
 .lr-chips.small{flex-direction:row;flex-wrap:wrap}
 .lr-chip{display:flex;gap:10px;align-items:flex-start;text-align:left;padding:11px 14px;border-radius:14px;border:1.5px solid var(--line);background:#fff;font-size:14.5px;line-height:1.4;font-weight:600;transition:all .15s}
