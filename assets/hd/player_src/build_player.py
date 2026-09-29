@@ -11,7 +11,8 @@ Output sheet: frames FW x FH, rows down/up/left/right/sit_down/sit_up (sit rows 
 9-12 idle (9 rest, 10 breathe in, 11 held, 12 rest). The PPE sheet recolours the T-shirt as a hi-vis vest with
 reflective bands and adds a white safety helmet.
 """
-import json, os
+import json, os, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import numpy as np
 from PIL import Image
 
@@ -254,18 +255,15 @@ def main():
     src_walk = {'down': walk[0], 'left': walk[2], 'up': walk[3], 'right': walk[5]}
     src_idle = {'down': act[0], 'left': act[1], 'up': act[2], 'right': act[3]}
     ROWS = ['down', 'up', 'left', 'right', 'sit_down', 'sit_up']
-    NC = 9   # col 0 stands, 1-8 walk; no idle columns, so the engine's own breathing (shoulders settle 1px) applies
+    NW = 12   # walk frames per cycle (two steps)
+    NC = 1 + NW   # col 0 stands, 1-12 walk; no idle columns, so the engine's own breathing (shoulders settle 1px) applies
+    import puppet
     sheet = np.zeros((FH * len(ROWS), FW * NC, 4), np.uint8)
     for ri, v in enumerate(ROWS[:4]):
-        wk = [process(c, k_walk) for c in src_walk[v]]
-        # stand: the passing frame (feet closest together = the narrowest lower body)
-        def legw(fr):
-            a = fr[..., 3] > 0; ys = np.nonzero(a.any(axis=1))[0]
-            if not len(ys): return 999
-            lo = a[int(ys.max() - (ys.max() - ys.min()) * 0.22):ys.max() + 1]
-            xs = np.nonzero(lo.any(axis=0))[0]; return xs.max() - xs.min()
-        stand = min(wk, key=legw)
-        for ci, fr in enumerate([stand] + wk):
+        # every frame is the same drawing: the neutral stand from the actions sheet, walked on joints (see puppet.py)
+        stand = process(src_idle[v][0], k_act)
+        wk = puppet.walk(stand, v, NW)
+        for ci, fr in enumerate([stand] + [ink_rim(f) for f in wk]):
             sheet[ri * FH:(ri + 1) * FH, ci * FW:(ci + 1) * FW] = fr
     sheet = skin_tone(sheet)
     sheet = quantize(sheet)
@@ -280,7 +278,7 @@ def main():
     mf = os.path.join(OUT, 'manifest.json'); man = json.load(open(mf))
     for key, is_ppe in (('avatar4', False), ('avatar4_ppe', True)):
         man[key] = dict(id='avatar4', file=key + '.png', w=FW * NC, h=FH * len(ROWS), frame=[FW, FH], rows=ROWS, cols=NC,
-                        walk=[1, 8], sit=[0, 0], anchor=[AX, AY], look=LOOK, ppe=is_ppe)
+                        walk=[1, NW], sit=[0, 0], anchor=[AX, AY], look=LOOK, ppe=is_ppe)
     json.dump(man, open(mf, 'w'), indent=1, sort_keys=True)
     # portrait for the dialogue box and the setup screen: head and shoulders from the front idle, at source detail
     c = clean(act[0][0]); y0, y1, x0, x1 = figure_box(c)
