@@ -1,6 +1,6 @@
 """v2 standing assembly for previews: python3 v2.py ids out scale [ppe]"""
 import sys, os
-sys.path.insert(0, 'assets/hd/chars'); sys.path.insert(0, 'assets/hd/lib')
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')); sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'lib'))
 import hand
 from cast import all_specs, ppe
 from PIL import Image

@@ -60,18 +60,20 @@ nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn
 #####
 
 == glasses_down 13 27
-....qqq+......qqq+
+....qqqq......qqqq
 rrrr....r....r....rrrr
 ...r....rrrrrr....r
 ...r....r....r....r
+...r....r....r....r
 ....ssss......ssss
 
-== glasses_left 13 27
-.qqqq+
-r.....rrrrrr
-r.....r
-r.....r
-.sssss
+== glasses_left 14 27
+.qqqq
+r....rrrrrr
+r....r
+r....r
+r....r
+.ssss
 
 == earrings_down 12 34
 U......................U

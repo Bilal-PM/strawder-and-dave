@@ -1,35 +1,42 @@
-; v2 faces: thick 2px brows, sclera + 2x2 iris with a catchlight under a dark lid, a nose drawn by
-; its shadow side and nostrils, a small dark mouth. No lips.
+; v2 faces: level 2px brows, open eyes (sclera both sides of a 2x2 iris, a catchlight, the lid dark over the
+; iris and soft at its ends), a nose drawn by its shadow side, a relaxed half-smile. No lips.
 
 == face_down 16 25 map=hair:brow
-deeeee....eeeeed
-eeeeed....deeeee
-.33333....33333
-.####......####
+eeeeee....eeeeee
+.eeeee....eeeee
+.
+.3##3......3##3
 .*+@*..1...*+@*
-.2@@3..1.3.3@@2
-.......1.3
-.......1.3
-.......1.3
+.*@@*..1.3.*@@*
+..33...1.3..33
+.........3
 ......4334
 .
-.....3....3
+.....w....w
 ......wwww
+.......33
 
 == eyes_shut_down 17 28
+2222......2222
 2222......2222
 ####......####
 2222......2222
 
 == face_left 14 25 map=hair:brow
 eeeee
-eeeed
+.eeee
 .
-.####
-.*+@
-.2@@
+.3##3
+.*+@*
+.*@@*
+..33
+.
+.
+...3
+..w
 
 == eyes_shut_left 15 28
-222
+2222
+2222
 ####
-222
+2222
