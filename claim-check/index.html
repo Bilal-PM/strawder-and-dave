@@ -111,6 +111,17 @@ mark.hl.pulse{outline:2px solid var(--accent);outline-offset:1px}
 .f q{display:block;margin-top:6px;font-size:12.5px;color:var(--text);border-left:2px solid var(--border);padding-left:8px;quotes:none}
 .empty{padding:20px;text-align:center;color:var(--muted);font-size:14px}
 .check{padding:12px 14px;display:grid;gap:6px}
+.ledger{width:100%;border-collapse:collapse;font-size:14px}
+.ledger td{padding:9px 14px;border-top:1px solid var(--border);vertical-align:top}
+.ledger tr:first-child td{border-top:0}
+.ledger td.st{width:118px;white-space:nowrap}
+.ledger td.why{color:var(--muted);font-size:13px;width:34%}
+.ledger tr{cursor:pointer}
+.ledger tr:hover td{background:var(--surface-2)}
+.st-pill{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:2px 8px;border-radius:99px}
+.st-wrong{color:var(--err);background:var(--err-bg)} .st-doubtful{color:var(--warn);background:var(--warn-bg)} .st-unverified{color:var(--ver);background:var(--ver-bg)} .st-verified{color:var(--ok);background:var(--ok-bg)} .st-unchecked{color:var(--info);background:var(--info-bg)}
+.ledger-sum{display:flex;gap:8px;flex-wrap:wrap;font-size:12px}
+@media (max-width:860px){.ledger td.why{display:none}.ledger td.st{width:96px}}
 .check label{display:flex;gap:8px;align-items:flex-start;font-size:14px}
 .check input{margin-top:4px}
 details.how{margin-top:16px}
@@ -155,6 +166,7 @@ details.how summary{cursor:pointer;padding:14px;font-weight:600}
       <button class="tab" role="tab" aria-selected="true" data-tab="p-answer" id="t-answer"><span class="dot"></span>1 · AI answer</button>
       <button class="tab" role="tab" aria-selected="false" data-tab="p-source" id="t-source"><span class="dot"></span>2 · Source facts <small>optional</small></button>
       <button class="tab" role="tab" aria-selected="false" data-tab="p-others" id="t-others"><span class="dot"></span>3 · Other answers <small>optional</small></button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="p-rules" id="t-rules"><span class="dot"></span>4 · Your rules <small>optional</small></button>
     </div>
     <div class="panel" id="p-answer" role="tabpanel">
       <p class="hint">Paste the response you want checked: a CFO summary, board paper, analysis or email.</p>
@@ -170,6 +182,17 @@ details.how summary{cursor:pointer;padding:14px;font-weight:600}
         <div><label for="o1">Answer B</label><textarea class="other" id="o1" spellcheck="false"></textarea></div>
         <div><label for="o2">Answer C</label><textarea class="other" id="o2" spellcheck="false"></textarea></div>
         <div><label for="o3">Answer D</label><textarea class="other" id="o3" spellcheck="false"></textarea></div>
+      </div>
+    </div>
+    <div class="panel" id="p-rules" role="tabpanel" hidden>
+      <p class="hint">Keep the checker up to date yourself, no coding needed. One rule per line. Rules are remembered in this browser. Save them to a file to share one rule set with your team.</p>
+      <textarea id="rules" spellcheck="false" placeholder="# Lines starting with # are notes.&#10;fact: Corporation tax main rate is 25%&#10;fact: Bank covenant is net debt / EBITDA below 3.0x&#10;withdrawn: IAS 1 -> IFRS 18 | from 2027-01-01&#10;valid: IFRS 20&#10;flag: guaranteed returns | error | Never promise guaranteed returns&#10;flag: /\bwill definitely\b/ | warn | Overconfident forecast"></textarea>
+      <p class="hint" style="margin-top:8px"><strong>fact:</strong> a figure you know is true. The answer is checked against it. · <strong>withdrawn:</strong> old term -&gt; replacement, optionally "| from YYYY-MM-DD" so it switches on by itself. · <strong>valid:</strong> a new standard the built-in list doesn't know yet. · <strong>flag:</strong> a phrase or /pattern/ | error, warn, verify or info | message.</p>
+      <p class="hint" id="rulesStatus"></p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" id="saveRules">Save rules to file</button>
+        <button class="btn" id="loadRulesBtn">Load rules file</button>
+        <input type="file" id="loadRules" accept=".txt,.rules,text/plain" hidden>
       </div>
     </div>
     <div class="actions">
@@ -230,6 +253,11 @@ details.how summary{cursor:pointer;padding:14px;font-weight:600}
       </div>
     </div>
 
+    <div class="card" style="margin-top:16px" id="ledgerCard">
+      <div class="sec-h"><h3>Claim by claim</h3><div class="ledger-sum" id="ledgerSum"></div></div>
+      <table class="ledger"><tbody id="ledger"></tbody></table>
+    </div>
+
     <div class="card" style="margin-top:16px" id="checklistCard">
       <div class="sec-h"><h3>Reviewer checklist: things only a person can confirm</h3></div>
       <div class="check" id="checklist"></div>
@@ -256,12 +284,30 @@ details.how summary{cursor:pointer;padding:14px;font-weight:600}
         <li>No flags doesn't mean the answer is correct. It means nothing checkable was found to be wrong. Judgement calls and advice still need an expert.</li>
         <li>Without tab 2 or tab 3 the tool can only check internal maths, logic and references. Adding a source turns it into a full fact-check of every figure.</li>
       </ul>
-      <h4>Free extra step: make the AI show its work</h4>
-      <p>Paste this into the same chat after the answer, then paste its reply into tab 3 or check it the same way:</p>
-      <pre id="vprompt">For every factual claim and figure in your previous answer, list:
-1) the claim, 2) where it came from (the document/data I gave you, a named and dated public source, or "my general knowledge"), 3) any calculation, shown step by step, 4) your confidence (high/medium/low).
-If you cannot point to a source, say so plainly. Do not invent sources, links or citations.</pre>
+      <h4>Free extra step: make the AI check itself</h4>
+      <p>This prompt uses the "chain of verification" technique from hallucination research. Open a <strong>new chat</strong> so the AI can't simply defend its earlier answer, paste the prompt, then check the reply here too.</p>
+      <pre id="vprompt">You are checking a draft written by someone else. Do not assume it is correct.
+1. Break the draft into separate factual claims (one fact per line, no pronouns).
+2. For each claim, write one question that would prove or disprove it.
+3. Answer each question on its own, without looking at the draft's wording.
+4. Re-do every calculation step by step.
+5. Give each claim a verdict: SUPPORTED, CONTRADICTED or CANNOT VERIFY, with the source you relied on (a document I provided, or a named, dated public source). If you have no source, say CANNOT VERIFY. Never invent sources, links or citations.
+6. Finish with a corrected version of the draft.
+
+DRAFT:</pre>
       <button class="btn" id="copyPrompt">Copy prompt</button>
+      <button class="btn" id="copyPromptAns">Copy prompt with my answer</button>
+      <h4>Why it won't go out of date</h4>
+      <p>The checks don't depend on any particular AI model, version or provider. Arithmetic, internal consistency, tracing figures to your source and comparing answers work the same on any AI's output, today or in ten years. The parts that can age, such as which standards exist or which rates and terms have been replaced, are plain lists. Rules with effective dates switch on by themselves using today's date, and you can add your own in the "Your rules" tab without touching code.</p>
+      <h4>What this learned from (ideas only, no code copied)</h4>
+      <ul>
+        <li><strong>Self-consistency</strong>: a model is less consistent about facts it is inventing. First shown model-free by SelfCheckGPT (2023), and still the basis of current methods such as semantic entropy (Nature, 2024) and UQLM (2026). Tab 3 uses this principle with its own text matching, so it doesn't depend on any one paper's code.</li>
+        <li><strong>FActScore</strong> and <strong>Loki / OpenFactVerification</strong>: split an answer into claims, score only the claims that can be decided, and never count "can't verify" as true. That is the claim-by-claim table.</li>
+        <li><strong>factool</strong>: re-compute every written-out calculation.</li>
+        <li><strong>RefChecker</strong> (Amazon): a figure can be real but attached to the wrong subject. Here, a source number must match the right metric, not just appear somewhere.</li>
+        <li><strong>ClaimBuster</strong> (political debate claim spotting) and <strong>Full Fact</strong>'s statistical-claim spotter: which sentences are worth checking, and ignoring label numbers like "Article 37".</li>
+        <li><strong>LettuceDetect</strong>, <strong>MiniCheck</strong>, <strong>Vectara HHEM</strong>: small AI models that check answers against a source. They could be added later as an optional local add-on, but would make the file tens of MB, so they're left out to keep this standalone.</li>
+      </ul>
     </div>
   </details>
   <p class="foot">Claim Check runs entirely offline. Save this file and open it in any browser, no install needed.</p>
@@ -381,6 +427,7 @@ function splitSentences(text) {
     while ((k = sre.exec(line))) {
       const pre = line.slice(s, k.index + 1).trimEnd();
       if (/\b(e\.g|i\.e|etc|vs|approx|inc|ltd|plc|co|no|dr|mr|mrs|ms|st|fig|al|corp|para|s)\.$/i.test(pre)) continue;
+      if (/(?:^|[\s.(])[A-Z]\.$/.test(pre)) continue; // initials and U.S., U.K.
       const end = k.index + k[0].length;
       push(line.slice(s, end), base + s);
       s = end;
@@ -402,6 +449,9 @@ function stem(w) { return w.replace(/ies$/, 'y').replace(/(ing|ed|es|s|ly)$/, ''
 function tokens(s) {
   return s.toLowerCase().replace(/[^a-z0-9\s-]/g, ' ').split(/[\s-]+/)
     .filter(w => w && /^[a-z]/.test(w) && w.length > 2 && !STOP.has(w)).map(stem);
+}
+function tokensRaw(s) {
+  return s.toLowerCase().replace(/[^a-z0-9\s-]/g, ' ').split(/[\s-]+/).filter(w => w && /^[a-z]/.test(w) && w.length > 3 && !STOP.has(w));
 }
 function overlap(aTok, bSet) {
   if (!aTok.length) return 0;
@@ -514,6 +564,91 @@ const ISA_VALID = new Set([200, 210, 220, 230, 240, 250, 260, 265, 300, 315, 320
 const NAMED_SOURCES = /\b(McKinsey|Deloitte|PwC|PricewaterhouseCoopers|KPMG|EY|Ernst & Young|Gartner|Forrester|IDC|Bain|BCG|Boston Consulting Group|Accenture|Harvard Business Review|HBR|Statista|Bloomberg|Reuters|Financial Times|Wall Street Journal|WSJ|World Bank|IMF|OECD|ONS|Office for National Statistics|Bank of England|Federal Reserve|SEC|FCA|HMRC|Companies House|Moody's|S&P|Fitch|Goldman Sachs|JP ?Morgan|Morgan Stanley|Nielsen|Pew Research|Eurostat|ICAEW|ACCA|CIMA|AICPA|IASB|FASB|FRC|Grant Thornton|BDO|RSM|Mazars|Forvis Mazars|Experian|Dun & Bradstreet|Ipsos|YouGov|Mintel|Euromonitor|CBI|IoD|Institute of Directors|British Chambers of Commerce|FSB|Federation of Small Businesses)\b/g;
 
 // ===================================================================
+// Check-worthiness: is this sentence a factual claim worth checking?
+// Cue words informed by ClaimBuster's labelled debate data and Full Fact's
+// statistical-claim spotting (ideas only; no code reused).
+// ===================================================================
+const CW_BOOST = /\b(trillion|billion|million|thousand|hundred|percent|per cent|average|increased?|decreased?|rose|fell|grew|growth|declined?|since|ago|last|previous|prior|cut|spent|debt|rate|income|revenue|sales|profit|margin|costs?|cash|half|third|quarter|doubled|tripled|halved|record|highest|lowest|largest|biggest|first|only|times|reported|announced|according)\b/gi;
+const CW_DAMP = /\b(think|believe|feel|hope|want|need|must|should|could|might|may|recommend|suggest|consider|important|clear|strong|fair|wrong|absolutely|kind of|I'm|I am|let me|we'll|would|perhaps|maybe|ideally)\b/gi;
+function checkWorthiness(text) {
+  let sc = 0;
+  if (/\d/.test(text)) sc += 2;
+  if (/%|per ?cent|£|\$|€|\b(?:million|billion|bn)\b/i.test(text)) sc += 1;
+  sc += Math.min(2, countRe(CW_BOOST, text) * 0.5);
+  if (/\b[A-Z][a-z]+\s+[A-Z][a-z]+|\b[A-Z]{2,}\b/.test(text.slice(1))) sc += 0.5;
+  sc -= Math.min(2.5, countRe(CW_DAMP, text) * 0.75);
+  if (text.split(/\s+/).length > 15) sc += 0.5;
+  if (/\?\s*$/.test(text)) sc -= 2;
+  return sc;
+}
+// Conversational wrapper, not content (pattern borrowed in spirit from FActScore's pre-processing)
+function isFiller(text, i, n) {
+  if (/^(?:sure|certainly|of course|absolutely|great question|good question|happy to help|here(?:'s| is| are)|below is|below are)\b/i.test(text) && i === 0) return true;
+  if (/^(?:i hope|hope this|please (?:let|feel)|let me know|feel free|if you (?:have|need|want|would)|happy to|i'?d be happy)\b/i.test(text)) return true;
+  if (/^#+\s|^\*\*[^*]+\*\*:?$|:$/.test(text) && text.split(/\s+/).length <= 8) return true; // headings
+  if (!/[.!?]["”')]*$/.test(text) && text.split(/\s+/).length <= 7 && !/\b(?:is|was|were|are|has|had|rose|fell|grew)\b/i.test(text)) return true; // title lines
+  return false;
+}
+// safe evaluator for "a + b × c" (no eval)
+function evalExpr(vals, ops) {
+  const v = vals.slice(), o = ops.slice();
+  for (let i = 0; i < o.length;) {
+    if (o[i] === '*' || o[i] === '/') {
+      if (o[i] === '/' && v[i + 1] === 0) return NaN;
+      v.splice(i, 2, o[i] === '*' ? v[i] * v[i + 1] : v[i] / v[i + 1]);
+      o.splice(i, 1);
+    } else i++;
+  }
+  let r = v[0];
+  for (let i = 0; i < o.length; i++) r = o[i] === '+' ? r + v[i + 1] : r - v[i + 1];
+  return r;
+}
+
+// ===================================================================
+// Evergreen knowledge: dated rules + user rules (no code changes needed)
+// ===================================================================
+const KNOWLEDGE_REVIEWED = '2026-11-09';
+// Changes with an effective date are judged against today's date, so they switch on by themselves.
+const BUILTIN_WITHDRAWN = [
+  { term: 'IAS 1', repl: 'IFRS 18 (Presentation and Disclosure in Financial Statements)', from: '2027-01-01', builtin: true },
+  { term: 'LIBOR', repl: 'SONIA (GBP) or SOFR (USD)', from: '2023-07-01', builtin: true, note: 'LIBOR has been discontinued. Check the reference is historical.' },
+];
+function escRe(t) { return t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s*'); }
+function parseRules(text) {
+  const r = { flags: [], withdrawn: [], valid: new Set(), facts: [], errors: [], count: 0 };
+  String(text || '').split('\n').forEach((line, i) => {
+    const t = line.trim();
+    if (!t || t.startsWith('#')) return;
+    const m = t.match(/^(\w+)\s*:\s*(.+)$/);
+    if (!m) { r.errors.push(`Line ${i + 1}: expected "type: …" (fact, flag, withdrawn or valid)`); return; }
+    const kind = m[1].toLowerCase(), body = m[2].trim();
+    r.count++;
+    if (kind === 'flag') {
+      const parts = body.split('|').map(x => x.trim());
+      const pat = parts[0];
+      const sev = ['error', 'warn', 'verify', 'info'].includes((parts[1] || '').toLowerCase()) ? parts[1].toLowerCase() : 'warn';
+      let re;
+      try {
+        const rm = pat.match(/^\/(.+)\/([gimsuy]*)$/);
+        re = rm ? new RegExp(rm[1], rm[2].includes('g') ? rm[2] : rm[2] + 'g') : new RegExp('\\b' + escRe(pat) + '\\b', 'gi');
+      } catch (e) { r.errors.push(`Line ${i + 1}: the pattern "${pat}" is not valid`); r.count--; return; }
+      r.flags.push({ re, sev, msg: parts.slice(2).join(' | '), pat });
+    } else if (kind === 'withdrawn' || kind === 'replaced') {
+      const [main, opt] = body.split('|');
+      const [term, repl] = main.split(/->|→/).map(x => x.trim());
+      const from = (opt || '').match(/(\d{4}-\d{2}-\d{2})/);
+      if (!term) { r.errors.push(`Line ${i + 1}: withdrawn needs a term, e.g. "withdrawn: LIBOR -> SONIA"`); r.count--; return; }
+      r.withdrawn.push({ term, repl: repl || '', from: from ? from[1] : null });
+    } else if (kind === 'valid' || kind === 'exists') {
+      body.split(',').forEach(x => r.valid.add(x.trim().toUpperCase().replace(/\s+/g, ' ')));
+    } else if (kind === 'fact') {
+      r.facts.push(body);
+    } else { r.errors.push(`Line ${i + 1}: unknown rule type "${m[1]}"`); r.count--; }
+  });
+  return r;
+}
+
+// ===================================================================
 // Main analysis
 // ===================================================================
 function analyze(input) {
@@ -521,6 +656,8 @@ function analyze(input) {
   const answer = String(input.answer || '');
   const source = String(input.source || '').trim();
   const others = (input.others || []).map(s => String(s || '').trim()).filter(Boolean);
+  const rules = parseRules(input.rules);
+  const withdrawnAll = BUILTIN_WITHDRAWN.concat(rules.withdrawn);
 
   const F = [];
   let fid = 0;
@@ -536,6 +673,7 @@ function analyze(input) {
   const stats = { figures: 0, calcRun: 0, calcOk: 0, calcBad: 0, grounded: 0, derived: 0, ungrounded: 0, crossMatched: 0, refs: 0 };
 
   const sents = splitSentences(answer);
+  sents.forEach((s, i) => { s.filler = isFiller(s.text, i, sents.length); s.cw = s.filler ? 0 : checkWorthiness(s.text); });
   const sentAt = pos => sents.find(s => pos >= s.start && pos < s.end) || null;
   const allNums = parseNumbers(answer);
   const masks = [];
@@ -543,7 +681,19 @@ function analyze(input) {
   // ---------------- dates ----------------
   checkDates(answer, now, add, masks, sents);
   // ---------------- references ----------------
-  checkReferences(answer, add, masks, source, stats);
+  checkReferences(answer, add, masks, source, stats, { withdrawn: withdrawnAll, valid: rules.valid, now });
+  // user "flag:" rules
+  for (const fr of rules.flags) {
+    fr.re.lastIndex = 0;
+    let fm, guard = 0;
+    while ((fm = fr.re.exec(answer)) && guard++ < 200) {
+      if (!fm[0]) { fr.re.lastIndex++; continue; }
+      add({ sev: fr.sev, cat: 'Your rules', title: fr.msg || `Matches your rule "${fr.pat}"`, detail: `Rule: flag ${fr.pat}`, start: fm.index, end: fm.index + fm[0].length });
+    }
+  }
+  // label numbers such as "Article 37", "Step 2", "Table 4" are not statistics (Full Fact hackathon idea)
+  { const LABEL_RE = /\b(?:Article|Art\.|Step|Figure|Fig\.|Table|Section|Chapter|Page|p\.|Phase|Stage|Option|Tier|Level|Version|Appendix|Annex|Item|Note|Slide|Clause|Schedule|Paragraph|Para\.?|Rule|Principle|Pillar|Workstream|Gate|GRIP)\s?\d+[A-Za-z]?\b/g;
+    let lm; while ((lm = LABEL_RE.exec(answer))) masks.push([lm.index, lm.index + lm[0].length]); }
 
   allNums.forEach(n => {
     n.masked = masks.some(r => n.start < r[1] && n.end > r[0]);
@@ -592,6 +742,15 @@ function analyze(input) {
       add({ sev: 'error', cat: 'Logic', title: `Says "${dir === 'up' ? 'increase' : 'decrease'}", but the figures go the other way`,
         detail: `${A.raw} → ${B.raw} is a ${delta < 0 ? 'fall' : 'rise'}, not a ${dir === 'up' ? 'rise' : 'fall'}.`,
         start: span0, end: span1, nums: [A, B] });
+    }
+    const multM = answer.slice(Math.max(0, Math.min(A.start, B.start) - 40), span1).match(/\b(doubled|tripled|trebled|quadrupled|halved)\b/i);
+    if (multM && !P && A.value > 0) {
+      const fct = { doubled: 2, tripled: 3, trebled: 3, quadrupled: 4, halved: 0.5 }[multM[1].toLowerCase()];
+      const ratio = B.value / A.value;
+      const good = ratio >= fct * 0.85 && ratio <= fct * 1.15;
+      calcResult(good, good
+        ? { cat: 'Calculation', title: `"${multM[1]}" checks out`, detail: `${A.raw} → ${B.raw} is ×${rnd(ratio, 2)}.`, start: A.start, end: B.end }
+        : { sev: 'error', cat: 'Calculation', title: `Says "${multM[1]}", but ${A.raw} → ${B.raw} is ×${rnd(ratio, 2)}`, detail: `"${multM[1]}" means roughly ×${fct}.`, start: A.start, end: B.end, nums: [B] });
     }
     if (!P || isCagr || A.value === 0) return;
     const rel = absRange(range(v => (v[1] - v[0]) / v[0] * 100, [A, B]));
@@ -680,7 +839,7 @@ function analyze(input) {
   for (const s of sents) {
     TOTAL_RE.lastIndex = 0;
     const m = TOTAL_RE.exec(s.text);
-    if (!m) continue;
+    if (!m || /=|≈/.test(s.text)) continue;
     const kwStart = s.start + m.index, kwEnd = kwStart + m[0].length;
     const sn = work.filter(n => n.start >= s.start && n.end <= s.end && kindOf(n) === 'amt' && n.role !== 'change' && n.role !== 'from');
     let T = sn.find(n => n.start >= kwEnd && n.start - kwEnd <= 20);
@@ -709,6 +868,55 @@ function analyze(input) {
     calcResult(ok, ok
       ? { cat: 'Calculation', title: `Total of ${T.raw} adds up`, detail: comps.map(c => c.raw).join(' + ') + ` = ${fmtLike(sum, T)}.`, start: T.start, end: T.end }
       : { sev: 'error', cat: 'Calculation', title: `Total doesn't add up: says ${T.raw}, parts sum to ${fmtLike(sum, T)}`, detail: comps.map(c => c.raw).join(' + ') + ` = ${fmtLike(sum, T)}.`, start: T.start, end: T.end, nums: [T] });
+  }
+
+  // ---------------- written-out sums: "£2m + £3m = £5m", "£1.2m × 12 = £14.4m" ----------------
+  // (factool re-computes explicit calculations; this is a model-free version)
+  {
+    const OP = { '+': '+', '-': '-', '−': '-', '–': '-', '×': '*', 'x': '*', '*': '*', '/': '/', '÷': '/' };
+    const eqRe = /\s*(?:=|≈|equals)\s*/g;
+    let em;
+    while ((em = eqRe.exec(answer))) {
+      const eqStart = em.index, eqEnd = em.index + em[0].length;
+      const C = work.find(n => n.start === eqEnd || (n.start > eqEnd && /^\s*\(?\s*$/.test(answer.slice(eqEnd, n.start)) && n.start - eqEnd < 4));
+      if (!C) continue;
+      const before = work.filter(n => n.end <= eqStart);
+      let cur = before[before.length - 1];
+      if (!cur || !/^\s*\)?\s*$/.test(answer.slice(cur.end, eqStart))) continue;
+      const chain = [cur], ops = [];
+      for (let i = before.length - 2; i >= 0; i--) {
+        const gap = answer.slice(before[i].end, chain[0].start);
+        const g = gap.match(/^\s*\(?\s*([+\-−–×x*\/÷])\s*\(?\s*$/);
+        if (!g) break;
+        chain.unshift(before[i]); ops.unshift(OP[g[1]]);
+      }
+      if (chain.length < 2) continue;
+      const hasMul = ops.some(o => o === '*' || o === '/');
+      const vals = chain.map(n => (hasMul && n.unit === 'pct' && kindOf(C) !== 'pct') ? n.value / 100 : n.value);
+      const res = evalExpr(vals, ops);
+      if (!isFinite(res)) continue;
+      const tol = C.prec + Math.abs(res) * 0.005 + (hasMul ? 0 : chain.reduce((a, n) => a + n.prec, 0));
+      const ok = Math.abs(Math.abs(res) - Math.abs(C.value)) <= tol;
+      const expr = answer.slice(chain[0].start, C.end).replace(/\s+/g, ' ');
+      calcResult(ok, ok
+        ? { cat: 'Calculation', title: 'Written-out calculation is right', detail: `${expr} ✓`, start: chain[0].start, end: C.end }
+        : { sev: 'error', cat: 'Calculation', title: `Calculation is wrong: comes to ${fmtLike(res, C)}, not ${C.raw}`, detail: `Re-computed: ${answer.slice(chain[0].start, chain[chain.length - 1].end).replace(/\s+/g, ' ')} = ${fmtLike(res, C)} (the answer says ${C.raw}).`, start: chain[0].start, end: C.end, nums: [C] });
+    }
+    // "15% of £10m is £1.5m"
+    for (const s of sents) {
+      const sn = work.filter(n => n.start >= s.start && n.end <= s.end);
+      for (let i = 0; i + 2 < sn.length; i++) {
+        const X = sn[i], Y = sn[i + 1], Z = sn[i + 2];
+        if (X.unit !== 'pct' || kindOf(Y) !== 'amt' || kindOf(Z) !== 'amt') continue;
+        if (!/^\s*of\s+(?:the\s+|our\s+|total\s+)?$/i.test(answer.slice(X.end, Y.start))) continue;
+        if (!/^\s*(?:[a-z][a-z ]{0,25}\s)?(?:is|was|=|equals|comes to|gives|giving|which is|or|,|\()\s*\(?\s*$/i.test(answer.slice(Y.end, Z.start))) continue;
+        const r = range(v => v[0] / 100 * v[1], [X, Y]);
+        const ok = fits(Z, r[0], r[1]);
+        calcResult(ok, ok
+          ? { cat: 'Calculation', title: `${X.raw} of ${Y.raw} checks out`, detail: `${X.raw} × ${Y.raw} = ${fmtLike(X.value / 100 * Y.value, Z)}.`, start: X.start, end: Z.end }
+          : { sev: 'error', cat: 'Calculation', title: `${X.raw} of ${Y.raw} is ${fmtLike(X.value / 100 * Y.value, Z)}, not ${Z.raw}`, detail: `${X.raw} × ${Y.raw} = ${fmtLike(X.value / 100 * Y.value, Z)}.`, start: X.start, end: Z.end, nums: [Z] });
+      }
+    }
   }
 
   // ---------------- % splits that should total 100 ----------------
@@ -820,6 +1028,8 @@ function analyze(input) {
     { re: /\b(?:as of my (?:last )?(?:knowledge|training)(?: cutoff| cut-off| update)?|i (?:do not|don't) have (?:access|real-time)|i cannot browse|my training data)\b/gi,
       sev: 'warn', cat: 'Language', title: 'Model says its knowledge may be out of date', detail: 'Any market, regulatory or rate information near this point may be stale. Check it against a current source.' },
   ];
+  LANG.push({ re: /\b(?:i'?m sorry|i am sorry|i (?:cannot|can't|am unable to) (?:provide|access|find|verify|confirm)|could not find (?:any )?(?:information|data)|(?:please )?provide more (?:information|context|details))\b/gi,
+    sev: 'info', cat: 'Language', title: 'The answer hedges or partly refuses', detail: 'The model admitted a gap here. Anything stated confidently around it deserves extra scrutiny.' });
   for (const L of LANG) {
     L.re.lastIndex = 0;
     let m;
@@ -837,6 +1047,31 @@ function analyze(input) {
     add({ sev: 'verify', cat: 'Benchmark', title: 'Unsourced benchmark or statistic', detail: `"${bm[0]}" is quoted with a number but no source. AI models often invent plausible benchmarks. Check it against a real dataset.`, start: pos, end: Math.max(pos + bm[0].length, sn[sn.length - 1].end) });
   }
 
+  // ---------------- your known facts ("fact:" rules) ----------------
+  for (const fact of rules.facts) {
+    const fn = parseNumbers(fact).filter(n => !n.isYear);
+    if (fn.length !== 1) continue;
+    const F0 = fn[0];
+    const key = Array.from(new Set(tokens(fact.slice(0, F0.start) + ' ' + fact.slice(F0.end))));
+    if (!key.length) continue;
+    const factIsLimit = LIMIT_RE.test(fact);
+    for (const s of sents) {
+      const st = new Set(tokens(s.text));
+      const hit = key.filter(t => st.has(t)).length;
+      if (hit < Math.max(1, Math.ceil(key.length * 0.75))) continue;
+      const cand = work.filter(n => n.start >= s.start && n.end <= s.end && kindOf(n) === kindOf(F0) && n.role !== 'change' && !n.flagged);
+      if (!cand.length) continue;
+      const match = cand.find(n => sameNum(n, F0));
+      if (match) {
+        match.grounded = true;
+        add({ sev: 'ok', cat: 'Your rules', title: `Matches your known fact`, detail: `fact: ${fact}`, start: match.start, end: match.end });
+      } else if (!factIsLimit) {
+        const n = cand[0];
+        add({ sev: 'error', cat: 'Your rules', title: `Contradicts your known fact: ${F0.raw}`, detail: `The answer says ${n.raw}. Your rule says: "${fact}".`, start: n.start, end: n.end, nums: [n] });
+      }
+    }
+  }
+
   // ---------------- grounding against source ----------------
   let srcInfo = null;
   if (source) {
@@ -847,25 +1082,41 @@ function analyze(input) {
     sNums.forEach(n => { if (n.metric) (srcVals[n.metric] = srcVals[n.metric] || []).push(n); });
     const pool = sNums.filter(n => kindOf(n) === 'amt' || kindOf(n) === 'pct').slice(0, 150);
     srcInfo = { sSents, sNums };
+    const srcSentTok = sSents.map(x => new Set(tokens(x.text)));
+    const closestLine = n => {
+      const tk = tokens(n.sent ? n.sent.text : '');
+      let bi = -1, bs = 0;
+      srcSentTok.forEach((set, i) => { const sc = overlap(tk, set); if (sc > bs) { bs = sc; bi = i; } });
+      return bi >= 0 && bs >= 0.2 ? sSents[bi].text : null;
+    };
+    const describe = x => x.metric ? `${METRIC_LABEL[x.metric]} (${x.raw})` : `"${(x.sent ? x.sent.text : x.raw).slice(0, 90)}"`;
     for (const n of work) {
       if (n.flagged || trivial(n)) continue;
-      if (sNums.some(x => sameNum(n, x))) { n.grounded = true; stats.grounded++; continue; }
+      // The figure's own metric in the source wins over a coincidental match elsewhere
+      // (RefChecker-style "right number, wrong subject" check, done without a model).
+      const sv = n.metric && n.role !== 'change' && n.role !== 'limit' ? (srcVals[n.metric] || []).filter(x => !LIMIT_RE.test(x.sent ? x.sent.text : '')) : [];
+      const exact = sNums.filter(x => sameNum(n, x));
+      if (sv.length && !sv.some(x => sameNum(n, x))) {
+        const d0 = derive(n, pool);
+        if (!d0 || exact.length) {
+          const elsewhere = exact.length ? ` In your source, ${n.raw} is ${describe(exact[0])}. It looks attached to the wrong item.` : '';
+          add({ sev: 'error', cat: 'Source check', title: `Contradicts your source: ${METRIC_LABEL[n.metric]} is ${sv.map(x => x.raw).join(' / ')} there`,
+            detail: `The answer says ${n.raw}. Your source gives ${sv.map(x => x.raw).join(' or ')}.${elsewhere}`, start: n.start, end: n.end, nums: [n] });
+          stats.ungrounded++;
+          continue;
+        }
+      }
+      if (exact.length) { n.grounded = true; stats.grounded++; continue; }
       const d = derive(n, pool);
       if (d) {
         n.derived = true; stats.derived++;
         add({ sev: 'ok', cat: 'Source check', title: `${n.raw} can be calculated from your source`, detail: d, start: n.start, end: n.end });
         continue;
       }
-      const sv = n.metric && n.role !== 'change' ? (srcVals[n.metric] || []).filter(x => !LIMIT_RE.test(x.sent ? x.sent.text : '')) : [];
-      if (sv.length) {
-        add({ sev: 'error', cat: 'Source check', title: `Contradicts your source: ${METRIC_LABEL[n.metric]} is ${sv.map(x => x.raw).join(' / ')} there`,
-          detail: `The answer says ${n.raw}. Your source gives ${sv.map(x => x.raw).join(' or ')}.`, start: n.start, end: n.end, nums: [n] });
-        stats.ungrounded++;
-        continue;
-      }
       stats.ungrounded++;
+      const cl = closestLine(n);
       add({ sev: 'warn', cat: 'Source check', title: `${n.raw} isn't in your source`,
-        detail: 'This figure isn\'t in the source and can\'t be calculated from any two source figures (sum, difference, ratio or % change). Treat it as unsupported until someone confirms where it came from.',
+        detail: 'This figure isn\'t in the source and can\'t be calculated from any two source figures (sum, difference, ratio or % change). Treat it as unsupported until someone confirms where it came from.' + (cl ? ` Closest line in your source: "${cl.slice(0, 160)}"` : ''),
         start: n.start, end: n.end, nums: [n] });
     }
     // sentence-level support & direction flips
@@ -877,6 +1128,7 @@ function analyze(input) {
       if (tk.length < 4 || /[?:]$/.test(s.text)) continue;
       let best = -1, bestScore = 0;
       srcTokSets.forEach((set, i) => { const sc = overlap(tk, set); if (sc > bestScore) { bestScore = sc; best = i; } });
+      s.srcSupport = bestScore;
       const hasIssue = F.some(f => f.sev !== 'ok' && f.sev !== 'info' && f.start >= s.start && f.end <= s.end);
       if (best >= 0 && bestScore >= 0.5) {
         const st = sSents[best].text;
@@ -892,7 +1144,7 @@ function analyze(input) {
           continue;
         }
       }
-      if (!hasIssue && bestScore < 0.3 && overlap(tk, srcAll) < 0.5 && tk.length >= 6) {
+      if (!hasIssue && s.cw >= 2 && bestScore < 0.3 && overlap(tk, srcAll) < 0.5 && tk.length >= 6) {
         add({ sev: 'verify', cat: 'Source check', title: 'Statement not traceable to your source', detail: 'Little of this sentence\'s wording appears in the source. It may be general knowledge, opinion or invention. Decide which.', start: s.start, end: s.end });
       }
     }
@@ -919,7 +1171,7 @@ function analyze(input) {
       if (n.flagged || trivial(n) || n.grounded || n.derived) continue;
       const matched = alts.map(a => a.nums.some(x => sameNum(n, x)));
       const mCount = matched.filter(Boolean).length;
-      if (mCount === alts.length) { stats.crossMatched++; continue; }
+      if (mCount === alts.length) { stats.crossMatched++; n.crossOk = true; continue; }
       const conflicts = [];
       if (n.metric && n.role === 'level') {
         alts.forEach((a, i) => {
@@ -933,7 +1185,30 @@ function analyze(input) {
       } else if (mCount === 0) {
         add({ sev: alts.length >= 2 ? 'warn' : 'verify', cat: 'Cross-check', title: `${n.raw} appears in no other answer`, detail: `None of the ${alts.length} other answer${alts.length > 1 ? 's' : ''} mention this figure. Details that change between regenerations are often invented.`, start: n.start, end: n.end, nums: [n] });
       } else {
-        stats.crossMatched++;
+        stats.crossMatched++; n.crossOk = true;
+      }
+    }
+    // Sentence agreement (self-consistency principle: SelfCheckGPT 2023, semantic entropy 2024, UQLM 2026): for each claim, take the best-matching
+    // sentence in every other answer, average over answers. Low agreement = probably made up.
+    // Words used in no other answer are listed, which is the model-free "unigram" signal.
+    const altSentTok = alts.map(a => splitSentences(a.text).map(x => new Set(tokens(x.text))).filter(x => x.size > 0));
+    const altAll = alts.map(a => new Set(tokens(a.text)));
+    for (const s of sents) {
+      if (s.filler || s.cw < 2) continue;
+      const tk = tokens(s.text);
+      if (tk.length < 4) continue;
+      const per = altSentTok.map(list => list.reduce((m, set) => Math.max(m, overlap(tk, set)), 0));
+      const agree = per.reduce((a, b) => a + b, 0) / per.length;
+      s.agreement = agree;
+      const onlyHere = Array.from(new Set(tk)).filter(t => !altAll.some(set => set.has(t)) && t.length > 3);
+      const touching = F.filter(f => f.start < s.end && f.end > s.start);
+      const hasIssue = touching.some(f => f.sev !== 'ok' && f.sev !== 'info');
+      const sn = work.filter(n => n.start >= s.start && n.end <= s.end && !trivial(n));
+      const backed = touching.some(f => f.sev === 'ok') || (sn.length && sn.every(n => n.grounded || n.derived || n.crossOk));
+      if (agree < 0.3 && !hasIssue && !backed) {
+        const words = Array.from(new Set(tokensRaw(s.text).filter(w => onlyHere.includes(stem(w))))).slice(0, 6);
+        add({ sev: alts.length >= 2 && agree < 0.2 ? 'warn' : 'verify', cat: 'Cross-check', title: `Point not made in the other answers (agreement ${Math.round(agree * 100)}%)`,
+          detail: `When the same question is asked again, nothing like this sentence comes back.${words.length ? ' Words used only here: ' + words.join(', ') + '.' : ''} Regenerations that drop a claim suggest the model was improvising.`, start: s.start, end: s.end });
       }
     }
     for (const s of sents) {
@@ -943,6 +1218,39 @@ function analyze(input) {
       add({ sev: 'verify', cat: 'Cross-check', title: `Only this answer mentions: ${fresh.map(e => e.text).join(', ')}`, detail: 'Names that appear in only one regeneration deserve a check.', start: fresh[0].start, end: fresh[fresh.length - 1].end });
     }
   }
+
+  // ---------------- knowledge freshness ----------------
+  const ageDays = (now - new Date(KNOWLEDGE_REVIEWED)) / 864e5;
+  if (ageDays > 365 && F.some(f => f.cat === 'Reference' && /IFRS|IAS|FRS|ISA|ASC/.test(f.title))) {
+    add({ sev: 'info', cat: 'Reference', title: `Built-in standards list was last reviewed ${KNOWLEDGE_REVIEWED.slice(0, 7)}`,
+      detail: 'Standards issued or withdrawn since then won\'t be known. Add them in the "Your rules" tab (e.g. "valid: IFRS 20" or "withdrawn: IAS 7 -> IFRS 21").' });
+  }
+
+  // ---------------- claim-by-claim ledger ----------------
+  // Every check-worthy sentence ends in one bucket. Unverifiable never counts as true
+  // (the honesty rule from FActScore / Loki: only decidable claims are scored).
+  const claims = [];
+  for (const s of sents) {
+    if (s.filler || s.cw < 2) continue;
+    const fs = F.filter(f => f.start >= 0 && f.start < s.end && f.end > s.start);
+    const sn = work.filter(n => n.start >= s.start && n.end <= s.end && !trivial(n));
+    let status, why;
+    if (fs.some(f => f.sev === 'error')) { status = 'wrong'; why = fs.find(f => f.sev === 'error').title; }
+    else if (fs.some(f => f.sev === 'warn')) { status = 'doubtful'; why = fs.find(f => f.sev === 'warn').title; }
+    else if (fs.some(f => f.sev === 'verify')) { status = 'unverified'; why = fs.find(f => f.sev === 'verify').title; }
+    else if (fs.some(f => f.sev === 'ok') || (sn.length && sn.every(n => n.grounded || n.derived || n.crossOk)) || (s.srcSupport >= 0.6) || (s.agreement >= 0.5)) {
+      status = 'verified';
+      why = fs.some(f => f.sev === 'ok') ? fs.find(f => f.sev === 'ok').title
+        : sn.length && sn.every(n => n.grounded || n.derived) ? 'All figures match your source'
+        : sn.length && sn.every(n => n.grounded || n.derived || n.crossOk) ? 'Figures repeated in the other answers'
+        : s.srcSupport >= 0.6 ? 'Wording matches your source' : 'Repeated in the other answers';
+    }
+    else { status = 'unchecked'; why = (source || others.length) ? 'No evidence either way' : 'Add a source or other answers to check this'; }
+    claims.push({ start: s.start, end: s.end, text: s.text, status, why });
+  }
+  const ledger = { verified: 0, wrong: 0, doubtful: 0, unverified: 0, unchecked: 0 };
+  claims.forEach(c => ledger[c.status]++);
+  stats.claims = claims.length;
 
   // ---------------- score ----------------
   const count = sev => F.filter(f => f.sev === sev).length;
@@ -959,7 +1267,7 @@ function analyze(input) {
   if (!source && !others.length && answer.trim()) sub += ' Add your source facts (tab 2) or other answers (tab 3) to check every figure, not just the maths.';
 
   F.sort((a, b) => (SEV_ORDER[b.sev] - SEV_ORDER[a.sev]) || (a.start - b.start));
-  return { findings: F, counts: c, score, verdict, sub, tone, stats, hasSource: !!source, otherCount: others.length };
+  return { findings: F, counts: c, score, verdict, sub, tone, stats, claims, ledger, hasSource: !!source, otherCount: others.length, ruleErrors: rules.errors, ruleCount: rules.count, knowledgeReviewed: KNOWLEDGE_REVIEWED };
 }
 const SEV_ORDER = { error: 4, warn: 3, verify: 2, info: 1, ok: 0 };
 const LIMIT_RE = /\b(covenant|limit|target|budget(?:ed)?|threshold|maximum|minimum|max|min|cap|ceiling|floor|plan|forecast|guidance|below|above|under|not (?:to )?exceed)\b/i;
@@ -1076,7 +1384,8 @@ function checkDates(text, now, add, masks) {
 }
 
 // ---------------- references ----------------
-function checkReferences(text, add, masks, source, stats) {
+function checkReferences(text, add, masks, source, stats, know) {
+  know = know || { withdrawn: [], valid: new Set(), now: new Date() };
   const srcL = (source || '').toLowerCase();
   const claimed = [];
   const free = (a, b) => !claimed.some(c => a < c[1] && b > c[0]);
@@ -1087,10 +1396,25 @@ function checkReferences(text, add, masks, source, stats) {
     add(Object.assign({ cat: 'Reference', start: a, end: b }, f));
   };
   let m;
+  // withdrawn / replaced terms (built-in dated rules + "withdrawn:" rules)
+  for (const w of know.withdrawn) {
+    const re = new RegExp('(?<![\\w.])' + escRe(w.term) + '(?![\\w])(?!\\.\\d)', 'gi');
+    let wm;
+    while ((wm = re.exec(text))) {
+      const a = wm.index, b = a + wm[0].length;
+      if (!free(a, b)) continue;
+      const live = !w.from || know.now >= new Date(w.from);
+      const when = w.from ? new Date(w.from).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+      if (live) flag(a, b, { sev: 'warn', title: `${w.term} has been replaced${w.repl ? ' by ' + w.repl : ''}`, detail: (w.note || `${w.term} no longer applies${w.from ? ' (from ' + when + ')' : ''}. Advice that relies on it may be out of date.`) + (w.builtin ? '' : ' (Your rule.)') });
+      else flag(a, b, { sev: 'info', title: `${w.term} is being replaced${w.repl ? ' by ' + w.repl : ''} from ${when}`, detail: 'Still in force today, but check the answer is right for the period it covers.' });
+    }
+  }
   // accounting & auditing standards
   const stdRe = /\b(IFRS|IAS|FRS|ISA(?: \(UK\))?|ASC|SFAS|IPSAS)\s?(\d{1,4})((?:[-.]\d+)*)/g;
   while ((m = stdRe.exec(text))) {
     const kind = m[1].replace(/ \(UK\)/, ''), num = parseInt(m[2], 10), a = m.index, b = a + m[0].length, label = m[0];
+    if (!free(a, b)) continue;
+    if (know.valid.has((kind + ' ' + num).toUpperCase())) { flag(a, b, { sev: 'verify', title: `Check the ${label} reference`, detail: 'Listed as valid in your rules. Confirm it says what the answer claims.' }); continue; }
     if (kind === 'IFRS') {
       if (IFRS_SUPERSEDED[num]) flag(a, b, { sev: 'warn', title: `${label} has been replaced`, detail: `${label} was superseded by ${IFRS_SUPERSEDED[num]}. Answers that cite withdrawn standards are often out of date or made up.` });
       else if (!IFRS_VALID.has(num)) flag(a, b, { sev: 'error', title: `${label} does not exist`, detail: 'There is no IFRS with this number (IFRS 1–19 as of 2026). The reference has probably been invented.' });
@@ -1157,7 +1481,7 @@ function checkReferences(text, add, masks, source, stats) {
   }
 }
 
-root.ClaimCheck = { analyze, parseNumbers, splitSentences, sameNum, _internals: { derive, range, fits } };
+root.ClaimCheck = { analyze, parseNumbers, splitSentences, sameNum, parseRules, KNOWLEDGE_REVIEWED, _internals: { derive, range, fits } };
 })(typeof window !== 'undefined' ? window : globalThis);
 /*ENGINE-END*/
 </script>
@@ -1181,6 +1505,7 @@ function refreshDots() {
   $('#t-answer').classList.toggle('filled', !!$('#answer').value.trim());
   $('#t-source').classList.toggle('filled', !!$('#source').value.trim());
   $('#t-others').classList.toggle('filled', $$('.other').some(t => t.value.trim()));
+  $('#t-rules').classList.toggle('filled', !!$('#rules').value.trim());
 }
 $$('textarea').forEach(t => t.addEventListener('input', refreshDots));
 
@@ -1188,7 +1513,7 @@ $$('textarea').forEach(t => t.addEventListener('input', refreshDots));
 function run() {
   const answer = $('#answer').value;
   if (!answer.trim()) { $('#t-answer').click(); $('#answer').focus(); return; }
-  last = ClaimCheck.analyze({ answer, source: $('#source').value, others: $$('.other').map(t => t.value) });
+  last = ClaimCheck.analyze({ answer, source: $('#source').value, others: $$('.other').map(t => t.value), rules: $('#rules').value });
   last.answer = answer;
   render();
   $('#report').hidden = false;
@@ -1219,9 +1544,15 @@ function render() {
   if (r.otherCount) bits.push(`${s.crossMatched} confirmed by other answers`);
   if (s.refs) bits.push(`${s.refs} reference${s.refs === 1 ? '' : 's'} to verify`);
   $('#coverage').textContent = bits.join(' · ');
+  if (r.claims.length) {
+    const L = r.ledger;
+    bits.push(`${r.claims.length} factual claim${r.claims.length === 1 ? '' : 's'}: ${L.verified} verified, ${L.wrong} wrong, ${L.doubtful} doubtful, ${L.unverified} need checking, ${L.unchecked} not checkable`);
+    $('#coverage').textContent = bits.join(' · ');
+  }
   renderAnnot();
   renderList();
   renderChecklist();
+  renderLedger();
 }
 
 function renderAnnot() {
@@ -1288,6 +1619,21 @@ $('#annot').addEventListener('click', e => {
   selectFinding(f.id, true);
 });
 
+const ST_LABEL = { wrong: 'Wrong', doubtful: 'Doubtful', unverified: 'Check', verified: 'Verified', unchecked: 'Not checked' };
+function renderLedger() {
+  const cl = last.claims;
+  $('#ledgerCard').hidden = !cl.length;
+  $('#ledgerSum').innerHTML = ['verified', 'wrong', 'doubtful', 'unverified', 'unchecked'].filter(k => last.ledger[k]).map(k => `<span class="st-pill st-${k}">${last.ledger[k]} ${ST_LABEL[k]}</span>`).join('');
+  $('#ledger').innerHTML = cl.map((c, i) => `<tr data-i="${i}"><td class="st"><span class="st-pill st-${c.status}">${ST_LABEL[c.status]}</span></td><td>${esc(c.text.length > 260 ? c.text.slice(0, 260) + '…' : c.text)}</td><td class="why">${esc(c.why)}</td></tr>`).join('');
+}
+$('#ledger').addEventListener('click', e => {
+  const tr = e.target.closest('tr');
+  if (!tr) return;
+  const c = last.claims[+tr.dataset.i];
+  const f = last.findings.filter(x => x.start >= 0 && x.start < c.end && x.end > c.start).sort((a, b) => SEV_RANK[b.sev] - SEV_RANK[a.sev])[0];
+  if (f) { if (!visible(f)) { filter = 'all'; renderList(); } selectFinding(f.id, true); }
+  else $('#annot').scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
 function renderChecklist() {
   const items = last.findings.filter(f => f.sev === 'verify');
   $('#checklistCard').hidden = !items.length;
@@ -1300,6 +1646,11 @@ function toMarkdown() {
   L.push('# Claim Check report', '');
   L.push(`Generated ${new Date().toLocaleString()} (offline)`, '');
   L.push(`**Verdict:** ${r.verdict}  `, `**Confidence score:** ${r.score}/100  `, `**Coverage:** ${$('#coverage').textContent}`, '');
+  if (r.claims.length) {
+    L.push('## Claim by claim', '', '| Status | Claim | Why |', '|---|---|---|');
+    r.claims.forEach(c => L.push(`| ${ST_LABEL[c.status]} | ${c.text.replace(/\|/g, '/').replace(/\n+/g, ' ')} | ${c.why.replace(/\|/g, '/')} |`));
+    L.push('');
+  }
   const groups = [['error', 'Errors: demonstrably wrong'], ['warn', 'Warnings: unsupported or inconsistent'], ['verify', 'Needs a human check'], ['info', 'Notes'], ['ok', 'Checks passed']];
   for (const [sev, h] of groups) {
     const fs = r.findings.filter(f => f.sev === sev);
@@ -1329,8 +1680,41 @@ $('#copyPrompt').addEventListener('click', async () => {
   catch (e) { const r = document.createRange(); r.selectNodeContents($('#vprompt')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); $('#copyPrompt').textContent = 'Selected: press Ctrl/Cmd+C'; }
   setTimeout(() => { $('#copyPrompt').textContent = 'Copy prompt'; }, 2500);
 });
+$('#copyPromptAns').addEventListener('click', async () => {
+  const t = $('#vprompt').textContent + '\n' + $('#answer').value;
+  const b = $('#copyPromptAns');
+  try { await navigator.clipboard.writeText(t); b.textContent = 'Copied'; }
+  catch (e) { const ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); b.textContent = 'Copied'; } catch (_) { b.textContent = 'Copy failed'; } ta.remove(); }
+  setTimeout(() => { b.textContent = 'Copy prompt with my answer'; }, 2500);
+});
+// ----- your rules: remembered per browser (convenience only), shareable as a file -----
+const RULES_KEY = 'claimcheck.rules.v1';
+try { const saved = localStorage.getItem(RULES_KEY); if (saved) $('#rules').value = saved; } catch (e) {}
+function rulesStatus() {
+  const r = ClaimCheck.parseRules($('#rules').value);
+  $('#rulesStatus').textContent = r.errors.length ? r.errors.join(' · ') : (r.count ? `${r.count} rule${r.count === 1 ? '' : 's'} active.` : '') + ` Built-in knowledge last reviewed ${ClaimCheck.KNOWLEDGE_REVIEWED}.`;
+  $('#rulesStatus').style.color = r.errors.length ? 'var(--err)' : '';
+}
+$('#rules').addEventListener('input', () => { try { localStorage.setItem(RULES_KEY, $('#rules').value); } catch (e) {} rulesStatus(); });
+$('#saveRules').addEventListener('click', () => {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([$('#rules').value], { type: 'text/plain' }));
+  a.download = 'claim-check-rules.txt';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+});
+$('#loadRulesBtn').addEventListener('click', () => $('#loadRules').click());
+$('#loadRules').addEventListener('change', e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const rd = new FileReader();
+  rd.onload = () => { $('#rules').value = String(rd.result || ''); try { localStorage.setItem(RULES_KEY, $('#rules').value); } catch (er) {} rulesStatus(); refreshDots(); };
+  rd.readAsText(f);
+  e.target.value = '';
+});
+rulesStatus(); refreshDots();
 $('#clear').addEventListener('click', () => {
-  $$('textarea').forEach(t => { t.value = ''; });
+  $$('textarea:not(#rules)').forEach(t => { t.value = ''; });
   $('#report').hidden = true; last = null; refreshDots(); $('#t-answer').click();
 });
 

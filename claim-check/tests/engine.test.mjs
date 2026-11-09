@@ -97,4 +97,82 @@ test('thresholds ("below 3x") are not treated as stated values', () => {
   const r = run('Net debt / EBITDA is 2.4x. Businesses with leverage below 3x tend to refinance more cheaply.');
   assert.ok(!has(r, 'warn', /given as/));
 });
+
+test('written-out calculations (factool-style)', () => {
+  assert.ok(has(run('Annual cost: £1.2m × 12 = £14.4m.'), 'ok', /Written-out calculation is right/));
+  { const r = run('Combined: £2.1m + £3.4m = £6.5m.'); assert.ok(has(r, 'error', /comes to £5.5m, not £6.5m/)); assert.equal(r.counts.error, 1); }
+  assert.ok(has(run('15% of £10m is £3m.'), 'error', /15% of £10m is £1.5m/));
+  assert.ok(has(run('15% of £10m is £1.5m.'), 'ok', /checks out/));
+});
+
+test('doubled / halved', () => {
+  assert.ok(has(run('Orders doubled from 400 to 1,000.'), 'error', /doubled/));
+  assert.ok(has(run('Orders doubled from 400 to 810.'), 'ok', /doubled/));
+});
+
+test('right number, wrong subject (number exists in source under another metric)', () => {
+  const r = run('Cash at year end was £3.1m.', { source: 'Cash at year end: £1,850,000\nNet debt: £3,100,000' });
+  const f = r.findings.find(x => /Contradicts your source: Cash/.test(x.title));
+  assert.ok(f && /wrong item/.test(f.detail), JSON.stringify(titles(r)));
+});
+
+test('unsupported figure shows the closest source line', () => {
+  const r = run('Operating expenses were £3.4m.', { source: 'Revenue: £12m\nOperating expenses: £2.95m' });
+  assert.ok(r.findings.some(f => /Closest line in your source/.test(f.detail || '') || /Contradicts/.test(f.title)));
+});
+
+test('label numbers are not statistics', () => {
+  const r = run('See Article 37 and Step 4 of the plan.', { source: 'Nothing numeric here.' });
+  assert.equal(r.stats.figures, 0);
+});
+
+test('filler and headings are not claims', () => {
+  const r = run('Sure! Here is the summary.\nQuarterly overview\nRevenue was £4m in Q3.\nI hope this helps.');
+  assert.equal(r.claims.length, 1, JSON.stringify(r.claims.map(c => c.text)));
+});
+
+test('initials and U.S. do not split sentences', () => {
+  const ss = ClaimCheck.splitSentences('Revenue in the U.S. rose 4% in 2025. J. K. Smith chaired.');
+  assert.equal(ss.length, 2, JSON.stringify(ss.map(x => x.text)));
+});
+
+test('sentence agreement across regenerations (SelfCheckGPT-style)', () => {
+  const r = run('Revenue was £4m. The firm also won the Queen\'s Award for Enterprise in 2023 for exports to Brazil.',
+    { others: ['Revenue was £4m and margins held steady.', 'Revenue came in at £4m for the year.'] });
+  assert.ok(has(r, null, /Point not made in the other answers|Only this answer mentions/));
+  assert.ok(r.claims.some(c => c.status === 'verified'));
+});
+
+test('claim ledger buckets', () => {
+  const r = run(exampleFromHtml('EX_ANSWER'), { source: exampleFromHtml('EX_SOURCE'), others: [exampleFromHtml('EX_B'), exampleFromHtml('EX_C')] });
+  assert.ok(r.ledger.wrong >= 6 && r.ledger.verified >= 2);
+});
+
+test('evergreen: dated rules switch on by themselves', () => {
+  const t = 'Prepare the accounts under IAS 1.';
+  assert.ok(has(ClaimCheck.analyze({ answer: t, now: '2026-11-09' }), 'info', /IAS 1 is being replaced by IFRS 18/));
+  assert.ok(has(ClaimCheck.analyze({ answer: t, now: '2027-03-01' }), 'warn', /IAS 1 has been replaced/));
+  assert.ok(!has(ClaimCheck.analyze({ answer: 'Leases fall under IAS 16 and IFRS 16.', now: '2027-03-01' }), 'warn', /IAS 1 has/), 'IAS 16 must not match IAS 1');
+  assert.ok(has(run('The loan is priced at LIBOR plus 2%.'), 'warn', /LIBOR has been replaced/));
+});
+
+test('evergreen: your rules (fact, flag, withdrawn, valid)', () => {
+  const rules = `# team rules
+fact: Corporation tax main rate is 25%
+flag: guaranteed returns | error | Never promise guaranteed returns
+withdrawn: RPI -> CPIH | from 2030-01-01
+valid: IFRS 20`;
+  const r = run('The corporation tax main rate is 19%. This fund offers guaranteed returns. Apply IFRS 20.', { rules });
+  assert.ok(has(r, 'error', /Contradicts your known fact/));
+  assert.ok(has(r, 'error', /Never promise guaranteed returns/));
+  assert.ok(has(r, 'verify', /IFRS 20/) && !has(r, 'error', /IFRS 20 does not exist/));
+  assert.ok(has(run('The corporation tax main rate is 25%.', { rules }), 'ok', /Matches your known fact/));
+  assert.ok(has(ClaimCheck.analyze({ answer: 'Uplift by RPI.', rules, now: '2031-01-01' }), 'warn', /RPI has been replaced by CPIH/));
+});
+
+test('rules with mistakes are reported, not crashed on', () => {
+  const r = ClaimCheck.parseRules('flag: /([/ | warn\nnonsense line\nfoo: bar');
+  assert.equal(r.errors.length, 3);
+});
+
 console.log(`\n${passed} tests passed`);
