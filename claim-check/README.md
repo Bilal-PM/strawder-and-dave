@@ -14,6 +14,7 @@ Paste an AI-generated answer, such as a CFO summary, board paper or analysis. Th
 | **Internal consistency** | The same metric with two values, "rose" when figures fell, wrong year spans, impossible dates, wrong weekdays, future periods in the past tense. |
 | **Source tracing** (tab 2) | Every figure must be in your source or calculable from two source figures. It catches a figure attached to the **wrong item** (e.g. the net debt number quoted as cash), names not in the source, and sentences that flip the source's direction. For each unsupported figure it shows the closest source line. |
 | **Self-consistency** (tab 3) | Paste 2–3 regenerations of the same question. Figures, names and whole points that don't come back are flagged. |
+| **Legal** | Quotations must appear word-for-word in the source (the changed words are shown). Cited clauses, sections and schedules must exist **and** match what is said; a wrong pinpoint is reported with the clause that actually matches. Obligation strength (may / must / must not) is compared with the source. Words vs figures ("thirty (45) days"). Deadline arithmetic in calendar and business days. Case citations: court codes, plus impossible years (UKSC before 2009, UKHL after 2009, KB before 2022, QB after 2022, F.4th before 2021, etc.). |
 | **Your rules** (tab 4) | Known facts, withdrawn terms (with effective dates), new standards, banned phrases. |
 | **Built-in knowledge** | Real, invented and withdrawn IFRS / IAS / FRS / ISA (e.g. IAS 17 → IFRS 16), Companies Act 2006 section range, LIBOR → SONIA/SOFR, and IAS 1 → IFRS 18 from 1 Jan 2027. It also flags references, studies, "according to X", "studies show…", unsourced benchmarks and absolute language. |
 
@@ -50,10 +51,18 @@ It can't confirm facts about the outside world (e.g. whether a survey really sai
 | Full Fact stat-claim spotter | MIT | Statistical-claim cues. Ignore label numbers like "Article 37". |
 | LettuceDetect / TinyLettuce, MiniCheck, Vectara HHEM | MIT / Apache-2.0 | Possible future **optional** local AI model add-on (17–68M parameters). Left out to keep the file small and standalone. |
 
+## Roadmap: an optional built-in AI model (offline)
+
+The plan is a very small fine-tuned model that judges whether each claim is entailed, contradicted or unsupported by your source, running inside the page.
+
+- **Proven:** onnxruntime-web 1.31.1 (MIT, from npm) runs inside a single HTML file opened from disk, with the network fully blocked by the page's security policy. A toy model ran correctly with no network requests and about 1s start-up. The engine adds about 15 MB (about 20 MB once embedded).
+- **Blocked:** suitable fine-tuned weights (TinyLettuce 17–68M parameters, MIT; small NLI cross-encoders) are hosted on Hugging Face, which this build environment's network policy blocks. Once that host is allowed, the plan is: fetch the model → quantise to int8 → embed it with a JS tokenizer → ship `claim-check-ai.html`. That file still runs with no network; end users never need Hugging Face.
+- The model is a **second opinion**: it adds findings, but never overrides the deterministic checks above.
+
 ## Tests
 
 ```
 node claim-check/tests/engine.test.mjs
 ```
 
-The tests load the engine directly out of `index.html`, so they always test the shipped code. 25 tests cover every check above, plus clean-text cases that must produce no flags.
+The tests load the engine directly out of `index.html`, so they always test the shipped code. 32 tests cover every check above, plus clean-text cases that must produce no flags.

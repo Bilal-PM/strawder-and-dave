@@ -175,4 +175,54 @@ test('rules with mistakes are reported, not crashed on', () => {
   assert.equal(r.errors.length, 3);
 });
 
+test('legal: quotes must be verbatim', () => {
+  const source = '9.2 The Customer may terminate immediately if the Supplier commits a material breach which is not remedied within 14 days.';
+  assert.ok(has(run('It says "terminate immediately if the Supplier commits a material breach".', { source }), 'ok', /word-for-word/));
+  assert.ok(has(run('It says "terminate immediately if the Supplier commits any breach".', { source }), 'error', /altered/));
+  assert.ok(has(run('It says "the Supplier shall indemnify the Customer for all losses".', { source }), 'error', /not found/));
+  assert.ok(has(run('It says "the Customer may terminate … within 14 days".', { source }), 'ok', /word-for-word/), 'ellipsis allowed');
+});
+
+test('legal: clause references exist and match', () => {
+  const source = '4. Payment\n4.1 The Customer shall pay invoices within 30 days.\n9. Termination\n9.1 Either party may terminate on 90 days written notice.';
+  assert.ok(has(run('Payment is due within 30 days (clause 4.1).', { source }), 'ok', /exists and matches/));
+  assert.ok(has(run('Either party may terminate on 90 days written notice under clause 4.1.', { source }), 'warn', /matching text is in clause 9.1/));
+  assert.ok(has(run('Liability is capped under clause 15.3.', { source }), 'error', /15.3 isn't in your document/));
+});
+
+test('legal: obligation strength (may vs must)', () => {
+  const source = 'The Supplier may charge interest on late payments at 4% above base rate.';
+  assert.ok(has(run('The Supplier must charge interest on late payments at 4% above base rate.', { source }), 'error', /Obligation changed/));
+  assert.ok(!has(run('The Supplier may charge interest on late payments at 4% above base rate.', { source }), 'error', /Obligation changed/));
+  assert.ok(!has(run('Notice of not less than 90 days is required.', { source: 'Notice of not less than 90 days is required.' }), 'warn', /negation/));
+});
+
+test('legal: words vs figures', () => {
+  assert.ok(has(run('Pay within thirty (45) days.'), 'error', /Words and figures disagree/));
+  assert.ok(has(run('A fee of £5,000 (five thousand pounds) applies.'), 'ok', /agree/));
+  assert.ok(has(run('A fee of £5,500 (five thousand pounds) applies.'), 'error', /disagree/));
+});
+
+test('legal: deadline arithmetic', () => {
+  assert.ok(has(run('Termination takes effect 90 days from 1 March 2025, i.e. 15 June 2025.'), 'error', /Deadline is wrong/));
+  assert.ok(has(run('Termination takes effect 90 days from 1 March 2025, i.e. 30 May 2025.'), 'ok', /Deadline/));
+  assert.ok(has(run('Payment is due 10 business days after 3 March 2025, that is by 17 March 2025.'), 'ok', /Deadline/));
+  assert.ok(has(run('Notice expires one month after 31 January 2025, on 28 February 2025.'), 'ok', /Deadline/));
+});
+
+test('legal: case citation validity', () => {
+  assert.ok(has(run('See [2008] UKSC 12.'), 'error', /UKSC citations don't exist for 2008/));
+  assert.ok(has(run('See [2012] UKHL 4.'), 'error', /UKHL/));
+  assert.ok(has(run('See [2021] EWHC 55 (KB).'), 'error', /King's Bench/));
+  assert.ok(has(run('See [2023] EWHC 55 (QB).'), 'warn', /Queen's Bench/));
+  assert.ok(has(run('See [2019] EWCA Civ 1234.'), 'verify', /citation exists/));
+  assert.ok(has(run('See Doe v Roe, 990 F.4th 112 (2d Cir. 2019).'), 'error', /F.4th/));
+  assert.ok(has(run('See [2019] ZZQC 5.'), 'warn', /not a recognised/));
+});
+
+test('legal sentences count as factual claims', () => {
+  const r = run('The Supplier may terminate the Agreement on notice.');
+  assert.equal(r.claims.length, 1);
+});
+
 console.log(`\n${passed} tests passed`);

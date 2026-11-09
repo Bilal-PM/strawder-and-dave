@@ -198,6 +198,7 @@ details.how summary{cursor:pointer;padding:14px;font-weight:600}
     <div class="actions">
       <button class="btn primary" id="run">Check this answer</button>
       <button class="btn" id="example">Load CFO example</button>
+      <button class="btn" id="exampleLegal">Load legal example</button>
       <span class="spacer"></span>
       <button class="btn ghost" id="clear">Clear</button>
     </div>
@@ -272,6 +273,8 @@ details.how summary{cursor:pointer;padding:14px;font-weight:600}
       <p>It recalculates percentage changes, margins (gross, EBITDA, operating, net), leverage, current ratio, interest cover, CAGR, "X of Y" shares, totals, and splits that should add up to 100%. It allows for rounding, so £12.4m vs £12,437,000 isn't flagged.</p>
       <h4>2. Is it consistent with itself?</h4>
       <p>It catches the same metric quoted with two different values, a "rise" where the numbers fall, a "5-year period" from 2019 to 2022, a weekday that doesn't match the date, impossible dates such as 30 February, and future events described in the past tense.</p>
+      <h4>Legal checks: what legal AI tools worry about most</h4>
+      <p>Studies of legal AI tools find the most damaging errors aren't made-up facts. They are real-looking material that doesn't say what's claimed: altered quotations, citations to provisions that don't exist, the right clause number on the wrong point, and "may" quietly becoming "must". With your document in tab 2, this tool checks that every quotation appears word-for-word (it shows exactly which words changed), that every cited clause, section, schedule or paragraph exists, and that what the answer says matches the text of the clause it cites. It also compares obligation strength (may / must / must not) against the source. Without a source it still checks words against figures ("thirty (45) days"), recalculates deadlines (calendar and business days) and tests case citations for impossibilities: a UK Supreme Court citation before 2009, a House of Lords citation after 2009, King's Bench before 2022, or a US reporter series cited outside its years.</p>
       <h4>3. Does it match your source? (tab 2)</h4>
       <p>Every figure is traced back to the source. If it isn't there, the tool tries to calculate it from any two source figures (sum, difference, ratio, % change). A figure that is neither found nor derivable is flagged as unsupported. Names that aren't in the source and statements that flip the source's direction (rise vs fall, profit vs loss) are flagged too.</p>
       <h4>4. Does it say the same thing twice? (tab 3)</h4>
@@ -463,7 +466,7 @@ function overlap(aTok, bSet) {
 const UP_WORDS = /\b(increase[sd]?|increasing|rise|rises|rising|rose|risen|grew|grow(?:s|n|th|ing)?|up|jump(?:ed|s)?|climb(?:ed|s)?|surge[sd]?|improve[sd]?|improvement|higher|gain(?:ed|s)?|expand(?:ed|s)?|uplift|boost(?:ed)?|profit|surplus|above|ahead|exceed(?:ed|s)?)\b/gi;
 const DOWN_WORDS = /\b(decrease[sd]?|decreasing|decline[sd]?|declining|fall|falls|fell|fallen|falling|drop(?:ped|s)?|down|reduc(?:e|ed|es|tion)|lower|shr[aiu]nk|contract(?:ed|ion)?|slip(?:ped)?|deteriorat(?:e|ed|ion)|loss|losses|deficit|below|behind|short(?:fall)?)\b/gi;
 const NEG_WORDS = /\b(not|no|never|none|neither|nor|without|cannot|can't|won't|isn't|wasn't|aren't|weren't|didn't|doesn't|don't|hasn't|haven't)\b/gi;
-function countRe(re, s) { re.lastIndex = 0; return (s.match(re) || []).length; }
+function countRe(re, s) { re.lastIndex = 0; if (re === NEG_WORDS) s = s.replace(/\b(?:not|no) (?:less|more|later|earlier|fewer|greater) than\b|\bnot exceed(?:ing)?\b|\bnothing in\b/gi, ' '); return (s.match(re) || []).length; }
 
 // ===================================================================
 // Finance metric vocabulary (the "CFO knowledge pack")
@@ -569,12 +572,16 @@ const NAMED_SOURCES = /\b(McKinsey|Deloitte|PwC|PricewaterhouseCoopers|KPMG|EY|E
 // statistical-claim spotting (ideas only; no code reused).
 // ===================================================================
 const CW_BOOST = /\b(trillion|billion|million|thousand|hundred|percent|per cent|average|increased?|decreased?|rose|fell|grew|growth|declined?|since|ago|last|previous|prior|cut|spent|debt|rate|income|revenue|sales|profit|margin|costs?|cash|half|third|quarter|doubled|tripled|halved|record|highest|lowest|largest|biggest|first|only|times|reported|announced|according)\b/gi;
+const CW_LEGAL = /\b(shall|entitled|liable|liability|terminate[sd]?|termination|clause|section|schedule|agreement|contract|part(?:y|ies)|oblig(?:ed|ation)|required|prohibited|court|held|ruled|judgment|judgement|notice|breach|indemnif(?:y|ies|ied)|warrant(?:y|ies)|statute|act|regulation|tribunal|appeal|claimant|defendant|tenant|landlord|supplier|customer|licen[cs]e[ed]?)\b/gi;
 const CW_DAMP = /\b(think|believe|feel|hope|want|need|must|should|could|might|may|recommend|suggest|consider|important|clear|strong|fair|wrong|absolutely|kind of|I'm|I am|let me|we'll|would|perhaps|maybe|ideally)\b/gi;
 function checkWorthiness(text) {
   let sc = 0;
   if (/\d/.test(text)) sc += 2;
   if (/%|per ?cent|£|\$|€|\b(?:million|billion|bn)\b/i.test(text)) sc += 1;
   sc += Math.min(2, countRe(CW_BOOST, text) * 0.5);
+  const legal = countRe(CW_LEGAL, text);
+  sc += Math.min(2, legal * 0.75);
+  if (legal) sc += Math.min(2.5, countRe(/\b(?:must|should|could|might|may|would|need)\b/gi, text) * 0.75); // modal verbs are operative in legal text, not opinion
   if (/\b[A-Z][a-z]+\s+[A-Z][a-z]+|\b[A-Z]{2,}\b/.test(text.slice(1))) sc += 0.5;
   sc -= Math.min(2.5, countRe(CW_DAMP, text) * 0.75);
   if (text.split(/\s+/).length > 15) sc += 0.5;
@@ -589,6 +596,50 @@ function isFiller(text, i, n) {
   if (!/[.!?]["”')]*$/.test(text) && text.split(/\s+/).length <= 7 && !/\b(?:is|was|were|are|has|had|rose|fell|grew)\b/i.test(text)) return true; // title lines
   return false;
 }
+// number words ("thirty-five", "one hundred and twenty")
+const NW_SMALL = { zero: 0, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19, twenty: 20, thirty: 30, forty: 40, fifty: 50, sixty: 60, seventy: 70, eighty: 80, ninety: 90 };
+const NW_SCALE = { thousand: 1e3, million: 1e6, billion: 1e9 };
+const NW_WORD = '(?:' + Object.keys(NW_SMALL).concat(['hundred', 'thousand', 'million', 'billion']).join('|') + ')';
+const NW_PHRASE = `${NW_WORD}(?:(?:[\\s-]+|\\s+and\\s+)${NW_WORD})*`;
+function wordsToNum(str) {
+  const ws = str.toLowerCase().replace(/-/g, ' ').replace(/\band\b/g, ' ').split(/\s+/).filter(Boolean);
+  let total = 0, cur = 0, any = false;
+  for (const w of ws) {
+    if (w in NW_SMALL) { cur += NW_SMALL[w]; any = true; }
+    else if (w === 'hundred') { cur = (cur || 1) * 100; any = true; }
+    else if (w in NW_SCALE) { total += (cur || 1) * NW_SCALE[w]; cur = 0; any = true; }
+    else return null;
+  }
+  return any ? total + cur : null;
+}
+function addDays(d, n) { const x = new Date(d.getTime()); x.setUTCDate(x.getUTCDate() + n); return x; }
+function addBusinessDays(d, n) { let x = new Date(d.getTime()), k = 0; while (k < n) { x = addDays(x, 1); const w = x.getUTCDay(); if (w !== 0 && w !== 6) k++; } return x; }
+function addMonths(d, n) { const x = new Date(d.getTime()); const day = x.getUTCDate(); x.setUTCDate(1); x.setUTCMonth(x.getUTCMonth() + n); x.setUTCDate(Math.min(day, daysIn(x.getUTCMonth(), x.getUTCFullYear()))); return x; }
+function fmtDate(d) { return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }); }
+function findDates(text, from, to) {
+  const re = new RegExp(`\\b(\\d{1,2})(?:st|nd|rd|th)?(?:\\s+of)?\\s+${MON_P}\\.?,?\\s+((?:19|20)\\d{2})\\b|\\b${MON_P}\\.?\\s+(\\d{1,2})(?:st|nd|rd|th)?,?\\s+((?:19|20)\\d{2})\\b|\\b((?:19|20)\\d{2})-(\\d{2})-(\\d{2})\\b`, 'g');
+  const seg = text.slice(from, to), out = [];
+  let m;
+  while ((m = re.exec(seg))) {
+    let d, mo, y;
+    if (m[1]) { d = +m[1]; mo = MON_IDX[m[2].slice(0, 3).toLowerCase()]; y = +m[3]; }
+    else if (m[4]) { d = +m[5]; mo = MON_IDX[m[4].slice(0, 3).toLowerCase()]; y = +m[6]; }
+    else { y = +m[7]; mo = +m[8] - 1; d = +m[9]; }
+    if (mo < 0 || mo > 11 || d < 1 || d > daysIn(mo, y)) continue;
+    out.push({ date: new Date(Date.UTC(y, mo, d)), start: from + m.index, end: from + m.index + m[0].length });
+  }
+  return out;
+}
+// modality of an obligation sentence: prohibition / obligation / permission
+function modality(t) {
+  if (/\b(?:must not|shall not|may not|cannot|can't|is not (?:permitted|entitled|allowed)|are not (?:permitted|entitled|allowed)|prohibited|forbidden|not permitted)\b/i.test(t)) return 'prohibited';
+  if (/\b(?:must|shall|is required to|are required to|obliged to|obligated to|mandatory|has to|have to|is obliged|are obliged)\b/i.test(t)) return 'required';
+  if (/\b(?:may|can|is entitled to|are entitled to|is permitted to|are permitted to|at (?:its|their|his|her) (?:sole )?discretion|has the right to|have the right to|has the option)\b/i.test(t)) return 'optional';
+  return null;
+}
+const MOD_WORD = { prohibited: 'must not / may not', required: 'must / shall', optional: 'may / can' };
+function normQ(t) { return t.toLowerCase().replace(/[‘’`´]/g, "'").replace(/[“”«»„]/g, '"').replace(/[–—]/g, '-').replace(/\s+/g, ' ').trim(); }
+
 // safe evaluator for "a + b × c" (no eval)
 function evalExpr(vals, ops) {
   const v = vals.slice(), o = ops.slice();
@@ -692,7 +743,7 @@ function analyze(input) {
     }
   }
   // label numbers such as "Article 37", "Step 2", "Table 4" are not statistics (Full Fact hackathon idea)
-  { const LABEL_RE = /\b(?:Article|Art\.|Step|Figure|Fig\.|Table|Section|Chapter|Page|p\.|Phase|Stage|Option|Tier|Level|Version|Appendix|Annex|Item|Note|Slide|Clause|Schedule|Paragraph|Para\.?|Rule|Principle|Pillar|Workstream|Gate|GRIP)\s?\d+[A-Za-z]?\b/g;
+  { const LABEL_RE = /\b(?:Article|Art\.|Step|Figure|Fig\.|Table|Section|Chapter|Page|p\.|Phase|Stage|Option|Tier|Level|Version|Appendix|Annex|Item|Note|Slide|Clause|Schedule|Paragraph|Para\.?|Rule|Principle|Pillar|Workstream|Gate|GRIP|Regulation|Annex)\s?\d+(?:\.\d+)*[A-Za-z]?\b/gi;
     let lm; while ((lm = LABEL_RE.exec(answer))) masks.push([lm.index, lm.index + lm[0].length]); }
 
   allNums.forEach(n => {
@@ -983,6 +1034,51 @@ function analyze(input) {
           start: out.start, end: out.end, nums: [out] });
   }
 
+  // ---------------- words vs figures: "ten (12) days", "£5,000 (five thousand pounds)" ----------------
+  {
+    const reA = new RegExp(`\\b(${NW_PHRASE})\\s*(?:pounds?|dollars?|euros?|per ?cent|percent)?\\s*\\(\\s*(?:£|\\$|€)?\\s*([\\d,]+(?:\\.\\d+)?)\\s*(?:%|per ?cent)?\\s*\\)`, 'gi');
+    const reB = new RegExp(`(?:£|\\$|€)?\\b([\\d,]+(?:\\.\\d+)?)\\s*(?:%|per ?cent)?\\s*\\(\\s*(${NW_PHRASE})(?:\\s+(?:pounds?|dollars?|euros?|per ?cent|percent))?\\s*\\)`, 'gi');
+    for (const [re, wi, di] of [[reA, 1, 2], [reB, 2, 1]]) {
+      let m;
+      while ((m = re.exec(answer))) {
+        const w = wordsToNum(m[wi]), d = parseFloat(m[di].replace(/,/g, ''));
+        if (w == null || !isFinite(d)) continue;
+        const a = m.index, b = a + m[0].length;
+        masks.push([a, b]);
+        work.forEach(n => { if (n.start < b && n.end > a) { n.flagged = true; n.wordsFig = true; } });
+        calcResult(w === d, w === d
+          ? { cat: 'Legal drafting', title: 'Words and figures agree', detail: `"${m[wi]}" = ${m[di]}.`, start: a, end: b }
+          : { sev: 'error', cat: 'Legal drafting', title: `Words and figures disagree: "${m[wi]}" is ${w}, not ${m[di]}`, detail: 'In contracts the words usually prevail over the figures. Either way, one of them is wrong.', start: a, end: b });
+      }
+    }
+  }
+
+  // ---------------- deadline arithmetic: "30 days from 1 March 2025, i.e. 31 March 2025" ----------------
+  for (const s of sents) {
+    const pr = new RegExp(`\\b(\\d{1,3}|${NW_PHRASE})\\s*(?:\\(\\d{1,3}\\)\\s*)?(calendar\\s+|business\\s+|working\\s+|clear\\s+)?(days?|weeks?|months?)\\s+(?:after|from|of|following|beginning with)\\s+(?:the\\s+)?`, 'gi');
+    let m;
+    while ((m = pr.exec(s.text))) {
+      const n = /^\d/.test(m[1]) ? parseInt(m[1], 10) : wordsToNum(m[1]);
+      if (!n) continue;
+      const after = s.start + m.index + m[0].length;
+      const ds = findDates(answer, after, s.end);
+      if (ds.length < 2 || ds[0].start - after > 45) continue;
+      const startD = ds[0];
+      const endD = ds.find(d => d.start > startD.end && /\b\b(?:by|before|on or before|on|until|i\.?e|that is|ending|expir\w*|deadline(?: is)?|falls? on|no later than|being|which is|so)\.?,?\s*$|[(,:–-]\s*$/i.test(answer.slice(startD.end, d.start)));
+      if (!endD) continue;
+      const kind = (m[2] || '').trim().toLowerCase(), unit = m[3].toLowerCase();
+      const business = kind === 'business' || kind === 'working';
+      let exp = unit.startsWith('day') ? (business ? addBusinessDays(startD.date, n) : addDays(startD.date, n))
+        : unit.startsWith('week') ? addDays(startD.date, 7 * n) : addMonths(startD.date, n);
+      const diff = Math.round((endD.date - exp) / 864e5);
+      const ok = Math.abs(diff) <= 1 || (business && diff > 1 && diff <= 4);
+      const note = business && diff > 1 && diff <= 4 ? ' (A later date can be right if bank holidays fall in the period. Those aren\'t known offline.)' : Math.abs(diff) === 1 ? ' (Off by one day depends on whether the first day is counted. Check the contract\'s counting rule.)' : '';
+      calcResult(ok, ok
+        ? { cat: 'Deadline', title: 'Deadline arithmetic checks out', detail: `${n} ${kind ? kind + ' ' : ''}${unit} from ${fmtDate(startD.date)} = ${fmtDate(exp)}.${note}`, start: startD.start, end: endD.end }
+        : { sev: 'error', cat: 'Deadline', title: `Deadline is wrong: ${n} ${kind ? kind + ' ' : ''}${unit} from ${fmtDate(startD.date)} is ${fmtDate(exp)}`, detail: `The answer says ${fmtDate(endD.date)}, ${Math.abs(diff)} days ${diff > 0 ? 'later' : 'earlier'}.${business ? ' Business days skip weekends. Bank holidays aren\'t included.' : ''}`, start: endD.start, end: endD.end });
+    }
+  }
+
   // ---------------- year spans ----------------
   for (const s of sents) {
     const m = s.text.match(/\b(?:from|between)\s+((?:19|20)\d{2})\s*(?:to|and|-|–)\s*((?:19|20)\d{2})\b/i);
@@ -1132,6 +1228,12 @@ function analyze(input) {
       const hasIssue = F.some(f => f.sev !== 'ok' && f.sev !== 'info' && f.start >= s.start && f.end <= s.end);
       if (best >= 0 && bestScore >= 0.5) {
         const st = sSents[best].text;
+        const mc = modality(s.text), ms = modality(st);
+        if (mc && ms && mc !== ms) {
+          add({ sev: 'error', cat: 'Legal', title: `Obligation changed: your source says "${MOD_WORD[ms]}", the answer says "${MOD_WORD[mc]}"`,
+            detail: `Turning a permission into a duty (or the reverse) changes the legal meaning. Source line: "${st.slice(0, 220)}"`, start: s.start, end: s.end });
+          continue;
+        }
         const cUp = countRe(UP_WORDS, s.text) > 0, cDown = countRe(DOWN_WORDS, s.text) > 0;
         const sUp = countRe(UP_WORDS, st) > 0, sDown = countRe(DOWN_WORDS, st) > 0;
         const negFlip = (countRe(NEG_WORDS, s.text) % 2) !== (countRe(NEG_WORDS, st) % 2);
@@ -1148,9 +1250,97 @@ function analyze(input) {
         add({ sev: 'verify', cat: 'Source check', title: 'Statement not traceable to your source', detail: 'Little of this sentence\'s wording appears in the source. It may be general knowledge, opinion or invention. Decide which.', start: s.start, end: s.end });
       }
     }
+    // ---- quotations must be verbatim (legal AI's #1 hallucination: invented or altered quotes) ----
+    {
+      const srcN = normQ(source);
+      const srcWords = srcN.replace(/[^a-z0-9' ]+/g, ' ').split(/\s+/).filter(Boolean);
+      const qre = /[“"]([^”"\n]{12,600})[”"]/g;
+      let q;
+      while ((q = qre.exec(answer))) {
+        const body = q[1];
+        if (body.split(/\s+/).length < 4) continue; // short defined terms like "the Supplier"
+        const a = q.index, b = q.index + q[0].length;
+        const parts = normQ(body).split(/\s*(?:\.\.\.|…|\[\.\.\.\])\s*/).map(x => x.replace(/^[\s.,;:]+|[\s.,;:]+$/g, '')).filter(x => x.length > 2);
+        let pos = 0, verbatim = true;
+        for (const part of parts) { const i = srcN.indexOf(part, pos); if (i < 0) { verbatim = false; break; } pos = i + part.length; }
+        if (verbatim) { calcResult(true, { cat: 'Quote', title: 'Quotation matches your source word-for-word', detail: parts.length > 1 ? 'Including the omitted parts marked with an ellipsis, in the right order.' : '', start: a, end: b }); continue; }
+        // best fuzzy window
+        const qw = normQ(body).replace(/[^a-z0-9' ]+/g, ' ').split(/\s+/).filter(Boolean);
+        const L = qw.length;
+        let bestI = -1, bestR = 0;
+        const qset = new Set(qw);
+        for (let i = 0; i + 1 < srcWords.length; i++) {
+          const win = srcWords.slice(i, i + L + 3);
+          let hit = 0; const used = new Set();
+          win.forEach(w => { if (qset.has(w) && !used.has(w)) { hit++; used.add(w); } });
+          const r = hit / qset.size;
+          if (r > bestR) { bestR = r; bestI = i; }
+        }
+        stats.calcRun++; stats.calcBad++;
+        if (bestR >= 0.6) {
+          while (bestI < srcWords.length - 1 && !qset.has(srcWords[bestI])) bestI++;
+          let end = Math.min(srcWords.length, bestI + L + 3);
+          while (end > bestI + 1 && !qset.has(srcWords[end - 1])) end--;
+          const win = srcWords.slice(bestI, end);
+          const wset = new Set(win);
+          const added = qw.filter(w => !wset.has(w));
+          const dropped = win.filter(w => !qset.has(w));
+          add({ sev: 'error', cat: 'Quote', title: 'Quotation has been altered: it doesn\'t match your source word-for-word',
+            detail: `Closest wording in the source: "…${win.join(' ')}…".${added.length ? ' Words in the quote but not the source: ' + added.slice(0, 8).join(', ') + '.' : ''}${dropped.length ? ' Words in the source but missing from the quote: ' + dropped.slice(0, 8).join(', ') + '.' : ''}`, start: a, end: b });
+        } else {
+          add({ sev: 'error', cat: 'Quote', title: 'Quotation not found in your source', detail: 'Nothing in the source resembles this quotation. Fabricated quotes are a well-documented legal AI failure.', start: a, end: b });
+        }
+      }
+    }
+    // ---- clause / section references must exist and say what is claimed ----
+    {
+      const REF_RE = /\b(clause|section|paragraph|para\.?|article|schedule|appendix|annex|part|regulation|rule)\s+(\d+(?:\.\d+)*[A-Za-z]?)((?:\([a-z0-9]+\))*)/gi;
+      const lines = source.split('\n');
+      const heads = [];
+      let off = 0;
+      for (const line of lines) {
+        const hm = line.match(/^\s*(?:(clause|section|article|paragraph|schedule|appendix|annex|part|regulation|rule)\s+)?(\d+(?:\.\d+)*[A-Za-z]?)[.):]?\s+\S/i);
+        if (hm) heads.push({ id: hm[2].toLowerCase(), word: (hm[1] || '').toLowerCase(), start: off });
+        off += line.length + 1;
+      }
+      const headText = heads.map((h, i) => source.slice(h.start, i + 1 < heads.length ? heads[i + 1].start : source.length));
+      const headTok = headText.map(t => new Set(tokens(t)));
+      const mentioned = new Set();
+      let rm;
+      const srcRe = new RegExp(REF_RE.source, 'gi');
+      while ((rm = srcRe.exec(source))) mentioned.add(rm[1].toLowerCase().replace(/\.$/, '') + ' ' + rm[2].toLowerCase());
+      if (heads.length >= 2 || mentioned.size) {
+        REF_RE.lastIndex = 0;
+        while ((rm = REF_RE.exec(answer))) {
+          const word = rm[1].toLowerCase().replace(/\.$/, ''), id = rm[2].toLowerCase();
+          const a = rm.index, b = a + rm[0].length;
+          const hi = heads.findIndex(h => h.id === id && (!h.word || h.word === word || ['clause', 'section', 'paragraph', 'para'].includes(word)));
+          const known = hi >= 0 || mentioned.has(word + ' ' + id);
+          if (!known) {
+            add({ sev: 'error', cat: 'Legal', title: `${rm[1][0].toUpperCase() + rm[1].slice(1)} ${rm[2]} isn't in your document`, detail: 'The answer cites a provision your source doesn\'t contain. Invented or mis-numbered references are a classic legal AI error.', start: a, end: b });
+            continue;
+          }
+          if (hi < 0) continue;
+          const s = sentAt(a);
+          if (!s) continue;
+          const tk = tokens(s.text.replace(rm[0], ' '));
+          if (tk.length < 3) continue;
+          const own = overlap(tk, headTok[hi]);
+          let bi = -1, bs = 0;
+          headTok.forEach((set, i) => { if (i === hi) return; const sc = overlap(tk, set); if (sc > bs) { bs = sc; bi = i; } });
+          if (bi >= 0 && bs >= 0.5 && own <= 0.25 && bs - own >= 0.3) {
+            add({ sev: 'warn', cat: 'Legal', title: `Cites ${rm[0]}, but the matching text is in ${heads[bi].word || word} ${heads[bi].id}`,
+              detail: `Real provision, wrong pinpoint: what this sentence says matches ${heads[bi].word || word} ${heads[bi].id} ("${headText[bi].trim().slice(0, 140)}…") much better than ${rm[0]}.`, start: a, end: b });
+          } else if (own >= 0.4) {
+            calcResult(true, { cat: 'Legal', title: `${rm[0]} exists and matches what is said`, detail: `"${headText[hi].trim().slice(0, 160)}…"`, start: a, end: b });
+          }
+        }
+      }
+    }
+    const srcWordsAll = source.split(/[^A-Za-z]+/).filter(Boolean);
     // named entities not in source
     for (const s of sents) {
-      const ents = entitiesIn(answer, s).filter(e => !srcLower.includes(e.text.toLowerCase()));
+      const ents = entitiesIn(answer, s).filter(e => !srcLower.includes(e.text.toLowerCase()) && !acronymIn(e.text, srcWordsAll));
       const fresh = ents.filter(e => !F.some(f => (f.cat === 'Reference') && e.start < f.end && e.end > f.start));
       if (!fresh.length) continue;
       add({ sev: 'warn', cat: 'Source check', title: `Name${fresh.length > 1 ? 's' : ''} not in your source: ${fresh.map(e => e.text).join(', ')}`,
@@ -1328,6 +1518,17 @@ function derive(n, pool) {
 }
 
 const ENT_STOP = new Set(('I The A An This That These Those It We Our You Your They Their He She His Her In On At By For With From As Of To And Or But If CFO CEO COO CTO CIO FD MD UK US USA EU UAE GBP USD EUR FY YoY EBITDA EBIT COGS OPEX CAPEX KPI KPIs ROI ROE ROCE IRR NPV VAT AI IT HR LTM YTD B2B B2C SaaS ARR MRR IFRS IAS GAAP SME SMEs PLC LTD CAGR OK PE PBT PAT DSO DPO DIO NB FX Q1 Q2 Q3 Q4 H1 H2 Net Gross Total Revenue Cash Board Overall However Summary Recommendation Recommendations Key Next Steps Risks Risk Note Executive Overview Conclusion January February March April May June July August September October November December Monday Tuesday Wednesday Thursday Friday Saturday Sunday').split(' '));
+function acronymIn(acr, words) {
+  if (!/^[A-Z]{2,6}s?$/.test(acr)) return false;
+  const A = acr.replace(/s$/, '');
+  const sig = words.filter(w => !/^(of|and|the|for|to|in|on|&)$/i.test(w));
+  for (let i = 0; i + A.length <= sig.length; i++) {
+    let ok = true;
+    for (let j = 0; j < A.length; j++) if (sig[i + j][0].toUpperCase() !== A[j]) { ok = false; break; }
+    if (ok) return true;
+  }
+  return false;
+}
 function entitiesIn(text, s) {
   const out = [];
   const re = /\b(?:[A-Z][a-z]+(?:'s)?(?:\s+(?:&\s+|of\s+|and\s+)?[A-Z][a-z]+)+|[A-Z]{2,6}s?)\b/g;
@@ -1441,6 +1642,34 @@ function checkReferences(text, add, masks, source, stats, know) {
     if (+m[1] > 1300) flag(a, b, { sev: 'error', title: `Section ${m[1]} of the Companies Act 2006 does not exist`, detail: 'The Act has 1,300 sections.' });
     else flag(a, b, { sev: 'verify', title: 'Check this legislation reference', detail: 'Confirm the section says what the answer claims. AI tools often attach real section numbers to the wrong rules.' });
   }
+  // UK neutral citations and US reporters: court/series must have existed in that year (Eyecite-style validation)
+  const UK_COURTS = { UKSC: [2009, 9999], UKPC: [2001, 9999], UKHL: [2001, 2009], 'EWCA Civ': [2001, 9999], 'EWCA Crim': [2001, 9999], EWHC: [2001, 9999], UKUT: [2008, 9999], UKFTT: [2008, 9999], UKEAT: [2001, 9999], EAT: [2021, 9999], EWFC: [2014, 9999], EWCOP: [2014, 9999], CSIH: [2005, 9999], CSOH: [2001, 9999], NICA: [2000, 9999], UKAIT: [2005, 2010] };
+  const ukRe = /\[((?:19|20)\d{2})\]\s+(UKSC|UKPC|UKHL|EWCA\s+Civ|EWCA\s+Crim|EWCA|EWHC|UKUT|UKFTT|UKEAT|EAT|EWFC|EWCOP|CSIH|CSOH|NICA|UKAIT|[A-Z]{3,6})\s+(\d+)(?:\s*\((Ch|QB|KB|Comm|TCC|Admin|Fam|Pat|IPEC|Costs|SCCO|Mercantile|IAC|LC|TC|AAC|[A-Za-z]+)\))?/g;
+  while ((m = ukRe.exec(text))) {
+    const yr = +m[1], court = m[2].replace(/\s+/g, ' '), div = m[4], a = m.index, b = a + m[0].length;
+    const span = UK_COURTS[court];
+    if (court === 'EWCA') { flag(a, b, { sev: 'warn', title: 'Incomplete citation: EWCA needs "Civ" or "Crim"', detail: 'Court of Appeal neutral citations are "[year] EWCA Civ n" or "[year] EWCA Crim n".' }); continue; }
+    if (!span) { flag(a, b, { sev: 'warn', title: `"${court}" is not a recognised UK court code`, detail: 'Check the citation. Invented court abbreviations are a sign of a fabricated case.' }); continue; }
+    if (yr < span[0] || yr > span[1]) {
+      flag(a, b, { sev: 'error', title: `Impossible citation: ${court} citations don't exist for ${yr}`, detail: `${court} neutral citations run from ${span[0]}${span[1] < 9999 ? ' to ' + span[1] : ''}.${court === 'UKHL' ? ' The House of Lords was replaced by the UK Supreme Court in October 2009.' : court === 'UKSC' ? ' The UK Supreme Court started in October 2009. Earlier final appeals are UKHL.' : ''} The case is probably invented or mis-cited.` });
+      continue;
+    }
+    if (div === 'KB' && yr < 2022) { flag(a, b, { sev: 'error', title: `Impossible citation: King's Bench (KB) in ${yr}`, detail: 'The Queen\'s Bench Division became the King\'s Bench Division in September 2022. A pre-2022 KB citation cannot exist.' }); continue; }
+    if (div === 'QB' && yr > 2022) { flag(a, b, { sev: 'warn', title: `Suspicious citation: Queen's Bench (QB) in ${yr}`, detail: 'Since September 2022 this is the King\'s Bench Division (KB).' }); continue; }
+    flag(a, b, { sev: 'verify', title: 'Check this case citation exists', detail: 'The format and dates are plausible. Confirm the case exists and says what is claimed (e.g. on the National Archives Find Case Law service or BAILII).' });
+  }
+  const usRe = /\b(\d{1,4})\s+(U\.\s?S\.|S\.\s?Ct\.|F\.\s?4th|F\.\s?3d|F\.\s?2d|F\.\s?Supp\.\s?3d|F\.\s?Supp\.\s?2d|F\.\s?Supp\.)\s+(\d{1,5})(?:,\s*\d+(?:-\d+)?)?(?:\s*\(([^)]{0,40}?)\s*((?:18|19|20)\d{2})\))?/g;
+  const US_SPAN = { 'F.4th': [2021, 9999], 'F.3d': [1993, 2021], 'F.2d': [1924, 1993], 'F.Supp.3d': [2014, 9999], 'F.Supp.2d': [1998, 2014], 'F.Supp.': [1932, 1998] };
+  while ((m = usRe.exec(text))) {
+    const a = m.index, b = a + m[0].length;
+    if (!free(a, b)) continue;
+    const series = m[2].replace(/\s+/g, ''), yr = m[5] ? +m[5] : null;
+    const span = US_SPAN[series];
+    if (span && yr && (yr < span[0] || yr > span[1])) {
+      flag(a, b, { sev: 'error', title: `Impossible citation: ${series} wasn't published in ${yr}`, detail: `${series} covers roughly ${span[0]}–${span[1] < 9999 ? span[1] : 'today'}. The citation is probably invented.` });
+    } else flag(a, b, { sev: 'verify', title: 'Check this case citation exists', detail: 'Confirm the case exists and says what is claimed (e.g. on CourtListener). AI-invented US cases have led to court sanctions.' });
+  }
+
   const pats = [
     [/\bhttps?:\/\/[^\s)\]>"]+|\bwww\.[^\s)\]>"]+/gi, 'Check this link', 'AI tools often produce real-looking links that don\'t exist or don\'t say what is claimed. Open it and confirm.'],
     [/\b10\.\d{4,9}\/[^\s)\]]+/g, 'Check this DOI', 'Confirm the DOI resolves to the paper described.'],
@@ -1465,6 +1694,7 @@ function checkReferences(text, add, masks, source, stats, know) {
   while ((m = caseRe.exec(text))) {
     if (caseStop.test(m[1].split(' ').pop()) || caseStop.test(m[2].split(' ')[0])) continue;
     const a = m.index, b = a + m[0].length;
+    if (claimed.some(c => c[0] >= b && c[0] - b <= 4)) continue; // its citation is already checked
     if (!free(a, b)) continue;
     flag(a, b, { sev: 'verify', title: 'Check this case name', detail: 'Confirm the case exists and decided what is claimed.' });
   }
@@ -1743,6 +1973,34 @@ Headcount: 84
 Revenue by region: UK 58%, Europe 27%, US 15%`;
 const EX_B = `FY24 summary. Revenue grew 15.3% to £12.45m (FY23: £10.8m). Gross margin was 34.1% on gross profit of £4.24m. EBITDA was £1.29m, a 10.4% margin. Year-end cash was £1.85m and net debt £3.1m, so leverage is 2.4x, within the 3.0x covenant. Leases are now accounted for under IFRS 16.`;
 const EX_C = `Revenue increased to £12.45m from £10.8m. EBITDA of £1.29m represents a margin of about 10%. Cash at year end was £1.85m. Leverage of roughly 2.4x leaves headroom against the covenant. Under IFRS 16 the warehouse lease comes onto the balance sheet.`;
+const EX_LEGAL_SOURCE = `MASTER SERVICES AGREEMENT
+1. Definitions
+1.1 "Services" means the facilities management services described in Schedule 1.
+4. Fees and payment
+4.1 The Customer shall pay each undisputed invoice within thirty (30) days of receipt.
+4.2 The Supplier may charge interest on late payments at 4% above the Bank of England base rate.
+9. Termination
+9.1 Either party may terminate this Agreement by giving not less than ninety (90) days' written notice.
+9.2 The Customer may terminate immediately if the Supplier commits a material breach which is not remedied within 14 days.
+12. Liability
+12.1 The Supplier's total liability shall not exceed the fees paid in the 12 months preceding the claim.
+12.2 Nothing in this Agreement limits liability for death or personal injury caused by negligence.`;
+const EX_LEGAL_ANSWER = `Summary of the MSA
+
+The Customer must pay invoices within thirty (45) days of receipt (clause 4.1). The Supplier must charge interest on late payments at 4% above base rate.
+
+Either party may terminate on 90 days' written notice under clause 12.1. Clause 9.2 states the Customer may terminate "immediately if the Supplier commits any breach which is not remedied within 30 days". Liability is capped under clause 15.3.
+
+If notice is served on 1 March 2025, termination takes effect 90 days from 1 March 2025, i.e. 15 June 2025. Payment is due 10 business days after 3 March 2025, that is by 17 March 2025.
+
+This follows Smith v Jones [2015] UKSC 99 and the Court of Appeal in [2019] EWCA Civ 1234, as well as Acme v Beta [2021] EWHC 55 (KB) and Doe v Roe, 990 F.4th 112 (2d Cir. 2019).`;
+$('#exampleLegal').addEventListener('click', () => {
+  $('#answer').value = EX_LEGAL_ANSWER;
+  $('#source').value = EX_LEGAL_SOURCE;
+  $$('.other').forEach(t => { t.value = ''; });
+  refreshDots();
+  run();
+});
 $('#example').addEventListener('click', () => {
   $('#answer').value = EX_ANSWER;
   $('#source').value = EX_SOURCE;
