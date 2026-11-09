@@ -1,0 +1,1372 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Hard offline guarantee: the browser is told this page may not load or send anything over the network. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; connect-src 'none'; form-action 'none'; base-uri 'none'">
+<title>Claim Check</title>
+<style>
+:root{
+  --bg:#f6f5f2;--surface:#ffffff;--surface-2:#f0eee9;--text:#1d1d1b;--muted:#5f5d57;--border:#dedbd3;
+  --accent:#2f5d8a;--accent-ink:#ffffff;
+  --err:#b42318;--err-bg:#fdecea;--warn:#9a5400;--warn-bg:#fff3dc;--ver:#5b4bb5;--ver-bg:#efecfb;
+  --ok:#1f7a4d;--ok-bg:#e5f4ec;--info:#4b5563;--info-bg:#eef0f3;
+  --shadow:0 1px 2px rgba(0,0,0,.05),0 4px 16px rgba(0,0,0,.04);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#141413;--surface:#1c1c1a;--surface-2:#252522;--text:#ecebe6;--muted:#a3a19a;--border:#34332f;
+    --accent:#86b5e3;--accent-ink:#0f1a26;
+    --err:#ff8f85;--err-bg:rgba(255,100,90,.15);--warn:#f2b85b;--warn-bg:rgba(242,184,91,.14);--ver:#b3a8ff;--ver-bg:rgba(160,145,255,.15);
+    --ok:#6fd3a0;--ok-bg:rgba(90,200,140,.14);--info:#b8bec8;--info-bg:rgba(180,190,200,.12);
+    --shadow:none;color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#141413;--surface:#1c1c1a;--surface-2:#252522;--text:#ecebe6;--muted:#a3a19a;--border:#34332f;
+  --accent:#86b5e3;--accent-ink:#0f1a26;
+  --err:#ff8f85;--err-bg:rgba(255,100,90,.15);--warn:#f2b85b;--warn-bg:rgba(242,184,91,.14);--ver:#b3a8ff;--ver-bg:rgba(160,145,255,.15);
+  --ok:#6fd3a0;--ok-bg:rgba(90,200,140,.14);--info:#b8bec8;--info-bg:rgba(180,190,200,.12);
+  --shadow:none;color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1240px;margin:0 auto;padding:20px 16px 60px}
+header.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.brand{display:flex;align-items:center;gap:10px}
+.brand h1{font-size:20px;margin:0;letter-spacing:-.01em}
+.brand p{margin:0;color:var(--muted);font-size:13px}
+.logo{width:34px;height:34px;border-radius:9px;background:var(--accent);display:grid;place-items:center;color:var(--accent-ink);flex:none}
+.pill-offline{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ok);background:var(--ok-bg);padding:5px 10px;border-radius:99px;font-weight:600}
+.pill-offline i{width:7px;height:7px;border-radius:50%;background:var(--ok);display:block}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow)}
+.tabs{display:flex;gap:2px;padding:6px 6px 0;border-bottom:1px solid var(--border);overflow-x:auto}
+.tab{appearance:none;border:0;background:none;color:var(--muted);font:inherit;font-size:14px;font-weight:600;padding:10px 14px;border-radius:9px 9px 0 0;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:7px;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab[aria-selected="true"]{color:var(--text);border-bottom-color:var(--accent)}
+.tab .dot{width:7px;height:7px;border-radius:50%;background:var(--border)}
+.tab.filled .dot{background:var(--ok)}
+.tab small{font-weight:500;color:var(--muted)}
+.panel{padding:14px}
+.panel[hidden]{display:none}
+.hint{color:var(--muted);font-size:13px;margin:0 0 10px}
+textarea{width:100%;min-height:230px;resize:vertical;border:1px solid var(--border);border-radius:10px;background:var(--surface-2);color:var(--text);font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;padding:12px}
+textarea:focus{outline:2px solid var(--accent);outline-offset:-1px}
+.others{display:grid;gap:10px}
+.others textarea{min-height:120px}
+.others label{font-size:12px;font-weight:600;color:var(--muted);display:block;margin:0 0 4px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;padding:0 14px 14px;align-items:center}
+button.btn{appearance:none;font:inherit;font-weight:600;font-size:14px;border-radius:10px;padding:10px 16px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text)}
+button.btn:hover{background:var(--surface-2)}
+button.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+button.btn.primary:hover{filter:brightness(1.07)}
+button.btn.ghost{border-color:transparent;background:none;color:var(--muted)}
+.spacer{flex:1}
+#report{margin-top:18px}
+#report[hidden]{display:none}
+.summary{display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:center;padding:18px}
+.ring{width:108px;height:108px;position:relative}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .num{position:absolute;inset:0;display:grid;place-items:center;text-align:center;line-height:1.05}
+.ring .num b{font-size:30px;display:block}
+.ring .num span{font-size:11px;color:var(--muted)}
+.verdict h2{margin:0 0 4px;font-size:20px;letter-spacing:-.01em}
+.verdict p{margin:0;color:var(--muted);font-size:14px}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px}
+.tile{border-radius:10px;padding:10px 12px;background:var(--surface-2)}
+.tile b{font-size:22px;display:block;line-height:1.1}
+.tile span{font-size:12px;color:var(--muted)}
+.tile.err b{color:var(--err)} .tile.warn b{color:var(--warn)} .tile.ver b{color:var(--ver)} .tile.ok b{color:var(--ok)}
+.coverage{font-size:13px;color:var(--muted);margin-top:10px}
+.grid2{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:16px;margin-top:16px;align-items:start}
+.sec-h{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 14px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.sec-h h3{margin:0;font-size:15px}
+.legend{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend i{width:12px;height:12px;border-radius:3px;display:block}
+.annot{padding:14px;white-space:pre-wrap;word-wrap:break-word;font-size:15px;line-height:1.7;max-height:70vh;overflow:auto}
+mark.hl{background:none;color:inherit;border-radius:3px;cursor:pointer;padding:1px 0;text-decoration-thickness:2px;text-underline-offset:3px}
+mark.hl-error{background:var(--err-bg);box-shadow:inset 0 -2px 0 var(--err)}
+mark.hl-warn{background:var(--warn-bg);box-shadow:inset 0 -2px 0 var(--warn)}
+mark.hl-verify{background:var(--ver-bg);box-shadow:inset 0 -2px 0 var(--ver)}
+mark.hl-info{box-shadow:inset 0 -1px 0 var(--info)}
+mark.hl-ok{box-shadow:inset 0 -2px 0 var(--ok)}
+mark.hl.pulse{outline:2px solid var(--accent);outline-offset:1px}
+.filters{display:flex;gap:6px;flex-wrap:wrap}
+.chip{appearance:none;font:inherit;font-size:12px;font-weight:600;border:1px solid var(--border);background:var(--surface);color:var(--muted);border-radius:99px;padding:4px 10px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--text);color:var(--surface);border-color:var(--text)}
+.flist{padding:10px;display:grid;gap:8px;max-height:70vh;overflow:auto}
+.f{border:1px solid var(--border);border-left:4px solid var(--info);border-radius:10px;padding:10px 12px;background:var(--surface);cursor:pointer}
+.f:hover{background:var(--surface-2)}
+.f.sel{outline:2px solid var(--accent);outline-offset:-1px}
+.f.error{border-left-color:var(--err)} .f.warn{border-left-color:var(--warn)} .f.verify{border-left-color:var(--ver)} .f.ok{border-left-color:var(--ok)}
+.f .meta{display:flex;gap:6px;align-items:center;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px}
+.sev{padding:2px 7px;border-radius:99px}
+.sev.error{color:var(--err);background:var(--err-bg)} .sev.warn{color:var(--warn);background:var(--warn-bg)} .sev.verify{color:var(--ver);background:var(--ver-bg)} .sev.ok{color:var(--ok);background:var(--ok-bg)} .sev.info{color:var(--info);background:var(--info-bg)}
+.f .cat{color:var(--muted)}
+.f h4{margin:0 0 2px;font-size:14px}
+.f p{margin:0;font-size:13px;color:var(--muted)}
+.f q{display:block;margin-top:6px;font-size:12.5px;color:var(--text);border-left:2px solid var(--border);padding-left:8px;quotes:none}
+.empty{padding:20px;text-align:center;color:var(--muted);font-size:14px}
+.check{padding:12px 14px;display:grid;gap:6px}
+.check label{display:flex;gap:8px;align-items:flex-start;font-size:14px}
+.check input{margin-top:4px}
+details.how{margin-top:16px}
+details.how summary{cursor:pointer;padding:14px;font-weight:600}
+.how .body{padding:0 18px 16px;font-size:14px;color:var(--text)}
+.how .body h4{margin:16px 0 4px;font-size:14px}
+.how .body p,.how .body li{color:var(--muted)}
+.how pre{white-space:pre-wrap;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:10px;font-size:12.5px}
+.foot{margin-top:18px;font-size:12px;color:var(--muted);text-align:center}
+@media (max-width:860px){
+  .grid2{grid-template-columns:minmax(0,1fr)}
+  .tiles{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .summary{grid-template-columns:1fr}
+  .annot,.flist{max-height:none}
+}
+@media print{
+  body{background:#fff;color:#000}
+  .card{box-shadow:none}
+  #inputs,.actions,.filters,details.how,header .pill-offline,#exportBar{display:none!important}
+  .annot,.flist{max-height:none;overflow:visible}
+  .grid2{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/><path d="m7.8 10.6 2 2 3.6-3.8"/></svg>
+      </div>
+      <div>
+        <h1>Claim Check</h1>
+        <p>Paste an AI answer. See which parts don't hold up.</p>
+      </div>
+    </div>
+    <span class="pill-offline" title="This page is blocked from making any network request. Nothing you paste leaves your computer."><i></i>Offline · nothing leaves this page</span>
+  </header>
+
+  <section class="card" id="inputs">
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" aria-selected="true" data-tab="p-answer" id="t-answer"><span class="dot"></span>1 · AI answer</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="p-source" id="t-source"><span class="dot"></span>2 · Source facts <small>optional</small></button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="p-others" id="t-others"><span class="dot"></span>3 · Other answers <small>optional</small></button>
+    </div>
+    <div class="panel" id="p-answer" role="tabpanel">
+      <p class="hint">Paste the response you want checked: a CFO summary, board paper, analysis or email.</p>
+      <textarea id="answer" spellcheck="false" placeholder="Paste the AI-generated answer here…"></textarea>
+    </div>
+    <div class="panel" id="p-source" role="tabpanel" hidden>
+      <p class="hint">Paste the facts the AI <em>should</em> have used, such as management accounts, a data extract or the original document. Every figure in the answer is then traced back to it. Any figure that isn't in the source and can't be calculated from it gets flagged.</p>
+      <textarea id="source" spellcheck="false" placeholder="e.g. Revenue: £12,450,000 (FY23: £10,800,000)&#10;Cost of sales: £8,210,000&#10;Cash at year end: £1,850,000 …"></textarea>
+    </div>
+    <div class="panel" id="p-others" role="tabpanel" hidden>
+      <p class="hint">Ask the AI the <strong>same question</strong> two or three more times, each in a new chat, and paste the answers here. Facts the model knows tend to stay the same between answers. Facts it made up tend to change.</p>
+      <div class="others">
+        <div><label for="o1">Answer B</label><textarea class="other" id="o1" spellcheck="false"></textarea></div>
+        <div><label for="o2">Answer C</label><textarea class="other" id="o2" spellcheck="false"></textarea></div>
+        <div><label for="o3">Answer D</label><textarea class="other" id="o3" spellcheck="false"></textarea></div>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn primary" id="run">Check this answer</button>
+      <button class="btn" id="example">Load CFO example</button>
+      <span class="spacer"></span>
+      <button class="btn ghost" id="clear">Clear</button>
+    </div>
+  </section>
+
+  <section id="report" hidden aria-live="polite">
+    <div class="card">
+      <div class="summary">
+        <div class="ring" id="ring"></div>
+        <div>
+          <div class="verdict"><h2 id="verdict"></h2><p id="verdictSub"></p></div>
+          <div class="tiles">
+            <div class="tile err"><b id="cErr">0</b><span>Errors</span></div>
+            <div class="tile warn"><b id="cWarn">0</b><span>Warnings</span></div>
+            <div class="tile ver"><b id="cVer">0</b><span>Needs a human check</span></div>
+            <div class="tile ok"><b id="cOk">0</b><span>Checks passed</span></div>
+          </div>
+          <div class="coverage" id="coverage"></div>
+        </div>
+      </div>
+      <div class="actions" id="exportBar">
+        <button class="btn" id="dlMd">Download report (.md)</button>
+        <button class="btn" id="print">Print / save as PDF</button>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="sec-h">
+          <h3>The answer, marked up</h3>
+          <div class="legend">
+            <span><i style="background:var(--err-bg);box-shadow:inset 0 -2px 0 var(--err)"></i>Wrong</span>
+            <span><i style="background:var(--warn-bg);box-shadow:inset 0 -2px 0 var(--warn)"></i>Doubtful</span>
+            <span><i style="background:var(--ver-bg);box-shadow:inset 0 -2px 0 var(--ver)"></i>Verify</span>
+            <span><i style="box-shadow:inset 0 -2px 0 var(--ok)"></i>Checked OK</span>
+          </div>
+        </div>
+        <div class="annot" id="annot"></div>
+      </div>
+      <div class="card">
+        <div class="sec-h">
+          <h3>Findings</h3>
+          <div class="filters" id="filters">
+            <button class="chip" data-f="issues" aria-pressed="true">Issues</button>
+            <button class="chip" data-f="error" aria-pressed="false">Errors</button>
+            <button class="chip" data-f="warn" aria-pressed="false">Warnings</button>
+            <button class="chip" data-f="verify" aria-pressed="false">Verify</button>
+            <button class="chip" data-f="ok" aria-pressed="false">Passed</button>
+            <button class="chip" data-f="all" aria-pressed="false">All</button>
+          </div>
+        </div>
+        <div class="flist" id="flist"></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px" id="checklistCard">
+      <div class="sec-h"><h3>Reviewer checklist: things only a person can confirm</h3></div>
+      <div class="check" id="checklist"></div>
+    </div>
+  </section>
+
+  <details class="card how">
+    <summary>How this works, and what it can't do</summary>
+    <div class="body">
+      <p>Everything runs in this page with plain JavaScript. There is no AI model, no API and no internet connection. The browser is told to block all network access, so you can paste confidential figures. Instead of asking another AI whether the answer is right, the tool checks the parts of an answer that can be checked mechanically. Those are the parts most often wrong in convincing AI writing.</p>
+      <h4>1. Does the maths add up?</h4>
+      <p>It recalculates percentage changes, margins (gross, EBITDA, operating, net), leverage, current ratio, interest cover, CAGR, "X of Y" shares, totals, and splits that should add up to 100%. It allows for rounding, so £12.4m vs £12,437,000 isn't flagged.</p>
+      <h4>2. Is it consistent with itself?</h4>
+      <p>It catches the same metric quoted with two different values, a "rise" where the numbers fall, a "5-year period" from 2019 to 2022, a weekday that doesn't match the date, impossible dates such as 30 February, and future events described in the past tense.</p>
+      <h4>3. Does it match your source? (tab 2)</h4>
+      <p>Every figure is traced back to the source. If it isn't there, the tool tries to calculate it from any two source figures (sum, difference, ratio, % change). A figure that is neither found nor derivable is flagged as unsupported. Names that aren't in the source and statements that flip the source's direction (rise vs fall, profit vs loss) are flagged too.</p>
+      <h4>4. Does it say the same thing twice? (tab 3)</h4>
+      <p>This is the "self-consistency" method used in hallucination research. If you ask the same question several times, invented details vary between answers and real ones stay put. Any figure that appears in only one answer, or that another answer contradicts, is flagged.</p>
+      <h4>5. Built-in expert knowledge</h4>
+      <p>It knows which IFRS / IAS / FRS / ISA standards exist and which have been withdrawn. Citing IAS 17 for leases or IAS 18 for revenue is a classic AI mistake. It also knows the Companies Act 2006 section range. It flags references a person must check by hand: URLs, DOIs, studies, surveys, "according to McKinsey", case law, legislation. It also flags vague authority ("studies show…"), unsourced benchmarks and absolute claims ("always", "guaranteed").</p>
+      <h4>What it can't do</h4>
+      <ul>
+        <li>It can't tell whether a claim about the outside world is <em>true</em>, for example whether a Deloitte survey actually said 68%. It flags those for a person to check instead.</li>
+        <li>No flags doesn't mean the answer is correct. It means nothing checkable was found to be wrong. Judgement calls and advice still need an expert.</li>
+        <li>Without tab 2 or tab 3 the tool can only check internal maths, logic and references. Adding a source turns it into a full fact-check of every figure.</li>
+      </ul>
+      <h4>Free extra step: make the AI show its work</h4>
+      <p>Paste this into the same chat after the answer, then paste its reply into tab 3 or check it the same way:</p>
+      <pre id="vprompt">For every factual claim and figure in your previous answer, list:
+1) the claim, 2) where it came from (the document/data I gave you, a named and dated public source, or "my general knowledge"), 3) any calculation, shown step by step, 4) your confidence (high/medium/low).
+If you cannot point to a source, say so plainly. Do not invent sources, links or citations.</pre>
+      <button class="btn" id="copyPrompt">Copy prompt</button>
+    </div>
+  </details>
+  <p class="foot">Claim Check runs entirely offline. Save this file and open it in any browser, no install needed.</p>
+</div>
+
+<script>
+/*ENGINE-START*/
+(function (root) {
+'use strict';
+
+// ===================================================================
+// Number handling
+// ===================================================================
+const MAG = { trillion: 1e12, tn: 1e12, billion: 1e9, bn: 1e9, b: 1e9, million: 1e6, mn: 1e6, mm: 1e6, m: 1e6, thousand: 1e3, k: 1e3 };
+const NUM_RE = /(?<![\w.])(US\$|A\$|C\$|£|\$|€|¥|₹|(?:USD|GBP|EUR|AUD|CAD|AED|SAR|INR) ?)?(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)(?: ?(trillion|billion|million|thousand)\b|(tn|bn|mn|mm|m|k|b)(?![A-Za-z]))?( ?(?:%|per ?cent\b|percentage points?\b|pp\b|bps\b|basis points\b)|x(?![A-Za-z]))?/g;
+
+function parseNumbers(text) {
+  const out = [];
+  NUM_RE.lastIndex = 0;
+  let m;
+  while ((m = NUM_RE.exec(text))) {
+    const raw = m[0];
+    const cur = m[1], digits = m[2], magW = m[3], magA = m[4], suf = m[5];
+    const magKey = (magW || magA || '').toLowerCase();
+    const mag = magKey ? MAG[magKey] : 1;
+    const base = parseFloat(digits.replace(/,/g, ''));
+    const dec = (digits.split('.')[1] || '').length;
+    const s = (suf || '').trim().toLowerCase();
+    let unit = 'num';
+    if (s === '%' || s.startsWith('per')) unit = 'pct';
+    else if (s.startsWith('percentage') || s === 'pp') unit = 'pp';
+    else if (s === 'bps' || s.startsWith('basis')) unit = 'bps';
+    else if (s === 'x') unit = 'x';
+    let currency = cur ? cur.trim() : '';
+    const after = text.slice(m.index + raw.length, m.index + raw.length + 12);
+    if (!currency && unit === 'num' && /^\s?(pounds|dollars|euros|GBP|USD|EUR)\b/i.test(after)) currency = 'word';
+    const n = {
+      raw: raw.trim(), start: m.index, end: m.index + raw.length,
+      value: base * mag, unit, currency, dec, mag,
+      prec: Math.pow(10, -dec) * mag / 2,
+      commas: digits.includes(',')
+    };
+    if (unit === 'bps') { n.value = base / 100; n.unit = 'pp'; n.prec = n.prec / 100; }
+    if (currency) n.unit = 'cur';
+    n.isYear = n.unit === 'num' && mag === 1 && !n.commas && dec === 0 && /^\d{4}$/.test(digits) && base >= 1900 && base <= 2100;
+    out.push(n);
+  }
+  return out;
+}
+function kindOf(n) {
+  if (n.unit === 'cur' || n.unit === 'num') return 'amt';
+  if (n.unit === 'pct' || n.unit === 'pp') return 'pct';
+  return n.unit;
+}
+function sameNum(a, b) {
+  if (kindOf(a) !== kindOf(b)) return false;
+  return Math.abs(a.value - b.value) <= Math.max(a.prec, b.prec) + 1e-9 * Math.max(1, Math.abs(a.value));
+}
+// does the stated number (with its rounding) overlap the computed interval?
+function fits(n, lo, hi, useAbs) {
+  const v = useAbs ? Math.abs(n.value) : n.value;
+  const slack = 1e-6 * Math.max(1, Math.abs(lo), Math.abs(hi));
+  return v + n.prec >= lo - slack && v - n.prec <= hi + slack;
+}
+// interval arithmetic: evaluate fn at every rounding corner of the inputs
+function range(fn, inputs) {
+  let lo = Infinity, hi = -Infinity;
+  const k = inputs.length;
+  for (let mask = 0; mask < (1 << k); mask++) {
+    const vals = inputs.map((x, i) => x.value + (((mask >> i) & 1) ? x.prec : -x.prec));
+    const r = fn(vals);
+    if (!isFinite(r)) return null;
+    if (r < lo) lo = r;
+    if (r > hi) hi = r;
+  }
+  return [lo, hi];
+}
+function absRange(r) {
+  if (!r) return null;
+  if (r[0] >= 0) return r;
+  if (r[1] <= 0) return [-r[1], -r[0]];
+  return [0, Math.max(-r[0], r[1])];
+}
+function rnd(v, d) { return Number(v.toFixed(d)).toString(); }
+function fmt(v, unit, cur) {
+  if (unit === 'pct') return rnd(v, 1) + '%';
+  if (unit === 'pp') return rnd(v, 1) + ' pts';
+  if (unit === 'x') return rnd(v, 2) + 'x';
+  const sym = cur && cur !== 'word' ? cur : '';
+  const a = Math.abs(v), sign = v < 0 ? '−' : '';
+  let s;
+  if (a >= 1e9) s = rnd(a / 1e9, 2) + 'bn';
+  else if (a >= 1e6) s = rnd(a / 1e6, 2) + 'm';
+  else if (a >= 1e4) s = Math.round(a).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  else s = rnd(a, 2);
+  return sign + sym + s;
+}
+function fmtLike(v, n) { return fmt(v, n.unit === 'pp' ? 'pp' : n.unit, n.currency); }
+
+// ===================================================================
+// Text helpers
+// ===================================================================
+function splitSentences(text) {
+  const out = [];
+  const lineRe = /[^\n]+/g;
+  let m;
+  function push(t, start) {
+    const lead = t.length - t.trimStart().length;
+    const tt = t.trim();
+    if (tt) out.push({ text: tt, start: start + lead, end: start + lead + tt.length });
+  }
+  while ((m = lineRe.exec(text))) {
+    const line = m[0], base = m.index;
+    let s = 0;
+    const sre = /[.!?]+["”')\]]*\s+(?=["“(\[]?[A-Z0-9£$€])/g;
+    let k;
+    while ((k = sre.exec(line))) {
+      const pre = line.slice(s, k.index + 1).trimEnd();
+      if (/\b(e\.g|i\.e|etc|vs|approx|inc|ltd|plc|co|no|dr|mr|mrs|ms|st|fig|al|corp|para|s)\.$/i.test(pre)) continue;
+      const end = k.index + k[0].length;
+      push(line.slice(s, end), base + s);
+      s = end;
+    }
+    push(line.slice(s), base + s);
+  }
+  return out;
+}
+function splitParagraphs(text) {
+  const out = [];
+  const re = /\n\s*\n/g;
+  let last = 0, m;
+  while ((m = re.exec(text))) { out.push({ start: last, end: m.index, text: text.slice(last, m.index) }); last = m.index + m[0].length; }
+  out.push({ start: last, end: text.length, text: text.slice(last) });
+  return out.filter(p => p.text.trim());
+}
+const STOP = new Set(('a an the and or but if of to in on at by for with from as is are was were be been being this that these those it its we our you your they their he she his her i me my not no yes do does did has have had will would can could should may might must than then so such into over under about above below up down out more most less very just also only per vs via which who whom whose what when where why how all any each both few other some own same too etc there here while whilst well however therefore overall given giving').split(' '));
+function stem(w) { return w.replace(/ies$/, 'y').replace(/(ing|ed|es|s|ly)$/, ''); }
+function tokens(s) {
+  return s.toLowerCase().replace(/[^a-z0-9\s-]/g, ' ').split(/[\s-]+/)
+    .filter(w => w && /^[a-z]/.test(w) && w.length > 2 && !STOP.has(w)).map(stem);
+}
+function overlap(aTok, bSet) {
+  if (!aTok.length) return 0;
+  const a = new Set(aTok);
+  let hit = 0;
+  a.forEach(t => { if (bSet.has(t)) hit++; });
+  return hit / a.size;
+}
+const UP_WORDS = /\b(increase[sd]?|increasing|rise|rises|rising|rose|risen|grew|grow(?:s|n|th|ing)?|up|jump(?:ed|s)?|climb(?:ed|s)?|surge[sd]?|improve[sd]?|improvement|higher|gain(?:ed|s)?|expand(?:ed|s)?|uplift|boost(?:ed)?|profit|surplus|above|ahead|exceed(?:ed|s)?)\b/gi;
+const DOWN_WORDS = /\b(decrease[sd]?|decreasing|decline[sd]?|declining|fall|falls|fell|fallen|falling|drop(?:ped|s)?|down|reduc(?:e|ed|es|tion)|lower|shr[aiu]nk|contract(?:ed|ion)?|slip(?:ped)?|deteriorat(?:e|ed|ion)|loss|losses|deficit|below|behind|short(?:fall)?)\b/gi;
+const NEG_WORDS = /\b(not|no|never|none|neither|nor|without|cannot|can't|won't|isn't|wasn't|aren't|weren't|didn't|doesn't|don't|hasn't|haven't)\b/gi;
+function countRe(re, s) { re.lastIndex = 0; return (s.match(re) || []).length; }
+
+// ===================================================================
+// Finance metric vocabulary (the "CFO knowledge pack")
+// ===================================================================
+const METRICS = [
+  ['ebitda_margin', /ebitda margins?/gi, 'pct', 'EBITDA margin'],
+  ['gross_margin', /gross (?:profit )?margins?/gi, 'pct', 'Gross margin'],
+  ['operating_margin', /(?:operating|ebit) margins?/gi, 'pct', 'Operating margin'],
+  ['net_margin', /net (?:profit )?margins?/gi, 'pct', 'Net margin'],
+  ['leverage', /net debt ?(?:\/|to|:) ?ebitda|leverage(?: ratio)?/gi, 'ratio', 'Net debt / EBITDA'],
+  ['interest_cover', /interest cover(?:age)?/gi, 'ratio', 'Interest cover'],
+  ['current_ratio', /current ratio/gi, 'ratio', 'Current ratio'],
+  ['net_debt', /net debt/gi, 'amount', 'Net debt'],
+  ['gross_profit', /gross profit/gi, 'amount', 'Gross profit'],
+  ['cogs', /cost of (?:goods sold|sales|revenue)|\bcogs\b|direct costs/gi, 'amount', 'Cost of sales'],
+  ['opex', /operating (?:expenses|costs)|\bopex\b|overheads/gi, 'amount', 'Operating expenses'],
+  ['ebitda', /\bebitda\b/gi, 'amount', 'EBITDA'],
+  ['operating_profit', /operating (?:profit|income)|\bebit\b/gi, 'amount', 'Operating profit'],
+  ['net_income', /net (?:income|profit|earnings)|profit after tax/gi, 'amount', 'Net profit'],
+  ['revenue', /\b(?:revenues?|turnover|sales|top[- ]line)\b/gi, 'amount', 'Revenue'],
+  ['cash', /\bcash\b(?![ -]?(?:flow|burn|conversion|generation|generative))(?: (?:balance|position|at bank|and cash equivalents))?/gi, 'amount', 'Cash'],
+  ['current_assets', /current assets/gi, 'amount', 'Current assets'],
+  ['current_liabilities', /current liabilities/gi, 'amount', 'Current liabilities'],
+  ['interest', /interest (?:expense|costs?|charges?)|finance costs/gi, 'amount', 'Interest expense'],
+  ['headcount', /headcount|\bemployees\b(?! costs)|\bFTEs?\b|\bstaff\b(?! costs)/gi, 'count', 'Headcount'],
+];
+const METRIC_LABEL = Object.fromEntries(METRICS.map(m => [m[0], m[3]]));
+const MARGIN_TO_PROFIT = { gross_margin: 'gross_profit', ebitda_margin: 'ebitda', operating_margin: 'operating_profit', net_margin: 'net_income' };
+
+function findMentions(text, s) {
+  const seg = text.slice(s.start, s.end);
+  const taken = [];
+  const out = [];
+  for (const [key, re, kind, label] of METRICS) {
+    re.lastIndex = 0;
+    let m;
+    while ((m = re.exec(seg))) {
+      const a = s.start + m.index, b = a + m[0].length;
+      if (taken.some(t => a < t[1] && b > t[0])) continue;
+      taken.push([a, b]);
+      out.push({ key, kind, label, start: a, end: b });
+    }
+  }
+  return out.sort((x, y) => x.start - y.start);
+}
+function compat(kind, n) {
+  if (kind === 'amount') return n.unit === 'cur' || n.unit === 'num';
+  if (kind === 'pct') return n.unit === 'pct';
+  if (kind === 'ratio') return n.unit === 'x' || (n.unit === 'num' && n.value < 100);
+  if (kind === 'count') return n.unit === 'num' && !n.currency;
+  return false;
+}
+const CHANGE_BEFORE = /\b(?:up|down|grew|grown|growth|increased?|increasing|rose|risen|rise|fell|fallen|fall|declined?|declining|decreased?|reduced?|reduction|dropped|drop|jumped|jump|improved|improvement|climbed|surged|slipped|shrank|contracted|expanded|uplift|change|swing)\s*(?:of\s*|by\s*)?(?:around\s|about\s|approximately\s|roughly\s|nearly\s|almost\s|some\s|just\s|over\s)?$|\bby\s*$/i;
+const CHANGE_AFTER = /^\s*(?:growth|increase|rise|decline|decrease|drop|fall|uplift|improvement|reduction|jump|higher|lower|more|less|up|down|yoy|y\/y|year[- ]on[- ]year|year[- ]over[- ]year|on (?:the )?(?:prior|previous|last) year|vs\.? (?:the )?(?:prior|previous|last))\b/i;
+const FROM_BEFORE = /(?:\bfrom|\bvs\.?|\bversus|\bcompared (?:with|to)|\bagainst|\bprior[- ]year:?|\blast year:?|\bprevious year:?|\bPY:?|\bFY ?\d{2,4}:)\s*\(?$/i;
+
+const LIMIT_NEAR_BEFORE = /\b(?:covenant|limit|target|budget(?:ed)?|threshold|maximum|minimum|cap|ceiling|guidance|headroom|hurdle)\b[^.;]*$/i;
+const LIMIT_NEAR_AFTER = /^\s*(?:\w+\s+){0,2}(?:covenant|limit|target|budget|threshold|maximum|minimum|cap|ceiling|guidance|hurdle)\b/i;
+function annotate(text, nums, sents) {
+  const mcache = new Map();
+  for (const n of nums) {
+    const s = sents.find(x => n.start >= x.start && n.start < x.end);
+    n.sent = s || null;
+    if (!s) continue;
+    if (!mcache.has(s)) mcache.set(s, findMentions(text, s));
+    const mentions = mcache.get(s);
+    const prefix = text.slice(Math.max(s.start, n.start - 60), n.start);
+    const following = text.slice(n.end, Math.min(s.end, n.end + 40));
+    n.role = 'level';
+    if (CHANGE_BEFORE.test(prefix) || ((n.unit === 'pct' || n.unit === 'pp') && CHANGE_AFTER.test(following))) n.role = 'change';
+    else if (FROM_BEFORE.test(prefix)) n.role = 'from';
+    if (/\b(?:below|above|under|over|less than|more than|at least|at most|up to|no more than|exceeding|in excess of)\s*$/i.test(prefix) || LIMIT_NEAR_BEFORE.test(prefix.slice(-30)) || LIMIT_NEAR_AFTER.test(following.slice(0, 25))) n.role = 'limit';
+    // metric assignment: "£2m of revenue" / "£2m EBITDA" first, else nearest preceding mention
+    let mention = mentions.find(mm => mm.start >= n.end && mm.start - n.end <= 15 && /^\s*(?:of |in |for )?(?:the )?$/i.test(text.slice(n.end, mm.start)));
+    if (!mention) {
+      const prev = mentions.filter(mm => mm.end <= n.start && n.start - mm.end <= 70);
+      mention = prev[prev.length - 1];
+    }
+    if (!mention) continue;
+    let key = mention.key, kind = mention.kind;
+    if (kind === 'pct' && n.unit === 'cur' && MARGIN_TO_PROFIT[key]) { key = MARGIN_TO_PROFIT[key]; kind = 'amount'; }
+    if (kind === 'amount' && n.unit === 'pct') { n.shareOf = key; continue; }
+    if (n.role === 'change') continue;
+    if (!compat(kind, n)) continue;
+    n.metric = key;
+  }
+}
+
+// ===================================================================
+// Reference knowledge (accounting & legal)
+// ===================================================================
+const IFRS_VALID = new Set([1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]);
+const IFRS_SUPERSEDED = { 4: 'IFRS 17 (from 2023)' };
+const IAS_VALID = new Set([1, 2, 7, 8, 10, 12, 16, 19, 20, 21, 23, 24, 26, 27, 28, 29, 32, 33, 34, 36, 37, 38, 40, 41]);
+const IAS_SUPERSEDED = { 3: 'IAS 27 / IAS 28', 4: 'IAS 16 / IAS 38', 5: 'IAS 1', 6: 'IAS 15 (since withdrawn)', 9: 'IAS 38', 11: 'IFRS 15', 13: 'IAS 1', 14: 'IFRS 8', 15: 'nothing (withdrawn)', 17: 'IFRS 16', 18: 'IFRS 15', 22: 'IFRS 3', 25: 'IAS 39 / IAS 40', 30: 'IFRS 7', 31: 'IFRS 11', 35: 'IFRS 5', 39: 'IFRS 9 (IAS 39 survives only as a hedge-accounting option)' };
+const FRS_VALID = new Set([100, 101, 102, 103, 104, 105]);
+const ISA_VALID = new Set([200, 210, 220, 230, 240, 250, 260, 265, 300, 315, 320, 330, 402, 450, 500, 501, 505, 510, 520, 530, 540, 550, 560, 570, 580, 600, 610, 620, 700, 701, 705, 706, 710, 720, 800, 805, 810]);
+const NAMED_SOURCES = /\b(McKinsey|Deloitte|PwC|PricewaterhouseCoopers|KPMG|EY|Ernst & Young|Gartner|Forrester|IDC|Bain|BCG|Boston Consulting Group|Accenture|Harvard Business Review|HBR|Statista|Bloomberg|Reuters|Financial Times|Wall Street Journal|WSJ|World Bank|IMF|OECD|ONS|Office for National Statistics|Bank of England|Federal Reserve|SEC|FCA|HMRC|Companies House|Moody's|S&P|Fitch|Goldman Sachs|JP ?Morgan|Morgan Stanley|Nielsen|Pew Research|Eurostat|ICAEW|ACCA|CIMA|AICPA|IASB|FASB|FRC|Grant Thornton|BDO|RSM|Mazars|Forvis Mazars|Experian|Dun & Bradstreet|Ipsos|YouGov|Mintel|Euromonitor|CBI|IoD|Institute of Directors|British Chambers of Commerce|FSB|Federation of Small Businesses)\b/g;
+
+// ===================================================================
+// Main analysis
+// ===================================================================
+function analyze(input) {
+  const now = input.now ? new Date(input.now) : new Date();
+  const answer = String(input.answer || '');
+  const source = String(input.source || '').trim();
+  const others = (input.others || []).map(s => String(s || '').trim()).filter(Boolean);
+
+  const F = [];
+  let fid = 0;
+  function add(f) {
+    f.id = ++fid;
+    if (f.start == null) { f.start = -1; f.end = -1; }
+    if (f.start >= 0 && f.quote == null) f.quote = answer.slice(f.start, f.end);
+    if (f.nums && (f.sev === 'error' || f.sev === 'warn')) f.nums.forEach(n => { n.flagged = true; });
+    delete f.nums;
+    F.push(f);
+    return f;
+  }
+  const stats = { figures: 0, calcRun: 0, calcOk: 0, calcBad: 0, grounded: 0, derived: 0, ungrounded: 0, crossMatched: 0, refs: 0 };
+
+  const sents = splitSentences(answer);
+  const sentAt = pos => sents.find(s => pos >= s.start && pos < s.end) || null;
+  const allNums = parseNumbers(answer);
+  const masks = [];
+
+  // ---------------- dates ----------------
+  checkDates(answer, now, add, masks, sents);
+  // ---------------- references ----------------
+  checkReferences(answer, add, masks, source, stats);
+
+  allNums.forEach(n => {
+    n.masked = masks.some(r => n.start < r[1] && n.end > r[0]);
+    const lineStart = answer.lastIndexOf('\n', n.start - 1) + 1;
+    const pre = answer.slice(lineStart, n.start);
+    if (n.unit === 'num' && /^\s*(?:[-*•]\s*)?$/.test(pre) && /^[.)](\s|$)/.test(answer.slice(n.end, n.end + 2))) n.listMarker = true;
+  });
+  const work = allNums.filter(n => !n.masked && !n.isYear && !n.listMarker);
+  annotate(answer, work, sents);
+  const trivial = n => n.unit === 'num' && !n.currency && n.mag === 1 && n.dec === 0 && n.value <= 12;
+  stats.figures = work.filter(n => !trivial(n)).length;
+
+  function calcResult(ok, f) {
+    stats.calcRun++;
+    if (ok) { stats.calcOk++; f.sev = 'ok'; } else { stats.calcBad++; }
+    return add(f);
+  }
+
+  // ---------------- % change: "from A to B, up P%" ----------------
+  const pairDone = new Set();
+  const dirAround = (a, b) => {
+    const seg = answer.slice(Math.max(0, a - 40), b);
+    let best = null, bestD = Infinity;
+    for (const [re, d] of [[UP_WORDS, 'up'], [DOWN_WORDS, 'down']]) {
+      re.lastIndex = 0;
+      let m;
+      while ((m = re.exec(seg))) {
+        if (/^up$/i.test(m[0]) && /made\s*$/i.test(seg.slice(0, m.index))) continue;
+        if (/^(above|below|ahead|behind|profit|loss|losses|surplus|deficit|short)$/i.test(m[0])) continue;
+        const pos = Math.max(0, a - 40) + m.index;
+        const dist = Math.abs(pos - a);
+        if (dist < bestD) { bestD = dist; best = d; }
+      }
+    }
+    return best;
+  };
+  function evalChange(A, B, P, s, isCagr) {
+    const key = A.start + ':' + B.start;
+    if (pairDone.has(key)) return;
+    pairDone.add(key);
+    const span0 = Math.min(A.start, B.start, P ? P.start : Infinity);
+    const span1 = Math.max(A.end, B.end, P ? P.end : 0);
+    const dir = dirAround(Math.min(A.start, B.start), span1);
+    const delta = B.value - A.value;
+    if (dir && Math.abs(delta) > 1e-9 * Math.max(1, Math.abs(A.value)) && ((dir === 'up' && delta < 0) || (dir === 'down' && delta > 0))) {
+      add({ sev: 'error', cat: 'Logic', title: `Says "${dir === 'up' ? 'increase' : 'decrease'}", but the figures go the other way`,
+        detail: `${A.raw} → ${B.raw} is a ${delta < 0 ? 'fall' : 'rise'}, not a ${dir === 'up' ? 'rise' : 'fall'}.`,
+        start: span0, end: span1, nums: [A, B] });
+    }
+    if (!P || isCagr || A.value === 0) return;
+    const rel = absRange(range(v => (v[1] - v[0]) / v[0] * 100, [A, B]));
+    let ok = P.unit === 'pct' && rel && fits(P, rel[0], rel[1], true);
+    let pp = null;
+    if (kindOf(A) === 'pct') { pp = absRange(range(v => v[1] - v[0], [A, B])); if (fits(P, pp[0], pp[1], true)) ok = true; }
+    const actualRel = (B.value - A.value) / A.value * 100;
+    const shown = P.unit === 'pp' && pp ? `${rnd(Math.abs(B.value - A.value), 1)} percentage points` : `${rnd(Math.abs(actualRel), 1)}%`;
+    calcResult(ok, ok
+      ? { cat: 'Calculation', title: `Change of ${P.raw} checks out`, detail: `${A.raw} → ${B.raw} = ${shown}.`, start: P.start, end: P.end }
+      : { sev: 'error', cat: 'Calculation', title: `Wrong % change: says ${P.raw}, actually ${shown}`,
+          detail: `Going from ${A.raw} to ${B.raw} is a change of ${rnd(actualRel, 1)}%${kindOf(A) === 'pct' ? ` (or ${rnd(B.value - A.value, 1)} percentage points)` : ''}, not ${P.raw}.`,
+          start: P.start, end: P.end, nums: [P] });
+  }
+
+  for (const s of sents) {
+    const sn = work.filter(n => n.start >= s.start && n.end <= s.end);
+    const sAll = allNums.filter(n => n.start >= s.start && n.end <= s.end);
+    const isCagr = /\bCAGR\b|compound annual|annuali[sz]ed|per annum|a year\b|annual growth|each year|per year/i.test(s.text);
+    // Pattern 1: from A to B
+    for (let i = 0; i < sn.length; i++) {
+      const A = sn[i];
+      if (!/\bfrom\s*$/i.test(answer.slice(Math.max(s.start, A.start - 12), A.start))) continue;
+      const B = sn.slice(i + 1).find(x => /^\s*(?:\([^)]{0,30}\)\s*)?(?:to|→|->|–|—)\s*$/i.test(answer.slice(A.end, x.start)));
+      if (!B || kindOf(A) !== kindOf(B) || (A.currency && B.currency && A.currency !== B.currency)) continue;
+      const cands = sn.filter(x => x !== A && x !== B && (x.unit === 'pct' || x.unit === 'pp'));
+      cands.sort((x, y) => (y.role === 'change') - (x.role === 'change') || Math.min(Math.abs(x.start - B.end), Math.abs(x.end - A.start)) - Math.min(Math.abs(y.start - B.end), Math.abs(y.end - A.start)));
+      const P = cands.find(x => x.role === 'change' || kindOf(A) !== 'pct') || null;
+      evalChange(A, B, P, s, isCagr);
+      if (isCagr) checkCagr(A, B, s, sn, sAll);
+    }
+    // Pattern 2: B, up P% on/from/vs A
+    for (const P of sn) {
+      if (!(P.unit === 'pct' || P.unit === 'pp') || P.role !== 'change') continue;
+      const A = sn.find(x => x.start >= P.end && x !== P);
+      if (!A) continue;
+      if (!/^\s*(?:year[- ]on[- ]year\s+|yoy\s+|y\/y\s+)?(?:from|on|vs\.?|versus|compared (?:with|to)|against)\s+(?:the\s+)?(?:(?:prior|previous|last)[- ]year(?:'s)?\s+|FY ?\d{2,4}(?:'s)?\s+)?(?:figure of\s+|level of\s+)?$/i.test(answer.slice(P.end, A.start))) continue;
+      const before = sn.filter(x => x.end <= P.start && P.start - x.end <= 60 && kindOf(x) === kindOf(A) && x !== A);
+      const B = before[before.length - 1];
+      if (!B) continue;
+      evalChange(A, B, P, s, isCagr);
+    }
+  }
+  function checkCagr(A, B, s, sn, sAll) {
+    let N = null;
+    const wordNum = { two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10 };
+    const m = s.text.match(/\b(\d{1,2}|two|three|four|five|six|seven|eight|nine|ten)[- ]years?\b/i);
+    if (m) N = wordNum[m[1].toLowerCase()] || parseInt(m[1], 10);
+    else {
+      const ys = sAll.filter(n => n.isYear).map(n => n.value);
+      if (ys.length >= 2) N = Math.max(...ys) - Math.min(...ys);
+    }
+    const cagrPos = s.start + s.text.search(/CAGR|compound|annual|per annum|a year|each year|per year/i);
+    const P = sn.filter(x => x.unit === 'pct' && x !== A && x !== B).sort((x, y) => Math.abs(x.start - cagrPos) - Math.abs(y.start - cagrPos))[0];
+    if (!N || !P || A.value <= 0 || B.value <= 0) return;
+    const r = range(v => (Math.pow(v[1] / v[0], 1 / N) - 1) * 100, [A, B]);
+    if (!r) return;
+    const ok = fits(P, r[0], r[1]);
+    const actual = (Math.pow(B.value / A.value, 1 / N) - 1) * 100;
+    calcResult(ok, ok
+      ? { cat: 'Calculation', title: `CAGR of ${P.raw} checks out`, detail: `${A.raw} → ${B.raw} over ${N} years = ${rnd(actual, 1)}% a year.`, start: P.start, end: P.end }
+      : { sev: 'error', cat: 'Calculation', title: `Wrong CAGR: says ${P.raw}, actually ${rnd(actual, 1)}%`,
+          detail: `Compound growth from ${A.raw} to ${B.raw} over ${N} years is ${rnd(actual, 1)}% a year. (Simple total growth is ${rnd((B.value / A.value - 1) * 100, 1)}%, a common mix-up.)`,
+          start: P.start, end: P.end, nums: [P] });
+  }
+
+  // ---------------- "A of B (P%)" shares ----------------
+  for (const s of sents) {
+    const sn = work.filter(n => n.start >= s.start && n.end <= s.end);
+    for (let i = 0; i + 1 < sn.length; i++) {
+      const A = sn[i], B = sn[i + 1];
+      if (kindOf(A) !== 'amt' || kindOf(B) !== 'amt') continue;
+      if (!/^\s*(?:out\s+)?of\s+(?:the\s+|a total of\s+|total\s+|all\s+|our\s+)?$/i.test(answer.slice(A.end, B.start))) continue;
+      const P = sn.find(x => x.unit === 'pct' && ((x.start >= B.end && x.start - B.end <= 40) || (x.end <= A.start && A.start - x.end <= 25)));
+      if (!P || B.value === 0) continue;
+      const r = range(v => v[0] / v[1] * 100, [A, B]);
+      const ok = fits(P, r[0], r[1]);
+      calcResult(ok, ok
+        ? { cat: 'Calculation', title: `${P.raw} share checks out`, detail: `${A.raw} ÷ ${B.raw} = ${rnd(A.value / B.value * 100, 1)}%.`, start: P.start, end: P.end }
+        : { sev: 'error', cat: 'Calculation', title: `Wrong share: says ${P.raw}, actually ${rnd(A.value / B.value * 100, 1)}%`, detail: `${A.raw} out of ${B.raw} is ${rnd(A.value / B.value * 100, 1)}%.`, start: P.start, end: P.end, nums: [P] });
+    }
+  }
+
+  // ---------------- totals ----------------
+  const TOTAL_RE = /\b(?:a total of|totall?ing|totall?ed|in total|combined total of|combined|altogether|in aggregate|sum(?:s|med)? to|add(?:s|ing)? up to|(?:the )?total (?:is|was|of|comes to|came to|stands at)|total:?)/gi;
+  for (const s of sents) {
+    TOTAL_RE.lastIndex = 0;
+    const m = TOTAL_RE.exec(s.text);
+    if (!m) continue;
+    const kwStart = s.start + m.index, kwEnd = kwStart + m[0].length;
+    const sn = work.filter(n => n.start >= s.start && n.end <= s.end && kindOf(n) === 'amt' && n.role !== 'change' && n.role !== 'from');
+    let T = sn.find(n => n.start >= kwEnd && n.start - kwEnd <= 20);
+    if (!T) T = sn.filter(n => n.end <= kwStart && kwStart - n.end <= 15).pop();
+    if (!T) continue;
+    let comps = sn.filter(n => n !== T && (!!n.currency === !!T.currency));
+    if (comps.length < 2) {
+      // look at the bullet lines just above
+      comps = [];
+      const lines = answer.slice(0, s.start).split('\n');
+      lines.pop();
+      let off = s.start - 1;
+      for (let li = lines.length - 1; li >= 0; li--) {
+        const line = lines[li];
+        const lStart = off - line.length;
+        off = lStart - 1;
+        if (!/^\s*(?:[-*•]|\d+[.)])\s+/.test(line)) break;
+        const first = work.find(n => n.start >= lStart && n.end <= lStart + line.length && kindOf(n) === 'amt' && (!!n.currency === !!T.currency) && n.role !== 'change');
+        if (first) comps.push(first);
+      }
+    }
+    if (comps.length < 2) continue;
+    const sum = comps.reduce((a, n) => a + n.value, 0);
+    const tol = comps.reduce((a, n) => a + n.prec, 0);
+    const ok = fits(T, sum - tol, sum + tol);
+    calcResult(ok, ok
+      ? { cat: 'Calculation', title: `Total of ${T.raw} adds up`, detail: comps.map(c => c.raw).join(' + ') + ` = ${fmtLike(sum, T)}.`, start: T.start, end: T.end }
+      : { sev: 'error', cat: 'Calculation', title: `Total doesn't add up: says ${T.raw}, parts sum to ${fmtLike(sum, T)}`, detail: comps.map(c => c.raw).join(' + ') + ` = ${fmtLike(sum, T)}.`, start: T.start, end: T.end, nums: [T] });
+  }
+
+  // ---------------- % splits that should total 100 ----------------
+  const SPLIT_RE = /\b(split|breakdown|broken down|comprises?|comprising|made up of|mix|allocation|allocated|composition|share of|by (?:region|segment|product|channel|customer|geography|category|division|business unit))\b/i;
+  for (const p of splitParagraphs(answer)) {
+    if (!SPLIT_RE.test(p.text)) continue;
+    const pn = work.filter(n => n.start >= p.start && n.end <= p.end && n.unit === 'pct' && n.role !== 'change' && !n.metric);
+    if (pn.length < 2) continue;
+    const sum = pn.reduce((a, n) => a + n.value, 0);
+    const tol = pn.reduce((a, n) => a + n.prec, 0) + 0.05;
+    if (sum > 100 + tol) {
+      add({ sev: 'error', cat: 'Calculation', title: `Split adds up to ${rnd(sum, 1)}%, more than 100%`, detail: pn.map(n => n.raw).join(' + ') + ` = ${rnd(sum, 1)}%. At least one share is wrong.`, start: pn[0].start, end: pn[pn.length - 1].end, nums: pn });
+      stats.calcRun++; stats.calcBad++;
+    } else if (pn.length >= 3 && Math.abs(sum - 100) <= tol) {
+      calcResult(true, { cat: 'Calculation', title: 'Split adds up to 100%', detail: pn.map(n => n.raw).join(' + ') + ` = ${rnd(sum, 1)}%.`, start: pn[0].start, end: pn[pn.length - 1].end });
+    } else if (pn.length >= 3 && sum < 100 - Math.max(5, tol) && /split|breakdown|mix|composition|comprise|made up/i.test(p.text)) {
+      add({ sev: 'info', cat: 'Calculation', title: `Split only adds up to ${rnd(sum, 1)}%`, detail: 'If this is meant to be a full breakdown, something is missing.', start: pn[0].start, end: pn[pn.length - 1].end });
+    }
+  }
+
+  // ---------------- metric consistency & financial relationships ----------------
+  const levels = {};
+  for (const n of work) if (n.metric && n.role === 'level') (levels[n.metric] = levels[n.metric] || []).push(n);
+  const PERIOD_RE = /\b(FY ?\d{2,4}|(?:19|20)\d{2}|Q[1-4]|H[12]|prior year|last year|previous year|this year|budget(?:ed)?|forecast|target|plan|LTM|YTD|month|quarter)\b/gi;
+  const single = {};
+  for (const [k, list] of Object.entries(levels)) {
+    const uniq = [];
+    list.forEach(n => { if (!uniq.some(u => sameNum(u, n))) uniq.push(n); });
+    if (uniq.length === 1) { single[k] = uniq[0]; continue; }
+    const sentsUsed = new Set(uniq.map(n => n.sent));
+    if (sentsUsed.size === 1) continue;
+    const marks = uniq.map(n => ((n.sent && n.sent.text.match(PERIOD_RE)) || []).map(x => x.toLowerCase()).sort().join('|'));
+    const differentPeriods = new Set(marks).size > 1;
+    add({ sev: differentPeriods ? 'info' : 'warn', cat: 'Consistency',
+      title: `${METRIC_LABEL[k]} is given as ${uniq.map(u => u.raw).join(' and ')}`,
+      detail: differentPeriods ? 'These may refer to different periods. Worth confirming.' : 'The same figure is stated with different values in different places. At least one is wrong.',
+      start: uniq[1].start, end: uniq[1].end, nums: uniq.slice(1) });
+  }
+  const RELS = [
+    { out: 'gross_profit', ins: ['revenue', 'cogs'], f: v => v[0] - v[1], expr: 'Revenue − Cost of sales' },
+    { out: 'gross_margin', ins: ['gross_profit', 'revenue'], f: v => v[0] / v[1] * 100, expr: 'Gross profit ÷ Revenue' },
+    { out: 'ebitda_margin', ins: ['ebitda', 'revenue'], f: v => v[0] / v[1] * 100, expr: 'EBITDA ÷ Revenue' },
+    { out: 'operating_margin', ins: ['operating_profit', 'revenue'], f: v => v[0] / v[1] * 100, expr: 'Operating profit ÷ Revenue' },
+    { out: 'net_margin', ins: ['net_income', 'revenue'], f: v => v[0] / v[1] * 100, expr: 'Net profit ÷ Revenue' },
+    { out: 'current_ratio', ins: ['current_assets', 'current_liabilities'], f: v => v[0] / v[1], expr: 'Current assets ÷ Current liabilities' },
+    { out: 'leverage', ins: ['net_debt', 'ebitda'], f: v => v[0] / v[1], expr: 'Net debt ÷ EBITDA' },
+    { out: 'interest_cover', ins: ['operating_profit', 'interest'], f: v => v[0] / v[1], expr: 'Operating profit ÷ Interest' },
+    { out: 'ebitda', ins: ['gross_profit', 'opex'], f: v => v[0] - v[1], expr: 'Gross profit − Operating expenses', soft: true },
+  ];
+  for (const r of RELS) {
+    const out = single[r.out];
+    if (!out || !r.ins.every(k => single[k])) continue;
+    const ins = r.ins.map(k => single[k]);
+    const rr = range(r.f, ins);
+    if (!rr) continue;
+    const ok = fits(out, rr[0], rr[1]);
+    const actual = r.f(ins.map(x => x.value));
+    const actualStr = fmtLike(actual, out);
+    const calc = `${r.expr} = ${ins.map(x => x.raw).join(r.f.toString().includes('/') ? ' ÷ ' : ' − ')} = ${actualStr}.`;
+    calcResult(ok, ok
+      ? { cat: 'Calculation', title: `${METRIC_LABEL[r.out]} of ${out.raw} checks out`, detail: calc, start: out.start, end: out.end }
+      : { sev: r.soft ? 'warn' : 'error', cat: 'Calculation', title: `${METRIC_LABEL[r.out]} doesn't reconcile: says ${out.raw}, figures give ${actualStr}`,
+          detail: calc + (r.soft ? ' (Only valid if operating expenses exclude depreciation and amortisation. Check the definition.)' : ''),
+          start: out.start, end: out.end, nums: [out] });
+  }
+
+  // ---------------- year spans ----------------
+  for (const s of sents) {
+    const m = s.text.match(/\b(?:from|between)\s+((?:19|20)\d{2})\s*(?:to|and|-|–)\s*((?:19|20)\d{2})\b/i);
+    const y = s.text.match(/\b(\d{1,2}|two|three|four|five|six|seven|eight|nine|ten)[- ]years?\b/i);
+    if (!m || !y) continue;
+    const words = { two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10 };
+    const N = words[y[1].toLowerCase()] || parseInt(y[1], 10);
+    const span = parseInt(m[2], 10) - parseInt(m[1], 10);
+    if (N !== span && N !== span + 1) {
+      const pos = s.start + s.text.indexOf(y[0]);
+      add({ sev: 'warn', cat: 'Logic', title: `${m[1]} to ${m[2]} is ${span} years, not ${N}`, detail: 'The period length stated doesn\'t match the years given.', start: pos, end: pos + y[0].length });
+    }
+  }
+
+  // ---------------- future events in the past tense ----------------
+  const thisYear = now.getFullYear();
+  const PAST_RE = /\b(was|were|had|reported|announced|achieved|delivered|recorded|posted|completed|grew|fell|rose|declined|reached|closed|ended|acquired|launched|published|released|signed|generated|returned|made|saw)\b/i;
+  const FUT_RE = /\b(will|would|expect(?:s|ed)?|forecast(?:s|ed)?|project(?:s|ed|ion|ions)?|target(?:s|ed)?|plan(?:s|ned)?|budget(?:s|ed)?|could|may|might|should|estimate[ds]?|anticipate[ds]?|outlook|guidance|scenario|assum(?:e|es|ed|ing|ption)|by|aim(?:s|ing)?|intend(?:s|ed)?|pipeline|going to|on track)\b/i;
+  for (const s of sents) {
+    const ys = [];
+    allNums.filter(n => n.isYear && n.start >= s.start && n.end <= s.end).forEach(n => ys.push({ y: n.value, start: n.start, end: n.end }));
+    const fyRe = /\bFY ?(\d{2}|\d{4})\b/g;
+    let fm;
+    while ((fm = fyRe.exec(s.text))) {
+      const yv = fm[1].length === 2 ? 2000 + parseInt(fm[1], 10) : parseInt(fm[1], 10);
+      ys.push({ y: yv, start: s.start + fm.index, end: s.start + fm.index + fm[0].length, fy: true });
+    }
+    const fut = ys.filter(o => o.y > thisYear + (o.fy ? 1 : 0));
+    if (!fut.length) continue;
+    if (PAST_RE.test(s.text) && !FUT_RE.test(s.text)) {
+      add({ sev: 'warn', cat: 'Date', title: `Describes ${fut[0].y} as if it has already happened`,
+        detail: `Your computer's clock says it is ${thisYear}. Past-tense statements about future periods are a common sign of invented facts.`,
+        start: fut[0].start, end: fut[0].end });
+    }
+  }
+
+  // ---------------- language risk signals ----------------
+  const LANG = [
+    { re: /\b(?:studies|research|evidence|data) (?:show|shows|suggests?|indicates?|has shown|have shown|proves?|confirms?)\b|\bexperts? (?:agree|say|believe|recommend)\b|\bit is (?:widely|well|generally|commonly) (?:known|accepted|recognised|recognized|understood)\b|\b(?:analysts|economists|commentators) (?:agree|expect|say|believe)\b|\baccording to (?:industry|experts|analysts|research|studies|reports)\b|\bindustry (?:data|research|reports?|benchmarks?) (?:shows?|suggests?|indicates?)\b/gi,
+      sev: 'warn', cat: 'Language', title: 'Appeal to an unnamed authority', detail: '"Studies show…" with no named, dated source is a classic sign of a made-up claim. Ask for the specific source, or remove it.' },
+    { re: /\b(?:always|never|guarantee[sd]?|certainly|definitely|undoubtedly|without (?:a )?doubt|no risk|risk[- ]free|zero risk|impossible|100% (?:certain|sure|safe)|cannot fail|will (?:definitely|certainly|always))\b/gi,
+      sev: 'info', cat: 'Language', title: 'Absolute or overconfident wording', detail: 'Finance and business claims are rarely absolute. Overconfidence often covers for a weak basis.' },
+    { re: /\b(?:as of my (?:last )?(?:knowledge|training)(?: cutoff| cut-off| update)?|i (?:do not|don't) have (?:access|real-time)|i cannot browse|my training data)\b/gi,
+      sev: 'warn', cat: 'Language', title: 'Model says its knowledge may be out of date', detail: 'Any market, regulatory or rate information near this point may be stale. Check it against a current source.' },
+  ];
+  for (const L of LANG) {
+    L.re.lastIndex = 0;
+    let m;
+    while ((m = L.re.exec(answer))) add({ sev: L.sev, cat: L.cat, title: L.title, detail: L.detail, start: m.index, end: m.index + m[0].length });
+  }
+  const BENCH_RE = /\b(?:industry (?:average|benchmark|norm|standard|median)s?|on average|the average|typical(?:ly)?|benchmarks?|market (?:size|share|growth|average)|peers?|sector average|most (?:companies|businesses|firms|cfos|organisations|organizations)|(?:majority|half|third|quarter) of (?:companies|businesses|firms|cfos))\b/i;
+  const SOURCE_CUE = /\b(?:according to|source:|per (?:the|your)|based on (?:the|your)|as shown in|(?:the|your) (?:data|accounts|figures|numbers|report|spreadsheet|management accounts) (?:show|shows|provided|indicate))\b/i;
+  for (const s of sents) {
+    if (!BENCH_RE.test(s.text) || SOURCE_CUE.test(s.text)) continue;
+    const sn = work.filter(n => n.start >= s.start && n.end <= s.end && !trivial(n));
+    if (!sn.length) continue;
+    if (F.some(f => (f.cat === 'Reference' || f.cat === 'Language') && f.sev !== 'info' && f.start >= s.start && f.end <= s.end)) continue;
+    const bm = s.text.match(BENCH_RE);
+    const pos = s.start + bm.index;
+    add({ sev: 'verify', cat: 'Benchmark', title: 'Unsourced benchmark or statistic', detail: `"${bm[0]}" is quoted with a number but no source. AI models often invent plausible benchmarks. Check it against a real dataset.`, start: pos, end: Math.max(pos + bm[0].length, sn[sn.length - 1].end) });
+  }
+
+  // ---------------- grounding against source ----------------
+  let srcInfo = null;
+  if (source) {
+    const sSents = splitSentences(source);
+    const sNums = parseNumbers(source).filter(n => !n.isYear);
+    annotate(source, sNums, sSents);
+    const srcVals = {};
+    sNums.forEach(n => { if (n.metric) (srcVals[n.metric] = srcVals[n.metric] || []).push(n); });
+    const pool = sNums.filter(n => kindOf(n) === 'amt' || kindOf(n) === 'pct').slice(0, 150);
+    srcInfo = { sSents, sNums };
+    for (const n of work) {
+      if (n.flagged || trivial(n)) continue;
+      if (sNums.some(x => sameNum(n, x))) { n.grounded = true; stats.grounded++; continue; }
+      const d = derive(n, pool);
+      if (d) {
+        n.derived = true; stats.derived++;
+        add({ sev: 'ok', cat: 'Source check', title: `${n.raw} can be calculated from your source`, detail: d, start: n.start, end: n.end });
+        continue;
+      }
+      const sv = n.metric && n.role !== 'change' ? (srcVals[n.metric] || []).filter(x => !LIMIT_RE.test(x.sent ? x.sent.text : '')) : [];
+      if (sv.length) {
+        add({ sev: 'error', cat: 'Source check', title: `Contradicts your source: ${METRIC_LABEL[n.metric]} is ${sv.map(x => x.raw).join(' / ')} there`,
+          detail: `The answer says ${n.raw}. Your source gives ${sv.map(x => x.raw).join(' or ')}.`, start: n.start, end: n.end, nums: [n] });
+        stats.ungrounded++;
+        continue;
+      }
+      stats.ungrounded++;
+      add({ sev: 'warn', cat: 'Source check', title: `${n.raw} isn't in your source`,
+        detail: 'This figure isn\'t in the source and can\'t be calculated from any two source figures (sum, difference, ratio or % change). Treat it as unsupported until someone confirms where it came from.',
+        start: n.start, end: n.end, nums: [n] });
+    }
+    // sentence-level support & direction flips
+    const srcTokSets = sSents.map(x => new Set(tokens(x.text)));
+    const srcAll = new Set(tokens(source));
+    const srcLower = source.toLowerCase();
+    for (const s of sents) {
+      const tk = tokens(s.text);
+      if (tk.length < 4 || /[?:]$/.test(s.text)) continue;
+      let best = -1, bestScore = 0;
+      srcTokSets.forEach((set, i) => { const sc = overlap(tk, set); if (sc > bestScore) { bestScore = sc; best = i; } });
+      const hasIssue = F.some(f => f.sev !== 'ok' && f.sev !== 'info' && f.start >= s.start && f.end <= s.end);
+      if (best >= 0 && bestScore >= 0.5) {
+        const st = sSents[best].text;
+        const cUp = countRe(UP_WORDS, s.text) > 0, cDown = countRe(DOWN_WORDS, s.text) > 0;
+        const sUp = countRe(UP_WORDS, st) > 0, sDown = countRe(DOWN_WORDS, st) > 0;
+        const negFlip = (countRe(NEG_WORDS, s.text) % 2) !== (countRe(NEG_WORDS, st) % 2);
+        if ((cUp && !cDown && sDown && !sUp) || (cDown && !cUp && sUp && !sDown)) {
+          add({ sev: 'warn', cat: 'Source check', title: 'Direction may be the opposite of your source', detail: `Closest source line: "${st.slice(0, 220)}"`, start: s.start, end: s.end });
+          continue;
+        }
+        if (negFlip) {
+          add({ sev: 'warn', cat: 'Source check', title: 'Possible contradiction with your source (negation differs)', detail: `Closest source line: "${st.slice(0, 220)}"`, start: s.start, end: s.end });
+          continue;
+        }
+      }
+      if (!hasIssue && bestScore < 0.3 && overlap(tk, srcAll) < 0.5 && tk.length >= 6) {
+        add({ sev: 'verify', cat: 'Source check', title: 'Statement not traceable to your source', detail: 'Little of this sentence\'s wording appears in the source. It may be general knowledge, opinion or invention. Decide which.', start: s.start, end: s.end });
+      }
+    }
+    // named entities not in source
+    for (const s of sents) {
+      const ents = entitiesIn(answer, s).filter(e => !srcLower.includes(e.text.toLowerCase()));
+      const fresh = ents.filter(e => !F.some(f => (f.cat === 'Reference') && e.start < f.end && e.end > f.start));
+      if (!fresh.length) continue;
+      add({ sev: 'warn', cat: 'Source check', title: `Name${fresh.length > 1 ? 's' : ''} not in your source: ${fresh.map(e => e.text).join(', ')}`,
+        detail: 'People, organisations and products that appear from nowhere are a common hallucination. Confirm they are real and relevant.', start: fresh[0].start, end: fresh[fresh.length - 1].end });
+    }
+  }
+
+  // ---------------- cross-check against other answers ----------------
+  if (others.length) {
+    const alts = others.map(t => {
+      const ss = splitSentences(t);
+      const ns = parseNumbers(t).filter(n => !n.isYear);
+      annotate(t, ns, ss);
+      return { text: t, lower: t.toLowerCase(), nums: ns };
+    });
+    const label = i => 'Answer ' + String.fromCharCode(66 + i);
+    for (const n of work) {
+      if (n.flagged || trivial(n) || n.grounded || n.derived) continue;
+      const matched = alts.map(a => a.nums.some(x => sameNum(n, x)));
+      const mCount = matched.filter(Boolean).length;
+      if (mCount === alts.length) { stats.crossMatched++; continue; }
+      const conflicts = [];
+      if (n.metric && n.role === 'level') {
+        alts.forEach((a, i) => {
+          if (matched[i]) return;
+          const diff = a.nums.filter(x => x.metric === n.metric && x.role === 'level');
+          if (diff.length) conflicts.push(`${label(i)} says ${diff.map(x => x.raw).join(' / ')}`);
+        });
+      }
+      if (conflicts.length) {
+        add({ sev: 'warn', cat: 'Cross-check', title: `Other answers give a different ${METRIC_LABEL[n.metric]}`, detail: `This answer: ${n.raw}. ${conflicts.join('; ')}. When regenerations disagree, the model is probably guessing.`, start: n.start, end: n.end, nums: [n] });
+      } else if (mCount === 0) {
+        add({ sev: alts.length >= 2 ? 'warn' : 'verify', cat: 'Cross-check', title: `${n.raw} appears in no other answer`, detail: `None of the ${alts.length} other answer${alts.length > 1 ? 's' : ''} mention this figure. Details that change between regenerations are often invented.`, start: n.start, end: n.end, nums: [n] });
+      } else {
+        stats.crossMatched++;
+      }
+    }
+    for (const s of sents) {
+      const ents = entitiesIn(answer, s).filter(e => !alts.some(a => a.lower.includes(e.text.toLowerCase())));
+      const fresh = ents.filter(e => !F.some(f => f.cat === 'Source check' && e.start < f.end && e.end > f.start));
+      if (!fresh.length) continue;
+      add({ sev: 'verify', cat: 'Cross-check', title: `Only this answer mentions: ${fresh.map(e => e.text).join(', ')}`, detail: 'Names that appear in only one regeneration deserve a check.', start: fresh[0].start, end: fresh[fresh.length - 1].end });
+    }
+  }
+
+  // ---------------- score ----------------
+  const count = sev => F.filter(f => f.sev === sev).length;
+  const c = { error: count('error'), warn: count('warn'), verify: count('verify'), info: count('info'), ok: count('ok') };
+  let score = 100 - c.error * 20 - c.warn * 8 - c.verify * 3 - c.info * 1;
+  if (c.error) score = Math.min(score, 59);
+  score = Math.max(0, Math.min(100, Math.round(score)));
+  let verdict, sub, tone;
+  if (!answer.trim()) { verdict = 'Nothing to check'; sub = 'Paste an AI answer first.'; tone = 'info'; }
+  else if (c.error) { verdict = 'Contains errors. Don\'t rely on it as-is.'; sub = `${c.error} statement${c.error > 1 ? 's are' : ' is'} demonstrably wrong. Fix these before anyone acts on the answer.`; tone = 'error'; }
+  else if (c.warn) { verdict = 'Needs review before use'; sub = 'No outright errors, but some figures or claims are unsupported or inconsistent.'; tone = 'warn'; }
+  else if (c.verify) { verdict = 'No errors found. Some claims need a human check.'; sub = 'The maths and logic hold up. The references and outside facts below can\'t be checked offline.'; tone = 'verify'; }
+  else { verdict = 'No problems found by offline checks'; sub = 'This doesn\'t prove the answer is right. Nothing checkable was found to be wrong.'; tone = 'ok'; }
+  if (!source && !others.length && answer.trim()) sub += ' Add your source facts (tab 2) or other answers (tab 3) to check every figure, not just the maths.';
+
+  F.sort((a, b) => (SEV_ORDER[b.sev] - SEV_ORDER[a.sev]) || (a.start - b.start));
+  return { findings: F, counts: c, score, verdict, sub, tone, stats, hasSource: !!source, otherCount: others.length };
+}
+const SEV_ORDER = { error: 4, warn: 3, verify: 2, info: 1, ok: 0 };
+const LIMIT_RE = /\b(covenant|limit|target|budget(?:ed)?|threshold|maximum|minimum|max|min|cap|ceiling|floor|plan|forecast|guidance|below|above|under|not (?:to )?exceed)\b/i;
+
+const GENERIC_TOK = new Set(['year', 'end', 'total', 'period', 'month', 'fy23', 'fy24', 'fy25', 'fy26', 'fy27', 'unaudit', 'audit', 'management', 'account', 'figure', 'number']);
+function linkTokens(s) { return new Set(tokens(s || '').filter(t => !GENERIC_TOK.has(t))); }
+// Try to rebuild a figure from two source figures. Only pairs whose source lines share
+// vocabulary with the answer's sentence count, so random coincidences are not accepted.
+function derive(n, pool) {
+  const k = kindOf(n);
+  const ctx = linkTokens(n.sent ? n.sent.text : '');
+  const relevant = x => { if (!x._tok) x._tok = linkTokens(x.sent ? x.sent.text : ''); for (const t of x._tok) if (ctx.has(t)) return true; return false; };
+  const cand = pool.filter(x => x !== n);
+  const tries = [];
+  for (let i = 0; i < cand.length; i++) {
+    for (let j = 0; j < cand.length; j++) {
+      if (i === j) continue;
+      const a = cand[i], b = cand[j];
+      if (!relevant(a) && !relevant(b)) continue;
+      tries.push([a, b, i < j]);
+    }
+  }
+  const passes = [
+    ([a, b, ordered]) => {
+      const ka = kindOf(a), kb = kindOf(b);
+      if (k === 'pct' && ka === 'amt' && kb === 'amt' && b.value !== 0) {
+        const r = range(v => v[0] / v[1] * 100, [a, b]);
+        if (r && fits(n, r[0], r[1])) return `${a.raw} ÷ ${b.raw} = ${rnd(a.value / b.value * 100, 1)}%`;
+      }
+      if (k === 'pct' && ka === 'pct' && kb === 'pct') {
+        const r = absRange(range(v => v[0] - v[1], [a, b]));
+        if (r && fits(n, r[0], r[1], true)) return `${a.raw} − ${b.raw} = ${rnd(a.value - b.value, 1)} points`;
+      }
+      if (k === 'amt' && ka === 'amt' && kb === 'amt') {
+        if (ordered) {
+          const r = range(v => v[0] + v[1], [a, b]);
+          if (r && fits(n, r[0], r[1])) return `${a.raw} + ${b.raw} = ${fmtLike(a.value + b.value, n)}`;
+        }
+        const r2 = range(v => v[0] - v[1], [a, b]);
+        if (r2 && fits(n, r2[0], r2[1])) return `${a.raw} − ${b.raw} = ${fmtLike(a.value - b.value, n)}`;
+      }
+      if ((k === 'x' || (k === 'amt' && !n.currency && n.dec > 0 && n.value < 100)) && ka === 'amt' && kb === 'amt' && b.value !== 0) {
+        const r = range(v => v[0] / v[1], [a, b]);
+        if (r && fits(n, r[0], r[1])) return `${a.raw} ÷ ${b.raw} = ${rnd(a.value / b.value, 2)}x`;
+      }
+      return null;
+    },
+    ([a, b]) => {
+      if (k === 'pct' && kindOf(a) === 'amt' && kindOf(b) === 'amt' && b.value !== 0) {
+        const r = absRange(range(v => (v[0] - v[1]) / v[1] * 100, [a, b]));
+        if (r && fits(n, r[0], r[1], true)) return `Change from ${b.raw} to ${a.raw} = ${rnd((a.value - b.value) / b.value * 100, 1)}%`;
+      }
+      return null;
+    }
+  ];
+  for (const pass of passes) for (const t of tries) { const d = pass(t); if (d) return d; }
+  return null;
+}
+
+const ENT_STOP = new Set(('I The A An This That These Those It We Our You Your They Their He She His Her In On At By For With From As Of To And Or But If CFO CEO COO CTO CIO FD MD UK US USA EU UAE GBP USD EUR FY YoY EBITDA EBIT COGS OPEX CAPEX KPI KPIs ROI ROE ROCE IRR NPV VAT AI IT HR LTM YTD B2B B2C SaaS ARR MRR IFRS IAS GAAP SME SMEs PLC LTD CAGR OK PE PBT PAT DSO DPO DIO NB FX Q1 Q2 Q3 Q4 H1 H2 Net Gross Total Revenue Cash Board Overall However Summary Recommendation Recommendations Key Next Steps Risks Risk Note Executive Overview Conclusion January February March April May June July August September October November December Monday Tuesday Wednesday Thursday Friday Saturday Sunday').split(' '));
+function entitiesIn(text, s) {
+  const out = [];
+  const re = /\b(?:[A-Z][a-z]+(?:'s)?(?:\s+(?:&\s+|of\s+|and\s+)?[A-Z][a-z]+)+|[A-Z]{2,6}s?)\b/g;
+  let m;
+  while ((m = re.exec(s.text))) {
+    let t = m[0].replace(/'s$/, '');
+    const words = t.split(/\s+/);
+    while (words.length && ENT_STOP.has(words[0])) words.shift();
+    while (words.length && ENT_STOP.has(words[words.length - 1])) words.pop();
+    if (!words.length) continue;
+    t = words.join(' ');
+    if (ENT_STOP.has(t) || ENT_STOP.has(t.replace(/s$/, '')) || t.length < 2) continue;
+    const off = m[0].indexOf(words[0]);
+    out.push({ text: t, start: s.start + m.index + off, end: s.start + m.index + off + t.length });
+  }
+  return out;
+}
+
+// ---------------- dates ----------------
+const MON_IDX = { jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5, jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11 };
+const DOW_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const MON_P = '(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|June?|July?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)';
+const DOW_P = '(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday|Mon|Tues?|Wed|Thu(?:rs)?|Fri|Sat|Sun)';
+function daysIn(m, y) { return [31, (y == null || (y % 4 === 0 && (y % 100 !== 0 || y % 400 === 0))) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][m]; }
+function dowIndex(s) { const k = s.slice(0, 3).toLowerCase(); return ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'].indexOf(k); }
+function checkDates(text, now, add, masks) {
+  const found = [];
+  const re1 = new RegExp(`(?:\\b${DOW_P}\\.?,?\\s+(?:the\\s+)?)?\\b(\\d{1,2})(?:st|nd|rd|th)?(?:\\s+of)?\\s+${MON_P}\\.?(?:,?\\s+((?:19|20)\\d{2}))?\\b`, 'g');
+  const re2 = new RegExp(`(?:\\b${DOW_P}\\.?,?\\s+)?\\b${MON_P}\\.?\\s+(\\d{1,2})(?!\\d)(?:st|nd|rd|th)?(?:,?\\s+((?:19|20)\\d{2}))?\\b`, 'g');
+  const re3 = /\b((?:19|20)\d{2})-(\d{2})-(\d{2})\b/g;
+  let m;
+  while ((m = re1.exec(text))) found.push({ start: m.index, end: m.index + m[0].length, dow: m[1], d: +m[2], mo: MON_IDX[m[3].slice(0, 3).toLowerCase()], y: m[4] ? +m[4] : null, raw: m[0] });
+  while ((m = re2.exec(text))) {
+    if (found.some(f => m.index < f.end && m.index + m[0].length > f.start)) continue;
+    found.push({ start: m.index, end: m.index + m[0].length, dow: m[1], d: +m[3], mo: MON_IDX[m[2].slice(0, 3).toLowerCase()], y: m[4] ? +m[4] : null, raw: m[0] });
+  }
+  while ((m = re3.exec(text))) found.push({ start: m.index, end: m.index + m[0].length, d: +m[3], mo: +m[2] - 1, y: +m[1], raw: m[0] });
+  for (const f of found) {
+    masks.push([f.start, f.end]);
+    if (f.mo < 0 || f.mo > 11 || f.d < 1 || f.d > daysIn(f.mo, f.y)) {
+      add({ sev: 'error', cat: 'Date', title: `"${f.raw.trim()}" is not a real date`, detail: f.mo >= 0 && f.mo <= 11 ? `That month has only ${daysIn(f.mo, f.y)} days${f.y ? ' in ' + f.y : ''}.` : 'Invalid month.', start: f.start, end: f.end });
+      continue;
+    }
+    if (f.dow && f.y) {
+      const actual = new Date(Date.UTC(f.y, f.mo, f.d)).getUTCDay();
+      const stated = dowIndex(f.dow);
+      if (stated >= 0 && stated !== actual) {
+        add({ sev: 'error', cat: 'Date', title: `Wrong weekday: ${f.d} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][f.mo]} ${f.y} was a ${DOW_NAMES[actual]}`, detail: `The answer says ${f.dow}. Made-up meeting dates and events often have the wrong weekday.`, start: f.start, end: f.end });
+      } else if (stated >= 0) {
+        add({ sev: 'ok', cat: 'Date', title: 'Weekday matches the date', detail: `${f.raw.trim()} is correct.`, start: f.start, end: f.end });
+      }
+    }
+  }
+}
+
+// ---------------- references ----------------
+function checkReferences(text, add, masks, source, stats) {
+  const srcL = (source || '').toLowerCase();
+  const claimed = [];
+  const free = (a, b) => !claimed.some(c => a < c[1] && b > c[0]);
+  const flag = (a, b, f) => {
+    claimed.push([a, b]); masks.push([a, b]);
+    if (f.sev === 'verify' && srcL && srcL.includes(text.slice(a, b).toLowerCase())) return; // present in source → fine
+    if (f.sev === 'verify') stats.refs++;
+    add(Object.assign({ cat: 'Reference', start: a, end: b }, f));
+  };
+  let m;
+  // accounting & auditing standards
+  const stdRe = /\b(IFRS|IAS|FRS|ISA(?: \(UK\))?|ASC|SFAS|IPSAS)\s?(\d{1,4})((?:[-.]\d+)*)/g;
+  while ((m = stdRe.exec(text))) {
+    const kind = m[1].replace(/ \(UK\)/, ''), num = parseInt(m[2], 10), a = m.index, b = a + m[0].length, label = m[0];
+    if (kind === 'IFRS') {
+      if (IFRS_SUPERSEDED[num]) flag(a, b, { sev: 'warn', title: `${label} has been replaced`, detail: `${label} was superseded by ${IFRS_SUPERSEDED[num]}. Answers that cite withdrawn standards are often out of date or made up.` });
+      else if (!IFRS_VALID.has(num)) flag(a, b, { sev: 'error', title: `${label} does not exist`, detail: 'There is no IFRS with this number (IFRS 1–19 as of 2026). The reference has probably been invented.' });
+      else flag(a, b, { sev: 'verify', title: `Check the ${label} reference`, detail: 'The standard exists. Confirm it actually says what the answer claims, including any paragraph numbers.' });
+    } else if (kind === 'IAS') {
+      if (IAS_SUPERSEDED[num]) flag(a, b, { sev: 'warn', title: `${label} is withdrawn: replaced by ${IAS_SUPERSEDED[num]}`, detail: `Citing ${label} is a classic AI error (e.g. IAS 17 for leases instead of IFRS 16, IAS 18 for revenue instead of IFRS 15). Any advice built on it may be wrong.` });
+      else if (!IAS_VALID.has(num)) flag(a, b, { sev: 'error', title: `${label} does not exist`, detail: 'There is no IAS with this number. The reference has probably been invented.' });
+      else flag(a, b, { sev: 'verify', title: `Check the ${label} reference`, detail: 'The standard exists. Confirm it actually says what the answer claims.' });
+    } else if (kind === 'FRS') {
+      if (FRS_VALID.has(num)) flag(a, b, { sev: 'verify', title: `Check the ${label} reference`, detail: 'Confirm the section cited says what the answer claims.' });
+      else if (num <= 30) flag(a, b, { sev: 'warn', title: `${label} is old UK GAAP (withdrawn 2015)`, detail: 'Current UK GAAP is FRS 100–105. Check whether this advice is out of date.' });
+      else flag(a, b, { sev: 'error', title: `${label} does not exist`, detail: 'Current UK standards are FRS 100–105.' });
+    } else if (kind === 'ISA') {
+      if (ISA_VALID.has(num)) flag(a, b, { sev: 'verify', title: `Check the ${label} reference`, detail: 'Confirm the auditing standard says what is claimed.' });
+      else flag(a, b, { sev: 'warn', title: `${label} is not a recognised ISA number`, detail: 'Possibly an invented reference. Check it.' });
+    } else {
+      flag(a, b, { sev: 'verify', title: `Check the ${label} reference`, detail: 'Confirm this standard and paragraph exist and say what is claimed.' });
+    }
+  }
+  // Companies Act 2006 sections
+  const caRe = /\b(?:section|s\.)\s?(\d+)[A-Z]?(?:\(\d+\))*\s+(?:of\s+)?(?:the\s+)?Companies Act 2006/gi;
+  while ((m = caRe.exec(text))) {
+    const a = m.index, b = a + m[0].length;
+    if (+m[1] > 1300) flag(a, b, { sev: 'error', title: `Section ${m[1]} of the Companies Act 2006 does not exist`, detail: 'The Act has 1,300 sections.' });
+    else flag(a, b, { sev: 'verify', title: 'Check this legislation reference', detail: 'Confirm the section says what the answer claims. AI tools often attach real section numbers to the wrong rules.' });
+  }
+  const pats = [
+    [/\bhttps?:\/\/[^\s)\]>"]+|\bwww\.[^\s)\]>"]+/gi, 'Check this link', 'AI tools often produce real-looking links that don\'t exist or don\'t say what is claimed. Open it and confirm.'],
+    [/\b10\.\d{4,9}\/[^\s)\]]+/g, 'Check this DOI', 'Confirm the DOI resolves to the paper described.'],
+    [/\b[A-Z][A-Za-z'-]+ et al\.?,? \(?(?:19|20)\d{2}\)?/g, 'Check this academic citation', 'Invented papers with real-sounding authors are one of the most common AI hallucinations. Search for the exact title.'],
+    [/\b[A-Z][A-Za-z'-]+ (?:and|&) [A-Z][A-Za-z'-]+ \((?:19|20)\d{2}\)/g, 'Check this academic citation', 'Invented papers with real-sounding authors are one of the most common AI hallucinations.'],
+    [/\[(?:19|20)\d{2}\] [A-Z]{2,}[A-Za-z]* (?:\([A-Za-z ]+\) )?\d+/g, 'Check this case citation', 'AI tools have invented case law that was then filed in court. Verify on an official database.'],
+    [/\b(?:section|s\.|regulation|reg\.|article|art\.|rule|clause|schedule)\s?\d+[A-Z]?(?:\(\d+\))*\s+(?:of\s+)?(?:the\s+)?[A-Z][A-Za-z ]+?(?:Act|Regulations?|Directive|Code)(?: (?:19|20)\d{2})?/g, 'Check this legislation reference', 'Confirm the provision exists and says what is claimed.'],
+    [/\b(?:[Aa]n?|[Tt]he)\s+(?:(?:19|20)\d{2}\s+)?(?:[A-Z][\w&.'-]*\s+){0,4}(?:study|survey|report|paper|analysis|research|white ?paper|index|barometer)\s+(?:by|from|published by|conducted by|of)\s+(?:the\s+)?[A-Z][\w&.'-]*(?:\s+[A-Z][\w&.'-]*)*/g, 'Check this study / report', 'Confirm the study exists and contains this finding. AI tools often attach real organisation names to statistics they made up.'],
+    [/\b[Aa]ccording to\s+(?:a\s+|an\s+|the\s+)?(?:(?:19|20)\d{2}\s+)?[A-Z][\w&.'-]*(?:\s+(?:[A-Z][\w&.'-]*|(?:19|20)\d{2}))*/g, 'Check this attributed source', 'Confirm the source exists and actually says this.'],
+  ];
+  for (const [re, title, detail] of pats) {
+    re.lastIndex = 0;
+    while ((m = re.exec(text))) {
+      const a = m.index, b = a + m[0].replace(/[.,;:]+$/, '').length;
+      if (!free(a, b)) continue;
+      flag(a, b, { sev: 'verify', title, detail });
+    }
+  }
+  // case names, e.g. "Salomon v Salomon"
+  const caseRe = /\b([A-Z][a-z]+(?: [A-Z][a-z]+)?) v\.? ([A-Z][a-z]+(?: [A-Z][a-z]+)?)\b/g;
+  const caseStop = /^(Budget|Actual|Actuals|Forecast|Plan|Prior|Target|Revenue|Cost|Last|Year|This|Plan|Reforecast|Outturn)$/;
+  while ((m = caseRe.exec(text))) {
+    if (caseStop.test(m[1].split(' ').pop()) || caseStop.test(m[2].split(' ')[0])) continue;
+    const a = m.index, b = a + m[0].length;
+    if (!free(a, b)) continue;
+    flag(a, b, { sev: 'verify', title: 'Check this case name', detail: 'Confirm the case exists and decided what is claimed.' });
+  }
+  // named organisations quoted with a statistic
+  const sents = splitSentences(text);
+  for (const s of sents) {
+    NAMED_SOURCES.lastIndex = 0;
+    const mm = NAMED_SOURCES.exec(s.text);
+    if (!mm) continue;
+    const a = s.start + mm.index, b = a + mm[0].length;
+    if (!free(a, b)) continue;
+    if (!/\d/.test(s.text)) continue;
+    flag(a, b, { sev: 'verify', title: `Statistic attributed to ${mm[0]}`, detail: `Confirm ${mm[0]} actually published this figure. Real organisation names are often attached to made-up statistics.` });
+  }
+}
+
+root.ClaimCheck = { analyze, parseNumbers, splitSentences, sameNum, _internals: { derive, range, fits } };
+})(typeof window !== 'undefined' ? window : globalThis);
+/*ENGINE-END*/
+</script>
+
+<script>
+(function () {
+'use strict';
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const SEV_RANK = { error: 4, warn: 3, verify: 2, info: 1, ok: 0.5 };
+const SEV_LABEL = { error: 'Error', warn: 'Warning', verify: 'Verify', info: 'Note', ok: 'Passed' };
+let last = null, filter = 'issues';
+
+// ----- tabs -----
+$$('.tab').forEach(t => t.addEventListener('click', () => {
+  $$('.tab').forEach(x => x.setAttribute('aria-selected', x === t ? 'true' : 'false'));
+  $$('.panel').forEach(p => { p.hidden = p.id !== t.dataset.tab; });
+}));
+function refreshDots() {
+  $('#t-answer').classList.toggle('filled', !!$('#answer').value.trim());
+  $('#t-source').classList.toggle('filled', !!$('#source').value.trim());
+  $('#t-others').classList.toggle('filled', $$('.other').some(t => t.value.trim()));
+}
+$$('textarea').forEach(t => t.addEventListener('input', refreshDots));
+
+// ----- run -----
+function run() {
+  const answer = $('#answer').value;
+  if (!answer.trim()) { $('#t-answer').click(); $('#answer').focus(); return; }
+  last = ClaimCheck.analyze({ answer, source: $('#source').value, others: $$('.other').map(t => t.value) });
+  last.answer = answer;
+  render();
+  $('#report').hidden = false;
+  $('#report').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+$('#run').addEventListener('click', run);
+document.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') run(); });
+
+function ring(score, tone) {
+  const col = { error: 'var(--err)', warn: 'var(--warn)', verify: 'var(--ver)', ok: 'var(--ok)', info: 'var(--info)' }[tone];
+  const r = 46, c = 2 * Math.PI * r, d = c * score / 100;
+  return `<svg viewBox="0 0 108 108" aria-hidden="true"><circle cx="54" cy="54" r="${r}" fill="none" stroke="var(--surface-2)" stroke-width="10"/><circle cx="54" cy="54" r="${r}" fill="none" stroke="${col}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${d} ${c}"/></svg><div class="num"><div><b>${score}</b><span>confidence</span></div></div>`;
+}
+
+function render() {
+  const r = last;
+  $('#ring').innerHTML = ring(r.score, r.tone);
+  $('#verdict').textContent = r.verdict;
+  $('#verdictSub').textContent = r.sub;
+  $('#cErr').textContent = r.counts.error;
+  $('#cWarn').textContent = r.counts.warn;
+  $('#cVer').textContent = r.counts.verify;
+  $('#cOk').textContent = r.counts.ok;
+  const s = r.stats, bits = [];
+  bits.push(`${s.figures} figure${s.figures === 1 ? '' : 's'} found`);
+  if (s.calcRun) bits.push(`${s.calcRun} calculation${s.calcRun === 1 ? '' : 's'} re-done (${s.calcOk} correct, ${s.calcBad} wrong)`);
+  if (r.hasSource) bits.push(`${s.grounded} matched to source, ${s.derived} derived from it, ${s.ungrounded} unsupported`);
+  if (r.otherCount) bits.push(`${s.crossMatched} confirmed by other answers`);
+  if (s.refs) bits.push(`${s.refs} reference${s.refs === 1 ? '' : 's'} to verify`);
+  $('#coverage').textContent = bits.join(' · ');
+  renderAnnot();
+  renderList();
+  renderChecklist();
+}
+
+function renderAnnot() {
+  const text = last.answer, fs = last.findings.filter(f => f.start >= 0 && f.sev !== 'info');
+  const pts = new Set([0, text.length]);
+  fs.forEach(f => { pts.add(f.start); pts.add(f.end); });
+  const cuts = Array.from(pts).sort((a, b) => a - b);
+  let html = '';
+  for (let i = 0; i + 1 < cuts.length; i++) {
+    const a = cuts[i], b = cuts[i + 1];
+    if (a === b) continue;
+    const seg = esc(text.slice(a, b));
+    const cover = fs.filter(f => f.start <= a && f.end >= b);
+    if (!cover.length) { html += seg; continue; }
+    const top = cover.reduce((x, y) => SEV_RANK[y.sev] > SEV_RANK[x.sev] ? y : x);
+    html += `<mark class="hl hl-${top.sev}" data-ids="${cover.map(f => f.id).join(',')}" title="${esc(cover.map(f => SEV_LABEL[f.sev] + ': ' + f.title).join('\n'))}">${seg}</mark>`;
+  }
+  $('#annot').innerHTML = html;
+}
+
+function visible(f) {
+  if (filter === 'all') return true;
+  if (filter === 'issues') return f.sev !== 'ok';
+  return f.sev === filter;
+}
+function renderList() {
+  const items = last.findings.filter(visible);
+  $$('#filters .chip').forEach(c => c.setAttribute('aria-pressed', c.dataset.f === filter ? 'true' : 'false'));
+  if (!items.length) {
+    $('#flist').innerHTML = `<div class="empty">${filter === 'issues' ? 'No issues found. Choose “Passed” to see what was checked.' : 'Nothing in this category.'}</div>`;
+    return;
+  }
+  $('#flist').innerHTML = items.map(f => `
+    <div class="f ${f.sev}" data-id="${f.id}" tabindex="0">
+      <div class="meta"><span class="sev ${f.sev}">${SEV_LABEL[f.sev]}</span><span class="cat">${esc(f.cat)}</span></div>
+      <h4>${esc(f.title)}</h4>
+      <p>${esc(f.detail || '')}</p>
+      ${f.quote && f.quote.length < 400 ? `<q>${esc(f.quote)}</q>` : ''}
+    </div>`).join('');
+}
+$('#filters').addEventListener('click', e => {
+  const c = e.target.closest('.chip');
+  if (!c) return;
+  filter = c.dataset.f;
+  renderList();
+});
+function selectFinding(id, scrollList) {
+  $$('.f.sel').forEach(x => x.classList.remove('sel'));
+  $$('mark.pulse').forEach(x => x.classList.remove('pulse'));
+  const card = document.querySelector(`.f[data-id="${id}"]`);
+  if (card) { card.classList.add('sel'); if (scrollList) card.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+  const marks = $$('#annot mark').filter(m => m.dataset.ids.split(',').includes(String(id)));
+  marks.forEach(m => m.classList.add('pulse'));
+  if (!scrollList && marks[0]) marks[0].scrollIntoView({ block: 'center', behavior: 'smooth' });
+}
+$('#flist').addEventListener('click', e => { const c = e.target.closest('.f'); if (c) selectFinding(c.dataset.id, false); });
+$('#flist').addEventListener('keydown', e => { if (e.key === 'Enter') { const c = e.target.closest('.f'); if (c) selectFinding(c.dataset.id, false); } });
+$('#annot').addEventListener('click', e => {
+  const m = e.target.closest('mark');
+  if (!m) return;
+  const ids = m.dataset.ids.split(',');
+  const f = last.findings.filter(x => ids.includes(String(x.id))).sort((a, b) => SEV_RANK[b.sev] - SEV_RANK[a.sev])[0];
+  if (!visible(f)) { filter = 'all'; renderList(); }
+  selectFinding(f.id, true);
+});
+
+function renderChecklist() {
+  const items = last.findings.filter(f => f.sev === 'verify');
+  $('#checklistCard').hidden = !items.length;
+  $('#checklist').innerHTML = items.map((f, i) => `<label><input type="checkbox" id="ck${i}"><span><strong>${esc(f.title)}</strong>${f.quote ? `: “${esc(f.quote.length > 160 ? f.quote.slice(0, 160) + '…' : f.quote)}”` : ''}</span></label>`).join('');
+}
+
+// ----- export -----
+function toMarkdown() {
+  const r = last, L = [];
+  L.push('# Claim Check report', '');
+  L.push(`Generated ${new Date().toLocaleString()} (offline)`, '');
+  L.push(`**Verdict:** ${r.verdict}  `, `**Confidence score:** ${r.score}/100  `, `**Coverage:** ${$('#coverage').textContent}`, '');
+  const groups = [['error', 'Errors: demonstrably wrong'], ['warn', 'Warnings: unsupported or inconsistent'], ['verify', 'Needs a human check'], ['info', 'Notes'], ['ok', 'Checks passed']];
+  for (const [sev, h] of groups) {
+    const fs = r.findings.filter(f => f.sev === sev);
+    if (!fs.length) continue;
+    L.push(`## ${h} (${fs.length})`, '');
+    fs.forEach(f => {
+      L.push(`- **${f.title}** (${f.cat}). ${f.detail || ''}`);
+      if (f.quote) L.push(`  > ${f.quote.replace(/\n+/g, ' ')}`);
+    });
+    L.push('');
+  }
+  L.push('---', 'Checked with Claim Check: maths, internal consistency, source tracing, cross-answer consistency and reference knowledge. No flags does not prove an answer is correct.');
+  return L.join('\n');
+}
+$('#dlMd').addEventListener('click', () => {
+  const blob = new Blob([toMarkdown()], { type: 'text/markdown' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'claim-check-report.md';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+});
+$('#print').addEventListener('click', () => window.print());
+$('#copyPrompt').addEventListener('click', async () => {
+  const t = $('#vprompt').textContent;
+  try { await navigator.clipboard.writeText(t); $('#copyPrompt').textContent = 'Copied'; }
+  catch (e) { const r = document.createRange(); r.selectNodeContents($('#vprompt')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); $('#copyPrompt').textContent = 'Selected: press Ctrl/Cmd+C'; }
+  setTimeout(() => { $('#copyPrompt').textContent = 'Copy prompt'; }, 2500);
+});
+$('#clear').addEventListener('click', () => {
+  $$('textarea').forEach(t => { t.value = ''; });
+  $('#report').hidden = true; last = null; refreshDots(); $('#t-answer').click();
+});
+
+// ----- example -----
+const EX_ANSWER = `CFO review: FY24 performance
+
+Revenue rose from £10.8m to £12.45m, an increase of 18.2%. Gross profit was £4.24m, giving a gross margin of 34.1%. EBITDA came in at £1.29m, an EBITDA margin of 12.4%.
+
+Operating expenses of £2.95m were broadly in line with the industry average of 23% of revenue. Net debt stands at £3.1m, giving leverage of 2.4x net debt/EBITDA, comfortably inside our 3.0x covenant. Cash closed the year at £2.1m.
+
+Revenue split by region: UK 55%, Europe 30%, US 20%. Headcount grew to 92.
+
+The new warehouse lease should be accounted for under IAS 17, with the right-of-use asset recognised on balance sheet. According to Deloitte's 2023 CFO Signals survey, 68% of mid-market CFOs plan to increase capital expenditure next year. Studies show that businesses with leverage below 3x always outperform their peers.
+
+The board approved the FY25 budget on Tuesday, 14 March 2024.`;
+const EX_SOURCE = `FY24 management accounts (unaudited)
+Revenue: £12,450,000 (FY23: £10,800,000)
+Cost of sales: £8,210,000
+Gross profit: £4,240,000
+Operating expenses: £2,950,000
+EBITDA: £1,290,000
+Cash at year end: £1,850,000
+Net debt: £3,100,000
+Bank covenant: net debt / EBITDA below 3.0x
+Headcount: 84
+Revenue by region: UK 58%, Europe 27%, US 15%`;
+const EX_B = `FY24 summary. Revenue grew 15.3% to £12.45m (FY23: £10.8m). Gross margin was 34.1% on gross profit of £4.24m. EBITDA was £1.29m, a 10.4% margin. Year-end cash was £1.85m and net debt £3.1m, so leverage is 2.4x, within the 3.0x covenant. Leases are now accounted for under IFRS 16.`;
+const EX_C = `Revenue increased to £12.45m from £10.8m. EBITDA of £1.29m represents a margin of about 10%. Cash at year end was £1.85m. Leverage of roughly 2.4x leaves headroom against the covenant. Under IFRS 16 the warehouse lease comes onto the balance sheet.`;
+$('#example').addEventListener('click', () => {
+  $('#answer').value = EX_ANSWER;
+  $('#source').value = EX_SOURCE;
+  $('#o1').value = EX_B; $('#o2').value = EX_C; $('#o3').value = '';
+  refreshDots();
+  run();
+});
+})();
+</script>
+</body>
+</html>
