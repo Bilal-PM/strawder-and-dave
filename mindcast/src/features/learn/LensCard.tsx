@@ -28,16 +28,25 @@ function Step({ n, label, children, last }: { n: number; label: string; children
   );
 }
 
-export function LensCard({ lens }: { lens: Mindcast }) {
-  const { c } = useTheme();
-  const m = useMotion();
+/**
+ * A lens's action in the learner's Loop (their action list on the You tab). `added` is true once an item with the
+ * same text is there, so the action is never added twice. Shared by the lens card and the illustrated stories.
+ */
+export function useLoopAction(lens: Mindcast) {
   const items = useStore((s) => s.loop.items);
   const added = items.some((it) => it.text === lens.action);
   const add = () => {
-    if (added) return;
+    if (useStore.getState().loop.items.some((it) => it.text === lens.action)) return;
     useStore.getState().set((s) => ({ loop: { ...s.loop, items: [...s.loop.items, { id: `loop-${lens.id}-${Date.now()}`, text: lens.action, stage: "plan" }] } }));
     announce("Added to your Loop, your action list on the You tab");
   };
+  return { added, add };
+}
+
+export function LensCard({ lens }: { lens: Mindcast }) {
+  const { c } = useTheme();
+  const m = useMotion();
+  const { added, add } = useLoopAction(lens);
   return (
     <View style={{ backgroundColor: c.surface, borderRadius: radius.l, borderWidth: 1, borderColor: c.line, borderTopWidth: 6, borderTopColor: c.accent, padding: space.xl, gap: space.l }}>
       <View style={{ gap: 4 }}>

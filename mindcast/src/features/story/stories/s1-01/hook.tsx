@@ -4,6 +4,7 @@
  * Frame 0 (reduced motion) has the train in the middle with one clack showing.
  */
 import React from "react";
+import { G } from "react-native-svg";
 import { bell, loop, wave } from "../../living";
 import { carBody, cloud, fishplate, pole, railSide, sleeperEnd, stipple, stoneInk, wheel } from "../../art";
 import { Layer, StageSvg, Still, clamp01, useArt, useSceneClocks, type Tick } from "../../layers";
@@ -25,10 +26,13 @@ const T = {
   RAIL_TOP: 286,
   WHEEL_R: 7,
 } as const;
+/** Shared with the welded-rail scene, so the train is the same size in both. */
+export const FRAME = "translate(-36 -13) scale(1.2)";
 const JOINTS = [70, 190, 310] as const;
 const BOGIES_REAR = [22, 98] as const;
 const BOGIES_FRONT = [148, 224] as const;
-const WHEELS = [14, 30, 90, 106, 140, 156, 216, 232] as const;
+/** Wheel centres along the two-car unit, from its left end. Shared with the welded-rail scene. */
+export const WHEELS = [14, 30, 90, 106, 140, 156, 216, 232] as const;
 const WHEEL_Y = T.RAIL_TOP - T.WHEEL_R;
 
 function trainX(t: number) {
@@ -136,6 +140,8 @@ export function HookScene({ active, reduced }: ArtProps) {
   const { wheels, clacks } = a;
   return (
     <StageSvg label="A two-carriage train runs along older track made of separate rail lengths. At each joint between two rails the wheels go over a small gap, and the word clack appears. Telegraph wires hang between poles and clouds drift by.">
+      {/* Framing: the scene is drawn at the plates' scale and shown 1.2× so the train fills the stage. */}
+      <G transform={FRAME}>
       <Layer c={c} pose={cloudBack} nodes={a.cloudB} />
       <Layer c={c} pose={cloudFront} nodes={a.cloudA} />
       <Still nodes={a.sky} />
@@ -149,6 +155,7 @@ export function HookScene({ active, reduced }: ArtProps) {
       <Layer c={c} pose={frontPose} nodes={a.front} />
       {WHEELS.map((wx, i) => <Layer key={wx} c={c} pose={wheelPose} pivot={[wx, WHEEL_Y]} nodes={wheels[i]} />)}
       {JOINTS.map((j, i) => <Layer key={j} c={c} pose={CLACKS[i]} nodes={clacks[i]} />)}
+      </G>
     </StageSvg>
   );
 }

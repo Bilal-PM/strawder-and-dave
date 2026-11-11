@@ -28,8 +28,7 @@ export type StoryScene = {
   eyebrow: string;
   /** Caption at each depth. Starter stays within about 25 words. Real text, so it can be read aloud and scaled. */
   caption: Record<Audience, string>;
-  /** What the drawing shows, for screen readers. */
-  describe: string;
+  /** The drawing. It describes itself to screen readers (StageSvg's label). */
   Art: React.ComponentType<ArtProps>;
   /** The learner works inside the drawing, so taps in the middle don't turn the page. */
   interactive?: boolean;

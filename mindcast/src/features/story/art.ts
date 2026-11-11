@@ -131,3 +131,13 @@ export function person(p: Painter, x: number, y: number, c: Palette, tone: strin
   p.circle(x, y, 15, c.surface, { roughness: 0.7, strokeWidth: 1.8 });
   p.path(`M${x - 13} ${y + 26} Q${x - 12} ${y + 11} ${x} ${y + 11} Q${x + 12} ${y + 11} ${x + 13} ${y + 26}`, tone, { roughness: 0.8, strokeWidth: 1.8, fillStyle: "hachure", hachureGap: 4 });
 }
+
+/** A hand-drawn dashed line (short rough strokes). */
+export function dashed(p: Painter, x1: number, y1: number, x2: number, y2: number, color: string, dash = 5, gap = 4, sw = 1.4) {
+  const len = Math.hypot(x2 - x1, y2 - y1);
+  const ux = (x2 - x1) / len, uy = (y2 - y1) / len;
+  for (let d = 0; d < len; d += dash + gap) {
+    const e = Math.min(len, d + dash);
+    p.line(x1 + ux * d, y1 + uy * d, x1 + ux * e, y1 + uy * e, { stroke: color, strokeWidth: sw, roughness: 0.3 });
+  }
+}
