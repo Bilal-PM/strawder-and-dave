@@ -1932,7 +1932,7 @@ export const lessons: Lesson[] = [
           "Heat only",
           "A signal fault and a late driver",
           "Heat, a thin ballast shoulder, recent tamping and a possibly unstressed repair",
-          "Leaves on the line",
+          "Wet leaves on the rails",
         ],
         answer: 2,
         why: "Heat supplied the force. The thin shoulder, loosened ballast and a possibly low stress-free temperature decided that the track failed here.",
