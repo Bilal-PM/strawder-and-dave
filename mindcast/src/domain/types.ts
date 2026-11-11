@@ -156,7 +156,74 @@ export type Companion = {
   anim: "hop" | "stretch" | "shake";
   hello: string;
   lines: string[];
-  unlock: { type: "start" } | { type: "streak"; days: number } | { type: "stop"; season: number; stop: number } | { type: "pass"; stop: number } | { type: "event"; season: number };
+  /**
+   * How the companion is earned. "stamps" and "set" are Field Book rewards; "streak" and "stop" are kept so older packs
+   * still type-check, but the railway pack no longer uses them (no streaks in the app).
+   */
+  unlock:
+    | { type: "start" }
+    | { type: "stamps"; count: number }
+    | { type: "set"; set: string }
+    | { type: "streak"; days: number }
+    | { type: "stop"; season: number; stop: number }
+    | { type: "pass"; stop: number }
+    | { type: "event"; season: number };
+};
+
+/** How hard something is to spot. The Field Book prints I-Spy style points beside each item: 5, 15 or 30. */
+export type SpotRarity = "common" | "uncommon" | "rare";
+
+/** Weather or season an item is worth looking at, used to choose the spot of the day. */
+export type SpotTag = "heat" | "cold" | "leaf" | "wet";
+
+/**
+ * A page of the Field Book: real things to spot safely from public places.
+ * `from: "items"` sets list their own SpotItems; "trains" and "places" sets are built from the pack's trains and places.
+ */
+export type SpotSet = {
+  id: string;
+  title: string;
+  /** One line under the title. */
+  blurb: string;
+  from: "items" | "trains" | "places";
+  /** 3 = bronze, silver, gold (spotted on three separate days). 1 = a single stamp (an underline in the ABC). */
+  grades: 1 | 3;
+};
+
+/** One thing to spot. Text is plain and checkable; `why` is taken word for word from the pack's lessons or glossary. */
+export type SpotItem = {
+  id: string;
+  set: string;
+  name: string;
+  rarity: SpotRarity;
+  /** One line: what to look for, from a platform, a footbridge or a train window. */
+  look: string;
+  /** One sentence: why it's there. Copied from existing lesson, glossary or Open Line text, never new facts. */
+  why: string;
+  /** The lesson that explains it, when there is one. */
+  lesson?: string;
+  /** The season that will cover it, when no lesson exists yet. */
+  season?: number;
+  /** Drawing key (shell-specific; see features/fieldbook/art). */
+  art: string;
+  /** Optional reference plate from the illustration library. */
+  plate?: string;
+  /** Landmark key in the Open Line world, when the world has one. */
+  world?: string;
+  tags?: SpotTag[];
+  sources: Source[];
+};
+
+export type SpotPack = {
+  sets: SpotSet[];
+  items: SpotItem[];
+  /** Shown on every set. */
+  fenceRule: string;
+  /** Extra safety lines (flash, staff). */
+  safety: string[];
+  rarity: { trains: Record<TrainGroup, SpotRarity>; places: SpotRarity };
+  /** "Use it" prompts for Explorers (children), by lesson id: a home or school version of the lesson's principle. */
+  practice: Record<string, { explorer: string }>;
 };
 
 export type Season = { n: number; title: string; time: string; event: string; colour: string };
@@ -172,6 +239,8 @@ export type DomainPack = {
   glossary: GlossaryTerm[];
   casts: Mindcast[];
   companions: Companion[];
+  /** The Field Book: things to spot, by set. */
+  spots: SpotPack;
   /** Phrases that make an analogy feel cheesy in this domain. Used by the cliché check. */
   cliches: string[];
   /** Word lists for the Mindcast integrity check (docs/MINDCAST_METHOD.md 3.1). */
