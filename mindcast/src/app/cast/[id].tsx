@@ -4,6 +4,7 @@ import React, { useMemo, useRef } from "react";
 import { Platform, Share, View } from "react-native";
 import { captureRef } from "react-native-view-shot";
 import { pack } from "@/domain";
+import { castLink } from "@/features/mindcast/link";
 import { ChecksList, integrityOf, MappingView, ScoreBadge, audienceLabel, useAllCasts } from "@/features/mindcast/parts";
 import { useStore } from "@/state/store";
 import { Body, BodyB, Button, Card, Chip, Eyebrow, H1, H3, Hand, Row, Screen, Small, tap } from "@/ui/kit";
@@ -21,7 +22,7 @@ export default function CastScreen() {
   const toggleSave = () => useStore.getState().set((s) => ({ casts: { ...s.casts, saved: saved ? s.casts.saved.filter((x) => x !== cast.id) : [...s.casts.saved, cast.id] } }));
   const addAction = () => { tap("success"); useStore.getState().set((s) => ({ loop: { ...s.loop, items: [...s.loop.items, { id: `a${Date.now()}`, text: cast.action, stage: "plan" }] } })); };
   const share = async () => {
-    const text = `${cast.title}\n\n${cast.principle}\n\nThis week: ${cast.action}\n\nA Mindcast from Groundwork`;
+    const text = `${cast.title}\n\n${cast.principle}\n\nThis week: ${cast.action}\n\nOpen it in Groundwork: ${castLink(cast)}`;
     try {
       if (Platform.OS !== "web" && shot.current && (await Sharing.isAvailableAsync())) { const uri = await captureRef(shot as never, { format: "png", quality: 1 }); await Sharing.shareAsync(uri, { dialogTitle: cast.title }); }
       else await Share.share({ message: text });
@@ -31,14 +32,14 @@ export default function CastScreen() {
     <Screen>
       <Row style={{ justifyContent: "space-between" }}>
         <Button label="Back" kind="ghost" small onPress={() => router.back()} />
-        <Row><Button label={saved ? "Saved" : "Save"} small onPress={toggleSave} /><Button label="Share" small onPress={share} /></Row>
+        <Row><Button label={saved ? "Saved" : "Save"} small onPress={toggleSave} /><Button label="Share image" small onPress={share} /><Button label="Send link" small onPress={() => Share.share({ message: `${cast.title}: ${cast.principle}\n${castLink(cast)}` }).catch(() => {})} /></Row>
       </Row>
       <View ref={shot} collapsable={false} style={{ gap: 14, backgroundColor: c.bg, paddingVertical: 4 }}>
         <Row style={{ justifyContent: "space-between", alignItems: "flex-start" }}>
           <View style={{ flex: 1, gap: 8 }}>
             <Eyebrow>Mindcast · {cast.audience.map((a) => audienceLabel[a]).join(", ")}</Eyebrow>
             <H1>{cast.title}</H1>
-            <Small color={c.soft}>{cast.author}</Small>
+            <Small color={c.soft}>{cast.author}{pack.casts.some((x) => x.id === cast.id) ? " · checked against sources" : " · not checked by Groundwork"}</Small>
           </View>
           <ScoreBadge score={integ.score} />
         </Row>

@@ -66,7 +66,7 @@ const REASON_RULES: [RegExp, Topic | null][] = [
   [/\bheat\b|buckl|high temperature|hot weather/i, { lesson: "s1-08", label: "Buckles" }],
   [/flood|heavy rain|landslip|earthwork/i, { lesson: "s1-09", label: "Drainage" }],
   [/\bpoints\b|\bice\b|\bicy\b|\bsnow|\bfrost/i, { lesson: "s1-14", label: "Points" }],
-  [/defective track|broken rail|track (defect|fault|repair)|inspection of the track|speed restriction|track/i, { lesson: "s1-15", label: "Inspection" }],
+  [/defective track|broken rail|track (defect|fault|repair)|inspection of the track|speed restriction|\btrack\b/i, { lesson: "s1-15", label: "Inspection" }],
   [/\btrees?\b|high winds?|strong winds?|debris|object on the line|objects on the line/i, { lesson: "s1-15", label: "Inspection" }],
 ];
 

@@ -51,3 +51,8 @@ describe("checkIntegrity (method section 3)", () => {
     expect(r.checks.find((x) => x.id === "surface")!.points).toBeLessThan(10);
   });
 });
+
+import { decodeCast } from "@/features/mindcast/link";
+describe("shared Mindcast links", () => {
+  it("rejects garbage safely", () => { expect(decodeCast("not-base64!!")).toBeNull(); });
+});

@@ -284,17 +284,17 @@ export function drawClass(D: P, s: DrawSpec, L: Livery, fitW = 640, railY = 184,
           D.rect(X(6.5), Y(s.h - 0.55), 0.6 * S, (s.h - 1.9) * S, body, { strokeWidth: 1 });
           [s.len * 0.24, s.len * 0.76].forEach((x) => bogie(x, 2, 1.1));
           for (let x = s.len * 0.35; x < s.len * 0.7; x += 0.55) D.line(X(x), Y(s.h - 0.8), X(x), Y(s.h - 1.6), { strokeWidth: 0.9, stroke: "#5A6069" });
-          number(1.9 + 2.2, 2.1);
+          number(4.1, 2.1); logo(s.len * 0.8, 2.5);
         } else {
-          const cl = Math.min(23, s.len * 1.3);
+          const cl = NMT_COACH;
           D.rect(X(x0), Y(s.h), cl * S, (s.h - 1.15) * S, body);
           D.rect(X(x0 + 0.3), Y(1.7), (cl - 0.6) * S, 0.18 * S, stripe, { strokeWidth: 1 });
-          [3, 7, 11, 15, 19].filter((p) => p + 1.6 < cl - 0.5).forEach((p) => D.rect(X(x0 + p), Y(s.h - 0.75), 1.6 * S, 0.9 * S, glass, { strokeWidth: 1 }));
+          [2.2, 5.0, 16.4, 19.2].forEach((p) => D.rect(X(x0 + p), Y(s.h - 0.75), 1.6 * S, 0.9 * S, glass, { strokeWidth: 1 }));
           D.path(`M${X(x0 + 9)} ${Y(s.h)} Q${X(x0 + 10.5)} ${Y(s.h + 0.7)} ${X(x0 + 12)} ${Y(s.h)} Z`, "#D7DBE0");
           D.rect(X(x0 + 8.5), Y(1.15), 3 * S, 0.5 * S, DARK, { strokeWidth: 1 });
           [9, 10, 11].forEach((p) => D.line(X(x0 + p), Y(0.65), X(x0 + p), Y(0.1), { stroke: "#E63946", strokeWidth: 1.6 }));
           [x0 + 3, x0 + cl - 3].forEach((x) => bogie(x, 2, 0.92));
-          nameplate(x0 + 15.5, 1.95 + 0.95); logo(x0 + 5, 2.4);
+          nameplate(x0 + 11.5, 2.75);
         }
         continue;
       }
@@ -423,6 +423,8 @@ export function drawClass(D: P, s: DrawSpec, L: Livery, fitW = 640, railY = 184,
 }
 
 const CARD_PAPER = "#FBF7EE";
+/** The measurement train draws its power car plus one 23 m coach. */
+export const NMT_COACH = 23;
 
 /** Steam locomotives, detailed side elevations (GWR Castle, LMS Black Five, LNER A4). */
 function drawSteam(

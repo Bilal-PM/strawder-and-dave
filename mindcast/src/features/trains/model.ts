@@ -68,7 +68,8 @@ export const classLivery = (t: TrainClass): Livery => ({ body: t.body, stripe: t
 /** How much of a vehicle we show (metres). Long trains show the first two cars. */
 export const shownLen = (s: DrawSpec) => {
   const k = s.model.kind;
-  if (k === "unit" || k === "mpv" || k === "nmt") return s.len * 2 + 0.6;
+  if (k === "nmt") return s.len + 0.6 + 23;
+  if (k === "unit" || k === "mpv") return s.len * 2 + 0.6;
   if (k === "legacy" && s.model.show) return s.model.show;
   return s.len;
 };
