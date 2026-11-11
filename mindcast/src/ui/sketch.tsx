@@ -18,7 +18,7 @@ import { F } from "./tokens";
 
 export type Pal = { ink: string; paper: string; glass: string; soft: string };
 export type Opt = Partial<Options> & { fill?: string; fillStyle?: string };
-type Node = { k: "p"; d: string; stroke: string; sw: number; fill: string } | { k: "t"; x: number; y: number; s: string; size: number; color: string; font: string; anchor: "start" | "middle" | "end"; weight?: string } | { k: "img"; href: string; x: number; y: number; w: number; h: number } | { k: "g"; transform: string; children: Node[] };
+export type Node = { k: "p"; d: string; stroke: string; sw: number; fill: string } | { k: "t"; x: number; y: number; s: string; size: number; color: string; font: string; anchor: "start" | "middle" | "end"; weight?: string } | { k: "img"; href: string; x: number; y: number; w: number; h: number } | { k: "g"; transform: string; children: Node[] };
 
 export type Font = "display" | "hand" | "mono" | "body";
 const fontFamily = (f: Font) => (f === "display" ? F.display : f === "hand" ? F.hand : f === "mono" ? F.mono : F.bodySemi);
@@ -55,13 +55,15 @@ export class Painter {
   text(x: number, y: number, s: string, size: number, color: string, font: Font = "body", anchor: "start" | "middle" | "end" = "middle") {
     this.stack[this.stack.length - 1].push({ k: "t", x, y, s, size, color, font: fontFamily(font), anchor });
   }
+  /** A plain (not rough) path: for dense textures such as ballast stipple, which would be slow and noisy through rough.js. */
+  raw(d: string, fill: string, stroke = "none", sw = 0) { this.stack[this.stack.length - 1].push({ k: "p", d, stroke, sw, fill }); }
   image(href: string, x: number, y: number, w: number, h: number) { this.stack[this.stack.length - 1].push({ k: "img", href, x, y, w, h }); }
   /** Draw children inside a transformed group, e.g. painter.group("translate(10 0) scale(2)", () => ...) */
   group(transform: string, fn: () => void) { this.stack.push([]); fn(); const children = this.stack.pop()!; this.stack[this.stack.length - 1].push({ k: "g", transform, children }); }
   nodes() { return this.stack[0]; }
 }
 
-function renderNodes(nodes: Node[], key = "n"): React.ReactNode[] {
+export function renderNodes(nodes: Node[], key = "n"): React.ReactNode[] {
   return nodes.map((n, i) => {
     const k = `${key}-${i}`;
     if (n.k === "p") return <Path key={k} d={n.d} stroke={n.stroke === "none" ? undefined : n.stroke} strokeWidth={n.sw} fill={n.fill} strokeLinecap="round" strokeLinejoin="round" />;
