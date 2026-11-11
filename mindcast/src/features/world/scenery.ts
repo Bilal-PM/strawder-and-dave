@@ -142,7 +142,7 @@ export function buildScenery(w: World, ter: Terrain): Scenery {
   // the tamper itself (Network Rail yellow), on the siding
   {
     const s = tp.s + 25, off = sidingOff(s), y0 = RAIL_TOP;
-    const T = (lx: number, ly: number, lz: number, sx: number, sy: number, sz: number, c: string, edge: number | false = 30, geo = PRIM.box) => {
+    const T = (lx: number, ly: number, lz: number, sx: number, sy: number, sz: number, c: string, edge: number | false = 30, geo: THREE.BufferGeometry = PRIM.box) => {
       const base = along(w, s, off, 0, 1, 1, 1);
       const m = new THREE.Matrix4().makeTranslation(lx, y0 + ly, lz).multiply(new THREE.Matrix4().makeScale(sx, sy, sz));
       b.add(geo, c, base.multiply(m), edge);

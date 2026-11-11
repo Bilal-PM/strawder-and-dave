@@ -108,7 +108,8 @@ export function Scene({ data, simRef, running, tod, cond, cam, reduceMotion, orb
   // ---- materials (shared) ----
   const mats = useMemo(() => ({
     toon: new THREE.MeshToonMaterial({ vertexColors: true, side: THREE.DoubleSide }),
-    terrain: new THREE.MeshToonMaterial({ vertexColors: true, flatShading: true }),
+    // MeshToonMaterial has no typed flatShading, but the shader honours it: faceted hills.
+    terrain: Object.assign(new THREE.MeshToonMaterial({ vertexColors: true }), { flatShading: true }),
     ink: new THREE.LineBasicMaterial({ color: INK, transparent: true, opacity: 0.78 }),
     sleeper: new THREE.MeshToonMaterial({ color: COL.sleeper }),
     lamp: new THREE.MeshBasicMaterial({ toneMapped: false }),
