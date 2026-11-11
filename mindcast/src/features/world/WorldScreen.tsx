@@ -7,7 +7,7 @@ import { ActivityIndicator, AppState, PanResponder, ScrollView, StyleSheet, Text
 import { useReducedMotion } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useStore } from "@/state/store";
-import { Body, BodyB, Button, Card, Eyebrow, H1, H2, Row, Segmented, Small, Stat, tap } from "@/ui/kit";
+import { Body, Button, Card, Eyebrow, H2, Row, Segmented, Small, Stat, tap } from "@/ui/kit";
 import { useTheme } from "@/ui/theme";
 import { F, space } from "@/ui/tokens";
 import { GLCanvas } from "./canvas";
@@ -225,26 +225,26 @@ export default function WorldScreen() {
               ))}
             </View>
             {moment && phase === "running" && (
-              <Card style={{ borderWidth: 1.5, borderColor: c.ink }}>
-                <View accessibilityLiveRegion="polite" style={{ gap: 6 }}>
+              <Panel>
+                <View accessibilityLiveRegion="polite" style={{ gap: 4 }}>
                   <Eyebrow color={c.accent}>{moment.title}</Eyebrow>
-                  <Body>{moment.text}</Body>
-                  <Row gap={8}>
+                  <Small>{moment.text}</Small>
+                  <Row gap={8} style={{ marginTop: 2 }}>
                     {moment.lessonId && <Button small kind="primary" label="Go to the lesson" onPress={() => openLesson(moment.lessonId!)} />}
                     <Button small kind="ghost" label="Got it" onPress={() => setMoments((m) => m.slice(1))} />
                   </Row>
                 </View>
-              </Card>
+              </Panel>
             )}
           </View>
 
           <View pointerEvents="box-none" style={{ gap: 8 }}>
             <BrakeBar s={hud} />
             <Row style={{ justifyContent: "space-between", alignItems: "flex-end" }}>
-              <Lever label="Brake" value={brake} labels={BRAKE_LABELS} tone="#E8611A" onChange={(v) => setLever("brake", v)} height={150} />
+              <Lever label="Brake" value={brake} labels={BRAKE_LABELS} tone="#E8611A" onChange={(v) => setLever("brake", v)} height={124} />
               <View pointerEvents="box-none" style={{ flex: 1, alignItems: "center", gap: 6, paddingBottom: 8 }}>
                 {hud.aws.active && (
-                  <Button kind="pass" label="Acknowledge warning" accessibilityLabel="Acknowledge the caution warning" onPress={() => { if (simRef.current) ackAws(simRef.current); }} />
+                  <Button kind="pass" label="Acknowledge" accessibilityLabel="Acknowledge the caution warning" onPress={() => { if (simRef.current) ackAws(simRef.current); }} />
                 )}
                 {hud.awsBrake && <StatusChip text="Brakes applied" color={c.warn} />}
                 {hud.slip && <StatusChip text="Wheelslip" color={c.ppe} />}
@@ -252,7 +252,7 @@ export default function WorldScreen() {
                 {hud.lowGrip && <StatusChip text="Low grip" color={c.ppe} />}
                 {power > 0 && brake > 0 && <StatusChip text="Power cut while braking" color={c.soft} />}
               </View>
-              <Lever label="Power" value={power} labels={POWER_LABELS} tone="#2B59C3" onChange={(v) => setLever("power", v)} height={150} />
+              <Lever label="Power" value={power} labels={POWER_LABELS} tone="#2B59C3" onChange={(v) => setLever("power", v)} height={124} />
             </Row>
           </View>
         </View>

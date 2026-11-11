@@ -20,7 +20,7 @@ export type WorldData = { world: World; terrain: Terrain; scenery: Scenery };
 export const TOD: Record<Tod, { sky: string; fogNear: number; fogFar: number; sun: string; sunI: number; sunDir: [number, number, number]; hemiSky: string; hemiGround: string; hemiI: number; disc?: string }> = {
   morning: { sky: "#ECEFEA", fogNear: 40, fogFar: 560, sun: "#FFE6C4", sunI: 1.9, sunDir: [0.6, 0.35, 0.5], hemiSky: "#E8EEF3", hemiGround: "#B9C49C", hemiI: 1.5, disc: "#FBE7C6" },
   day: { sky: "#F6F5F1", fogNear: 260, fogFar: 1250, sun: "#FFFFFF", sunI: 2.1, sunDir: [0.4, 0.85, 0.3], hemiSky: "#F2F4F6", hemiGround: "#B9C49C", hemiI: 1.5 },
-  dusk: { sky: "#F0D2B6", fogNear: 160, fogFar: 900, sun: "#FFB070", sunI: 1.7, sunDir: [-0.7, 0.22, -0.4], hemiSky: "#CDB8C6", hemiGround: "#8E8D6A", hemiI: 1.25, disc: "#F7A86A" },
+  dusk: { sky: "#F2D9C2", fogNear: 160, fogFar: 950, sun: "#FFD0A8", sunI: 1.75, sunDir: [-0.7, 0.25, -0.4], hemiSky: "#E2D6DE", hemiGround: "#A9AC8A", hemiI: 1.4, disc: "#F5A66E" },
 };
 
 const LIT = { r: new THREE.Color("#FF3B30"), y: new THREE.Color("#FFC02E"), g: new THREE.Color("#36D27A"), off: new THREE.Color("#3A3F45") };
@@ -247,9 +247,9 @@ export function Scene({ data, simRef, running, tod, cond, cam, reduceMotion, orb
 
   useEffect(() => () => {
     // free GPU memory when leaving the screen
-    statics.traverse((o) => { const m = o as THREE.Mesh; if (m.geometry && m.geometry !== PRIM.box) m.geometry.dispose(); });
+    for (const g of [statics, esr, trains.player.g, trains.ai.g]) g.traverse((o) => { const m = o as THREE.Mesh; if (m.geometry && m.geometry !== PRIM.box) m.geometry.dispose(); });
     Object.values(mats).flat().forEach((m) => (m as THREE.Material).dispose());
-  }, [statics, mats]);
+  }, [statics, esr, trains, mats]);
 
   // ---- per frame ----
   const acc = useRef(0);
@@ -342,10 +342,10 @@ export function Scene({ data, simRef, running, tod, cond, cam, reduceMotion, orb
       tmp.look.lerp(tmp.lookWant, k);
       camera.up.set(fr.ux, fr.uy, fr.uz);
     } else if (c.mode === "chase") {
-      frame(world, head - TRAIN_LEN - 22, fr, true);
-      tmp.want.set(fr.px - fr.rx * 4, fr.py + 9, fr.pz - fr.rz * 4);
-      frame(world, head + 30, fr2, true);
-      tmp.lookWant.set(fr2.px, fr2.py + 1.5, fr2.pz);
+      frame(world, head - TRAIN_LEN - 42, fr, true);
+      tmp.want.set(fr.px - fr.rx * 7, fr.py + 17, fr.pz - fr.rz * 7);
+      frame(world, head + 20, fr2, true);
+      tmp.lookWant.set(fr2.px, fr2.py - 4, fr2.pz);
       if (!tmp.init) { camera.position.copy(tmp.want); tmp.look.copy(tmp.lookWant); }
       camera.position.lerp(tmp.want, k);
       tmp.look.lerp(tmp.lookWant, k);

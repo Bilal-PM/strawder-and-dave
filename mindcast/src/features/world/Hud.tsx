@@ -23,7 +23,7 @@ export const fmtDist = (m: number) => (m >= 1000 ? `${(m / 1000).toFixed(1)} km`
 /** A panel that reads clearly over the 3D scene in both themes. */
 export function Panel({ children, style }: { children: React.ReactNode; style?: object }) {
   const { c, dark } = useTheme();
-  return <View style={[{ backgroundColor: dark ? "rgba(26,30,36,0.92)" : "rgba(255,255,255,0.92)", borderRadius: radius.l, borderWidth: 1.5, borderColor: c.ink, padding: 10 }, style]}>{children}</View>;
+  return <View style={[{ backgroundColor: dark ? "rgba(26,30,36,0.92)" : "rgba(255,255,255,0.92)", borderRadius: radius.l, borderWidth: 1.5, borderColor: c.ink, paddingHorizontal: 10, paddingVertical: 8 }, style]}>{children}</View>;
 }
 
 export function MiniSignal({ aspect, size = 12 }: { aspect: Aspect; size?: number }) {
@@ -40,11 +40,11 @@ export function SpeedPanel({ s }: { s: Snapshot }) {
   const { c } = useTheme();
   const over = s.mph > s.limitMph + 3;
   return (
-    <Panel style={{ minWidth: 118 }}>
+    <Panel style={{ minWidth: 92 }}>
       <View accessible accessibilityLabel={`Speed ${Math.round(s.mph)} miles per hour. Limit ${s.limitMph}.`}>
         <Text style={{ fontFamily: F.mono, fontSize: 11, letterSpacing: 1, color: c.soft }}>SPEED</Text>
         <View style={{ flexDirection: "row", alignItems: "baseline", gap: 4 }}>
-          <Text style={{ fontFamily: F.display, fontSize: 40, lineHeight: 44, color: over ? c.warn : c.ink, fontVariant: ["tabular-nums"] }}>{Math.round(s.mph)}</Text>
+          <Text style={{ fontFamily: F.display, fontSize: 32, lineHeight: 36, color: over ? c.warn : c.ink, fontVariant: ["tabular-nums"] }}>{Math.round(s.mph)}</Text>
           <Text style={{ fontFamily: F.bodySemi, fontSize: 14, color: c.soft }}>mph</Text>
         </View>
         <View style={{ flexDirection: "row", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
@@ -64,10 +64,10 @@ export function SignalPanel({ s }: { s: Snapshot }) {
   return (
     <Panel style={{ flexDirection: "row", gap: 10, alignItems: "center" }}>
       <View accessible accessibilityLabel={`Next signal ${s.sig.label}, ${ASPECT_NAME[s.sig.aspect]}, ${fmtDist(s.sig.d)} ahead.`} style={{ flexDirection: "row", gap: 10, alignItems: "center" }}>
-        <MiniSignal aspect={s.sig.aspect} />
+        <MiniSignal aspect={s.sig.aspect} size={10} />
         <View>
-          <Text style={{ fontFamily: F.mono, fontSize: 11, letterSpacing: 1, color: c.soft }}>NEXT SIGNAL</Text>
-          <Text style={{ fontFamily: F.display, fontSize: 18, color: c.ink }}>{s.sig.label}</Text>
+          <Text style={{ fontFamily: F.mono, fontSize: 10, letterSpacing: 1, color: c.soft }}>SIGNAL</Text>
+          <Text style={{ fontFamily: F.display, fontSize: 16, color: c.ink }}>{s.sig.label}</Text>
           <Text style={{ fontFamily: F.bodySemi, fontSize: 13, color: s.sig.aspect === 0 ? c.warn : c.ink }}>{ASPECT_NAME[s.sig.aspect]}</Text>
           <Text style={{ fontFamily: F.body, fontSize: 12, color: c.soft }}>{fmtDist(s.sig.d)}</Text>
         </View>
@@ -83,7 +83,7 @@ export function StopPanel({ s }: { s: Snapshot }) {
     <Panel style={{ flex: 1 }}>
       <View accessible accessibilityLabel={`Next stop ${s.station.name}. ${status}.`}>
         <Text style={{ fontFamily: F.mono, fontSize: 11, letterSpacing: 1, color: c.soft }}>NEXT STOP</Text>
-        <Text numberOfLines={1} style={{ fontFamily: F.displaySemi, fontSize: 16, color: c.ink }}>{s.station.name}</Text>
+        <Text numberOfLines={2} style={{ fontFamily: F.displaySemi, fontSize: 14, lineHeight: 17, color: c.ink }}>{s.station.name}</Text>
         <Text style={{ fontFamily: F.bodySemi, fontSize: 13, color: s.dwell > 0 ? c.good : c.ink }}>{status}</Text>
       </View>
     </Panel>
@@ -111,15 +111,15 @@ export function BrakeBar({ s }: { s: Snapshot }) {
   const ticks = [];
   for (let m = 100; m < scale; m += scale > 900 ? 200 : 100) ticks.push(m);
   return (
-    <Panel style={{ gap: 6 }}>
+    <Panel style={{ gap: 4 }}>
       <View accessible accessibilityRole="text" accessibilityLabel={`Braking distance. ${msg}${t ? ` ${t.kind === "red" ? "Red signal" : "Stop marker"} in ${fmtDist(t.dist)}.` : ""}`}>
-        <Text style={{ fontFamily: F.bodySemi, fontSize: 13, color: late ? c.warn : c.ink }}>{msg}</Text>
-        <View onLayout={(e: LayoutChangeEvent) => setW(e.nativeEvent.layout.width)} style={{ height: 26, marginTop: 6, justifyContent: "center" }}>
+        <Text style={{ fontFamily: F.bodySemi, fontSize: 13, lineHeight: 17, color: late ? c.warn : c.ink }}>{msg}</Text>
+        <View onLayout={(e: LayoutChangeEvent) => setW(e.nativeEvent.layout.width)} style={{ height: 22, marginTop: 4, justifyContent: "center" }}>
           <View style={{ position: "absolute", left: 0, right: 0, height: 10, borderRadius: 5, backgroundColor: c.sunk, borderWidth: 1, borderColor: c.line }} />
           {ticks.map((m) => <View key={m} style={{ position: "absolute", left: px(m), width: 1, height: 10, backgroundColor: c.line }} />)}
           {!stopped && <View style={{ position: "absolute", left: 0, width: Math.max(4, px(bd)), height: 10, borderRadius: 5, backgroundColor: late ? c.warn : "#F2C230", borderWidth: 1, borderColor: c.ink }} />}
           {t && t.dist >= 0 && (
-            <View style={{ position: "absolute", left: px(t.dist) - 2, width: 4, height: 26, borderRadius: 2, backgroundColor: t.kind === "red" ? "#E53935" : c.ink }} />
+            <View style={{ position: "absolute", left: px(t.dist) - 2, width: 4, height: 22, borderRadius: 2, backgroundColor: t.kind === "red" ? "#E53935" : c.ink }} />
           )}
         </View>
         <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
@@ -160,8 +160,10 @@ export function Lever({ label, value, labels, onChange, tone, height = 176 }: { 
   ).current;
   const step = height / max;
   return (
-    <View style={{ alignItems: "center", gap: 6 }}>
-      <Text style={{ fontFamily: F.mono, fontSize: 11, letterSpacing: 1, color: c.ink }}>{label.toUpperCase()}</Text>
+    <View style={{ alignItems: "center", gap: 4 }}>
+      <View style={{ backgroundColor: c.surface, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 }}>
+        <Text style={{ fontFamily: F.mono, fontSize: 11, letterSpacing: 1, color: c.ink }}>{label.toUpperCase()}</Text>
+      </View>
       <View
         accessible
         accessibilityRole="adjustable"
@@ -170,17 +172,17 @@ export function Lever({ label, value, labels, onChange, tone, height = 176 }: { 
         accessibilityActions={[{ name: "increment" }, { name: "decrement" }]}
         onAccessibilityAction={(e) => set(value + (e.nativeEvent.actionName === "increment" ? 1 : -1))}
         {...pan.panHandlers}
-        style={{ width: 92, height: height + 28, borderRadius: 22, borderWidth: 2, borderColor: c.ink, backgroundColor: "rgba(255,255,255,0.9)", paddingVertical: 14 }}
+        style={{ width: 84, height: height + 24, borderRadius: 20, borderWidth: 2, borderColor: c.ink, backgroundColor: "rgba(255,255,255,0.86)", paddingVertical: 12 }}
       >
         <View pointerEvents="none" style={{ flex: 1 }}>
-          <View style={{ position: "absolute", left: 44, width: 4, top: 0, bottom: 0, backgroundColor: "#D8D4CB", borderRadius: 2 }} />
-          <View style={{ position: "absolute", left: 44, width: 4, bottom: 0, height: value * step, backgroundColor: tone, borderRadius: 2 }} />
+          <View style={{ position: "absolute", left: 50, width: 4, top: 0, bottom: 0, backgroundColor: "#D8D4CB", borderRadius: 2 }} />
+          <View style={{ position: "absolute", left: 50, width: 4, bottom: 0, height: value * step, backgroundColor: tone, borderRadius: 2 }} />
           {labels.map((l, i) => (
             <View key={i} style={{ position: "absolute", top: height - i * step - 8, left: 0, right: 0, flexDirection: "row", alignItems: "center" }}>
-              <Text style={{ width: 38, textAlign: "right", fontFamily: F.mono, fontSize: 10, color: i === value ? "#1B1F24" : "#7A828C" }}>{l}</Text>
+              <Text style={{ width: 36, textAlign: "right", fontFamily: F.mono, fontSize: 10, color: i === value ? "#1B1F24" : "#7A828C" }}>{l}</Text>
             </View>
           ))}
-          <View style={{ position: "absolute", left: 30, top: height - value * step - 14, width: 32, height: 28, borderRadius: 8, backgroundColor: tone, borderWidth: 2, borderColor: "#1B1F24" }} />
+          <View style={{ position: "absolute", left: 38, top: height - value * step - 13, width: 28, height: 26, borderRadius: 8, backgroundColor: tone, borderWidth: 2, borderColor: "#1B1F24" }} />
         </View>
       </View>
     </View>

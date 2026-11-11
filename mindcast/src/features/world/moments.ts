@@ -36,8 +36,11 @@ export function momentFor(key: MomentKey): Moment {
   const d = DEFS[key];
   const terms = (d.terms ?? []).map((t) => t.toLowerCase());
   const g = pack.glossary.find((x) => terms.includes(x.term.toLowerCase()));
-  const lesson = d.diagrams?.length ? pack.lessons.find((l) => d.diagrams!.includes(l.diagram)) : undefined;
-  return { key, title: d.title, text: g?.plain ?? d.text, lessonId: lesson?.id };
+  // the first listed diagram with a lesson wins, so the most relevant lesson is linked
+  const lesson = (d.diagrams ?? []).map((k) => pack.lessons.find((l) => l.diagram === k)).find(Boolean);
+  // the card holds one or two short sentences; long glossary entries fall back to ours
+  const text = g && g.plain.length <= 200 ? g.plain : d.text;
+  return { key, title: d.title, text, lessonId: lesson?.id };
 }
 
 /** A glossary definition from the pack, if it has one. */

@@ -9,8 +9,8 @@ import * as THREE from "three";
 import { frame, inRange, makeNearest, newFrame, sample, smoothstep, type World } from "./track";
 
 export const GRASS = ["#B7CB8F", "#A6BF82", "#C4D09A", "#D6CC94", "#AFC48A"];
-const SLOPE = "#98B27C";
-const CUT = "#C9B58C";
+const SLOPE = "#9FB680";
+const CUT = "#BDBF8E";
 const CESS = "#BDB4A3";
 
 export type Terrain = {

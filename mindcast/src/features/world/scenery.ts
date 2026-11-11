@@ -50,7 +50,6 @@ export type Scenery = {
   crossing: { booms: Pivot[]; lights: THREE.Matrix4[] };
   esr: { geo: THREE.BufferGeometry; lines: THREE.BufferGeometry; labels: Label[] };
   labels: Label[];
-  marker: { lamp: THREE.Matrix4 };
 };
 
 const F = newFrame();
@@ -485,7 +484,6 @@ export function buildScenery(w: World, ter: Terrain): Scenery {
     crossing: { booms, lights: xLights },
     esr: { geo: eb.meshGeometry(), lines: eb.lineGeometry(), labels: esrLabels },
     labels,
-    marker: { lamp: new THREE.Matrix4() },
   };
 }
 
