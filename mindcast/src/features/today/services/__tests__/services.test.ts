@@ -114,6 +114,8 @@ describe("departures", () => {
       [
         { id: "1", lineId: "elizabeth", lineName: "Elizabeth line", platformName: "Platform A", destinationName: "Abbey Wood Rail Station", destinationNaptanId: "910GABWD", expectedArrival: "2026-11-11T17:20:00Z", timeToStation: 600 },
         { id: "2", lineId: "elizabeth", lineName: "Elizabeth line", destinationName: "Paddington Rail Station", destinationNaptanId: st.tfl, expectedArrival: "2026-11-11T17:15:00Z", timeToStation: 300 },
+        { id: "3", lineId: "elizabeth", lineName: "Elizabeth line", destinationName: "Paddington", destinationNaptanId: "910GPADTONX", expectedArrival: "2026-11-11T17:16:00Z", timeToStation: 360 },
+        { id: "4", lineId: "elizabeth", lineName: "Elizabeth line", platformName: "A", destinationName: "Abbey Wood Rail Station", destinationNaptanId: "910GABWD", expectedArrival: "2026-11-11T17:20:20Z", timeToStation: 620 },
       ],
       [{ id: "elizabeth", name: "Elizabeth line", lineStatuses: [{ statusSeverity: 9, statusSeverityDescription: "Minor Delays", reason: "Minor delays due to a signal failure at Ealing." }] }],
       st

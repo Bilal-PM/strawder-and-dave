@@ -25,7 +25,7 @@ const BRAKE_STEPS = [0, 0.3, 0.6, 0.9, 1.2]; // m/s^2 demanded; 4 is emergency
 const BRAKE_LAG = 0.7; // s, time constant for brake build-up
 const AWS_TIME = 2.7; // s to acknowledge
 const DWELL = 8; // s doors open
-const AI_DWELL = 22;
+const AI_DWELL = 16;
 
 export type Cond = "dry" | "leaves" | "hot";
 export type Tod = "morning" | "day" | "dusk";
@@ -191,7 +191,8 @@ export function nextSignal(sim: Sim) {
 export function ackAws(sim: Sim) {
   if (!sim.aws.active) return;
   sim.aws.active = false;
-  toast(sim, "Warning acknowledged.", "good", 10);
+  sim.score += 10;
+  if (!sim.shown.has("ack")) { sim.shown.add("ack"); toast(sim, "Warning acknowledged. Watch the next signal.", "good"); }
 }
 
 /** Advance the world by dt seconds. */

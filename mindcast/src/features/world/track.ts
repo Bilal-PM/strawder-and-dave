@@ -231,11 +231,11 @@ export function buildWorld(names: string[]): World {
   sigS.sort((a, b) => a - b);
   const signals: SignalDef[] = sigS.map((s, i) => ({ idx: i, s, label: `OL${String(i + 1).padStart(2, "0")}`, aws: (s - 180 + W) % W }));
 
-  const signalBox = { s: stations[0].stopS - 60, side: 1 as const };
+  const signalBox = { s: stations[0].stopS + 75, side: 1 as const };
   const tamper = { s: st[4] + 60, side: -1 as const, from: st[4] + 5, to: st[4] + 125 };
 
   const landmarks: Landmark[] = [
-    { key: "track", s: 40 },
+    { key: "track", s: stations[0].stopS + 40 },
     { key: "signalbox", s: signalBox.s },
     { key: "cutting", s: cutting.from + 20 },
     { key: "tamper", s: tamper.s },

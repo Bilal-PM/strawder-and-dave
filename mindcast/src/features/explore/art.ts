@@ -17,9 +17,11 @@ export function paintMap(p: Painter, c: Palette) {
   CITY_LABELS.forEach(([name, k, side]) => {
     const [x, y] = P(k);
     const w = name.length * 17 * 0.62 + 8;
-    p.rect(side > 0 ? x + 6 : x - 6 - w, y - 9, w, 20, c.bg, { stroke: "none", roughness: 0.3 });
+    const bx = side > 0 ? x + 6 : side < 0 ? x - 6 - w : x - w / 2, by = side === 0 ? y + 9 : y - 9;
+    p.rect(bx, by, w, 20, c.bg, { stroke: "none", roughness: 0.3 });
     p.circle(x, y, 8, c.ink, { roughness: 0.5, strokeWidth: 1.4 });
-    p.text(x + side * 10, y + 6, name, 17, c.soft, "mono", side > 0 ? "start" : "end");
+    if (side === 0) p.text(x, y + 25, name, 17, c.soft, "mono", "middle");
+    else p.text(x + side * 10, y + 6, name, 17, c.soft, "mono", side > 0 ? "start" : "end");
   });
   p.text(520, 58, "N", 24, c.ink, "display");
   p.line(520, 66, 520, 106, { roughness: 0.6 });

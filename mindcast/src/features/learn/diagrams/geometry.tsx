@@ -15,7 +15,7 @@ const W = 340;
 
 const FAULTS = [
   { value: "line", label: "Line", why: "Line: the track has kinked sideways. Seen from above it is no longer a smooth line." },
-  { value: "level", label: "Level", why: "Level: the track dips along its length. Seen from the side, both rails sag together." },
+  { value: "level", label: "Level", why: "Level (engineers also say top): the track dips along its length. Seen from the side, both rails sag together." },
   { value: "twist", label: "Twist", why: "Twist: one rail rises while the other falls over a short distance. That can lift a wheel." },
   { value: "gauge", label: "Gauge", why: "Gauge: the rails have spread apart. Too wide and a wheel can drop between them." },
 ] as const;

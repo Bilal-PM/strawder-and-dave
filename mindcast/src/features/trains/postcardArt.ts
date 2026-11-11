@@ -80,8 +80,8 @@ export function paintPostcard(D: Painter, a: PostcardArt) {
   // ground and track bed
   if (sc === "viaduct") {
     // brick viaduct: a solid wall from the deck down, with arched openings onto the valley
-    flat(D, px, groundY + 20, pw, bottom - groundY - 20, "#9DBE8E");
-    D.rect(px, groundY + 20, pw, bottom - groundY - 20, "#D27A4B", { fillStyle: "hachure", hachureGap: 8, strokeWidth: 1.6 });
+    flat(D, px, groundY + 20, pw, bottom - groundY - 20, "#D99468");
+    D.rect(px, groundY + 20, pw, bottom - groundY - 20, "#B5643C", { fillStyle: "hachure", hachureGap: 9, strokeWidth: 1.6 });
     for (let i = 0; i < 6; i++) { const x = px + i * 150; D.path(`M${x + 22} ${bottom} L${x + 22} 850 Q${x + 75} 770 ${x + 128} 850 L${x + 128} ${bottom} Z`, "#9DBE8E", { strokeWidth: 2 }); }
     D.rect(px, groundY + 6, pw, 26, "#C5683A");
   } else if (sc === "city" && a.tram) {

@@ -79,12 +79,21 @@ function frameVecs(w: World, s: number, level = true) {
   return { f: V(f.fx, 0, f.fz).normalize(), r: V(f.rx, 0, f.rz).normalize(), u: V(0, 1, 0), p: V(f.px, f.py, f.pz) };
 }
 
-type SweepOpt = { level?: boolean; closed?: boolean; lines?: number[]; offset?: (s: number) => number; cap?: boolean };
+type SweepOpt = { level?: boolean; closed?: boolean; lines?: number[]; offset?: (s: number) => number; cap?: boolean; adaptive?: boolean };
 function sweep(b: Builder, w: World, from: number, to: number, step: number, prof: [number, number][], cols: string[], opt: SweepOpt = {}) {
-  const n = Math.max(1, Math.ceil((to - from) / step));
+  // ring positions: evenly spaced, or longer steps on straights when adaptive
+  const ss: number[] = [];
+  if (opt.adaptive) {
+    for (let s = from; s < to - 0.5; ) { ss.push(s); s += Math.abs(sample(w, s).k) > 0.0004 || Math.abs(sample(w, s + step * 3).k) > 0.0004 ? step : step * 3; }
+    ss.push(to);
+  } else {
+    const cnt = Math.max(1, Math.ceil((to - from) / step));
+    for (let i = 0; i <= cnt; i++) ss.push(from + ((to - from) * i) / cnt);
+  }
+  const n = ss.length - 1;
   const rings: THREE.Vector3[][] = [];
   for (let i = 0; i <= n; i++) {
-    const s = from + ((to - from) * i) / n;
+    const s = ss[i];
     frame(w, s, F, !!opt.level);
     const off = opt.offset ? opt.offset(s) : 0;
     rings.push(prof.map(([lat, y]) => V(F.px + F.rx * (lat + off) + F.ux * y, F.py + F.ry * (lat + off) + F.uy * y, F.pz + F.rz * (lat + off) + F.uz * y)));
@@ -110,10 +119,10 @@ export function buildScenery(w: World, ter: Terrain): Scenery {
 
   // ---------------- track ----------------
   const ballastProf: [number, number][] = [[-2.7, -0.18], [-1.7, 0.3], [1.7, 0.3], [2.7, -0.18]];
-  sweep(b, w, 0, w.L, 3, ballastProf, [COL.ballast, COL.ballastTop, COL.ballast]);
+  sweep(b, w, 0, w.L, 3, ballastProf, [COL.ballast, COL.ballastTop, COL.ballast], { adaptive: true });
   for (const sgn of [-1, 1]) {
     const o = sgn * RAIL_HALF;
-    sweep(b, w, 0, w.L, 2.5, [[o - sgn * 0.036, 0.38], [o - sgn * 0.036, RAIL_TOP], [o + sgn * 0.036, RAIL_TOP], [o + sgn * 0.036, 0.38]], [COL.railSide, COL.railTop, COL.railSide]);
+    sweep(b, w, 0, w.L, 2.5, [[o - sgn * 0.036, 0.38], [o - sgn * 0.036, RAIL_TOP], [o + sgn * 0.036, RAIL_TOP], [o + sgn * 0.036, 0.38]], [COL.railSide, COL.railTop, COL.railSide], { adaptive: true });
   }
   const sleeperAt = (s: number, off = 0, level = false) => {
     frame(w, s, F, level);

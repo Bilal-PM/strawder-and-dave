@@ -47,7 +47,8 @@ export const LINES: string[][] = [
   ["ryd", "sha"],
   ["bel", "col", "cas", "der"],
 ];
-export const CITY_LABELS: [string, string, 1 | -1][] = [["London", "lon", 1], ["Edinburgh", "edi", 1], ["Glasgow", "gla", -1], ["York", "yrk", 1], ["Manchester", "man", 1], ["Inverness", "inv", 1], ["Belfast", "bel", 1], ["Plymouth", "ply", 1], ["Cardiff", "cdf", -1]];
+/** [label, T key, side]: 1 = right, -1 = left, 0 = centred below. */
+export const CITY_LABELS: [string, string, 1 | -1 | 0][] = [["London", "lon", 1], ["Edinburgh", "edi", 0], ["Glasgow", "gla", -1], ["York", "yrk", 1], ["Manchester", "man", 1], ["Inverness", "inv", 1], ["Belfast", "bel", 1], ["Plymouth", "ply", 1], ["Cardiff", "cdf", -1]];
 
 const norm = (s: string) => s.toLowerCase().replace(/\(.*?\)/g, "").replace(/[^a-z ]/g, " ").replace(/\s+/g, " ").trim();
 

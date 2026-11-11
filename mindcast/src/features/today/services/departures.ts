@@ -154,10 +154,24 @@ const londonTime = (iso: string) => {
 };
 const tidyTflName = (s?: string) => (s ?? "Unknown").replace(/ (Rail|Underground) Station$/i, "").replace(/ \(.*\)$/, "");
 
+const plain = (s: string) => tidyTflName(s).toLowerCase().replace(/^london /, "").trim();
+
+/**
+ * TfL arrivals include trains terminating here and, on some lines, several predictions for the same
+ * departure. Drop the first and collapse the second (same minute, same destination) so the board stays honest.
+ */
 export function parseTfl(arrivals: TflArrival[], statuses: TflLineStatus[], station: Station): Board {
+  const here = plain(station.name);
+  const seen = new Set<string>();
   const rows: Departure[] = arrivals
-    .filter((a) => a.destinationNaptanId !== station.tfl)
+    .filter((a) => a.destinationNaptanId !== station.tfl && plain(a.destinationName ?? "") !== here)
     .sort((a, b) => a.timeToStation - b.timeToStation)
+    .filter((a) => {
+      const k = `${londonTime(a.expectedArrival)}|${plain(a.destinationName ?? "")}`;
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    })
     .slice(0, ROWS)
     .map((a) => ({
       id: a.id,

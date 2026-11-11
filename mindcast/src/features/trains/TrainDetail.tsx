@@ -113,7 +113,9 @@ export default function TrainDetail({ id }: { id: string }) {
       </Card>
       <View style={{ gap: space.s }}>
         <Eyebrow>To scale</Eyebrow>
-        <ScaleStrip train={t} />
+        <Card style={{ paddingHorizontal: 8 }}>
+          <ScaleStrip train={t} />
+        </Card>
         <Small color={c.soft}>{legacy ? "Next to a 1.75 m person. Engineering machines are simplified drawings, set to their real length and height." : "Next to a 1.75 m person, at the same scale."}{toDraw(t).model.kind === "unit" && t.cars && t.cars > 2 ? ` Two of ${t.cars} cars shown.` : ""}</Small>
       </View>
       <Sources sources={t.sources} />

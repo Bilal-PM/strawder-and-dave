@@ -347,7 +347,7 @@ export function drawClass(D: P, s: DrawSpec, L: Livery, fitW = 640, railY = 184,
       else { nameplate(x0 + s.len / 2, flH + 0.95); logo(x0 + 3.2, h - 0.55); }
     }
     if (m.artic) D.rect(X(s.len), Y(s.h - 0.3), 0.6 * S, (s.h - 0.6 - flH) * S, "#3A3F45", { strokeWidth: 1 });
-    if (s.cars > 2 && !L.noMore) D.text(X(shownLen(s)) - 4, railY + MORE_DY, `+ ${s.cars - 2} more ${m.kind === "unit" ? "cars" : "vehicles"}`, Math.max(10, S * 0.5), P.ink, "mono", "end");
+    if (s.cars > 2 && !L.noMore) D.text(X(shownLen(s)) - 4, railY + MORE_DY, `+ ${s.cars - 2} more ${m.kind === "unit" ? "cars" : "vehicles"}`, Math.max(16, S * 0.5), P.ink, "mono", "end");
     return;
   }
 

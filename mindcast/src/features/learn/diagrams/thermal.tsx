@@ -14,7 +14,7 @@ export function RailExpansion({ lesson }: { lesson: Lesson }) {
   const { c } = useTheme();
   const pal = usePal();
   const [t, setT] = useState(0.5);
-  const [mode, setMode] = useState<"jointed" | "cwr">("jointed");
+  const [mode, setMode] = useState<"jointed" | "cwr">(() => (/weld|continuous|\bCWR\b/i.test(`${lesson.title} ${lesson.hook}`) ? "cwr" : "jointed"));
   const heat = t < 0.34 ? "cold" : t > 0.66 ? "hot" : "mild";
   const k = (t - 0.5) * 2; // -1 tension .. +1 compression
   const status =
@@ -67,7 +67,7 @@ export function Stressing({ lesson }: { lesson: Lesson }) {
   const { c } = useTheme();
   const pal = usePal();
   const [t, setT] = useState(0);
-  const sft = factQuantity(lesson, /stress[- ]free|neutral|stressing/i, /°C/);
+  const sft = factQuantity(lesson, /stress[- ]free|neutral|halfway|stressing|CWR is fixed/i, /°C/);
   const closed = t >= 0.96;
   const status = t === 0 ? "The rail was cut and freed on rollers. It is cooler than its stress-free temperature, so it is shorter than it should be." : closed ? "Gap closed: weld now. Once clipped down, the rail behaves as if it had been laid at its stress-free temperature." : "Pulling: the tensor stretches the rail to the length it would have at its stress-free temperature.";
   const fact = factMatching(lesson, /stress|tensor|°C|neutral/i);

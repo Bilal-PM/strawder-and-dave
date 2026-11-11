@@ -6,7 +6,7 @@ import { Button, tap, usePal } from "@/ui/kit";
 import { Sketch, type Painter } from "@/ui/sketch";
 import { useTheme } from "@/ui/theme";
 import { F, radius, type Palette } from "@/ui/tokens";
-import { factMatching } from "../content";
+import { factMatching, factQuantity } from "../content";
 import { Frame, Pills, Slider, Stepper, announce } from "../ui";
 import { arrow, clamp01, mix } from "./draw";
 
@@ -43,17 +43,18 @@ export function ThermiteWeld({ lesson }: { lesson: Lesson }) {
   const { c } = useTheme();
   const pal = usePal();
   const [i, setI] = useState(0);
-  const fact = factMatching(lesson, /thermite|weld|crucible|°C/i);
+  const fact = factMatching(lesson, /thermit|aluminothermic|crucible/i) ?? factMatching(lesson, /weld/i);
+  const gapSize = factQuantity(lesson, /thermit|aluminothermic|gap/i, /mm/);
   return (
     <Frame title="Make a thermite weld" hint="Step through the weld, one stage at a time." status={`${i + 1}. ${WELD[i].name}: ${WELD[i].text}`} statusColor={i >= 2 && i <= 3 ? c.ppe : c.accent} fact={fact}
       control={<Stepper i={i} n={WELD.length} label="Weld" names={WELD.map((w) => w.name)} onChange={(n) => { setI(n); announce(`${WELD[n].name}. ${WELD[n].text}`); }} />}>
-      <Sketch w={W} h={200} pal={pal} deps={[i, c.ink]} accessibilityLabel={`Thermite weld, step ${i + 1}: ${WELD[i].name}`} paint={(p) => {
+      <Sketch w={W} h={200} pal={pal} deps={[i, gapSize, c.ink]} accessibilityLabel={`Thermite weld, step ${i + 1}: ${WELD[i].name}`} paint={(p) => {
         const y = 120, g = i >= 3 ? 0 : 14;
         const railFill = i === 2 ? mix(c.sunk, c.ppe, 0.5) : c.sunk;
         railSide(p, -4, 170 - g / 2, y, railFill);
         railSide(p, 170 + g / 2, W + 4, y, railFill);
         p.rect(-4, y + 28, W + 8, 30, c.soft, { fillStyle: "hachure", hachureGap: 7, strokeWidth: 1 });
-        if (i === 0) { arrow(p, 130, 100, 160, 100, c.ink, 1.6, 6); arrow(p, 210, 100, 180, 100, c.ink, 1.6, 6); p.text(170, 90, "gap", 16, c.ink, "hand"); }
+        if (i === 0) { arrow(p, 130, 100, 160, 100, c.ink, 1.6, 6); arrow(p, 210, 100, 180, 100, c.ink, 1.6, 6); p.text(170, 90, gapSize ? `gap about ${gapSize}` : "gap", 16, c.ink, "hand"); }
         if (i >= 1 && i <= 3) p.rect(146, y - 10, 48, 48, i === 3 ? mix(c.surface, c.ppe, 0.35) : c.surface, { strokeWidth: 2.2, roughness: 0.6 });
         if (i === 1) p.text(170, 96, "moulds", 16, c.ink, "hand");
         if (i === 2) { for (let k = 0; k < 4; k++) p.path(`M ${158 + k * 8} 106 q -6 -14 0 -26 q 6 12 0 26`, c.ppe, { stroke: c.ppe, strokeWidth: 1.4 }); p.line(170, 40, 170, 80, { strokeWidth: 3 }); p.text(186, 52, "burner", 15, c.ppe, "hand", "start"); }
