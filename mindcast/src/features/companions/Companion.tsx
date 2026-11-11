@@ -2,18 +2,15 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { View } from "react-native";
 import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withSequence, withSpring, withTiming } from "react-native-reanimated";
 import { companionById, pack } from "@/domain";
-import { paintPet } from "@/features/crew/draw";
+import { CompanionArt } from "./Art";
 import { useStore } from "@/state/store";
-import { Bubble, Tappable, tap, usePal } from "@/ui/kit";
-import { Sketch } from "@/ui/sketch";
-import { useTheme } from "@/ui/theme";
+import { Bubble, Tappable, tap } from "@/ui/kit";
 
 /** Reading time: about 3 words a second plus thinking time. */
 export const readMs = (t: string) => 5000 + t.split(/\s+/).length * 380;
 
 /** A companion that can be tapped to speak. Shows its bubble above. */
 export function CompanionSpeaker({ id, size = 84, first, onLine }: { id?: string; size?: number; first?: string; onLine?: (n: number) => string | undefined }) {
-  const pal = usePal(); const { c } = useTheme();
   const chosen = useStore((s) => s.crew.pet);
   const chatty = useStore((s) => s.settings.chatty);
   const comp = companionById(id ?? chosen) ?? pack.companions[0];
@@ -40,7 +37,7 @@ export function CompanionSpeaker({ id, size = 84, first, onLine }: { id?: string
       {text && chatty && <Bubble who={comp.name} text={text} onClose={() => setText(null)} onMore={next} />}
       <Tappable accessibilityRole="button" accessibilityLabel={`${comp.name}, tap to talk`} onPress={next} style={{ alignSelf: "flex-start" }}>
         <Animated.View style={[{ width: size, height: size }, style]}>
-          <Sketch w={80} h={80} pal={pal} deps={[comp.id, c.pass]} paint={(p) => paintPet(p, comp.id, c.ink, c.pass)} />
+          <CompanionArt id={comp.id} size={size} />
         </Animated.View>
       </Tappable>
     </View>

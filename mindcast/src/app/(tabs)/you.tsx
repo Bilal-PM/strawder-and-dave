@@ -7,7 +7,8 @@ import { captureRef } from "react-native-view-shot";
 import { pack, type Audience } from "@/domain";
 import { CompanionSpeaker } from "@/features/companions/Companion";
 import { isUnlocked, unlockText } from "@/features/companions/logic";
-import { CREW_OPTIONS, paintAvatar, paintPet, SKINS, type CrewKey } from "@/features/crew/draw";
+import { CompanionArt } from "@/features/companions/Art";
+import { CREW_OPTIONS, paintAvatar, SKINS, type CrewKey } from "@/features/crew/draw";
 import { CREW_LINES, KIT_LINES } from "@/features/crew/lines";
 import { useStore, type LoopItem } from "@/state/store";
 import { Body, BodyB, Bubble, Button, Card, Chip, Eyebrow, H1, H2, H3, Hand, Mono, Row, Screen, Segmented, Small, Stat, tap, usePal } from "@/ui/kit";
@@ -80,7 +81,7 @@ function Companions() {
           return (
             <Pressable key={comp.id} accessibilityRole="button" accessibilityLabel={`${comp.name}. ${ok ? "Unlocked" : unlockText(comp)}`} onPress={() => { tap(); useStore.getState().set((s) => ({ crew: { ...s.crew, pet: comp.id } })); }}
               style={{ width: "48%", flexGrow: 1, backgroundColor: c.surface, borderRadius: radius.m, borderWidth: cur ? 2 : 1, borderColor: cur ? c.ink : c.line, padding: 10, gap: 4, opacity: ok ? 1 : 0.75 }}>
-              <View style={{ width: 64, height: 64 }}><Sketch w={80} h={80} pal={pal} deps={[comp.id]} paint={(p) => paintPet(p, comp.id, c.ink, c.pass)} /></View>
+              <CompanionArt id={comp.id} size={84} />
               <BodyB>{comp.name}</BodyB>
               <Small color={c.soft}>{comp.bio}</Small>
               {ok ? <Chip label={cur ? "With you now" : "Unlocked"} color={c.good} /> : <><Chip label={comp.unlock.type === "pass" ? "Season Pass or Single" : comp.unlock.type === "event" ? "Seasonal" : "Earn it free"} color={comp.unlock.type === "pass" ? c.ppe : c.accent} /><Small color={c.soft}>{unlockText(comp)}</Small></>}

@@ -11,6 +11,7 @@ import { F, radius, space } from "@/ui/tokens";
 import { Celebration, type CelebrationData } from "./Celebration";
 import { lessonAt, lessonGlossary, lineCompanion, pick, seasonInfo, STOPS } from "./content";
 import { Diagram } from "./diagrams";
+import { LessonPlate } from "./Plate";
 import { GlossaryText, useTermSheet } from "./GlossaryText";
 import { LensCard } from "./LensCard";
 import { Quiz } from "./Quiz";
@@ -99,6 +100,7 @@ export function LessonScreen({ lesson }: { lesson: Lesson }) {
 
         <Section label="See it work" delay={120}>
           <Diagram lesson={lesson} />
+          <LessonPlate lessonId={lesson.id} />
         </Section>
 
         <Section label={aud === "explorer" ? "The simple version" : aud === "leader" ? "For leaders" : "How it works"}>
