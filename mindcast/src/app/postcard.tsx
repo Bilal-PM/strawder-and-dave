@@ -1,11 +1,3 @@
-import { Body, H1, Screen } from "@/ui/kit";
+import PostcardScreen from "@/features/trains/PostcardScreen";
 
-/** Placeholder: being built. */
-export default function Page() {
-  return (
-    <Screen>
-      <H1>Postcard</H1>
-      <Body>Coming together.</Body>
-    </Screen>
-  );
-}
+export default PostcardScreen;

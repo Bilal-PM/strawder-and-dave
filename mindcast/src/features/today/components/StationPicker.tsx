@@ -90,7 +90,7 @@ export function StationPicker({ visible, current, onPick, onClose }: { visible: 
           initialNumToRender={20}
           contentContainerStyle={{ paddingBottom: ins.bottom + space.xl }}
           ListEmptyComponent={<Small color={c.soft} style={{ padding: space.l }}>No major station matches that. This list covers about 120 of the busiest and best-connected stations in Great Britain.</Small>}
-          ListFooterComponent={list.length ? <Small color={c.soft} style={{ padding: space.l }}>Busiest stations from ORR station usage data, plus regional stations. Northern Ireland is not in the National Rail feed.</Small> : null}
+          ListFooterComponent={list.length ? <Small color={c.soft} style={{ padding: space.l }}>Busiest stations from ORR station usage data, plus regional stations. Northern Ireland is not in the National Rail feed.</Small> : undefined}
         />
       </View>
     </Modal>

@@ -7,7 +7,7 @@
  */
 import type { Opt, Painter } from "@/ui/sketch";
 import { measure } from "@/ui/sketch";
-import { INK, onColour, shownLen, type DrawSpec, type EndStyle, type Livery } from "./model";
+import { INK, LEGACY_TOP, onColour, shownLen, type DrawSpec, type EndStyle, type Livery } from "./model";
 
 type P = Painter;
 type Pt = [number, number];
@@ -99,11 +99,12 @@ export function drawVehicle(D: P, kind: string, L: Livery) {
       nameplate(225, 116, 11); logo(395, 110, 18); number(90, 128);
     }
     if (kind === "regulator") {
-      D.rect(20, 140, 600, 16, DARK, { strokeWidth: 1.6 });
+      D.rect(70, 140, 540, 16, DARK, { strokeWidth: 1.6 });
       D.poly([[20, 182], [60, 120], [110, 120], [110, 140], [80, 182]], body); D.rect(110, 104, 420, 36, body); band(110, 530, 140, 6);
       D.rect(230, 50, 180, 56, body); wins(238, 402, 58, 36, 3);
-      D.circle(560, 132, 52, "#5A6069");
-      for (let i = 0; i < 10; i++) { const a = (i * Math.PI) / 5; D.line(560 + Math.cos(a) * 26, 132 + Math.sin(a) * 26, 560 + Math.cos(a) * 34, 132 + Math.sin(a) * 34, { strokeWidth: 1.2 }); }
+      // sweeper brush, just touching the sleeper tops
+      D.circle(560, 157, 52, "#5A6069");
+      for (let i = 0; i < 10; i++) { const a = (i * Math.PI) / 5 + 0.3; D.line(560 + Math.cos(a) * 18, 157 + Math.sin(a) * 18, 560 + Math.cos(a) * 25, 157 + Math.sin(a) * 25, { strokeWidth: 1.2 }); }
       D.rect(530, 104, 70, 36, body); beacon(250, 44); beacon(390, 44); bogie(190, 1, 0, 14); bogie(460, 1, 0, 14);
       nameplate(320, 132, 11); logo(160, 122, 16); number(470, 128);
     }
@@ -123,14 +124,15 @@ export function drawVehicle(D: P, kind: string, L: Livery) {
  * Draw a class side-on, to scale. Fits `shownLen` metres into `fitW` units (10 unit margin), at most `maxH` tall.
  * `strict` keeps simplified machines at their true height (used by the to-scale strip).
  */
-export function drawClass(D: P, s: DrawSpec, L: Livery, fitW = 640, railY = 184, maxH = 172, strict = false) {
+export function drawClass(D: P, s: DrawSpec, L: Livery, fitW = 640, railY = 184, maxH = 172, strict = false, fitLen?: number) {
   const m = s.model;
   if (m.kind === "legacy") {
-    const sc = fitW / 640;
-    push(D, sc, railY, strict ? sc * (m.yf || 1) : sc, () => drawVehicle(D, m.k || "tamper", L));
+    const sc = fitW / 640, top = LEGACY_TOP[m.k || ""];
+    const sy = strict && top ? (s.h * ((fitW - 20) / shownLen(s))) / top : sc;
+    push(D, sc, railY, sy, () => drawVehicle(D, m.k || "tamper", L));
     return;
   }
-  const S = Math.min((fitW - 20) / shownLen(s), maxH / (s.h + 0.3));
+  const S = Math.min((fitW - 20) / (fitLen ?? shownLen(s)), maxH / (s.h + 0.3));
   const X = (v: number) => 10 + v * S, Y = (hm: number) => railY - hm * S;
   const P = D.pal, glass = P.glass, body = L.body, stripe = L.stripe;
   const ends = (m.ends && m.ends.length ? m.ends : ["flat", "flat"]) as EndStyle[];
@@ -345,7 +347,7 @@ export function drawClass(D: P, s: DrawSpec, L: Livery, fitW = 640, railY = 184,
       else { nameplate(x0 + s.len / 2, flH + 0.95); logo(x0 + 3.2, h - 0.55); }
     }
     if (m.artic) D.rect(X(s.len), Y(s.h - 0.3), 0.6 * S, (s.h - 0.6 - flH) * S, "#3A3F45", { strokeWidth: 1 });
-    if (s.cars > 2 && !L.noMore) D.text(X(shownLen(s)) - 4, railY + Math.max(12, S * 0.7), `+ ${s.cars - 2} more ${m.kind === "unit" ? "cars" : "vehicles"}`, Math.max(10, S * 0.5), P.ink, "mono", "end");
+    if (s.cars > 2 && !L.noMore) D.text(X(shownLen(s)) - 4, railY + MORE_DY, `+ ${s.cars - 2} more ${m.kind === "unit" ? "cars" : "vehicles"}`, Math.max(10, S * 0.5), P.ink, "mono", "end");
     return;
   }
 
@@ -410,8 +412,8 @@ export function drawClass(D: P, s: DrawSpec, L: Livery, fitW = 640, railY = 184,
     D.path(`M${X(5)} ${Y(3.6)} L${X(17.5)} ${Y(3.95)} L${X(17.5)} ${Y(3.6)} L${X(6.5)} ${Y(3.1)} Z`, body);
     D.line(X(17.2), Y(3.8), X(17.2), Y(2.0), { strokeWidth: 1.4 });
     D.rect(X(16.6), Y(2.0), 1.2 * S, 0.3 * S, DARK, { strokeWidth: 1 });
-    D.circle(X(5.5), Y(3.85), 0.35 * S, "#F59E0B", { strokeWidth: 1 });
-    D.rect(X(0.5), Y(fl + 0.9), 3 * S, 0.18 * S, stripe, { strokeWidth: 1 });
+    D.circle(X(5.5), Y(3.75), 0.35 * S, "#F59E0B", { strokeWidth: 1 });
+    D.rect(X(4), Y(fl + 0.55), 8 * S, 0.18 * S, stripe, { strokeWidth: 1 });
     nameplate(8, 2.3); logo(13.2, 2.4); number(1.6, 2.4);
     return;
   }
@@ -425,6 +427,8 @@ export function drawClass(D: P, s: DrawSpec, L: Livery, fitW = 640, railY = 184,
 const CARD_PAPER = "#FBF7EE";
 /** The measurement train draws its power car plus one 23 m coach. */
 export const NMT_COACH = 23;
+/** Baseline of the "+ N more cars" label, below the ballast. */
+const MORE_DY = 26;
 
 /** Steam locomotives, detailed side elevations (GWR Castle, LMS Black Five, LNER A4). */
 function drawSteam(
@@ -492,7 +496,7 @@ function drawSteam(
     D.path(`M${X(0.3)} ${Y(1.55)} Q${X(0.4)} ${Y(2.9)} ${X(1.6)} ${Y(3.55)} Q${X(2.8)} ${Y(3.95)} ${X(4.6)} ${Y(3.97)} L${X(C3.cab[0])} ${Y(3.97)} L${X(C3.cab[0])} ${Y(1.62)} Q${X(3.0)} ${Y(1.5)} ${X(2.6)} ${Y(1.62)} Q${X(1.2)} ${Y(1.62)} ${X(0.3)} ${Y(1.55)} Z`, body, { strokeWidth: 2 });
     D.path(`M${X(1.5)} ${Y(1.62)} Q${X(1.05)} ${Y(2.6)} ${X(1.9)} ${Y(3.55)}`, null, { strokeWidth: 1.2 });
     D.line(X(2.2), Y(2.2), X(C3.cab[0]), Y(2.2), { stroke: stripe, strokeWidth: 2.2 });
-    D.rect(X(1.95), Y(4.0), 0.45 * S, 0.06 * S, dark, { strokeWidth: 0.8 });
+    D.rect(X(1.95), Y(3.8), 0.45 * S, 0.08 * S, dark, { strokeWidth: 0.8 });
     D.path(`M${X(C3.cab[0])} ${Y(1.62)} L${X(C3.cab[0])} ${Y(3.97)} L${X(C3.cab[0] + 0.5)} ${Y(4.0)} Q${X(C3.cab[1] - 0.6)} ${Y(4.08)} ${X(C3.cab[1])} ${Y(3.8)} L${X(C3.cab[1])} ${Y(1.62)} Z`, body);
     D.poly([[X(C3.cab[0] + 0.12), Y(3.75)], [X(C3.cab[0] + 0.45), Y(3.88)], [X(C3.cab[0] + 1.05), Y(3.88)], [X(C3.cab[0] + 1.05), Y(3.25)], [X(C3.cab[0] + 0.12), Y(3.25)]], glass, { strokeWidth: 1 });
     D.line(X(C3.cab[0] + 0.15), Y(2.2), X(C3.cab[1] - 0.1), Y(2.2), { stroke: stripe, strokeWidth: 2.2 });
@@ -545,10 +549,41 @@ export function drawTrack(D: P, w = 640, railY = 184, tram = false) {
   D.line(0, railY, w, railY, { roughness: 0.6, stroke: D.pal.ink, strokeWidth: 2.4 });
 }
 
-/** A side view in a 640 x 200 box, with track. */
+/** Metres above the roof taken by pantographs and other roof gear. */
+const extraTop = (s: DrawSpec) => ((s.model.roof || []).some(([t]) => t === "panto") || s.model.kind === "tram7" ? 2.0 : 0.5);
+const isTramish = (s: DrawSpec) => s.model.kind === "tram7" || !!s.model.tram;
+
+/**
+ * Side view box: the 640 x 200 drawing with empty sky trimmed off the top.
+ * Returns the viewBox height and how far the drawing is shifted up.
+ */
+export function sideBox(s: DrawSpec) {
+  if (s.model.kind === "legacy") return { h: 170, dy: 30 };
+  const S = Math.min(620 / shownLen(s), 172 / (s.h + 0.3));
+  const dy = Math.max(0, Math.floor(184 - (s.h + extraTop(s)) * S - 16));
+  const more = (s.model.kind === "unit" || s.model.kind === "mpv" || s.model.kind === "nmt") && s.cars > 2 ? MORE_DY + 6 - 16 : 0;
+  return { h: 200 - dy + more, dy };
+}
+
+/** A side view with track, sized by sideBox(). */
 export function paintSide(D: P, s: DrawSpec, L: Livery) {
-  drawTrack(D, 640, 184, s.model.kind === "tram7" || !!s.model.tram);
-  drawClass(D, s, L);
+  const { dy } = sideBox(s);
+  D.group(`translate(0 ${-dy})`, () => {
+    drawTrack(D, 640, 184, isTramish(s));
+    drawClass(D, s, L);
+  });
+}
+
+export const THUMB_H = 150;
+/** Library thumbnail in a 640 x 150 box. Long trains show the leading car running off the edge. */
+export function paintThumb(D: P, s: DrawSpec, L: Livery) {
+  const k = s.model.kind;
+  D.group("translate(0 -50)", () => {
+    drawTrack(D, 640, 184, isTramish(s));
+    if (k === "legacy") { D.group("translate(40 0)", () => drawClass(D, s, L, 560)); return; }
+    const fitLen = k === "unit" || k === "mpv" ? s.len + 5 : k === "nmt" ? s.len + 7 : k === "tram7" ? 26 : undefined;
+    drawClass(D, s, L, 640, 184, (126 * (s.h + 0.3)) / (s.h + extraTop(s)), false, fitLen);
+  });
 }
 
 /** Pixels per metre used by the to-scale strip. */

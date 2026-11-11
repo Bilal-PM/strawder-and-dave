@@ -65,12 +65,20 @@ export function toDraw(t: TrainClass): DrawSpec {
 
 export const classLivery = (t: TrainClass): Livery => ({ body: t.body, stripe: t.stripe, logo: "none" });
 
+/**
+ * Simplified engineering machines are drawn in a 640-unit box. LEGACY_SHOW is the length in metres that box
+ * represents when the drawing does not fill it; LEGACY_TOP is the drawing's height above the rail in box units,
+ * used to stretch it to its real height in the to-scale strip.
+ */
+export const LEGACY_SHOW: Record<string, number> = { rrv: 12 };
+export const LEGACY_TOP: Record<string, number> = { hopper: 113, tamper: 114, stoneblower: 114, regulator: 126, rrv: 129 };
+
 /** How much of a vehicle we show (metres). Long trains show the first two cars. */
 export const shownLen = (s: DrawSpec) => {
   const k = s.model.kind;
   if (k === "nmt") return s.len + 0.6 + 23;
   if (k === "unit" || k === "mpv") return s.len * 2 + 0.6;
-  if (k === "legacy" && s.model.show) return s.model.show;
+  if (k === "legacy") return s.model.show || LEGACY_SHOW[s.model.k || ""] || s.len;
   return s.len;
 };
 

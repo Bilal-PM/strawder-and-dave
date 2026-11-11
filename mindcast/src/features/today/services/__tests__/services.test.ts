@@ -1,3 +1,4 @@
+/// <reference types="jest" />
 /* Unit tests for the Today services' pure functions. Run: npx jest --preset jest-expo src/features/today */
 jest.mock("@react-native-async-storage/async-storage", () => require("@react-native-async-storage/async-storage/jest/async-storage-mock"));
 jest.mock("expo-location", () => ({}));
@@ -165,7 +166,8 @@ describe("history and links", () => {
     const pack = { lessons: [{ id: "s1-08", stop: 8, title: "Buckles" }] as never, seasons: [{ n: 2, title: "Signals", time: "", event: "Leaf fall", colour: "" }, { n: 4, title: "Structures", time: "", event: "", colour: "" }] };
     expect(resolveLink({ lesson: "s1-08", label: "" }, pack)).toEqual({ href: "/lesson/s1-08", label: "Stop 8: Buckles", kind: "lesson" });
     expect(resolveLink({ lesson: "s1-17", label: "" }, pack)?.href).toBe("/line");
-    expect(resolveLink({ season: 9, event: "leaf", label: "" }, pack)?.label).toBe("Season 2: Signals");
+    expect(resolveLink({ season: 9, event: "leaf", label: "" }, pack)?.label).toBe("Leaf fall, Season 2");
+    expect(resolveLink({ season: 2, label: "" }, pack)?.label).toBe("Season 2: Signals");
     expect(resolveLink(topicFromLinkString("Season 4: Structures")!, pack)?.label).toBe("Season 4: Structures");
     expect(topicFromLinkString("nonsense")).toBeNull();
   });

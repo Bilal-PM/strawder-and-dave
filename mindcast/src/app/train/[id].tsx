@@ -1,11 +1,7 @@
-import { Body, H1, Screen } from "@/ui/kit";
+import { useLocalSearchParams } from "expo-router";
+import TrainDetail from "@/features/trains/TrainDetail";
 
-/** Placeholder: being built. */
-export default function Page() {
-  return (
-    <Screen>
-      <H1>Train</H1>
-      <Body>Coming together.</Body>
-    </Screen>
-  );
+export default function TrainPage() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  return <TrainDetail key={String(id)} id={String(id)} />;
 }

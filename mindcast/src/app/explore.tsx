@@ -1,11 +1,5 @@
-import { Body, H1, Screen } from "@/ui/kit";
+import { ExploreScreen } from "@/features/explore/ExploreScreen";
 
-/** Placeholder: being built. */
-export default function Page() {
-  return (
-    <Screen>
-      <H1>Explore</H1>
-      <Body>Coming together.</Body>
-    </Screen>
-  );
+export default function Explore() {
+  return <ExploreScreen />;
 }

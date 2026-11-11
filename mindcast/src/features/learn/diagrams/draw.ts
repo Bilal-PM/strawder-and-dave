@@ -1,5 +1,5 @@
 /** Shared hand-drawn shapes for the Learn diagrams. */
-import type { Painter } from "@/ui/sketch";
+import { measure, type Painter } from "@/ui/sketch";
 import type { Palette } from "@/ui/tokens";
 
 /** A hand-drawn arrow from (x1,y1) to (x2,y2). */
@@ -50,3 +50,11 @@ export function mix(a: string, b: string, t: number) {
 
 /** Clamp to 0..1. */
 export const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
+
+/** Text on a small paper patch so it stays readable over hatching. */
+export function tag(p: Painter, x: number, y: number, s: string, size: number, color: string, bg: string, font: "body" | "hand" | "mono" = "mono", anchor: "start" | "middle" | "end" = "start") {
+  const w = measure(s, size, font) + 8;
+  const x0 = anchor === "start" ? x - 4 : anchor === "end" ? x - w + 4 : x - w / 2;
+  p.rect(x0, y - size, w, size + 5, bg, { strokeWidth: 0, stroke: "none", roughness: 0 });
+  p.text(x, y, s, size, color, font, anchor);
+}

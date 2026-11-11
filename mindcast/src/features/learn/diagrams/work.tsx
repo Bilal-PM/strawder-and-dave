@@ -21,9 +21,9 @@ function railSide(p: Painter, x1: number, x2: number, y: number, fill: string) {
 }
 
 /** A worker in hi-vis, standing at x with feet on y. */
-function worker(p: Painter, x: number, y: number, c: Palette) {
+function worker(p: Painter, x: number, y: number, c: Palette, coat?: string) {
   p.circle(x, y - 30, 9, c.surface, { strokeWidth: 1.6 });
-  p.rect(x - 5, y - 25, 10, 14, c.ppe, { strokeWidth: 1.4, roughness: 0.4 });
+  p.rect(x - 5, y - 25, 10, 14, coat ?? c.ppe, { strokeWidth: 1.4, roughness: 0.4 });
   p.line(x - 3, y - 11, x - 4, y, { strokeWidth: 1.6 });
   p.line(x + 3, y - 11, x + 4, y, { strokeWidth: 1.6 });
 }
@@ -267,21 +267,22 @@ export function Safety({ lesson }: { lesson: Lesson }) {
     <Frame title="Where is it safe to stand?" hint="Tap each place. Never go on the line without training and permission." status={zone.text} statusColor={col} fact={fact}
       control={<Pills label="Place" value={z} onChange={(v) => { setZ(v); const t = ZONES.find((x) => x.value === v)!; tap(t.tone === "warn" ? "warn" : "light"); announce(t.text); }} options={ZONES.map((x) => ({ value: x.value, label: x.label }))} />}>
       <Sketch w={W} h={190} pal={pal} deps={[z, c.ink]} accessibilityLabel={`Cross-section of a two-track railway. ${zone.label}: ${zone.text}`} paint={(p) => {
-        const band: Record<Zone, [number, number][]> = { fence: [[0, 40]], cess: [[44, 92], [296, 340]], four: [[104, 152], [196, 244]], six: [[160, 188]] };
+        const band: Record<Zone, [number, number][]> = { fence: [[0, 30]], cess: [[52, 94], [296, 340]], four: [[104, 152], [196, 244]], six: [[160, 188]] };
         for (const [a, b] of band[z]) p.rect(a, 104, b - a, 52, col, { fillStyle: "hachure", hachureGap: 5, strokeWidth: 1.2, stroke: col });
         p.rect(-4, 156, W + 8, 34, c.sunk, { strokeWidth: 1.2 });
-        for (const x of [12, 30]) p.line(x, 156, x, 96, { strokeWidth: 2.5 });
-        p.line(6, 106, 36, 106, { strokeWidth: 2 }); p.line(6, 126, 36, 126, { strokeWidth: 2 });
-        p.text(20, 90, "fence", 12, c.soft, "hand");
+        for (const x of [36, 48]) p.line(x, 156, x, 96, { strokeWidth: 2.5 });
+        p.line(32, 106, 52, 106, { strokeWidth: 2 }); p.line(32, 126, 52, 126, { strokeWidth: 2 });
+        p.text(42, 88, "fence", 12, c.soft, "hand");
         for (const [x1, x2] of [[104, 152], [196, 244]]) {
           p.rect(x1 - 8, 146, x2 - x1 + 16, 10, c.surface, { strokeWidth: 1.4 });
           for (const x of [x1, x2]) p.rect(x - 4, 134, 8, 12, c.ink, { roughness: 0.2 });
         }
         p.text(128, 182, "four-foot", 11, c.soft, "mono"); p.text(220, 182, "four-foot", 11, c.soft, "mono");
-        p.text(174, 124, "six-foot", 11, c.soft, "mono");
-        p.text(68, 182, "cess", 11, c.soft, "mono"); p.text(318, 182, "cess", 11, c.soft, "mono");
+        p.text(174, 98, "six-foot", 11, c.soft, "mono");
+        p.text(73, 182, "cess", 11, c.soft, "mono"); p.text(318, 182, "cess", 11, c.soft, "mono");
         if (zone.tone === "warn") { const [a, b] = band[z][0]; p.text((a + b) / 2, 70, "no", 28, c.warn, "hand"); }
-        else { const [a, b] = band[z][0]; worker(p, (a + b) / 2, 154, c); p.text((a + b) / 2, 70, zone.tone === "good" ? "public" : "trained staff only", 15, zone.tone === "good" ? c.good : c.ink, "hand"); }
+        else if (zone.tone === "good") { worker(p, 16, 154, c, c.accent); p.text(4, 76, "public", 15, c.good, "hand", "start"); }
+        else { const [a, b] = band[z][0]; worker(p, (a + b) / 2, 154, c); p.text((a + b) / 2, 76, "trained staff only", 15, c.ink, "hand"); }
       }} />
     </Frame>
   );

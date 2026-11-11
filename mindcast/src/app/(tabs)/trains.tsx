@@ -1,11 +1,3 @@
-import { Body, H1, Screen } from "@/ui/kit";
+import TrainsScreen from "@/features/trains/TrainsScreen";
 
-/** Placeholder: being built. */
-export default function Page() {
-  return (
-    <Screen>
-      <H1>Trains</H1>
-      <Body>Coming together.</Body>
-    </Screen>
-  );
-}
+export default TrainsScreen;

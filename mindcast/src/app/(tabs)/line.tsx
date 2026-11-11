@@ -1,11 +1,6 @@
-import { Body, H1, Screen } from "@/ui/kit";
+import { LineScreen } from "@/features/learn/LineScreen";
 
-/** Placeholder: being built. */
-export default function Page() {
-  return (
-    <Screen>
-      <H1>The Line</H1>
-      <Body>Coming together.</Body>
-    </Screen>
-  );
+/** The Line tab: Season 1 "The Permanent Way" as a hand-drawn line of stops. */
+export default function LinePage() {
+  return <LineScreen />;
 }

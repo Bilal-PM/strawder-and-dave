@@ -92,7 +92,7 @@ export function weekEvent(days: DayWx[]): RailEvent {
   }
   const best = Math.max(hot, ice, leaf);
   if (best === 0) return { id: "quiet", title: "A quiet week for the track", text: "No weather events this week. A good week to catch up on stops.", sky: "cloud", days: 0 };
-  if (hot === best) return { id: "buckle", title: "Buckle Watch is on", text: "Hot days ahead. Steel grows in the heat, so this is the week to learn how track is kept from buckling.", sky: "sun", days: hot, topic: { lesson: "s1-08", label: "Buckles" } };
-  if (ice === best) return { id: "ice", title: "Ice on the line", text: "A cold snap. Points heaters and icy rails are the story this week.", sky: "snow", days: ice, topic: { lesson: "s1-14", label: "Points" } };
+  if (hot === best) return { id: "buckle", title: "Buckle Watch is on", text: "Hot days ahead. Steel grows in the heat, so this is the week to learn how track is kept from buckling.", sky: "sun", days: hot, topic: { lesson: "s1-08", event: "buckle", label: "Buckles" } };
+  if (ice === best) return { id: "ice", title: "Ice on the line", text: "A cold snap. Points heaters and icy rails are the story this week.", sky: "snow", days: ice, topic: { lesson: "s1-14", event: "ice", label: "Points" } };
   return { id: "leaf", title: "Leaf fall is on", text: "Windy, wet autumn days. Slippery rails and the trains that clean them are the story this week.", sky: "wind", days: leaf, topic: { season: 2, event: "leaf", label: "Leaf fall" } };
 }

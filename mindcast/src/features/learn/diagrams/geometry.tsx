@@ -7,7 +7,7 @@ import { Sketch } from "@/ui/sketch";
 import { useTheme } from "@/ui/theme";
 import { factMatching, factQuantity } from "../content";
 import { Frame, Pills, Slider, announce, useTween } from "../ui";
-import { arrow } from "./draw";
+import { arrow, tag } from "./draw";
 
 const W = 340;
 
@@ -67,8 +67,8 @@ export function Geometry({ lesson }: { lesson: Lesson }) {
           }
           p.curve(a, { strokeWidth: 3, roughness: 0.4 });
           p.curve(b, { strokeWidth: 3, roughness: 0.4, stroke: c.accent });
-          p.text(W - 8, 58, "left rail", 12, c.ink, "hand", "end");
-          p.text(W - 8, 132, "right rail", 12, c.accent, "hand", "end");
+          p.text(10, 52, "left rail", 13, c.ink, "hand", "start");
+          p.text(10, 126, "right rail", 13, c.accent, "hand", "start");
           p.line(0, 70, W, 70, { stroke: c.line, strokeWidth: 1, strokeLineDash: [4, 6] });
           p.line(0, 100, W, 100, { stroke: c.line, strokeWidth: 1, strokeLineDash: [4, 6] });
           p.text(10, 160, "Seen from the side (heights exaggerated)", 11, c.soft, "mono", "start");
@@ -144,11 +144,11 @@ export function Cant({ lesson }: { lesson: Lesson }) {
         arrow(p, mx, my, mx + a, my, c.ppe, 2.5);
         const col = state === "balanced" ? c.good : state === "deficiency" ? c.ppe : c.accent;
         arrow(p, mx, my, mx + a, my + g, col, 4, 12);
-        p.text(mx - 8, my + g + 4, "weight", 13, c.ink, "hand", "end");
-        p.text(mx + a + 6, my - 6, "outward pull", 13, c.ppe, "hand", "start");
-        p.text(14, 24, "inside of curve", 12, c.soft, "mono", "start");
-        const [ox, oy] = rot(118, -2);
-        p.text(ox, oy - 14, "outer rail raised", 12, c.soft, "mono", "end");
+        tag(p, mx - 8, my + g - 2, "weight", 13, c.ink, c.surface, "hand", "end");
+        tag(p, mx + a + 6, my - 6, "outward pull", 13, c.ppe, c.surface, "hand", "start");
+        p.text(14, 24, "inside of curve", 11, c.soft, "mono", "start");
+        p.text(W - 6, 104, "outer rail", 11, c.soft, "mono", "end");
+        p.text(W - 6, 118, "raised", 11, c.soft, "mono", "end");
       }} />
     </Frame>
   );

@@ -1,11 +1,5 @@
-import { Body, H1, Screen } from "@/ui/kit";
+import { TodayScreen } from "@/features/today/TodayScreen";
 
-/** Placeholder: being built. */
-export default function Page() {
-  return (
-    <Screen>
-      <H1>Today</H1>
-      <Body>Coming together.</Body>
-    </Screen>
-  );
+export default function Today() {
+  return <TodayScreen />;
 }

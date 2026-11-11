@@ -77,9 +77,9 @@ export function Stressing({ lesson }: { lesson: Lesson }) {
       <Sketch w={W} h={190} pal={pal} deps={[t, sft, c.ink]} accessibilityLabel={`Rail stressing. ${status}`} paint={(p) => {
         const gap = 6 + 34 * (1 - t);
         const lEnd = 150 - gap / 2 + 0, rStart = 150 + gap / 2;
-        for (let x = 20; x < 290; x += 34) p.circle(x, 128, 10, c.sunk, { strokeWidth: 1.2 });
+        for (let x = 20; x < 262; x += 34) p.circle(x, 128, 10, c.sunk, { strokeWidth: 1.2 });
         p.rect(-4, 104, lEnd + 4, 18, c.sunk, { roughness: 0.7 });
-        p.rect(rStart, 104, 290 - rStart, 18, c.sunk, { roughness: 0.7 });
+        p.rect(rStart, 104, 262 - rStart, 18, c.sunk, { roughness: 0.7 });
         p.text(20, 152, "rollers", 12, c.soft, "hand", "start");
         // tensor frame
         p.rect(lEnd - 46, 92, 16, 34, c.ink, { roughness: 0.5 });
@@ -88,7 +88,7 @@ export function Stressing({ lesson }: { lesson: Lesson }) {
         p.line(lEnd - 38, 84, lEnd - 38, 92, { strokeWidth: 2 });
         p.line(rStart + 38, 84, rStart + 38, 92, { strokeWidth: 2 });
         p.text(150, 62, "tensor", 14, c.ink, "hand");
-        if (t > 0.02) { const L = 8 + 26 * t; arrow(p, 40, 113, 40 + L, 113, c.accent, 3); arrow(p, 260, 113, 260 - L, 113, c.accent, 3); }
+        if (t > 0.02) { const L = 8 + 26 * t; arrow(p, 40, 113, 40 + L, 113, c.accent, 3); arrow(p, 240, 113, 240 - L, 113, c.accent, 3); }
         p.text(150, 146, closed ? "weld gap" : "gap", 13, closed ? c.good : c.ink, "hand");
         // thermometer: the rail is cooler than its stress-free temperature
         const tx = 312;
@@ -97,7 +97,8 @@ export function Stressing({ lesson }: { lesson: Lesson }) {
         p.rect(tx - 3, 100, 6, 44, c.accent, { roughness: 0.2, strokeWidth: 0 });
         p.line(tx - 14, 56, tx + 14, 56, { stroke: c.good, strokeWidth: 2.5 });
         p.text(tx - 16, 46, sft ? `SFT ${sft}` : "stress-free", 11, c.good, "mono", "end");
-        p.text(tx - 16, 104, "rail now", 11, c.accent, "mono", "end");
+        p.line(tx - 14, 100, tx + 14, 100, { stroke: c.accent, strokeWidth: 2 });
+        p.text(tx - 16, 92, "rail now", 11, c.accent, "mono", "end");
       }} />
     </Frame>
   );

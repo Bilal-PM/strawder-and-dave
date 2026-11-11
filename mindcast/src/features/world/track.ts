@@ -28,23 +28,24 @@ const A = (R: number, deg: number): Seg => ({ kind: "a", R, deg });
 
 /** Index of each named piece of the alignment. */
 const SEGS: Seg[] = [
-  S(470), //  0 station 1, signal box, tamper siding
-  A(380, 75), //  1
-  S(340), //  2 cutting on a rising gradient
-  A(700, -30), //  3 reverse curve
-  S(360), //  4 station 2, then the level crossing
-  A(300, 100), //  5 the canted curve, autumn trees
-  S(420), //  6 viaduct
-  A(500, 60), //  7
-  S(330), //  8 station 3
-  A(450, 70), //  9
-  S(560), // 10 tunnel, then station 4
-  A(420, 50), // 11
-  S(260), // 12
-  A(500, 35), // 13
-  S(420), // 14 hot spot, station 5
+  S(300), //  0 station 1 and the signal box
+  A(230, 90), //  1
+  S(260), //  2 cutting on a rising gradient
+  A(400, -30), //  3 reverse curve
+  S(380), //  4 tamper siding, station 2, level crossing
+  A(200, 85), //  5 the canted curve, autumn trees
+  S(340), //  6 viaduct
+  A(270, 75), //  7 falling gradient
+  S(420), //  8 station 3, then the hot spot
+  A(260, 60), //  9
+  S(480), // 10 tunnel, then station 4
+  A(240, 50), // 11
+  S(280), // 12 station 5
+  A(290, 30), // 13
+  S(260), // 14 approach to station 1
 ];
-const ADJUST: [number, number] = [2, 6];
+/** How freely each straight may stretch to close the loop (weighted least squares). */
+const FLEX: Record<number, number> = { 0: 0.15, 2: 0.3, 4: 0.15, 6: 0.6, 8: 1.5, 10: 0.4, 12: 0.4, 14: 0.4 };
 
 export type Range = { from: number; to: number };
 export type Station = { idx: number; name: string; stopS: number; platFrom: number; platTo: number; side: 1 | -1 };
@@ -134,17 +135,17 @@ const smoothstep = (a: number, b: number, x: number) => { const t = Math.min(1, 
 /** Build the whole world layout. `names` are used for the station boards, in order. */
 export function buildWorld(names: string[]): World {
   const segs = SEGS.map((g) => ({ ...g })) as Seg[];
-  // Close the loop: stretch two straights so the end meets the start.
-  for (let pass = 0; pass < 2; pass++) {
-    const r = integrate(segs, 0.5);
-    const ex = r.xs[r.steps], ez = r.zs[r.steps];
-    const ha = r.hs[Math.round(r.starts[ADJUST[0]] / 0.5)], hb = r.hs[Math.round(r.starts[ADJUST[1]] / 0.5)];
-    const ax = Math.cos(ha), az = Math.sin(ha), bx = Math.cos(hb), bz = Math.sin(hb);
-    const det = ax * bz - az * bx;
-    const da = (-ex * bz + ez * bx) / det;
-    const db = (-ax * ez + az * ex) / det;
-    (segs[ADJUST[0]] as { len: number }).len += da;
-    (segs[ADJUST[1]] as { len: number }).len += db;
+  // Close the loop: stretch the straights (weighted least squares) so the end meets the start.
+  {
+    const r0 = integrate(segs, 0.5);
+    const idx = segs.map((g, i) => (g.kind === "s" ? i : -1)).filter((i) => i >= 0);
+    const head = (i: number) => r0.hs[Math.min(r0.steps, Math.round(r0.starts[i] / 0.5))];
+    const wt = (i: number) => FLEX[i] ?? 1;
+    let a = 0, b = 0, c = 0;
+    for (const i of idx) { const cx = Math.cos(head(i)), cz = Math.sin(head(i)); a += wt(i) * cx * cx; b += wt(i) * cx * cz; c += wt(i) * cz * cz; }
+    const det = a * c - b * b, rx = -r0.xs[r0.steps], rz = -r0.zs[r0.steps];
+    const l1 = (c * rx - b * rz) / det, l2 = (-b * rx + a * rz) / det;
+    for (const i of idx) (segs[i] as { len: number }).len += wt(i) * (l1 * Math.cos(head(i)) + l2 * Math.sin(head(i)));
   }
   const r = integrate(segs, 0.5);
   const L = r.total;
@@ -166,7 +167,7 @@ export function buildWorld(names: string[]): World {
   const W = n; // use table length as loop length from here on
 
   // Vertical profile: keyframes, then smoothed into vertical curves.
-  const climb = (segEnd(2) - 10 - (st[2] + 20)) / 80; // 1 in 80
+  const climb = (segEnd(2) - 10 - (st[2] + 20)) / 60; // 1 in 60
   const keys: [number, number][] = [
     [0, 0],
     [st[2] + 20, 0],
@@ -196,23 +197,23 @@ export function buildWorld(names: string[]): World {
   // Stations: the front of the train stops at stopS; platforms are 150 m long.
   const station = (idx: number, stopS: number, side: 1 | -1): Station => ({ idx, name: names[idx] ?? `Stop ${idx + 1}`, stopS, platFrom: stopS - 145, platTo: stopS + 8, side });
   const stations: Station[] = [
-    station(0, st[0] + 300, -1),
-    station(1, st[4] + 220, 1),
-    station(2, st[8] + 240, -1),
-    station(3, segEnd(10) - 30, 1),
-    station(4, st[14] + 400, -1),
+    station(0, st[0] + 200, -1),
+    station(1, st[4] + 250, 1),
+    station(2, st[8] + 250, -1),
+    station(3, segEnd(10) - 25, 1),
+    station(4, st[12] + 170, -1),
   ];
 
-  const tunnelFrom = st[10] + 40;
-  const tunnel = { from: tunnelFrom, to: tunnelFrom + Math.min(260, segEnd(10) - st[10] - 260) };
+  const tunnelFrom = st[10] + 30;
+  const tunnel = { from: tunnelFrom, to: tunnelFrom + Math.min(230, segEnd(10) - st[10] - 250) };
   const vLen = segEnd(6) - st[6];
-  const viaduct = { from: st[6] + Math.max(50, vLen * 0.18), to: segEnd(6) - Math.max(50, vLen * 0.18) };
+  const viaduct = { from: st[6] + Math.max(45, vLen * 0.12), to: segEnd(6) - Math.max(45, vLen * 0.12) };
   const cutting = { from: st[2] + 40, to: segEnd(2) - 20 };
   const cantCurve = { from: st[5], to: segEnd(5) };
-  const crossing = st[4] + 300;
+  const crossing = Math.min(st[4] + 330, segEnd(4) - 25);
   const leafZones = [{ from: st[5] - 60, to: segEnd(5) + 40 }, { from: cutting.from, to: cutting.to }];
-  const hotSpot = { from: st[14] + 60, to: st[14] + 200 };
-  const esrWarning = hotSpot.from - 230;
+  const hotSpot = { from: st[8] + 470, to: st[8] + 590 };
+  const esrWarning = hotSpot.from - 200;
 
   // Signals: a starter just beyond each platform, then intermediates so blocks are about 300 m.
   const starters = stations.map((s) => s.stopS + 30).sort((a, b) => a - b);
@@ -231,7 +232,7 @@ export function buildWorld(names: string[]): World {
   const signals: SignalDef[] = sigS.map((s, i) => ({ idx: i, s, label: `OL${String(i + 1).padStart(2, "0")}`, aws: (s - 180 + W) % W }));
 
   const signalBox = { s: stations[0].stopS - 60, side: 1 as const };
-  const tamper = { s: st[4] + 60, side: -1 as const, from: st[4] + 10, to: st[4] + 130 };
+  const tamper = { s: st[4] + 60, side: -1 as const, from: st[4] + 5, to: st[4] + 125 };
 
   const landmarks: Landmark[] = [
     { key: "track", s: 40 },

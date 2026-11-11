@@ -6,7 +6,7 @@ import { Sketch } from "@/ui/sketch";
 import { useTheme } from "@/ui/theme";
 import { factMatching, factQuantity, glossaryTerm } from "../content";
 import { Frame, Pills, Slider, announce, useTween } from "../ui";
-import { arrow, mix, railSection } from "./draw";
+import { arrow, mix, railSection, tag } from "./draw";
 
 const W = 340;
 const rnd = (i: number) => { const x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
@@ -35,25 +35,27 @@ export function TrackLayers({ lesson }: { lesson: Lesson }) {
   return (
     <Frame title="Dig down through the track" hint="Tap a layer to see what it does." status={`${layer.label}: ${describe(layer.value, layer.role)}`} fact={fact}
       control={<Pills label="Track layer" value={sel} onChange={(v) => { setSel(v); announce(v); }} options={LAYERS.map((l) => ({ value: l.value, label: l.label }))} />}>
-      <Sketch w={W} h={230} pal={pal} deps={[sel, c.ink]} accessibilityLabel={`Cross-section of the track with ${layer.label} highlighted`} paint={(p) => {
+      <Sketch w={W} h={200} pal={pal} deps={[sel, c.ink]} accessibilityLabel={`Cross-section of the track with ${layer.label} highlighted`} paint={(p) => {
         const hi = (id: LayerId, base: string) => (sel === id ? c.accent : base);
         const sw = (id: LayerId) => (sel === id ? 2.6 : 1.4);
-        p.rect(-4, 182, W + 8, 50, hi("formation", c.soft), { fillStyle: sel === "formation" ? "solid" : "cross-hatch", hachureGap: 9, strokeWidth: sw("formation") });
-        p.poly([[40, 160], [300, 160], [330, 182], [10, 182]], hi("sub-ballast", c.soft), { fillStyle: sel === "sub-ballast" ? "solid" : "dots", hachureGap: 5, strokeWidth: sw("sub-ballast") });
-        p.poly([[70, 104], [270, 104], [310, 160], [30, 160]], hi("ballast", c.sunk), { fillStyle: sel === "ballast" ? "solid" : "hachure", hachureGap: 6, strokeWidth: sw("ballast"), ...(sel === "ballast" ? {} : { fill: c.soft }) });
-        for (let i = 0; i < 18; i++) { const x = 50 + rnd(i) * 240, y = 120 + rnd(i + 40) * 34; p.poly([[x - 5, y], [x - 1, y - 5], [x + 5, y - 2], [x + 3, y + 4], [x - 3, y + 4]], c.bg, { strokeWidth: 1, roughness: 0.8 }); }
-        p.rect(78, 96, 184, 18, hi("sleeper", c.sunk), { strokeWidth: sw("sleeper"), roughness: 0.7 });
-        for (const x of [116, 224]) {
-          p.rect(x - 20, 91, 40, 5, hi("pad", c.ink), { strokeWidth: 1, roughness: 0.3 });
-          railSection(p, x, 91, 1.3, hi("rail", c.sunk));
+        const K = 0.72, OY = 18;
+        p.group(`translate(0 ${OY}) scale(${K})`, () => {
+          p.rect(-4, 182, 344, 50, hi("formation", c.soft), { fillStyle: sel === "formation" ? "solid" : "cross-hatch", hachureGap: 9, strokeWidth: sw("formation") });
+          p.poly([[40, 160], [300, 160], [330, 182], [10, 182]], hi("sub-ballast", c.soft), { fillStyle: sel === "sub-ballast" ? "solid" : "dots", hachureGap: 5, strokeWidth: sw("sub-ballast") });
+          p.poly([[70, 104], [270, 104], [310, 160], [30, 160]], hi("ballast", c.sunk), { fillStyle: sel === "ballast" ? "solid" : "hachure", hachureGap: 6, strokeWidth: sw("ballast"), ...(sel === "ballast" ? {} : { fill: c.soft }) });
+          for (let i = 0; i < 18; i++) { const x = 50 + rnd(i) * 240, y = 120 + rnd(i + 40) * 34; p.poly([[x - 5, y], [x - 1, y - 5], [x + 5, y - 2], [x + 3, y + 4], [x - 3, y + 4]], c.bg, { strokeWidth: 1, roughness: 0.8 }); }
+          p.rect(78, 96, 184, 18, hi("sleeper", c.sunk), { strokeWidth: sw("sleeper"), roughness: 0.7 });
+          for (const x of [116, 224]) {
+            p.rect(x - 20, 91, 40, 5, hi("pad", c.ink), { strokeWidth: 1, roughness: 0.3 });
+            railSection(p, x, 91, 1.3, hi("rail", c.sunk));
+          }
+        });
+        const LBL: [LayerId, number, number, number][] = [["rail", 224, 50, 30], ["pad", 238, 93, 62], ["sleeper", 258, 105, 92], ["ballast", 290, 140, 122], ["sub-ballast", 316, 172, 152], ["formation", 330, 205, 184]];
+        for (const [id, ax, ay, ly] of LBL) {
+          const on = sel === id;
+          p.line(ax * K + 2, ay * K + OY, 252, ly - 4, { stroke: on ? c.accent : c.line, strokeWidth: on ? 1.6 : 1, roughness: 0.4 });
+          p.text(256, ly, id, on ? 17 : 13, on ? c.accent : c.soft, on ? "hand" : "body", "start");
         }
-        const label = (txt: string, x: number, y: number, on: boolean) => p.text(x, y, txt, on ? 18 : 13, on ? c.accent : c.soft, on ? "hand" : "body", "start");
-        label("rail", 248, 52, sel === "rail");
-        label("pad", 248, 94, sel === "pad");
-        label("sleeper", 270, 110, sel === "sleeper");
-        label("ballast", 280, 140, sel === "ballast");
-        label("sub-ballast", 8, 154, sel === "sub-ballast");
-        label("formation", 10, 216, sel === "formation");
       }} />
     </Frame>
   );
@@ -91,7 +93,7 @@ export function SleeperSpacing({ lesson }: { lesson: Lesson }) {
         xs.forEach((x, i) => {
           const dy = depth * Math.exp(-(((x - 170) / 60) ** 2));
           p.rect(x - 8, 78 + dy, 16, 12, share[i] > 0.001 ? c.sunk : c.bg, { strokeWidth: 1.5, roughness: 0.5 });
-          if (share[i] > 0.001) p.rect(x - 6, 178 - share[i] * 150, 12, share[i] * 150, mix(c.accent, c.ppe, Math.min(1, share[i] * 2.4)), { roughness: 0.4, strokeWidth: 1 });
+          if (share[i] > 0.001) p.rect(x - 6, 178 - share[i] * 110, 12, share[i] * 110, mix(c.accent, c.ppe, Math.min(1, share[i] * 2.4)), { roughness: 0.4, strokeWidth: 1 });
         });
         p.line(4, 178, W - 4, 178, { stroke: c.soft, strokeWidth: 1 });
         p.text(8, 194, "Pressure under each sleeper", 11, c.soft, "mono", "start");
@@ -165,7 +167,7 @@ export function Fastening({ lesson }: { lesson: Lesson }) {
       <Sketch w={W} h={220} pal={pal} deps={[sel, toe, c.ink]} accessibilityLabel={`Rail fastening cross-section with the ${part.label} highlighted`} paint={(p) => {
         const on = (id: PartId) => sel === id;
         p.rect(-4, 160, W + 8, 64, c.sunk, { fillStyle: "dots", hachureGap: 7, fill: c.soft, strokeWidth: 1.6 });
-        p.text(12, 212, "concrete sleeper", 12, c.soft, "hand", "start");
+        tag(p, 12, 212, "concrete sleeper", 11, c.soft, c.bg);
         for (const sx of [1, -1]) {
           const x0 = 170 + sx * 92;
           p.rect(x0 - 12, 128, 24, 34, on("shoulder") ? c.accent : c.soft, { strokeWidth: on("shoulder") ? 2.6 : 1.6, roughness: 0.5 });
@@ -177,7 +179,7 @@ export function Fastening({ lesson }: { lesson: Lesson }) {
         }
         p.rect(130, 150, 80, 10, on("pad") ? c.accent : c.ink, { strokeWidth: 1, roughness: 0.3 });
         railSection(p, 170, 150, 2.8, c.surface);
-        if (on("toe load")) p.text(170, 84, toe ? `toe load ${toe} each` : "toe load", 18, c.ppe, "hand");
+        if (on("toe load")) { p.text(10, 52, "toe load", 18, c.ppe, "hand", "start"); if (toe) p.text(10, 72, `${toe} each`, 16, c.ppe, "hand", "start"); }
       }} />
     </Frame>
   );
@@ -207,7 +209,7 @@ export function Formation({ lesson }: { lesson: Lesson }) {
         p.line(135, 54, l, base, { stroke: c.accent, strokeWidth: 2, strokeLineDash: [6, 5] });
         p.line(205, 54, r, base, { stroke: c.accent, strokeWidth: 2, strokeLineDash: [6, 5] });
         p.rect(-4, base, W + 8, 220 - base + 4, c.sunk, { fillStyle: "cross-hatch", hachureGap: 10, fill: c.soft, strokeWidth: 1.4 });
-        p.text(12, Math.min(base + 26, 214), "formation (the ground)", 12, c.soft, "hand", "start");
+        tag(p, 12, Math.min(base + 26, 212), "formation (the ground)", 11, c.soft, c.bg);
         const h = 10 + 40 * pr;
         const col = mix(c.accent, c.ppe, Math.min(1, pr * 1.2));
         p.rect(l, base - 3, fw, 6, col, { strokeWidth: 0, roughness: 0.3 });
@@ -258,7 +260,7 @@ export function Drainage({ lesson }: { lesson: Lesson }) {
           arrow(p, 200, 60, 200, 84, c.warn, 2.5); arrow(p, 216, 84, 216, 60, c.warn, 2.5);
           p.text(236, 70, "pumping", 15, c.warn, "hand", "start");
         }
-        p.text(W - 8, wy - 6 < 20 ? 20 : wy - 6, "water table", 11, c.accent, "mono", "end");
+        tag(p, W - 8, wy - 6 < 20 ? 20 : wy - 6, "water table", 11, c.accent, c.bg, "mono", "end");
       }} />
     </Frame>
   );

@@ -69,7 +69,7 @@ export function CastCard({ cast }: { cast: Mindcast }) {
     <Card onPress={() => router.push(`/cast/${cast.id}`)} accessibilityLabel={`Mindcast: ${cast.title}`}>
       <Row style={{ justifyContent: "space-between", alignItems: "flex-start" }}>
         <View style={{ flex: 1, gap: 6 }}>
-          <Chip label={lesson ? lesson.title : "Railway"} color={c.ppe} />
+          <Chip label={lesson ? lesson.title : topicLabel(cast.railwayTopic)} color={c.ppe} />
           <H3>{cast.title}</H3>
         </View>
         <ScoreBadge score={integ.score} small />
@@ -118,5 +118,6 @@ export function ChecksList({ integ }: { integ: Integrity }) {
   );
 }
 
+export const topicLabel = (t: string) => (t ? t.replace(/-/g, " ").replace(/^./, (x) => x.toUpperCase()) : "Railway");
 export const audienceLabel = { explorer: "Explorer", starter: "Starter", leader: "Leader" } as const;
 export { Body };

@@ -19,7 +19,8 @@ export function resolveLink(t: Topic, pack: Pick<DomainPack, "lessons" | "season
   const n = byEvent?.n ?? t.season ?? (t.lesson ? Number(/^s(\d+)-/.exec(t.lesson)?.[1]) : NaN);
   if (Number.isFinite(n)) {
     const s = byEvent ?? pack.seasons.find((x) => x.n === n);
-    return { href: "/line", label: s ? `Season ${s.n}: ${s.title}` : `Season ${n}`, kind: "season" };
+    const label = byEvent ? `${byEvent.event}, Season ${byEvent.n}` : s ? `Season ${s.n}: ${s.title}` : `Season ${n}`;
+    return { href: "/line", label, kind: "season" };
   }
   return null;
 }
