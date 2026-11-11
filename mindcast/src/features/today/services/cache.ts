@@ -44,7 +44,9 @@ export async function getJson<T>(url: string, ms = 10000, headers: Record<string
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), ms);
   try {
-    const res = await fetch(url, { signal: ctl.signal, headers: { Accept: "application/json", ...headers } });
+    // Identify the app to free APIs (some throttle anonymous clients). Browsers set their own User-Agent, so only add it off the web.
+    const ua: Record<string, string> = typeof document === "undefined" ? { "User-Agent": "Groundwork/1.0 (railway learning app)" } : {};
+    const res = await fetch(url, { signal: ctl.signal, headers: { Accept: "application/json", ...ua, ...headers } });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return (await res.json()) as T;
   } catch (e) {
