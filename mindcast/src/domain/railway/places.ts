@@ -2,7 +2,16 @@ import type { Place, Source } from "../types";
 
 /**
  * Great railway places in the UK you can reach by train.
- * `station` is where to get off. Coordinates are for the place itself (WGS84), from Wikidata.
+ * `station` is where to get off. Coordinates are for the place itself (WGS84), from Wikidata
+ * (SPARQL, Nov 2026); every coordinate in this file came from the Wikidata item cited.
+ *
+ * Verification: opening years, arch counts and heights checked against Wikidata for Glenfinnan,
+ * Forth Bridge, Ribblehead, Conwy, Barmouth, Royal Albert, Royal Border, Ouse Valley (37 arches),
+ * St Pancras (1868), Corrour (408 m) and Dent (1,150 ft). The 17 original facts were in the draft.
+ * NOT yet checked against a source text (Wikipedia was rate-limiting): Ryde Pier "one of the
+ * oldest", St Pancras "largest single span", Calstock (1908, concrete blocks), Ouse Valley oval
+ * piers, Tay Bridge length and old piers, Locomotion and Cumbrian Coast descriptions. Treat those
+ * as "approx" until rechecked.
  */
 
 const wp = (title: string): Source => ({
@@ -104,6 +113,7 @@ export const places: Place[] = [
   },
   {
     id: "st-pancras",
+    confidence: "approx",
     name: "St Pancras",
     station: "London St Pancras International",
     lat: 51.53, lon: -0.1253,
@@ -149,6 +159,7 @@ export const places: Place[] = [
   },
   {
     id: "ryde-pier",
+    confidence: "approx",
     name: "Ryde Pier",
     station: "Ryde Pier Head",
     lat: 50.737, lon: -1.1609,
@@ -172,7 +183,7 @@ export const places: Place[] = [
     station: "Corrour",
     lat: 56.7602, lon: -4.6907,
     category: "scenic",
-    fact: "The highest station on Britain's national network, out on Rannoch Moor with no public road to it.",
+    fact: "At 408 metres, the highest station on Britain's national network, out on the moor with no public road to it.",
     sources: [wp("Corrour railway station"), wd("Q1900452", "Corrour railway station")],
   },
   {
@@ -181,7 +192,7 @@ export const places: Place[] = [
     station: "Dent",
     lat: 54.282, lon: -2.363,
     category: "scenic",
-    fact: "The highest main-line station in England, high on the Settle to Carlisle line, miles above the village it is named after.",
+    fact: "The highest main-line station in England, about 350 metres up on the Settle to Carlisle line, well above the village it is named after.",
     sources: [wp("Dent railway station"), wd("Q2319302", "Dent railway station")],
   },
   {
@@ -195,6 +206,7 @@ export const places: Place[] = [
   },
   {
     id: "ouse-valley-viaduct",
+    confidence: "approx",
     name: "Ouse Valley Viaduct",
     station: "Balcombe",
     lat: 51.0347, lon: -0.1144,
@@ -204,6 +216,7 @@ export const places: Place[] = [
   },
   {
     id: "calstock-viaduct",
+    confidence: "approx",
     name: "Calstock Viaduct",
     station: "Calstock",
     lat: 50.4967, lon: -4.2099,
@@ -213,6 +226,7 @@ export const places: Place[] = [
   },
   {
     id: "locomotion-shildon",
+    confidence: "approx",
     name: "Locomotion",
     station: "Shildon",
     lat: 54.6243, lon: -1.6306,
@@ -222,6 +236,7 @@ export const places: Place[] = [
   },
   {
     id: "tay-bridge",
+    confidence: "approx",
     name: "Tay Bridge",
     station: "Dundee",
     lat: 56.4389, lon: -2.9886,
@@ -231,6 +246,7 @@ export const places: Place[] = [
   },
   {
     id: "cumbrian-coast",
+    confidence: "approx",
     name: "Cumbrian Coast line",
     station: "Ravenglass",
     lat: 54.356, lon: -3.409,

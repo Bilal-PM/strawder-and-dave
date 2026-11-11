@@ -107,6 +107,7 @@ function PlaceSheet({ place, onClose }: { place: Place; onClose: () => void }) {
         <BodyB>Get off at: {place.station}</BodyB>
         <Body>{place.fact}</Body>
         <TopicChip topic={topicFromLinkString((place as Place & { link?: string }).link)} prefix="Linked:" />
+        {place.confidence && place.confidence !== "checked" && <Small color={c.soft}>Draft: wording still being checked against the source.</Small>}
         <Sources sources={place.sources} />
 
         <View style={{ marginTop: space.s, gap: space.s, padding: space.m, borderRadius: radius.m, backgroundColor: c.sunk }}>

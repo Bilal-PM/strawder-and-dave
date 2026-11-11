@@ -32,6 +32,7 @@ export function HistoryCard() {
       <H3 accessibilityRole="header">{e.title}</H3>
       <Body>{e.text}</Body>
       <TopicChip topic={topic} prefix="Linked:" />
+      {e.confidence && e.confidence !== "checked" && <Mono color={c.soft}>Draft: details still being checked against the source</Mono>}
       <Sources sources={e.sources} />
       {ordered.length > 1 && (
         <Row style={{ justifyContent: "space-between" }}>

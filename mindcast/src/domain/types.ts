@@ -57,6 +57,8 @@ export type HistoryEvent = {
   art: "loco" | "viaduct" | "tunnel" | "bridge" | "streamline" | "paper" | "station" | "signal";
   link: string; // lesson id or season name
   sources: Source[];
+  /** Omitted means checked against the cited source. */
+  confidence?: Confidence;
 };
 
 export type Place = {
@@ -68,6 +70,8 @@ export type Place = {
   category: "bridges" | "coast" | "scenic" | "museums";
   fact: string;
   sources: Source[];
+  /** Omitted means checked against the cited source. */
+  confidence?: Confidence;
 };
 
 export type GlossaryTerm = { term: string; plain: string; sources?: Source[] };

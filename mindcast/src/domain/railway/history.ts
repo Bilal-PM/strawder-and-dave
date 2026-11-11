@@ -3,6 +3,19 @@ import type { HistoryEvent, Source } from "../types";
 /**
  * "On this day" cards from British railway history, at least one for every month.
  * Dates are the event day itself (opening day, record day). Links point to a lesson id or a season.
+ *
+ * Verification (Nov 2026). Date and wording checked against the article text of the cited
+ * Wikipedia page: Metropolitan, Big Four, British Railways, Beeching, Channel Tunnel (opening and
+ * breakthrough), Eurostar, Elizabeth line, Rainhill, Liverpool and Manchester, Stockton and
+ * Darlington, Fifteen Guinea Special, Forth Bridge, City and South London, Railtrack, Mallard,
+ * HST record. Date checked against Wikidata only: Royal Albert Bridge, Royal Border Bridge, Box
+ * Tunnel, Tay Bridge disaster, Hatfield, Ouse Valley (via Balcombe station opening).
+ * NOT yet checked against a source text (Wikipedia was rate-limiting): Penydarren (21 Feb 1804),
+ * Dawlish (5 Feb 2014, two-month closure), Mallaig extension (1 Apr 1901), Settle to Carlisle
+ * passenger opening (1 May 1876), GWR first section (4 Jun 1838), 2022 heat (19 Jul 2022),
+ * HS1 section 1 (28 Sep 2003), Network Rail (3 Oct 2002), Flying Scotsman 100 mph (30 Nov 1934),
+ * St Pancras International (14 Nov 2007), Hatfield and Tay Bridge narrative details.
+ * Treat those as "approx" until rechecked.
  */
 
 const wp = (title: string): Source => ({
@@ -41,11 +54,12 @@ export const history: HistoryEvent[] = [
     title: "British Railways is formed",
     text: "The Big Four are nationalised and brought together as British Railways. One organisation now runs almost the whole national network.",
     art: "paper", link: S5,
-    sources: [wp("British Railways")],
+    sources: [wp("British Rail")],
   },
   // February
   {
     id: "h-1804-penydarren",
+    confidence: "approx",
     month: 2, day: 21, year: 1804,
     title: "The first locomotive-hauled railway journey",
     text: "Richard Trevithick's steam locomotive hauls iron and passengers along the Penydarren tramroad in south Wales. It is so heavy that it breaks the cast iron rails, an early lesson that track and train must be designed together.",
@@ -54,6 +68,7 @@ export const history: HistoryEvent[] = [
   },
   {
     id: "h-2014-dawlish",
+    confidence: "approx",
     month: 2, day: 5, year: 2014,
     title: "Storms break the line at Dawlish",
     text: "Huge waves wash away part of the sea wall at Dawlish, leaving the rails hanging in mid-air. The main line to Devon and Cornwall stays closed for about two months while it is rebuilt.",
@@ -75,11 +90,12 @@ export const history: HistoryEvent[] = [
     title: "The Beeching report",
     text: "A report called The Reshaping of British Railways is published. It proposes closing about 5,000 miles of line and 2,363 stations.",
     art: "paper", link: S6,
-    sources: [wp("The Reshaping of British Railways")],
+    sources: [wp("Beeching cuts")],
   },
   // April
   {
     id: "h-1901-mallaig",
+    confidence: "approx",
     month: 4, day: 1, year: 1901,
     title: "The line to Mallaig opens",
     text: "The extension of the West Highland Line from Fort William to Mallaig opens. It crosses the Glenfinnan Viaduct, one of the first big structures built in mass concrete.",
@@ -92,7 +108,7 @@ export const history: HistoryEvent[] = [
     title: "Track and trains are split",
     text: "Railtrack takes over Britain's track, signals and stations from British Rail as part of privatisation. Running the trains and looking after the track become separate jobs for separate companies.",
     art: "paper", link: S5,
-    sources: [wp("Railtrack")],
+    sources: [wp("Railtrack"), wp("British Rail")],
   },
   // May
   {
@@ -105,6 +121,7 @@ export const history: HistoryEvent[] = [
   },
   {
     id: "h-1876-settle-carlisle",
+    confidence: "approx",
     month: 5, day: 1, year: 1876,
     title: "Passengers on the Settle to Carlisle line",
     text: "Passenger trains start running over the Settle to Carlisle line across the Pennines. Building it took viaducts like Ribblehead and long tunnels through the hills.",
@@ -130,6 +147,7 @@ export const history: HistoryEvent[] = [
   // June
   {
     id: "h-1838-gwr",
+    confidence: "approx",
     month: 6, day: 4, year: 1838,
     title: "The Great Western opens",
     text: "The first section of Brunel's Great Western Railway opens from Paddington towards Maidenhead. It was built to a wide gauge of 7 feet, later converted to the standard 4 feet 8½ inches.",
@@ -140,7 +158,7 @@ export const history: HistoryEvent[] = [
     id: "h-1841-box-tunnel",
     month: 6, day: 30, year: 1841,
     title: "Box Tunnel completes London to Bristol",
-    text: "Box Tunnel opens and the Great Western Railway runs all the way from London to Bristol. At nearly two miles long it was the longest railway tunnel in the world when built.",
+    text: "Box Tunnel opens and the Great Western Railway runs all the way from London to Bristol. The tunnel is nearly two miles long, cut through the hills near Bath.",
     art: "tunnel", link: S4,
     sources: [wp("Box Tunnel"), wd("Q848315", "Box Tunnel")],
   },
@@ -171,6 +189,7 @@ export const history: HistoryEvent[] = [
   },
   {
     id: "h-2022-heat",
+    confidence: "approx",
     month: 7, day: 19, year: 2022,
     title: "Britain's hottest day",
     text: "The air temperature in England passes 40°C for the first time on record. Rails in full sun get much hotter than the air, so many lines run slower or close to reduce the risk of buckles.",
@@ -213,6 +232,7 @@ export const history: HistoryEvent[] = [
   },
   {
     id: "h-2003-hs1",
+    confidence: "approx",
     month: 9, day: 28, year: 2003,
     title: "Britain's first high-speed line",
     text: "The first section of the Channel Tunnel Rail Link, now High Speed 1, opens through Kent. Eurostar trains can now run at up to 186 mph in Britain.",
@@ -230,6 +250,7 @@ export const history: HistoryEvent[] = [
   },
   {
     id: "h-2000-hatfield",
+    confidence: "approx",
     month: 10, day: 17, year: 2000,
     title: "The Hatfield derailment",
     text: "A rail weakened by fine fatigue cracks shatters under an express train at Hatfield, and four people die. Hundreds of speed restrictions follow while rails are checked and replaced across the country.",
@@ -238,6 +259,7 @@ export const history: HistoryEvent[] = [
   },
   {
     id: "h-2002-network-rail",
+    confidence: "approx",
     month: 10, day: 3, year: 2002,
     title: "Network Rail takes over",
     text: "Network Rail takes over Britain's track, signals and stations from Railtrack. It has run the national rail infrastructure ever since.",
@@ -247,6 +269,7 @@ export const history: HistoryEvent[] = [
   // November
   {
     id: "h-1934-flying-scotsman",
+    confidence: "approx",
     month: 11, day: 30, year: 1934,
     title: "The first 100 mph",
     text: "Flying Scotsman becomes the first steam locomotive officially recorded at 100 mph in Britain. The run was a test to plan faster express services.",
@@ -263,6 +286,7 @@ export const history: HistoryEvent[] = [
   },
   {
     id: "h-2007-st-pancras",
+    confidence: "approx",
     month: 11, day: 14, year: 2007,
     title: "St Pancras International",
     text: "High Speed 1 is completed into a restored and extended St Pancras station. Eurostar trains move there from Waterloo.",
@@ -272,19 +296,12 @@ export const history: HistoryEvent[] = [
   // December
   {
     id: "h-1879-tay-bridge",
+    confidence: "approx",
     month: 12, day: 28, year: 1879,
     title: "The Tay Bridge disaster",
     text: "The first Tay Bridge collapses in a storm as a train crosses it, and everyone on board dies. The inquiry found faults in its design, building and upkeep, and engineers took far more care over wind loads afterwards.",
     art: "bridge", link: S4,
     sources: [wp("Tay Bridge disaster"), wd("Q1287158", "Tay Bridge disaster")],
-  },
-  {
-    id: "h-1886-severn-tunnel",
-    month: 12, day: 1, year: 1886,
-    title: "Passengers through the Severn Tunnel",
-    text: "Regular passenger trains start running through the Severn Tunnel between England and Wales. Water from a spring kept flooding the works, and pumps still run there today.",
-    art: "tunnel", link: S4,
-    sources: [wp("Severn Tunnel")],
   },
   {
     id: "h-1890-city-south-london",

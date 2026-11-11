@@ -19,7 +19,7 @@ Use TestFlight with 10 to 20 people first: a mix of a parent and child, two stud
 - **Name:** Groundwork: Railway, explained
 - **Subtitle:** Learn the railway. Lead like it.
 - **Category:** Education (secondary: Reference)
-- **Age rating:** 4+ (no user-generated content is shared between users in this version)
+- **Age rating:** 4+. There is no public feed: a Mindcast can be sent as a link through the share sheet, and the person who opens it sees it marked "Not checked by Groundwork" before choosing to save it. If you later add a public feed, you will need reporting and blocking tools and a higher rating.
 - **Promotional text:** The railway explained from the ground up: drawings you can play with, trains drawn to scale, live departures, and Mindcasts that carry real engineering into how we lead.
 - **Description:**
   How does the railway actually work? Why do rails buckle on hot days, why can't a train just stop, and what does any of it teach us about leading big work?
@@ -42,7 +42,7 @@ This version stores everything on the device. Answer:
 - Add a privacy policy URL (a simple page saying the above) before submission.
 
 ## 5. Before you submit
-- [ ] Every fact shown to users is `checked`, or labelled `approx`/`unverified` in the UI.
+- [ ] Every fact shown to users is `checked`, or labelled `approx`/`unverified` in the UI. Today: 21 train classes are `approx` (mostly heights missing from the source), 12 history cards and 7 places are marked draft. See the comments at the top of `src/domain/railway/*.ts` for exactly what is outstanding.
 - [ ] Open-Meteo: move to their commercial plan or to the Met Office DataHub before charging money (see DATA_SOURCES.md).
 - [ ] Live departures: confirm the data provider's terms allow app use; for production, register with the Rail Data Marketplace for the official feed.
 - [ ] Run `npm test`, `npm run typecheck`, and a TestFlight round.
