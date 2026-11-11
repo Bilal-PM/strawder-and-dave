@@ -163,7 +163,7 @@ export default function You() {
         <H1>{st.profile.name ? `${st.profile.name}'s railway` : "Your railway"}</H1>
       </View>
       <Segmented label="Learning as" value={st.profile.audience} onChange={(v: Audience) => useStore.getState().set((s) => ({ profile: { ...s.profile, audience: v } }))} options={[{ value: "explorer", label: "Explorer" }, { value: "starter", label: "Starter" }, { value: "leader", label: "Leader" }]} />
-      <Row><Stat value={`${done}/${ready}`} label="stops done" /><Stat value={st.progress.miles} label="miles" /><Stat value={st.progress.streak} label="day streak" /><Stat value={st.loop.laps} label="loops" /></Row>
+      <Row style={{ alignItems: "stretch" }}><Stat value={`${done}/${ready}`} label="stops" /><Stat value={st.progress.miles} label="miles" /><Stat value={st.progress.streak} label="streak" /><Stat value={st.loop.laps} label="loops" /></Row>
 
       <Card><H2>Your crew member</H2><Small color={c.soft}>Real kit from the real railway. Tap them to talk.</Small><Avatar /><CrewOptions /></Card>
       <Card><H2>Companions</H2><Small color={c.soft}>Earn some free, collect some on the Season Pass line, or pick one up on a Single ticket.</Small><Companions /></Card>

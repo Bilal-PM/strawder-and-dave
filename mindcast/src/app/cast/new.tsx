@@ -42,7 +42,7 @@ export default function NewCast() {
       <ScrollView contentContainerStyle={{ padding: 16, paddingTop: ins.top + 12, paddingBottom: 140, gap: 14, maxWidth: 760, width: "100%", alignSelf: "center" }} keyboardShouldPersistTaps="handled">
         <Row style={{ justifyContent: "space-between" }}>
           <Button label="Close" kind="ghost" small onPress={() => router.back()} />
-          <Row><Small color={c.soft}>Integrity</Small><ScoreBadge score={integ.score} small /></Row>
+          {step >= 1 && d.observe.trim().length > 0 ? <Row><Small color={c.soft}>Integrity</Small><ScoreBadge score={integ.score} small /></Row> : <Small color={c.soft}>Checked as you write</Small>}
         </Row>
         <MethodLine at={step - 1} done={step - 2} />
 
