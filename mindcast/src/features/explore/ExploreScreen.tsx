@@ -3,8 +3,8 @@
  * by rail, a detail sheet for each, and a rail passport you stamp by being there (or honestly marking a visit).
  */
 import { router } from "expo-router";
-import React, { useMemo, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import React, { useMemo, useRef, useState } from "react";
+import { Pressable, ScrollView, Text, useWindowDimensions, View } from "react-native";
 import Animated, { SlideInDown, useReducedMotion } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { pack } from "@/domain";
@@ -88,7 +88,7 @@ function PlaceSheet({ place, onClose }: { place: Place; onClose: () => void }) {
     <Animated.View
       entering={reduce ? undefined : SlideInDown.duration(260)}
       accessibilityViewIsModal
-      style={{ position: "absolute", left: 0, right: 0, bottom: 0, maxHeight: "64%", backgroundColor: c.surface, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, borderWidth: 1, borderColor: c.line, shadowColor: "#000", shadowOpacity: 0.18, shadowRadius: 18, shadowOffset: { width: 0, height: -4 }, elevation: 12 }}
+      style={{ position: "absolute", left: 0, right: 0, bottom: 0, maxHeight: "58%", backgroundColor: c.surface, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, borderWidth: 1, borderColor: c.line, shadowColor: "#000", shadowOpacity: 0.18, shadowRadius: 18, shadowOffset: { width: 0, height: -4 }, elevation: 12 }}
     >
       <View style={{ alignItems: "center", paddingTop: 8 }}>
         <View style={{ width: 40, height: 5, borderRadius: 3, backgroundColor: c.line }} />
@@ -185,16 +185,25 @@ export function ExploreScreen() {
   const counts = useMemo(() => Object.fromEntries(CAT_ORDER.map((k) => [k, places.filter((p) => p.category === k).length])) as Record<Cat, number>, [places]);
 
   const back = () => (router.canGoBack() ? router.back() : router.replace("/"));
+  const scroller = useRef<React.ComponentRef<typeof ScrollView>>(null);
+  const mapBox = useRef({ y: 0, h: 0 });
+  const win = useWindowDimensions();
   const choose = (id: string) => {
     setSel(id);
     const p = places.find((x) => x.id === id);
     if (p && filter !== "all" && p.category !== filter) setFilter("all");
+    // Keep the chosen pin visible above the detail sheet, which covers the lower part of the screen.
+    if (p && mapBox.current.h > 0) {
+      const [, py] = project(p.lat, p.lon);
+      const pinY = mapBox.current.y + (py / GB_MAP.H) * mapBox.current.h;
+      scroller.current?.scrollTo({ y: Math.max(0, pinY - win.height * 0.2), animated: true });
+    }
   };
 
   return (
     <View style={{ flex: 1, backgroundColor: c.bg }}>
       <PaperGrid />
-      <ScrollView contentContainerStyle={{ paddingHorizontal: space.l, paddingTop: ins.top + space.m, paddingBottom: ins.bottom + (selected ? 420 : 96), gap: space.l, maxWidth: 760, width: "100%", alignSelf: "center" }}>
+      <ScrollView ref={scroller} contentContainerStyle={{ paddingHorizontal: space.l, paddingTop: ins.top + space.m, paddingBottom: ins.bottom + (selected ? win.height * 0.6 : 96), gap: space.l, maxWidth: 760, width: "100%", alignSelf: "center" }}>
         <Row>
           <Button small kind="ghost" label="‹ Back" onPress={back} accessibilityLabel="Go back" />
         </Row>
@@ -223,7 +232,9 @@ export function ExploreScreen() {
             <Body color={c.soft}>The list of great places is being checked. Come back soon.</Body>
           </View>
         ) : (
-          <MapView places={visible} selected={sel} stamped={passport} onSelect={choose} />
+          <View onLayout={(e) => { mapBox.current = { y: e.nativeEvent.layout.y, h: e.nativeEvent.layout.height }; }}>
+            <MapView places={visible} selected={sel} stamped={passport} onSelect={choose} />
+          </View>
         )}
         <Small color={c.soft}>Lines are simplified to show the main routes, not every branch. Map outline from Natural Earth.</Small>
 

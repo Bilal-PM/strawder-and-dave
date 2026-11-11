@@ -40,7 +40,10 @@ export function paintPins(p: Painter, pins: Pin[], c: Palette) {
     p.circle(x, y - 26, 10, pin.stamped ? c.ink : c.surface, { roughness: 0.4, strokeWidth: 1.2 });
     if (pin.selected) {
       const right = x < 400;
-      p.text(x + (right ? 20 : -20), y - 30, pin.name, 26, c.ink, "hand", right ? "start" : "end");
+      const w = pin.name.length * 12 + 20; // Caveat at 26px averages about 12px a character
+      const lx = right ? x + 18 : x - 18 - w;
+      p.rect(lx, y - 56, w, 36, c.surface, { stroke: colour, strokeWidth: 1.6, roughness: 0.6, fillStyle: "solid" });
+      p.text(lx + w / 2, y - 30, pin.name, 26, c.ink, "hand", "middle");
     }
   });
 }
