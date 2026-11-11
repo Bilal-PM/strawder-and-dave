@@ -1,4 +1,4 @@
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useMemo, useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
@@ -21,7 +21,15 @@ function Field({ value, onChange, placeholder, label, lines = 4 }: { value: stri
 export default function NewCast() {
   const { c } = useTheme();
   const ins = useSafeAreaInsets();
-  const [d, setD] = useState<Draft>(blank);
+  // Opened from a practice stamp: `topic` is the lesson, `note` is where they saw it. The note seeds the first
+  // "in your world" relation, and stays visible as a reminder while they write.
+  const { topic, note } = useLocalSearchParams<{ topic?: string; note?: string }>();
+  const seedNote = typeof note === "string" ? note.slice(0, 600) : "";
+  const [d, setD] = useState<Draft>(() => ({
+    ...blank,
+    railwayTopic: typeof topic === "string" && pack.lessons.some((l) => l.id === topic) ? topic : "",
+    mapping: seedNote ? [{ railway: "", target: seedNote }, { railway: "", target: "" }] : blank.mapping,
+  }));
   const [step, setStep] = useState(0); // 0 = topic and title, 1..6 = method, 7 = review
   const [leaving, setLeaving] = useState(false);
   const mo = useMotion();
@@ -64,6 +72,13 @@ export default function NewCast() {
           <Animated.View key={step} entering={mo.next()} style={{ gap: 12 }}>
             <Eyebrow>New Mindcast</Eyebrow>
             <H2>Start from something real</H2>
+            {seedNote ? (
+              <Card tone="sunk">
+                <Eyebrow>From your practice stamp</Eyebrow>
+                <Hand>{seedNote}</Hand>
+                <Small color={c.soft}>{"It's waiting in step 3 as the first relation in your world. Start with the railway side."}</Small>
+              </Card>
+            ) : null}
             <Body color={c.soft}>{"Pick the part of the railway your experience comes from. You'll build it in six steps, and the integrity score will coach you as you go."}</Body>
             <BodyB>Railway topic</BodyB>
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>

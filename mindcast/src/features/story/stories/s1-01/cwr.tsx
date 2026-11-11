@@ -13,7 +13,10 @@ import { EASE_IN, loop, seg, wave } from "../../living";
 import { arrow, carBody, cloud, label, railSide, sleeperEnd, stipple, stoneInk, wheel } from "../../art";
 import { DrawOn, Layer, StageSvg, Still, clamp01, useArt, useSceneClocks, type Tick } from "../../layers";
 import type { ArtProps } from "../../types";
-import { FRAME, WHEELS } from "./hook";
+import { WHEELS } from "./hook";
+
+/** Framing: closer than scene 1 (1.3×), so welds, clips and arrows read on a phone. Visible x ≈ 42–318. */
+const FRAME = "translate(-54 -96) scale(1.3)";
 
 const T = {
   LOOP: 45000,
@@ -87,7 +90,7 @@ const tensor = (t: Tick) => {
   const out = seg(t.shot, T.TENSOR_OUT[0], T.TENSOR_OUT[1]);
   // Clamped to the rail end, it moves with the stretch; then lifts off and goes.
   const pull = seg(t.shot, T.PULL[0], T.PULL[1], "inOut");
-  return { o: inn * (1 - out), y: -10 * out + 6 * (1 - inn), x: (300 + 40) * T.STRETCH * pull };
+  return { o: inn * (1 - out), y: -10 * out + 6 * (1 - inn), x: (270 + 40) * T.STRETCH * pull };
 };
 const pullArrow = (t: Tick) => {
   "worklet";
@@ -139,8 +142,8 @@ export function CwrScene({ active, reduced }: ArtProps) {
     const sl: [number, number, number, number][] = SLEEPERS.map((x) => [x, RAIL_Y + RAIL_H, 20, 12]);
     const glass = dark ? "#3E5566" : "#BFD9EA";
     return {
-      cloudA: part((p) => cloud(p, 0, 96, 1.1, k)),
-      cloudB: part((p) => cloud(p, 0, 62, 0.75, k)),
+      cloudA: part((p) => cloud(p, 0, 128, 1.0, k)),
+      cloudB: part((p) => cloud(p, 0, 104, 0.7, k)),
       horizon: part((p) => p.curve([[-10, 206], [70, 196], [150, 202], [240, 192], [370, 200]], { stroke: k.line, strokeWidth: 1.6, roughness: 0.8 })),
       bed: part((p) => { stipple(p, -10, RAIL_Y + RAIL_H + 4, 380, 44, stoneInk(k, dark), 51, 0.06, sl); for (const s of sl) sleeperEnd(p, s[0], s[1], s[2], s[3], k); }),
       railA: part((p) => railSide(p, -40, 118, RAIL_Y, RAIL_H, k)),
@@ -148,29 +151,29 @@ export function CwrScene({ active, reduced }: ArtProps) {
       railC: part((p) => railSide(p, 242, 400, RAIL_Y, RAIL_H, k)),
       glow: part((p) => { for (const w of WELDS) p.ellipse(w, RAIL_Y + RAIL_H / 2, 20, 30, k.ppe, { stroke: k.ppe, strokeWidth: 1, roughness: 0.6 }); }),
       collar: part((p) => { for (const w of WELDS) p.rect(w - 3, RAIL_Y - 2, 6, RAIL_H + 4, k.surface, { roughness: 0.4, strokeWidth: 1.6 }); }),
-      longLabel: part((p) => label(p, 52, 262, "welded into one long rail", k, 17)),
+      longLabel: part((p) => label(p, 74, 266, "welded into one long rail", k, 14)),
       tensor: part((p) => {
-        p.rect(268, RAIL_Y - 10, 12, RAIL_H + 20, k.ink, { roughness: 0.5, strokeWidth: 1.2 });
-        p.rect(316, RAIL_Y - 10, 12, RAIL_H + 20, k.ink, { roughness: 0.5, strokeWidth: 1.2 });
-        p.rect(266, RAIL_Y - 24, 64, 12, k.sunk, { roughness: 0.6, strokeWidth: 1.8 });
-        p.text(298, RAIL_Y - 30, "tensor", 16, k.ink, "hand");
+        p.rect(250, RAIL_Y - 10, 10, RAIL_H + 20, k.ink, { roughness: 0.5, strokeWidth: 1.2 });
+        p.rect(284, RAIL_Y - 10, 10, RAIL_H + 20, k.ink, { roughness: 0.5, strokeWidth: 1.2 });
+        p.rect(248, RAIL_Y - 22, 48, 11, k.sunk, { roughness: 0.6, strokeWidth: 1.6 });
+        p.text(272, RAIL_Y - 27, "tensor", 14, k.ink, "hand");
       }),
-      pull: part((p) => arrow(p, 300, RAIL_Y - 52, 340, RAIL_Y - 52, k.accent, 2.4, 7)),
-      pullLabel: part((p) => p.text(296, RAIL_Y - 46, "stretched first", 16, k.accent, "hand", "end")),
-      clips: SLEEPERS.map((x) => part((p) => p.path(`M${x - 1} ${RAIL_Y + RAIL_H} L${x + 3} ${RAIL_Y + RAIL_H - 6} L${x + 17} ${RAIL_Y + RAIL_H - 6} L${x + 21} ${RAIL_Y + RAIL_H} Z`, k.accent, { stroke: k.accent, roughness: 0.4, strokeWidth: 1.2 }))),
+      pull: part((p) => arrow(p, 254, RAIL_Y - 46, 292, RAIL_Y - 46, k.accent, 2, 6)),
+      pullLabel: part((p) => p.text(248, RAIL_Y - 42, "stretched first", 14, k.accent, "hand", "end")),
+      clips: SLEEPERS.map((x) => part((p) => p.path(`M${x + 3} ${RAIL_Y + RAIL_H + 1} L${x + 5} ${RAIL_Y + RAIL_H - 4} L${x + 15} ${RAIL_Y + RAIL_H - 4} L${x + 17} ${RAIL_Y + RAIL_H + 1} Z`, k.accent, { stroke: k.accent, roughness: 0.3, strokeWidth: 1 }))),
       arrows: part((p) => {
-        for (const i of [2, 6, 10]) {
+        for (const i of [3, 6, 9]) {
           const x = SLEEPERS[i];
           arrow(p, x - 16, RAIL_Y + RAIL_H + 8, x - 3, RAIL_Y + RAIL_H + 8, k.accent, 1.8, 5);
           arrow(p, x + 36, RAIL_Y + RAIL_H + 8, x + 23, RAIL_Y + RAIL_H + 8, k.accent, 1.8, 5);
           arrow(p, x + 10, RAIL_Y + RAIL_H + 38, x + 10, RAIL_Y + RAIL_H + 15, k.accent, 1.8, 5);
         }
       }),
-      holdLabel: part((p) => p.text(180, 356, "clipped down, held by sleepers and ballast", 15, k.ink, "hand")),
+      holdLabel: part((p) => { p.text(180, 352, "clipped down, held still", 14, k.ink, "hand"); p.text(180, 366, "by sleepers and ballast", 14, k.ink, "hand"); }),
       rear: part((p) => carBody(p, 0, RAIL_Y - 60, 120, k, false, glass)),
       front: part((p) => { carBody(p, 126, RAIL_Y - 60, 120, k, true, glass); p.line(118, RAIL_Y - 28, 128, RAIL_Y - 28, { strokeWidth: 2.4, roughness: 0.3 }); }),
       wheels: WHEELS.map((wx) => part((p) => wheel(p, wx, WY, WR, k, 3))),
-      quiet: part((p) => p.text(180, 196, "quiet: no clack", 22, k.accent, "hand")),
+      quiet: part((p) => p.text(180, 200, "quiet: no clack", 18, k.accent, "hand")),
     };
   });
   return (
@@ -189,7 +192,7 @@ export function CwrScene({ active, reduced }: ArtProps) {
         <Layer c={c} pose={glow} pivot={[180, RAIL_Y + 8]} nodes={a.glow} />
         {SLEEPERS.map((x, i) => <Layer key={x} c={c} pose={CLIP_POSES[i]} nodes={a.clips[i]} />)}
         <Layer c={c} pose={tensor} nodes={a.tensor} />
-        <Layer c={c} pose={pullArrow} pivot={[300, RAIL_Y - 52]} nodes={a.pull} />
+        <Layer c={c} pose={pullArrow} pivot={[254, RAIL_Y - 46]} nodes={a.pull} />
         <Layer c={c} pose={pullLabel} nodes={a.pullLabel} />
         <Layer c={c} pose={LONG_POSE} nodes={a.longLabel} />
         <DrawOn c={c} nodes={a.arrows} from={T.ARROWS[0]} to={T.ARROWS[1]} />

@@ -1,13 +1,14 @@
-import { router } from "expo-router";
+import type { Href } from "expo-router";
 import React, { useMemo } from "react";
 import { Text, View } from "react-native";
 import { pack, type Mindcast } from "@/domain";
 import { useStore } from "@/state/store";
-import { Body, BodyB, Card, Chip, Eyebrow, H3, Hand, Row, Small, usePal } from "@/ui/kit";
+import { Body, BodyB, Chip, Eyebrow, H3, Hand, Row, Small, usePal } from "@/ui/kit";
 import { useCountTo } from "@/ui/motion";
+import { PeekLink } from "@/ui/peek";
 import { Sketch } from "@/ui/sketch";
 import { useTheme } from "@/ui/theme";
-import { F, onColour, radius, type as T } from "@/ui/tokens";
+import { F, onColour, radius, space, type as T } from "@/ui/tokens";
 import { checkIntegrity, type Integrity } from "./integrity";
 
 export const METHOD = [
@@ -78,7 +79,7 @@ export function CastCard({ cast }: { cast: Mindcast }) {
   const integ = useMemo(() => integrityOf(cast), [cast]);
   const lesson = pack.lessons.find((l) => l.id === cast.railwayTopic);
   return (
-    <Card onPress={() => router.push(`/cast/${cast.id}`)} accessibilityLabel={`Mindcast: ${cast.title}`}>
+    <PeekLink href={`/cast/${cast.id}` as Href} accessibilityLabel={`Mindcast: ${cast.title}`} style={{ backgroundColor: c.surface, borderRadius: radius.l, borderWidth: 1, borderColor: c.line, padding: space.l, gap: space.s }}>
       <Row style={{ justifyContent: "space-between", alignItems: "flex-start" }}>
         <View style={{ flex: 1, gap: 6 }}>
           <Chip label={lesson ? lesson.title : topicLabel(cast.railwayTopic)} color={c.ppe} />
@@ -88,7 +89,7 @@ export function CastCard({ cast }: { cast: Mindcast }) {
       </Row>
       <Hand style={{ color: c.accent }}>{cast.principle}</Hand>
       <Small color={c.soft}>{cast.author} · for {cast.audience.map((a) => audienceLabel[a] + "s").join(" and ")}</Small>
-    </Card>
+    </PeekLink>
   );
 }
 

@@ -48,11 +48,13 @@ export type Tick = { loop: number; shot: number; x: number };
 
 /**
  * The scene's clocks. The loop runs only while the scene is on screen and motion is allowed; the one-shot
- * plays once when the scene becomes active and, with reduced motion, sits at its last frame.
+ * plays once when the scene becomes active (or, with `play`, when the scene says so, e.g. after a guess)
+ * and, with reduced motion, sits at its last frame.
  */
-export function useSceneClocks(loopPeriod: number, shotDuration: number, active: boolean, reduced: boolean, x?: SharedValue<number>): Clocks {
+export function useSceneClocks(loopPeriod: number, shotDuration: number, active: boolean, reduced: boolean, x?: SharedValue<number>, play = true): Clocks {
   const loop = useLoopClock(loopPeriod, active && !reduced);
-  const shot = useOneShotClock(shotDuration, active, reduced);
+  // With reduced motion the one-shot sits at its last frame, but only once it is allowed to play.
+  const shot = useOneShotClock(shotDuration, active && play, reduced && play);
   const own = useSharedValue(0);
   return useMemo(() => ({ loop, shot, x: x ?? own }), [loop, shot, x, own]);
 }

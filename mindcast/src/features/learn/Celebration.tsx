@@ -1,4 +1,4 @@
-/** The "stop complete" moment: the train pulls in, the stop is stamped, miles gained, next stop open. */
+/** The "stop complete" moment: the train pulls in, the stop is stamped, the score, next stop open. (Miles are no longer shown.) */
 import React, { useEffect } from "react";
 import { Modal, Text, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from "react-native-reanimated";
@@ -43,7 +43,7 @@ export function Celebration({ data, onDone, onNext }: { data: CelebrationData | 
     if (!data) return;
     x.set(m.reduce ? 0 : -260);
     if (!m.reduce) x.set(withDelay(150, withTiming(0, { duration: dur.glide, easing: ease.out })));
-    announce(`Stop ${data.lesson.stop} complete. ${data.miles} miles gained.${data.next && data.newlyOpen ? ` Stop ${data.next.stop}, ${data.next.title}, is now open.` : ""}`);
+    announce(`Stop ${data.lesson.stop} complete.${data.next && data.newlyOpen ? ` Stop ${data.next.stop}, ${data.next.title}, is now open.` : ""}`);
   }, [data, m.reduce, x]);
   // Beats after the train arrives: stamp, then stats, next stop, companion, buttons.
   const beat = (k: number) => (m.reduce ? 0 : ARRIVE + stagger(k, 90));
@@ -80,10 +80,6 @@ export function Celebration({ data, onDone, onNext }: { data: CelebrationData | 
               </Animated.View>
             </Animated.View>
             <View style={{ flexDirection: "row", gap: space.m }}>
-              <Animated.View entering={m.rise(0, beat(1))} style={card}>
-                <Text style={{ fontFamily: F.display, fontSize: 36, color: c.ink, fontVariant: ["tabular-nums"] }}>+{data.miles}</Text>
-                <Small color={c.soft}>miles on the line</Small>
-              </Animated.View>
               <Animated.View entering={m.rise(0, beat(2))} style={card}>
                 <Text style={{ fontFamily: F.display, fontSize: 36, color: data.score === data.total ? c.good : c.ink, fontVariant: ["tabular-nums"] }}>{data.score}/{data.total}</Text>
                 <Small color={c.soft}>{data.scoreLabel ?? "quiz score"}</Small>

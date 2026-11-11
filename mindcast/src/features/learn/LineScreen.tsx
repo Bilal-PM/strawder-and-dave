@@ -12,6 +12,7 @@ import { F, radius, space } from "@/ui/tokens";
 import { lineCompanion, pick, seasonInfo, seasonSlots } from "./content";
 import { LineMap, MAP_W, stopXY, type StopState } from "./LineMap";
 import { Sheet, useEnter } from "./ui";
+import { hasStory } from "@/features/story/stories";
 
 export function LineScreen() {
   const { c } = useTheme();
@@ -78,8 +79,11 @@ export function LineScreen() {
 
           {here && !hereDone ? (
             <Animated.View entering={enter[4]}>
-              <Card tone="pass" onPress={() => open(here.id)} accessibilityLabel={`Your next stop: stop ${current + 1}, ${here.title}`}>
-                <Eyebrow>Your next stop</Eyebrow>
+              <Card tone="pass" onPress={() => open(here.id)} accessibilityLabel={`Your next stop: stop ${current + 1}, ${here.title}${hasStory(here.id) ? ", an illustrated story" : ""}`}>
+                <Row gap={space.s} style={{ justifyContent: "space-between" }}>
+                  <Eyebrow>Your next stop</Eyebrow>
+                  {hasStory(here.id) && <Chip label="Illustrated story" color={c.accent} />}
+                </Row>
                 <Row gap={space.m} style={{ alignItems: "flex-start" }}>
                   <View style={{ width: 44, height: 44, borderRadius: 22, borderWidth: 2, borderColor: c.ink, alignItems: "center", justifyContent: "center", backgroundColor: c.pass }}>
                     <Text style={{ fontFamily: F.display, fontSize: 18, color: "#1B1F24" }}>{current + 1}</Text>
@@ -147,6 +151,7 @@ export function LineScreen() {
                 : <Chip label={selState === "soon" ? "Coming soon" : "Locked"} color={c.soft} />}
             </View>
             <H2>{selLesson?.title ?? `Stop ${sel + 1}`}</H2>
+            {selLesson && hasStory(selLesson.id) && <Chip label="Illustrated story" color={c.accent} />}
             {selLesson ? <Text style={{ fontFamily: F.hand, fontSize: 26, lineHeight: 28, color: c.ink }}>{selLesson.hook}</Text> : <Small color={c.soft}>This stop is still being written.</Small>}
             {selLesson && (selState === "locked" ? (
               <>

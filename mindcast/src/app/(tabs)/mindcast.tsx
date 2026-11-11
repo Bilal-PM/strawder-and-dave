@@ -20,7 +20,7 @@ export default function MindcastTab() {
   return (
     <Screen>
       <Enter style={{ gap: 6 }}>
-        <Eyebrow>Mindcast</Eyebrow>
+        <Eyebrow>{me === "explorer" ? "Ideas" : "Mindcast"}</Eyebrow>
         <H1 accessibilityRole="header">Experience that sticks</H1>
         <Body color={c.soft}>A Mindcast takes one real thing from the railway, explains why it happens, and carries that cause and effect across to how we lead and deliver. No slogans, no clichés.</Body>
       </Enter>
@@ -28,8 +28,8 @@ export default function MindcastTab() {
         <Enter i={1}>
           <Card tone="sunk">
             <Hand color={c.accent}>For grown-ups</Hand>
-            <Small color={c.soft}>Mindcasts are written for older learners and people at work. Ask a grown-up to read one with you, or head to the Line for your next stop.</Small>
-            <Button small label="Go to the Line" onPress={() => router.navigate("/line")} style={{ alignSelf: "flex-start" }} />
+            <Small color={c.soft}>Mindcasts are written for older learners and people at work. Ask a grown-up to read one with you, or head to Learn for your next stop.</Small>
+            <Button small label="Go to Learn" onPress={() => router.navigate("/line")} style={{ alignSelf: "flex-start" }} />
           </Card>
         </Enter>
       )}

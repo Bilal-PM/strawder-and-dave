@@ -20,6 +20,8 @@ export type StoryApi = {
   /** Credit the stop. `score` of `total` is the in-story check; the stop's quiz best is left untouched. */
   finish: (score: number, total: number) => void;
   openNotes: () => void;
+  /** The scene has shown its answer: switch from the `before` caption to the caption. */
+  reveal: () => void;
 };
 
 export type StoryScene = {
@@ -28,6 +30,11 @@ export type StoryScene = {
   eyebrow: string;
   /** Caption at each depth. Starter stays within about 25 words. Real text, so it can be read aloud and scaled. */
   caption: Record<Audience, string>;
+  /**
+   * For a scene that opens on a playful guess ("what do you think happens?"): the caption shown until the
+   * scene calls `api.reveal()`, so the words don't give the answer away before the drawing shows it.
+   */
+  before?: Record<Audience, string>;
   /** The drawing. It describes itself to screen readers (StageSvg's label). */
   Art: React.ComponentType<ArtProps>;
   /** The learner works inside the drawing, so taps in the middle don't turn the page. */

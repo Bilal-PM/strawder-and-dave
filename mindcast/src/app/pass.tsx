@@ -8,9 +8,9 @@ import { useMotion } from "@/ui/motion";
 import { useTheme } from "@/ui/theme";
 
 const TIERS = [
-  { name: "Free, always", price: "£0", tone: "good", items: ["Every lesson, Mindcast and field note", "Free rewards on every season line", "Basic crew kit and the station cat", "Departure board, weather and one Loop"] },
+  { name: "Free, always", price: "£0", tone: "good", items: ["Every lesson, Mindcast and field note", "Free rewards on every season line", "Basic crew kit and the station cat", "Departure board, Field Book and Your week"] },
   { name: "Single ticket", price: "£1 per item", tone: "accent", items: ["One piece of kit, one companion or one ticket design", "Yours to keep, no subscription"] },
-  { name: "Season Pass", price: "£5 per season", tone: "pass", items: ["A Season Pass reward at every stop", "Unlimited loops with full history", "Ticket designs and your season certificate", "Finish the line to earn credit for next season"] },
+  { name: "Season Pass", price: "£5 per season", tone: "pass", items: ["A Season Pass reward at every stop", "Extra crew kit and ticket designs", "Your season certificate", "Finish the line to earn credit for next season"] },
   { name: "Crew Pass", price: "For teams", tone: "accent", items: ["The Season Pass for a whole team", "A team board for onboarding new joiners", "Progress for managers"] },
   { name: "Sponsor a learner", price: "For companies", tone: "ppe", items: ["Gift passes to apprentices and schools", "A reach report for social value bids"] },
 ] as const;

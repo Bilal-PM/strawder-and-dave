@@ -6,11 +6,11 @@
  * when the kink starts. Idle: heat shimmer (more as it warms), sun rays turning, a jiggle on the sun until it
  * has been moved once.
  */
-import React, { useRef, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { PanResponder, View } from "react-native";
 import { useSharedValue, withTiming } from "react-native-reanimated";
 import { bell, loop, wave } from "../../living";
-import { arrow, label, sunDisc, sunRays, stipple, stoneInk } from "../../art";
+import { arrow, sunDisc, sunRays, stipple, stoneInk } from "../../art";
 import { Layer, StageSvg, Still, clamp01, unitRect, useArt, useSceneClocks, useStage, type Tick } from "../../layers";
 import type { ArtProps } from "../../types";
 import { tap } from "@/ui/kit";
@@ -35,7 +35,8 @@ const FAR_R = 450;
 const RAILS_Y = [266, 316] as const;
 const SUN = { x: 262, y: 110, r: 24 };
 const THERMO = { x: 84, top: 44, bulb: 206 };
-const SLEEPERS = Array.from({ length: 12 }, (_, i) => 6 + i * 32);
+/** Sleepers either side of the joint, none under it (a suspended joint). */
+const SLEEPERS = Array.from({ length: 12 }, (_, i) => -2 + i * 32);
 
 const gapNow = (h: number) => {
   "worklet";
@@ -87,14 +88,14 @@ const sayOpen = (t: Tick) => {
 };
 const sayClosed = (t: Tick) => {
   "worklet";
-  return { o: clamp01((t.x - 0.62) / 0.08) * (1 - clamp01((t.x - 0.8) / 0.05)) };
+  return { o: clamp01((t.x - 0.62) / 0.08) * (1 - clamp01((t.x - 0.83) / 0.03)) };
 };
 const sayPush = (t: Tick) => {
   "worklet";
-  return { o: clamp01((t.x - 0.86) / 0.06) };
+  return { o: clamp01((t.x - 0.86) / 0.04) };
 };
 function makeWisp(i: number) {
-  const x0 = [60, 150, 240, 310][i], period = [2400, 3000, 2000, 3600][i];
+  const x0 = [214, 252, 300, 338][i], period = [2400, 3000, 2000, 3600][i];
   return (t: Tick) => {
     "worklet";
     const p = loop(t.loop, period, i * 0.29);
@@ -108,8 +109,6 @@ export function TryScene({ active, reduced }: ArtProps) {
   const waiting = useSharedValue<number>(1);
   const c = useSceneClocks(T.LOOP, 1, active, reduced, heat);
   const box = useStage();
-  const last = useRef<number>(T.START_HEAT);
-  const startY = useRef(0);
   const [valueText, setValueText] = useState(describeHeat(T.START_HEAT));
 
   const a = useArt("s1-01/try", (part, k, dark) => ({
@@ -134,13 +133,13 @@ export function TryScene({ active, reduced }: ArtProps) {
       arrow(p, SUN.x + 36, SUN.y + 4, SUN.x + 36, SUN.y + 24, k.accent, 1.6, 5);
     }),
     bed: part((p) => stipple(p, -4, 246, 368, 92, stoneInk(k, dark), 31, 0.035)),
-    sleepers: SLEEPERS.map((sx) => part((p) => p.rect(sx, 250, 12, 82, k.surface, { roughness: 0.8, strokeWidth: 1.6 }))),
+    sleepers: SLEEPERS.map((sx) => part((p) => p.rect(sx, 254, 12, 74, k.surface, { roughness: 0.8, strokeWidth: 1.6 }))),
     railL: part((p) => { for (const y of RAILS_Y) p.rect(FAR_L, y - 5, JOINT - T.GAP / 2 - FAR_L, 10, k.surface, { roughness: 0.6, strokeWidth: 1.8 }); }),
     railR: part((p) => { for (const y of RAILS_Y) p.rect(JOINT + T.GAP / 2, y - 5, FAR_R - JOINT - T.GAP / 2, 10, k.surface, { roughness: 0.6, strokeWidth: 1.8 }); }),
     gap: part((p) => {
-      p.line(JOINT - T.GAP / 2, 246, JOINT - T.GAP / 2, 256, { stroke: k.accent, strokeWidth: 1.4, roughness: 0.2 });
-      p.line(JOINT + T.GAP / 2, 246, JOINT + T.GAP / 2, 256, { stroke: k.accent, strokeWidth: 1.4, roughness: 0.2 });
-      label(p, JOINT + 14, 248, "gap", k, 18, k.accent);
+      p.line(JOINT - T.GAP / 2, 248, JOINT - T.GAP / 2, 258, { stroke: k.accent, strokeWidth: 1.4, roughness: 0.2 });
+      p.line(JOINT + T.GAP / 2, 248, JOINT + T.GAP / 2, 258, { stroke: k.accent, strokeWidth: 1.4, roughness: 0.2 });
+      p.text(JOINT, 242, "gap", 18, k.accent, "hand");
     }),
     push: part((p) => {
       arrow(p, 14, 291, 64, 291, k.ppe, 2.6, 8);
@@ -155,45 +154,45 @@ export function TryScene({ active, reduced }: ArtProps) {
     wisp: part((p) => p.curve([[0, 0], [3, -5], [-2, -10], [2, -15], [0, -19]], { stroke: k.ppe, strokeWidth: 1.5, roughness: 0.3 })),
   }));
 
-  const sunJiggle = useRef((t: Tick) => {
+  // Waiting to be dragged: a small squash-and-widen pulse on the sun (skill §3), gone once it has been moved.
+  const sunJiggle = useMemo(() => (t: Tick) => {
     "worklet";
-    // Waiting to be dragged: a small squash-and-widen pulse (skill §3). Gone once the learner has moved it.
     const w = waiting.value;
     const h = t.x;
-    return { x: -16 * Math.sin(Math.PI * h), y: T.SUN_LOW - (T.SUN_LOW - T.SUN_HIGH) * h - SUN.y, sx: (0.88 + 0.2 * h) * (1 + 0.025 * w * wave(t.loop, 600)), sy: (0.88 + 0.2 * h) * (1 - 0.025 * w * wave(t.loop, 600)) };
-  }).current;
-  const hintPose = useRef((t: Tick) => {
+    const s = 0.88 + 0.2 * h;
+    return { x: -16 * Math.sin(Math.PI * h), y: T.SUN_LOW - (T.SUN_LOW - T.SUN_HIGH) * h - SUN.y, sx: s * (1 + 0.025 * w * wave(t.loop, 600)), sy: s * (1 - 0.025 * w * wave(t.loop, 600)) };
+  }, [waiting]);
+  const hintPose = useMemo(() => (t: Tick) => {
     "worklet";
     return { y: T.SUN_LOW - (T.SUN_LOW - T.SUN_HIGH) * t.x - SUN.y, x: -16 * Math.sin(Math.PI * t.x), o: waiting.value };
-  }).current;
-
-  const setHeat = (h: number) => {
-    const v = Math.max(0, Math.min(1, h));
-    const prev = last.current;
-    last.current = v;
-    heat.value = v;
-    if (prev < T.CLOSED && v >= T.CLOSED) { tap("medium"); announce("The gap has closed. The rail has used its room."); }
-    if (prev < T.KINK_FROM && v >= T.KINK_FROM) { tap("warn"); announce("No room left. The rail is pushing sideways."); }
-    setValueText((s) => { const n = describeHeat(v); return n === s ? s : n; });
-  };
-  const firstMove = () => { if (waiting.value > 0.5) waiting.value = reduced ? 0 : withTiming(0, { duration: 250 }); };
+  }, [waiting]);
 
   // The drag area: the sky, between the page-turn edges. A touch puts the sun at that height; dragging moves it.
-  const area = { x: 58, y: 20, w: 268, h: 200 };
-  const r = unitRect(box, area.x, area.y, area.w, area.h);
-  const toHeat = (localY: number) => {
-    const yU = (r.top + localY - box.oy) / box.s;
-    return (T.SUN_LOW - yU) / (T.SUN_LOW - T.SUN_HIGH);
-  };
-  const pr = useRef(PanResponder.create({
-    onStartShouldSetPanResponder: () => true,
-    onMoveShouldSetPanResponder: () => true,
-    onPanResponderTerminationRequest: () => false,
-    onPanResponderGrant: (e) => { startY.current = e.nativeEvent.locationY; firstMove(); handlers.current.set(handlers.current.toHeat(startY.current)); },
-    onPanResponderMove: (_, g) => handlers.current.set(handlers.current.toHeat(startY.current + g.dy)),
-  })).current;
-  const handlers = useRef({ set: setHeat, toHeat });
-  handlers.current = { set: setHeat, toHeat };
+  const r = unitRect(box, 58, 20, 268, 200);
+  const pr = useMemo(() => {
+    const toHeat = (localY: number) => (T.SUN_LOW - (r.top + localY - box.oy) / box.s) / (T.SUN_LOW - T.SUN_HIGH);
+    const setHeat = (h: number) => {
+      const v = Math.max(0, Math.min(1, h));
+      const prev = heat.get();
+      heat.set(v);
+      if (prev < T.CLOSED && v >= T.CLOSED) { tap("medium"); announce("The gap has closed. The rail has used its room."); }
+      if (prev < T.KINK_FROM && v >= T.KINK_FROM) { tap("warn"); announce("No room left. The rail is pushing sideways."); }
+      setValueText((s) => { const n = describeHeat(v); return n === s ? s : n; });
+    };
+    const firstMove = () => { if (waiting.get() > 0.5) waiting.set(reduced ? 0 : withTiming(0, { duration: 250 })); };
+    const drag = { y: 0 };
+    return {
+      setHeat,
+      firstMove,
+      responder: PanResponder.create({
+        onStartShouldSetPanResponder: () => true,
+        onMoveShouldSetPanResponder: () => true,
+        onPanResponderTerminationRequest: () => false,
+        onPanResponderGrant: (e) => { drag.y = e.nativeEvent.locationY; firstMove(); setHeat(toHeat(drag.y)); },
+        onPanResponderMove: (_, g) => setHeat(toHeat(drag.y + g.dy)),
+      }),
+    };
+  }, [r.top, box.oy, box.s, heat, waiting, reduced]);
 
   return (
     <>
@@ -219,13 +218,13 @@ export function TryScene({ active, reduced }: ArtProps) {
         <Layer c={c} pose={sayPush} nodes={a.sayPush} />
       </StageSvg>
       <View
-        {...pr.panHandlers}
+        {...pr.responder.panHandlers}
         accessible
         accessibilityRole="adjustable"
         accessibilityLabel="The sun. Drag up to warm the day, down to cool it."
         accessibilityValue={{ text: valueText }}
         accessibilityActions={[{ name: "increment" }, { name: "decrement" }]}
-        onAccessibilityAction={(e) => { firstMove(); setHeat(last.current + (e.nativeEvent.actionName === "increment" ? 0.1 : -0.1)); }}
+        onAccessibilityAction={(e) => { pr.firstMove(); pr.setHeat(heat.get() + (e.nativeEvent.actionName === "increment" ? 0.1 : -0.1)); }}
         style={[r, { cursor: "grab" } as object]}
       />
     </>

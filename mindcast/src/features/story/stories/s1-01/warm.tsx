@@ -1,22 +1,36 @@
 /**
- * Scene 2 · Warm steel. One action: the day warms. The sun arcs up about a point below the horizon, the
+ * Scene 2 · Warm steel. It opens on a playful guess ("When the sun warms it, this rail will…"), drawn as
+ * chips in the scene. Whatever the learner guesses, it is circled as their guess and never marked right or
+ * wrong; then the drawing acts it out. One action: the day warms. The sun arcs up about a point below the horizon, the
  * thermometer rises and, a beat behind, the rail gets longer from its fixed left end (exaggerated, and lettered
  * so). Idle: heat shimmer over the rail, sun rays turning, a cloud drifting.
  * Final frame (reduced motion): sun high, rail long, "warm" and "exaggerated" lettered.
  */
-import React from "react";
+import React, { useEffect } from "react";
 import { bell, loop, seg, wave } from "../../living";
 import { arrow, cloud, dashed, label, railSide, sleeperEnd, stipple, stoneInk, sunDisc, sunRays } from "../../art";
 import { DrawOn, Layer, StageSvg, Still, useArt, useSceneClocks, type Tick } from "../../layers";
 import type { ArtProps } from "../../types";
+import { GuessArt, GuessTouch, useGuess, type GuessChoice, type GuessGeo } from "../../choices";
+
+const QUESTION = "When the sun warms it, this rail will…";
+const GUESSES: GuessChoice[] = [
+  { id: "longer", label: "get longer" },
+  { id: "shorter", label: "get shorter" },
+  { id: "same", label: "stay the same" },
+];
+const GUESS_AT: GuessGeo = { x: 84, y: 146, w: 192, h: 38, step: 47 };
+/** When the caption switches from the question to the explanation: once the rail has visibly lengthened. */
+const REVEAL_AFTER = 2600;
 
 const T = {
   LOOP: 36000,
   SHOT: 4800,
   SUN: [0, 3200],
   /** The sun is drawn at its high point and turns up to it about a pivot below the horizon. */
-  SUN_PIVOT: [190, 360] as const,
-  SUN_FROM_DEG: -55,
+  SUN_PIVOT: [190, 380] as const,
+  /** Starts low on the left, half beyond the stage's edge, just over the horizon. */
+  SUN_FROM_DEG: -62,
   MERCURY: [400, 3400],
   RAIL: [900, 3800],
   /** How much longer the rail gets, drawn: 12%, wildly exaggerated so you can see it. */
@@ -49,11 +63,6 @@ const warmLabel = (t: Tick) => {
   const p = seg(t.shot, T.LABELS[0], T.LABELS[1]);
   return { o: p, y: 4 * (1 - p) };
 };
-const exagLabel = (t: Tick) => {
-  "worklet";
-  const p = seg(t.shot, T.EXAG[0], T.EXAG[1]);
-  return { o: p, y: 4 * (1 - p) + 1.2 * wave(t.loop, 4000) * p };
-};
 const cloudPose = (t: Tick) => {
   "worklet";
   return { x: -120 + 560 * loop(t.loop, 36000, 0.18) };
@@ -72,8 +81,16 @@ function makeWisp(i: number) {
 }
 const WISPS = [0, 1, 2].map(makeWisp);
 
-export function WarmScene({ active, reduced }: ArtProps) {
-  const c = useSceneClocks(T.LOOP, T.SHOT, active, reduced);
+export function WarmScene({ active, reduced, api }: ArtProps) {
+  const guess = useGuess(reduced);
+  // The day only warms once a guess is in.
+  const c = useSceneClocks(T.LOOP, T.SHOT, active, reduced, undefined, !!guess.picked);
+  const { reveal } = api;
+  useEffect(() => {
+    if (!guess.picked) return;
+    const id = setTimeout(reveal, reduced ? 0 : REVEAL_AFTER);
+    return () => clearTimeout(id);
+  }, [guess.picked, reduced, reveal]);
   const a = useArt("s1-01/warm", (part, k, dark) => ({
     cloud: part((p) => cloud(p, 0, 70, 1.05, k)),
     ground: part((p) => {
@@ -109,7 +126,8 @@ export function WarmScene({ active, reduced }: ArtProps) {
     wisp: part((p) => p.curve([[0, 0], [3, -5], [-2, -10], [2, -15], [0, -19]], { stroke: k.ppe, strokeWidth: 1.6, roughness: 0.3 })),
   }));
   return (
-    <StageSvg label="A rail lies on sleepers on a cool morning. The sun rises in an arc and the thermometer climbs. As the day warms, the rail gets longer, from its fixed left end past the line that marks its cool length. The change is exaggerated so you can see it. Heat shimmers above the rail.">
+    <>
+    <StageSvg label="First, a guess: when the sun warms it, will this rail get longer, get shorter or stay the same? Then a rail lies on sleepers on a cool morning. The sun rises in an arc and the thermometer climbs. As the day warms, the rail gets longer, from its fixed left end past the line that marks its cool length. The change is exaggerated so you can see it. Heat shimmers above the rail.">
       <Layer c={c} pose={cloudPose} nodes={a.cloud} />
       <Layer c={c} pose={sunPose} pivot={T.SUN_PIVOT}>
         <Layer c={c} pose={raysPose} pivot={[SUN.x, SUN.y]} nodes={a.rays} />
@@ -124,6 +142,9 @@ export function WarmScene({ active, reduced }: ArtProps) {
       {WISPS.map((w, i) => <Layer key={i} c={c} pose={w} nodes={a.wisp} />)}
       <Layer c={c} pose={warmLabel} nodes={a.warm} />
       <DrawOn c={c} nodes={a.exag} from={T.EXAG[0]} to={T.EXAG[1]} />
+      <GuessArt c={c} question={QUESTION} choices={GUESSES} at={GUESS_AT} guess={guess} />
     </StageSvg>
+    <GuessTouch question={QUESTION} choices={GUESSES} at={GUESS_AT} guess={guess} onGuess={() => {}} />
+    </>
   );
 }

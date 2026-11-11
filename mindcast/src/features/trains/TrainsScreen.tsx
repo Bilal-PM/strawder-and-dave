@@ -1,11 +1,14 @@
-/** Trains tab: a library of UK classes drawn to scale. */
-import { router } from "expo-router";
+/** The train library (opened from the Field Book): UK classes drawn to scale, underlined once you've spotted one. */
+import type { Href } from "expo-router";
 import React, { memo, useCallback, useMemo, useState } from "react";
 import { FlatList, Pressable, ScrollView, Text, TextInput, View, type ListRenderItem } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { pack } from "@/domain";
 import type { TrainClass, TrainGroup } from "@/domain/types";
-import { Body, Enter, Eyebrow, H1, Mono, PaperGrid, Small, Tappable, tap } from "@/ui/kit";
+import { trainKey } from "@/features/fieldbook/logic";
+import { useStore } from "@/state/store";
+import { BackButton, Body, Eyebrow, H1, Mono, PaperGrid, Small, tap } from "@/ui/kit";
+import { PeekLink } from "@/ui/peek";
 import { useTheme } from "@/ui/theme";
 import { F, radius, space } from "@/ui/tokens";
 import { Thumb } from "./art";
@@ -13,23 +16,23 @@ import { GROUPS } from "./model";
 
 type G = "all" | TrainGroup;
 
-const TrainCard = memo(function TrainCard({ train, index }: { train: TrainClass; index: number }) {
+const TrainCard = memo(function TrainCard({ train }: { train: TrainClass }) {
   const { c } = useTheme();
+  const spotted = useStore((s) => (s.fieldbook.spots[trainKey(train.id)]?.grade ?? 0) > 0);
   return (
-    <Enter i={index < 8 ? index : 0} style={{ flex: 1 }}>
-    <Tappable
-      accessibilityRole="button"
-      accessibilityLabel={`${train.name}, ${train.type}`}
-      accessibilityHint="Opens details and a 3D view"
-      onPress={() => router.push(`/train/${train.id}`)}
-      style={{ flex: 1, backgroundColor: c.surface, borderRadius: radius.l, borderWidth: 1, borderColor: c.line, padding: 10, gap: 6, minHeight: 44 }}>
-      <View style={{ backgroundColor: c.sunk, borderRadius: radius.m, paddingVertical: 6, paddingHorizontal: 2 }}>
-        <Thumb train={train} />
-      </View>
-      <Text numberOfLines={2} style={{ fontFamily: F.displaySemi, fontSize: 16, color: c.ink }}>{train.name}</Text>
-      <Text numberOfLines={2} style={{ fontFamily: F.body, fontSize: 13, lineHeight: 17, color: c.soft }}>{train.type}</Text>
-    </Tappable>
-    </Enter>
+    <View style={{ flex: 1 }}>
+      <PeekLink
+        href={`/train/${train.id}` as Href}
+        accessibilityLabel={`${train.name}, ${train.type}${spotted ? ". Spotted" : ""}`}
+        accessibilityHint="Opens details and a 3D view"
+        style={{ flex: 1, backgroundColor: c.surface, borderRadius: radius.l, borderWidth: 1, borderColor: c.line, padding: 10, gap: 6, minHeight: 44 }}>
+        <View style={{ backgroundColor: c.sunk, borderRadius: radius.m, paddingVertical: 6, paddingHorizontal: 2 }}>
+          <Thumb train={train} />
+        </View>
+        <Text numberOfLines={2} style={{ fontFamily: F.displaySemi, fontSize: 16, color: c.ink, textDecorationLine: spotted ? "underline" : "none", textDecorationColor: c.accent }}>{train.name}</Text>
+        <Text numberOfLines={2} style={{ fontFamily: F.body, fontSize: 13, lineHeight: 17, color: c.soft }}>{spotted ? `Spotted · ${train.type}` : train.type}</Text>
+      </PeekLink>
+    </View>
   );
 });
 
@@ -63,13 +66,14 @@ export default function TrainsScreen() {
 
   // keep the last card half width when the count is odd
   const data = useMemo<(TrainClass | null)[]>(() => (list.length % 2 ? [...list, null] : list), [list]);
-  const renderItem = useCallback<ListRenderItem<TrainClass | null>>(({ item, index }) => (item ? <TrainCard train={item} index={index} /> : <View style={{ flex: 1 }} importantForAccessibility="no" />), []);
+  const renderItem = useCallback<ListRenderItem<TrainClass | null>>(({ item }) => (item ? <TrainCard train={item} /> : <View style={{ flex: 1 }} importantForAccessibility="no" />), []);
 
   const header = (
     <View style={{ gap: space.m, paddingBottom: space.m }}>
+      <BackButton label="Field Book" fallback="/fieldbook" />
       <Eyebrow>Trains</Eyebrow>
       <H1 accessibilityRole="header">{"Britain's trains, drawn to scale"}</H1>
-      <Body color={c.soft}>{"Each drawing is built from the class's real length and height. Tap one for its details, a 3D view and a postcard."}</Body>
+      <Body color={c.soft}>{"Each drawing is built from the class's real length and height. Spot one for real and it's underlined in your Field Book."}</Body>
       <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: c.surface, borderWidth: 1.5, borderColor: c.line, borderRadius: radius.m, paddingLeft: 12 }}>
         <TextInput
           value={q}

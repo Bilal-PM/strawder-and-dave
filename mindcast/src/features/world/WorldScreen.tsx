@@ -6,6 +6,8 @@ import React, { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, AppState, PanResponder, ScrollView, StyleSheet, Text, View } from "react-native";
 import Animated, { useReducedMotion } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { pack } from "@/domain";
+import { entries } from "@/features/fieldbook/logic";
 import { useStore } from "@/state/store";
 import { Body, Button, Card, Eyebrow, H2, Row, Segmented, Small, Stat, tap } from "@/ui/kit";
 import { useTheme } from "@/ui/theme";
@@ -19,6 +21,27 @@ import { Scene, type CamCtl, type CamMode, type WorldData } from "./Scene";
 import { ackAws, createSim, LINE_SPEED, MPH, snapshot, type Cond, type Sim, type Snapshot, type Tod, type Tone } from "./sim";
 
 type Phase = "loading" | "intro" | "running" | "paused" | "ended";
+
+/** Field Book items that also exist in this world, by their world key. Signal aspects all point at the colour-light signal. */
+const WORLD_ITEMS = entries(pack).filter((e) => e.item?.world);
+const worldKeyFor = (moment: string) => (["red", "yellow", "doubleYellow", "spad"].includes(moment) ? "signal" : moment);
+function useSpottedHere() {
+  const spots = useStore((s) => s.fieldbook.spots);
+  return (momentKey: string) => {
+    const e = WORLD_ITEMS.find((x) => x.item?.world === worldKeyFor(momentKey));
+    return e && (spots[e.key]?.grade ?? 0) > 0 ? e : null;
+  };
+}
+
+/** "You spotted this": shown on a landmark card when the real thing is stamped in the Field Book. */
+function SpottedMark({ name }: { name: string }) {
+  const { c } = useTheme();
+  return (
+    <View accessible accessibilityLabel={`You spotted a real ${name.toLowerCase()}. It's in your Field Book.`} style={{ alignSelf: "flex-start", flexDirection: "row", alignItems: "center", gap: 6, borderRadius: 999, borderWidth: 1.5, borderColor: c.good, paddingHorizontal: 8, paddingVertical: 3 }}>
+      <Text style={{ fontFamily: F.bodySemi, fontSize: 12, color: c.good }}>✓ You spotted one · in your Field Book</Text>
+    </View>
+  );
+}
 type Toast = { id: number; text: string; tone: Tone; points?: number };
 
 const POWER_LABELS = ["Off", "1", "2", "3", "4"];
@@ -50,6 +73,7 @@ export default function WorldScreen() {
   const [appActive, setAppActive] = useState(true);
   const [power, setPower] = useState(0);
   const [brake, setBrake] = useState(2);
+  const spottedHere = useSpottedHere();
 
   const simRef = useRef<Sim | null>(null);
   const cam = useRef<CamCtl>({ mode: "drone", yaw: 0.8, pitch: 0.42, dist: 95 });
@@ -231,6 +255,7 @@ export default function WorldScreen() {
               <Panel>
                 <View accessibilityLiveRegion="polite" style={{ gap: 4 }}>
                   <Eyebrow color={c.accent}>{moment.title}</Eyebrow>
+                  {spottedHere(moment.key) && <SpottedMark name={spottedHere(moment.key)!.name} />}
                   <Small>{moment.text}</Small>
                   <Row gap={8} style={{ marginTop: 2 }}>
                     {moment.lessonId && <Button small kind="primary" label="Go to the lesson" onPress={() => openLesson(moment.lessonId!)} />}
@@ -333,6 +358,8 @@ function Overlay({ children }: { children: React.ReactNode }) {
 
 function IntroOverlay({ miles, tod, setTod, cond, setCond, onStart, onBack }: { miles: number; tod: Tod; setTod: (t: Tod) => void; cond: Cond; setCond: (c: Cond) => void; onStart: () => void; onBack: () => void }) {
   const { c, dark } = useTheme();
+  const spots = useStore((s) => s.fieldbook.spots);
+  const found = WORLD_ITEMS.filter((e) => (spots[e.key]?.grade ?? 0) > 0);
   const ins = useSafeAreaInsets();
   const rows: [string, string][] = [
     ["Drive", "Power on the right, brake on the left. Braking cuts the power."],
@@ -358,6 +385,7 @@ function IntroOverlay({ miles, tod, setTod, cond, setCond, onStart, onBack }: { 
               </Text>
             ))}
           </View>
+          <Small color={found.length ? c.good : c.soft}>{found.length ? `Your line: you've spotted ${found.map((e) => e.name.toLowerCase()).join(", ")} for real. Look out for them here.` : "Your line: spot a viaduct, tunnel or level crossing for real and it's marked here when you pass it."}</Small>
           <Segmented label="Time of day" showLabel value={tod} onChange={setTod} options={[{ value: "morning", label: "Morning" }, { value: "day", label: "Day" }, { value: "dusk", label: "Dusk" }]} />
           <Segmented label="Conditions" showLabel value={cond} onChange={setCond} options={[{ value: "dry", label: "Dry" }, { value: "leaves", label: "Wet leaves" }, { value: "hot", label: "Hot" }]} />
           <Small color={c.soft}>{COND_NOTE[cond]}</Small>

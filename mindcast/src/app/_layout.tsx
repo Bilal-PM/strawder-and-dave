@@ -25,6 +25,8 @@ function Shell() {
         <Stack.Screen name="world" options={{ animation: "fade_from_bottom" }} />
         <Stack.Screen name="cast/new" options={{ presentation: "modal" }} />
         <Stack.Screen name="pass" options={{ presentation: "modal" }} />
+        <Stack.Screen name="practice" options={{ presentation: "formSheet", sheetAllowedDetents: [0.75, 1], sheetGrabberVisible: true, sheetCornerRadius: 20 }} />
+        <Stack.Screen name="place/[id]" options={{ presentation: "formSheet", sheetAllowedDetents: [0.6, 1], sheetGrabberVisible: true, sheetCornerRadius: 20 }} />
       </Stack>
     </>
   );

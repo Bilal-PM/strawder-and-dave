@@ -20,7 +20,7 @@ export const FIRM = { roughness: 0.7, strokeWidth: 2 } as const;
  * rough would be slow and blotchy). `skip` leaves room for sleepers.
  */
 export function stipple(p: Painter, x: number, y: number, w: number, h: number, color: string, seed: number, density = 0.05, skip: [number, number, number, number][] = []) {
-  const count = Math.round(w * h * density * 0.12);
+  const count = Math.round(w * h * density * 0.4);
   let d = "";
   for (let i = 0; i < count; i++) {
     const sx = x + seeded(i, seed) * w;

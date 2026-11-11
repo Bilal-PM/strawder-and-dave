@@ -56,7 +56,7 @@ export const spotItems: SpotItem[] = [
   {
     id: "railhead", set: "track", name: "Railhead", rarity: "common",
     look: "The bright strip along the top of each rail, where the wheels run.",
-    why: "Wet leaves are crushed into a slippery layer on the rail head.",
+    why: "The grip between steel wheel and steel rail. It is low compared with a tyre on a road, and leaves, rain or frost on the rail can reduce it further, making braking and starting harder.",
     season: 2, art: "railhead", plate: "rail", tags: ["leaf"], sources: term("Adhesion"),
   },
   {

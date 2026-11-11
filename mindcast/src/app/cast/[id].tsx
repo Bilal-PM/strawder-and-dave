@@ -79,13 +79,13 @@ export default function CastScreen() {
             <H3>{cast.action}</H3>
             {added ? (
               <Animated.View entering={m.fade()} style={{ gap: 2, minHeight: 44, justifyContent: "center" }}>
-                <BodyB color={c.good}>✓ Added to your Loop</BodyB>
-                <Small color={c.soft}>Your Loop is your action list, on the You tab.</Small>
+                <BodyB color={c.good}>✓ Added to Your week</BodyB>
+                <Small color={c.soft}>Do it, then note what you noticed. It earns a practice stamp.</Small>
               </Animated.View>
             ) : (
               <>
-                <Button label="Add to my Loop" kind="primary" haptic="success" onPress={addAction} />
-                <Small color={c.soft}>Your Loop is your action list, on the You tab.</Small>
+                <Button label="Add to Your week" kind="primary" haptic="success" onPress={addAction} />
+                <Small color={c.soft}>Do it, then note what you noticed. It earns a practice stamp.</Small>
               </>
             )}
           </Card>

@@ -6,7 +6,7 @@
  */
 import React from "react";
 import { bell, seg, wave } from "../../living";
-import { fishplate, label, railSide, sleeperEnd, stipple, stoneInk, wheel } from "../../art";
+import { label, railSide, sleeperEnd, stipple, stoneInk, wheel } from "../../art";
 import { DrawOn, Layer, StageSvg, clamp01, useArt, useSceneClocks, type Tick } from "../../layers";
 import type { ArtProps } from "../../types";
 
@@ -22,8 +22,9 @@ const T = {
   INSET: [2300, 3200],
   /** The wheel crosses the frame at a steady roll. */
   WHEEL: [3000, 5600],
-  WHEEL_FROM: -60,
-  WHEEL_TO: 420,
+  /** Starts and ends well beyond the stage's edges (the stage is wider than the drawing on some phones). */
+  WHEEL_FROM: -130,
+  WHEEL_TO: 490,
   DIP: 3,
 } as const;
 const GAP_X = 180;
@@ -91,7 +92,7 @@ export function JointScene({ active, reduced }: ArtProps) {
       bolts: BOLTS.map((bx) => part((p) => p.circle(bx, 181, 14, k.ink, { roughness: 0.6, strokeWidth: 1 }))),
       railEndL: part((p) => { label(p, 34, 58, "rail end", k, 19); p.line(60, 64, 82, RAIL.y - 4, { stroke: k.soft, strokeWidth: 1, roughness: 0.6 }); }),
       gapLabel: part((p) => p.text(GAP_X, 40, "small gap", 19, k.accent, "hand")),
-      railEndR: part((p) => { label(p, 262, 58, "rail end", k, 19); p.line(290, 64, 272, RAIL.y - 4, { stroke: k.soft, strokeWidth: 1, roughness: 0.6 }); }),
+      railEndR: part((p) => { label(p, 276, 58, "rail end", k, 19); p.line(304, 64, 306, RAIL.y - 4, { stroke: k.soft, strokeWidth: 1, roughness: 0.6 }); }),
       plateLabel: part((p) => { label(p, 30, 318, "fishplate and bolts", k, 19); p.line(84, 300, 120, 196, { stroke: k.soft, strokeWidth: 1, roughness: 0.6 }); }),
       pointer: part((p) => {
         p.line(GAP_X, 50, GAP_X, 70, { stroke: k.accent, strokeWidth: 1.8, roughness: 0.3 });
@@ -106,12 +107,16 @@ export function JointScene({ active, reduced }: ArtProps) {
         p.rect(cx + 7 * s, fy - 25 * s, 10 * s, 15 * s, k.ink, { roughness: 0.5, strokeWidth: 1.4 });
         p.line(cx - 22 * s, fy - 17.5 * s, cx + 22 * s, fy - 17.5 * s, { strokeWidth: 2.2, roughness: 0.4 });
       }),
-      insetLabel: part((p) => { p.text(224, 334, "seen end on:", 17, k.soft, "hand", "end"); label(p, 102, 362, "a fishplate each side", k, 17); p.line(258, 358, 262, 364, { stroke: k.soft, strokeWidth: 1, roughness: 0.4 }); }),
+      insetLabel: part((p) => {
+        p.text(300, 322, "seen end on:", 17, k.soft, "hand");
+        p.text(252, 372, "a fishplate each side", 17, k.ink, "hand", "end");
+        p.line(255, 367, 266, 367, { stroke: k.soft, strokeWidth: 1.2, roughness: 0.4 });
+      }),
       wheel: part((p) => wheel(p, GAP_X, WY, WR, k, 5)),
       clack: part((p) => {
         p.line(GAP_X + 8, 140, GAP_X + 18, 128, { stroke: k.accent, strokeWidth: 2, roughness: 0.3 });
         p.line(GAP_X + 14, 146, GAP_X + 28, 140, { stroke: k.accent, strokeWidth: 2, roughness: 0.3 });
-        p.text(GAP_X + 70, 124, "clack", 28, k.accent, "hand");
+        p.text(GAP_X + 56, 118, "clack", 28, k.accent, "hand");
       }),
     };
   });
@@ -130,7 +135,7 @@ export function JointScene({ active, reduced }: ArtProps) {
       <DrawOn c={c} nodes={a.inset} from={T.INSET[0]} to={T.INSET[1]} />
       <Layer c={c} pose={LABEL_POSES[3]} nodes={a.insetLabel} />
       <Layer c={c} pose={wheelPose} pivot={[GAP_X, WY]} nodes={a.wheel} />
-      <Layer c={c} pose={clackPose} pivot={[GAP_X + 70, 116]} nodes={a.clack} />
+      <Layer c={c} pose={clackPose} pivot={[GAP_X + 56, 110]} nodes={a.clack} />
     </StageSvg>
   );
 }

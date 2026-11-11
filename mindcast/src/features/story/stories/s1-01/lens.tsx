@@ -98,7 +98,7 @@ export function LensScene({ active, reduced }: ArtProps) {
         p.rect(32, 152, 296, 80, null, { roughness: 1, strokeWidth: 2 });
         p.line(32, 172, 328, 172, { stroke: kk.soft, strokeWidth: 1, roughness: 0.6 });
       }),
-      boardTag: part((p) => p.text(42, 166, "IN YOUR WORK · TEAM MEETING", 10, kk.soft, "mono", "start")),
+      boardTag: part((p) => { p.text(42, 166, "IN YOUR WORK", 10, kk.soft, "mono", "start"); p.text(318, 167, "team meeting", 15, kk.soft, "hand", "end"); }),
       blockLabels: part((p) => {
         p.text(BLOCK_L.x + BLOCK_L.w / 2, 203, "updates", 17, kk.ink, "hand");
         p.text(BLOCK_R.x + BLOCK_R.w / 2, 203, "plans", 17, kk.ink, "hand");
@@ -119,7 +119,7 @@ export function LensScene({ active, reduced }: ArtProps) {
       l1: part((p) => p.line(180, 66, 180, 176, { stroke: kk.accent, strokeWidth: 2, roughness: 0.6 })),
       l1Label: part((p) => p.text(172, 116, LENS_LABELS.gap, 16, kk.accent, "hand", "end")),
       l2: part((p) => p.path("M214 54 C 300 62, 346 100, 344 160 L 343 214 C 342 230, 340 236, 338 240", null, { stroke: kk.ppe, strokeWidth: 2, roughness: 0.6 })),
-      l2Label: part((p) => p.text(336, 142, LENS_LABELS.seized, 16, kk.ppe, "hand", "end")),
+      l2Label: part((p) => p.text(338, 142, LENS_LABELS.seized, 15, kk.ppe, "hand", "end")),
       l3: part((p) => p.path("M20 92 C 8 130, 8 200, 14 236 C 18 254, 30 262, 46 264", null, { stroke: kk.accent, strokeWidth: 2, roughness: 0.6 })),
       l3Label: part((p) => p.text(26, 314, LENS_LABELS.ballast, 16, kk.accent, "hand", "start")),
       p1: part((p) => p.text(180, 348, LENS_LABELS.principle[0], 23, kk.ink, "hand")),

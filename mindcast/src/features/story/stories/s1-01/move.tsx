@@ -29,7 +29,7 @@ const T = {
 } as const;
 const WRITE_X = [88, 300] as const;
 const WRITE_Y = 216;
-const REST = [318, 300] as const;
+const REST = [336, 318] as const;
 const WORDS = [{ s: "What's", x: 88, w: 58 }, { s: "stuck?", x: 152, w: 60 }, { s: "5 min", x: 250, w: 50 }];
 
 const pencilPose = (t: Tick) => {

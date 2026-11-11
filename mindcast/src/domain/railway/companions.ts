@@ -19,7 +19,7 @@ export const companions: Companion[] = [
       "I've watched thousands of trains. Not one stopped quickly. Steel on steel, you see.",
       // Crushed leaves form a slippery layer on the rail head (Wikipedia: Slippery rail).
       "Leaves on the line aren't an excuse. Crushed leaves make a slippery layer on the rail. Physics.",
-      "Two minutes a day beats an hour once a month. I nap on the same principle.",
+      "A few minutes on a few days beats an hour once a month. I nap on the same principle.",
       // Angular ballast interlocks (Practical Railway Engineering, s. 5.4).
       "Ballast likes to be sharp. I relate.",
     ],
@@ -42,7 +42,8 @@ export const companions: Companion[] = [
       "Why don't signals gossip? They only tell you what's ahead.",
       "A green signal means the line ahead is clear. In learning, that's your cue for the next step.",
     ],
-    unlock: { type: "pass", stop: 2 },
+    // Field Book reward: spot everything in Signals and signs.
+    unlock: { type: "set", set: "signals" },
   },
   {
     id: "tampy",
@@ -58,27 +59,29 @@ export const companions: Companion[] = [
       // Tamping is usually done in possessions or non-traffic hours (Practical Railway Engineering, s. 5.27).
       "I mostly work nights. Trains by day, tamping by night.",
       "I pack ballast under the sleepers. Think of me as a very loud tidy-up.",
-      "Pick one action you can finish this week. Small actions lap the Loop fastest.",
+      "Pick one action you can finish this week. Small actions are the ones that get done.",
       "Every lift I make is measured. Guesswork isn't my style.",
     ],
-    unlock: { type: "pass", stop: 8 },
+    // Field Book reward: spot everything in Track parts.
+    unlock: { type: "set", set: "track" },
   },
   {
     id: "pip",
     name: "Pip",
     kind: "Platform pigeon",
-    bio: "Platform pigeon. Here every day, knows every platform.",
+    bio: "Platform pigeon. Here most days, knows every platform.",
     tag: "Coo, ",
     anim: "hop",
-    hello: "Pip here. I'm at this station every day, so I'll keep you company.",
+    hello: "Pip here. I'm at this station most days, so I'll keep you company.",
     lines: [
-      "I'm at the station every day. Turning up is half of learning.",
+      "I'm at the station most days. Turning up is half of learning.",
       "Platform tip: stand behind the yellow line. It's there for a reason.",
-      "I know every platform number. Two minutes a day, that's the secret.",
+      "I know every platform number. A few minutes, a few days a week. That's the secret.",
       "Delays happen. What matters is what you do while you wait.",
-      "Why did the pigeon buy a season pass? It's cheaper if you come back every day.",
+      "Rest days count too. Even pigeons sit still sometimes.",
     ],
-    unlock: { type: "streak", days: 5 },
+    // Field Book reward: the first ten stamps.
+    unlock: { type: "stamps", count: 10 },
   },
   {
     id: "gauge",
@@ -96,7 +99,8 @@ export const companions: Companion[] = [
       "Pick one action you can finish this week. Then finish it.",
       "I measure twice and move once. Mostly I just measure.",
     ],
-    unlock: { type: "stop", season: 1, stop: 20 },
+    // Field Book reward: spot everything in Structures.
+    unlock: { type: "set", set: "structures" },
   },
   {
     id: "conker",

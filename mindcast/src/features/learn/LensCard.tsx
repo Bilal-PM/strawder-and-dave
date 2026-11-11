@@ -29,7 +29,7 @@ function Step({ n, label, children, last }: { n: number; label: string; children
 }
 
 /**
- * A lens's action in the learner's Loop (their action list on the You tab). `added` is true once an item with the
+ * A lens's action in the learner's week ("Your week" on the You tab, stored as `loop`). `added` is true once an item with the
  * same text is there, so the action is never added twice. Shared by the lens card and the illustrated stories.
  */
 export function useLoopAction(lens: Mindcast) {
@@ -38,7 +38,7 @@ export function useLoopAction(lens: Mindcast) {
   const add = () => {
     if (useStore.getState().loop.items.some((it) => it.text === lens.action)) return;
     useStore.getState().set((s) => ({ loop: { ...s.loop, items: [...s.loop.items, { id: `loop-${lens.id}-${Date.now()}`, text: lens.action, stage: "plan" }] } }));
-    announce("Added to your Loop, your action list on the You tab");
+    announce("Added to Your week, on the You tab");
   };
   return { added, add };
 }
@@ -82,11 +82,11 @@ export function LensCard({ lens }: { lens: Mindcast }) {
           </View>
           {added ? (
             <Animated.View entering={m.fade()} style={{ minHeight: 48, justifyContent: "center", gap: 2 }}>
-              <Text style={{ fontFamily: F.bodySemi, fontSize: 16, color: c.good }}>✓ Added to your Loop</Text>
-              <Small color={c.soft}>Your Loop is your action list, on the You tab.</Small>
+              <Text style={{ fontFamily: F.bodySemi, fontSize: 16, color: c.good }}>✓ Added to Your week</Text>
+              <Small color={c.soft}>Do it, then note what you noticed. It earns a practice stamp.</Small>
             </Animated.View>
           ) : (
-            <Button label="Add this action to my Loop" kind="primary" haptic="success" onPress={add} />
+            <Button label="Add to Your week" kind="primary" haptic="success" onPress={add} />
           )}
         </Step>
       </View>

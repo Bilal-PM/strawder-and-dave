@@ -35,6 +35,13 @@ export const s1_01: Story = {
       id: "warm",
       eyebrow: "Warm steel",
       Art: WarmScene,
+      // Opens on a playful guess, drawn in the scene; the caption explains once the drawing has shown it.
+      interactive: true,
+      before: {
+        explorer: "Have a guess. When the sun warms this rail, what do you think happens to it? Tap one.",
+        starter: "What do you think happens? Tap a guess, then watch the rail on a warm day.",
+        leader: "A quick guess before the drawing shows it: when the sun warms this rail, what does it do?",
+      },
       caption: {
         explorer: "When the sun warms a rail, the steel gets a tiny bit longer. When it cools down again, it gets a tiny bit shorter.",
         starter: "Warm steel expands. Cool steel contracts. In full sun a rail runs hotter than the air, and over a whole rail length that adds up.",
@@ -68,7 +75,7 @@ export const s1_01: Story = {
       Art: CwrScene,
       caption: {
         explorer: "Busy railways today weld rails into one very long piece and clip it down tight. Then there are no gaps, and no clack.",
-        starter: "Main lines now weld rails into one long rail, stretch it to the right length and clip it down. Sleepers and ballast hold it. No clack.",
+        starter: "Main lines now weld rails into one long rail, stretch it to the right length, then clip it down. Sleepers and ballast hold it still.",
         leader: "Welded rail swaps thousands of small movements for one large force held inside the steel. It's quieter and cheaper to look after, but only if it was fixed down right.",
       },
     },

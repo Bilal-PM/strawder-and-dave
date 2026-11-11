@@ -1,5 +1,5 @@
 /** Train detail: big side view or 3D view, spec sheet with sources, spotting tip, to-scale strip. */
-import { router } from "expo-router";
+import { Link, router } from "expo-router";
 import React, { useState } from "react";
 import { Linking, Pressable, Text, View } from "react-native";
 import { trainById } from "@/domain";
@@ -7,6 +7,8 @@ import type { Source, TrainClass } from "@/domain/types";
 import { BackButton, Body, Button, Card, Chip, EmptyState, Enter, Eyebrow, H1, H3, Hand, Row, Screen, Segmented, Small } from "@/ui/kit";
 import { useTheme } from "@/ui/theme";
 import { F, space } from "@/ui/tokens";
+import { SpotIt } from "@/features/fieldbook/SpotIt";
+import { trainKey } from "@/features/fieldbook/logic";
 import { ScaleStrip, SideView } from "./art";
 import { classLivery, toDraw } from "./model";
 import Viewer3D from "./Viewer3D";
@@ -92,9 +94,11 @@ export default function TrainDetail({ id }: { id: string }) {
       </Enter>
       <Segmented label="Choose a view" value={view} onChange={setView} options={[{ value: "side", label: "Side view" }, { value: "3d", label: "3D view" }]} />
       {view === "side" ? (
-        <Card style={{ paddingHorizontal: 8 }}>
-          <SideView train={t} livery={classLivery(t)} />
-        </Card>
+        <Link.AppleZoomTarget>
+          <Card style={{ paddingHorizontal: 8 }}>
+            <SideView train={t} livery={classLivery(t)} />
+          </Card>
+        </Link.AppleZoomTarget>
       ) : (
         <Viewer3D spec={toDraw(t)} livery={classLivery(t)} label={t.name} />
       )}
@@ -103,6 +107,7 @@ export default function TrainDetail({ id }: { id: string }) {
       <Card tone="pass">
         <Hand color={c.accent}>How to spot one</Hand>
         <Body>{t.spotting}</Body>
+        <SpotIt itemId={trainKey(t.id)} compact />
       </Card>
       <View style={{ gap: space.s }}>
         <Eyebrow>To scale</Eyebrow>

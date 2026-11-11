@@ -10,7 +10,7 @@
  *    changes become a short fade.
  */
 import { router, useIsFocused } from "expo-router";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { AppState, PanResponder, Pressable, Text, View, type LayoutChangeEvent } from "react-native";
 import Animated, { FadeIn, FadeInLeft, FadeInRight, FadeOut, ReduceMotion, useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -112,6 +112,8 @@ export function StoryPlayer({ lesson, story, start = 0 }: { lesson: Lesson; stor
   const [cele, setCele] = useState<CelebrationData | null>(null);
   const [box, setBox] = useState<StageBox>(() => stageBox(390, 480));
   const [speaking, setSpeaking] = useState(false);
+  /** Scenes that have shown their answer (a guess scene keeps its question caption until then). */
+  const [revealed, setRevealed] = useState<Record<string, boolean>>({});
   const scene = story.scenes[i];
   const active = focused && appActive && !cele;
 
@@ -121,8 +123,10 @@ export function StoryPlayer({ lesson, story, start = 0 }: { lesson: Lesson; stor
     stopSpeaking();
     setSpeaking(false);
     setDir(to > i ? 1 : -1);
+    // A scene starts fresh each time it is shown, so its guess is asked again.
+    setRevealed((r) => ({ ...r, [story.scenes[to].id]: false }));
     setI(to);
-  }, [i, n]);
+  }, [i, n, story.scenes]);
   const next = useCallback(() => go(i + 1), [go, i]);
   const back = useCallback(() => go(i - 1), [go, i]);
 
@@ -135,32 +139,32 @@ export function StoryPlayer({ lesson, story, start = 0 }: { lesson: Lesson; stor
     router.push({ pathname: "/lesson/[id]", params: { id: lesson.id, view: "notes" } });
   }, [lesson.id]);
 
+  const sceneId = scene.id;
   const api: StoryApi = useMemo(() => ({
     next,
     openNotes,
+    reveal: () => setRevealed((r) => ({ ...r, [sceneId]: true })),
     finish: (score, total) => {
       stopSpeaking();
       setCele(completeStop(lesson, { score, total, scoreLabel: "quick check" }));
     },
-  }), [next, openNotes, lesson]);
+  }), [next, openNotes, lesson, sceneId]);
 
   // Swipe left/right anywhere (the drawing's own drags claim the touch first).
-  const nav = useRef({ next, back });
-  nav.current = { next, back };
   const swipe = useMemo(() => PanResponder.create({
     onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 14 && Math.abs(g.dx) > Math.abs(g.dy) * 1.6,
     onPanResponderRelease: (_, g) => {
-      if (g.dx < -40) nav.current.next();
-      else if (g.dx > 40) nav.current.back();
+      if (g.dx < -40) next();
+      else if (g.dx > 40) back();
     },
-  }), []);
+  }), [next, back]);
 
   const onStage = (e: LayoutChangeEvent) => {
     const { width, height } = e.nativeEvent.layout;
     setBox((b) => (Math.abs(b.w - width) < 0.5 && Math.abs(b.h - height) < 0.5 ? b : stageBox(width, height)));
   };
 
-  const caption = scene.caption[depth];
+  const caption = scene.before && !revealed[scene.id] ? scene.before[depth] : scene.caption[depth];
   const read = () => {
     if (speaking) { stopSpeaking(); setSpeaking(false); return; }
     setSpeaking(true);
@@ -169,7 +173,7 @@ export function StoryPlayer({ lesson, story, start = 0 }: { lesson: Lesson; stor
 
   const enter = reduced ? FadeIn.duration(dur.quick).reduceMotion(ReduceMotion.Never) : (dir > 0 ? FadeInRight : FadeInLeft).duration(dur.base);
   const exit = FadeOut.duration(dur.quick).reduceMotion(ReduceMotion.Never);
-  const capSize = depth === "explorer" ? [25, 31] : depth === "leader" ? [19, 25] : [22, 28];
+  const capSize = depth === "explorer" ? [24, 30] : depth === "leader" ? [19, 25] : [21, 27];
   const Art = scene.Art;
 
   return (
@@ -189,7 +193,7 @@ export function StoryPlayer({ lesson, story, start = 0 }: { lesson: Lesson; stor
       </View>
 
       {/* The drawing: most of the screen. */}
-      <View style={{ flex: 1 }} onLayout={onStage}>
+      <View style={{ flex: 1, overflow: "hidden" }} onLayout={onStage}>
         <StageCtx.Provider value={box}>
           <Animated.View key={scene.id} entering={enter} exiting={exit} style={{ position: "absolute", left: 0, top: 0, right: 0, bottom: 0 }}>
             <Art active={active} reduced={reduced} depth={depth} lesson={lesson} api={api} />
@@ -205,7 +209,7 @@ export function StoryPlayer({ lesson, story, start = 0 }: { lesson: Lesson; stor
       {/* The caption: real text, set large, in a box that never changes size. */}
       <Pressable accessible={false} importantForAccessibility="no" onPress={scene.interactive ? undefined : next} style={{ height: CAPTION_H, paddingHorizontal: space.xl, paddingTop: space.s, gap: 6 }}>
         <Text style={{ fontFamily: F.mono, fontSize: 12, letterSpacing: 1, textTransform: "uppercase", color: c.soft }}>{i + 1} · {scene.eyebrow}</Text>
-        <Animated.Text key={`${scene.id}-${depth}`} entering={FadeIn.duration(dur.base).reduceMotion(ReduceMotion.Never)} accessibilityLiveRegion="polite"
+        <Animated.Text key={`${scene.id}-${depth}-${caption.length}`} entering={FadeIn.duration(dur.base).reduceMotion(ReduceMotion.Never)} accessibilityLiveRegion="polite"
           style={{ fontFamily: depth === "explorer" ? F.display : F.displaySemi, fontSize: capSize[0], lineHeight: capSize[1], letterSpacing: depth === "explorer" ? -0.3 : -0.2, color: c.ink }}>
           {caption}
         </Animated.Text>

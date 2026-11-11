@@ -2,7 +2,7 @@
  * Scene 9 · Quick check. A hot afternoon over jointed track. The learner taps the drawing where the steel has
  * room to expand. Right: a ring draws round the joint gap and it is lettered. Elsewhere: a soft ring where they
  * tapped and a hint; after two misses the answer is shown. Then they finish the stop (it is credited exactly
- * as the lesson notes credit it). Three labelled touch targets make the check work with a screen reader.
+ * as the lesson notes credit it). Finding the gap on any try counts; nothing is lost for a miss. Three labelled touch targets make the check work with a screen reader.
  * Idle: the sun's rays turn and heat shimmers over the rail.
  */
 import React, { useState } from "react";
@@ -17,9 +17,9 @@ import { Button, tap } from "@/ui/kit";
 import { space } from "@/ui/tokens";
 
 const T = { LOOP: 36000, RING_MS: 520 } as const;
-const RAIL = { y: 196, h: 32 };
+const RAIL = { y: 232, h: 34 };
 const GAP = 238;
-const SUN = { x: 300, y: 70, r: 26 };
+const SUN = { x: 296, y: 92, r: 28 };
 const SLEEPERS = [24, 96, 168, 300];
 /** The three answers a screen reader offers, and the hit areas for a finger (drawing units). */
 const SPOTS = [
@@ -51,20 +51,19 @@ export function CheckScene({ active, reduced, api }: ArtProps) {
   const ringClocks: Clocks = { loop: c.loop, shot: ring, x: c.x };
   const [answer, setAnswer] = useState<Answer | null>(null);
   const [misses, setMisses] = useState(0);
-  const [firstTry, setFirstTry] = useState<boolean | null>(null);
   const done = answer?.kind === "right" || answer?.kind === "shown";
 
   const a = useArt("s1-01/check", (part, k, dark) => {
     const sl: [number, number, number, number][] = SLEEPERS.map((x) => [x, RAIL.y + RAIL.h, 48, 30]);
     return {
       sky: part((p) => {
-        p.curve([[-10, 150], [80, 142], [170, 148], [260, 138], [370, 146]], { stroke: k.line, strokeWidth: 1.6, roughness: 0.8 });
-        p.text(16, 40, "A HOT AFTERNOON", 10, k.soft, "mono", "start");
+        p.curve([[-10, 184], [80, 176], [170, 182], [260, 172], [370, 180]], { stroke: k.line, strokeWidth: 1.6, roughness: 0.8 });
+        p.text(16, 48, "A HOT AFTERNOON", 10, k.soft, "mono", "start");
       }),
       sun: part((p) => sunDisc(p, SUN.x, SUN.y, SUN.r, k)),
       rays: part((p) => sunRays(p, SUN.x, SUN.y, SUN.r, k)),
       track: part((p) => {
-        stipple(p, 6, RAIL.y + RAIL.h + 4, 348, 70, stoneInk(k, dark), 71, 0.07, sl);
+        stipple(p, 6, RAIL.y + RAIL.h + 4, 348, 60, stoneInk(k, dark), 71, 0.07, sl);
         for (const s of sl) sleeperEnd(p, s[0], s[1], s[2], s[3], k);
         railSide(p, -10, GAP - 3, RAIL.y, RAIL.h, k);
         railSide(p, GAP + 3, 370, RAIL.y, RAIL.h, k);
@@ -84,12 +83,10 @@ export function CheckScene({ active, reduced, api }: ArtProps) {
     if (done) return;
     if (id === "gap") {
       tap("success");
-      setFirstTry((f) => (f === null ? true : f));
       setAnswer({ kind: "right", x: GAP, y: RAIL.y + RAIL.h / 2 });
       announce("Yes. The gap at the joint gives the steel room to expand.");
     } else {
       tap("warn");
-      setFirstTry(false);
       const n = misses + 1;
       setMisses(n);
       if (n >= 2) { setAnswer({ kind: "shown", x: GAP, y: RAIL.y + RAIL.h / 2 }); announce("Here it is: the gap at the joint, where two rails meet."); }
@@ -119,7 +116,7 @@ export function CheckScene({ active, reduced, api }: ArtProps) {
             <DrawOn c={ringClocks} nodes={answer.kind === "wrong" ? a.ringSoft : a.ringGood} from={0} to={T.RING_MS} />
           </Layer>
         )}
-        {say && <Label key={say} c={ringClocks} x={Math.max(110, Math.min(250, answer!.x))} y={RAIL.y - 52} text={say} color={sayColor} />}
+        {say && <Label key={say} c={ringClocks} x={Math.max(140, Math.min(230, answer!.x))} y={RAIL.y - 52} text={say} color={sayColor} />}
       </StageSvg>
       {!done && (
         <Pressable accessible={false} onPress={onTapDrawing} style={{ position: "absolute", left: 64, right: 64, top: 0, bottom: 90 }} />
@@ -129,7 +126,7 @@ export function CheckScene({ active, reduced, api }: ArtProps) {
       ))}
       {done && (
         <View style={{ position: "absolute", left: 72, right: 72, bottom: space.m, gap: space.s }}>
-          <Button label="Finish stop" kind="primary" haptic="success" onPress={() => api.finish(firstTry ? 1 : 0, 1)} accessibilityLabel="Finish this stop" />
+          <Button label="Finish stop" kind="primary" haptic="success" onPress={() => api.finish(answer?.kind === "right" ? 1 : 0, 1)} accessibilityLabel="Finish this stop" />
         </View>
       )}
     </>

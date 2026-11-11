@@ -10,13 +10,14 @@ slogan) across to leadership and management. A built-in integrity check keeps it
 ## What's in the app
 | Tab | What it does |
 |---|---|
-| Today | History card, railway weather (what today's weather means for the track), live departures with delay reasons linked to lessons, next stop, featured Mindcast |
-| Line | Season 1, The Permanent Way: 20 stops, each taught at three depths with an interactive drawing, a quiz and a Mindcast lens |
-| Mindcast | The method, the feed, and a composer that scores your Mindcast as you write it |
-| Trains | 35 UK classes drawn to scale, a 3D view, spec sheets with sources, and a postcard maker |
-| You | Crew member, companions (with unlocks), the Loop (want, strategy, plan, do, learn) and a shareable ticket, Season Pass, settings |
-| Open Line | An open 3D world: drive a train, read signals, feel braking distance, learn as you go |
-| Explore | Great places to reach by train, with a rail passport |
+| Today | Next stop, one spot of the day (picked by weather and season), what is due for another look, live departures with delay reasons linked to lessons, this day in history |
+| Learn | Season 1, The Permanent Way: 20 stops, each taught at three depths with an interactive drawing, a quiz and a Mindcast lens (route `/line`) |
+| Field Book | The centre tab and one currency, stamps: spot real track parts, signals, structures, trains (an ABC book) and places, one recall question each, bronze to gold over separate days; practice stamps for using a lesson's idea; "Your line" in the Open Line 3D world |
+| Mindcast | The method, the feed, and a composer that scores your Mindcast as you write it ("Ideas" for Explorers) |
+| You | Crew member, companions (earned by filling Field Book sets), Your week (plan, do, notice) with a noticing ring, Season Pass, settings |
+
+The train library (`/trains`), Explore (`/explore`, the Places set) and the Open Line (`/world`) open from the Field Book.
+Safety comes first: every set shows the fence rule, nothing points to railway land, and Explorers have location off unless a grown-up allows it.
 
 ## Run it on your iPhone (no Mac needed)
 1. Install **Expo Go** from the App Store.

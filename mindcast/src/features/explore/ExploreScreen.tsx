@@ -1,26 +1,24 @@
 /**
  * Explore by train: a hand-drawn map of Great Britain and Northern Ireland with great places to reach
- * by rail, a detail sheet for each, and a rail passport you stamp by being there (or honestly marking a visit).
+ * by rail, a native sheet for each, and the Field Book's Places set: stamp a place by being there
+ * (or honestly marking a visit). Stamps live in the Field Book (fieldbook.spots["place.<id>"]).
  */
 import { router } from "expo-router";
 import React, { useMemo, useRef, useState } from "react";
 import { Pressable, ScrollView, Text, useWindowDimensions, View } from "react-native";
-import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { pack } from "@/domain";
 import type { Place } from "@/domain/types";
-import { Sources, TopicChip } from "@/features/today/components/bits";
-import { topicFromLinkString } from "@/features/today/services/links";
-import { locateOnce } from "@/features/today/services/weather";
 import { useStore } from "@/state/store";
-import { BackButton, Body, BodyB, Button, Chip, Enter, Eyebrow, H1, H2, H3, PaperGrid, Row, Small, tap, usePal } from "@/ui/kit";
-import { useMotion } from "@/ui/motion";
+import { BackButton, Body, Enter, Eyebrow, H1, H2, H3, PaperGrid, Small, tap, usePal } from "@/ui/kit";
 import { Sketch } from "@/ui/sketch";
 import { useTheme } from "@/ui/theme";
 import { F, radius, space, TOUCH } from "@/ui/tokens";
-import { paintMap, paintPins, paintPlace, paintStamp, type Pin } from "./art";
+import { placeKey } from "@/features/fieldbook/logic";
+import { EmptyStamp, InkStamp } from "@/features/fieldbook/Stamp";
+import { paintMap, paintPins, type Pin } from "./art";
 import { GB_MAP, project } from "./gbmap";
-import { CAT_ORDER, CATS, kmText, stampCheck, STAMP_RADIUS_KM, type Cat } from "./places";
+import { CAT_ORDER, CATS, type Cat } from "./places";
 
 type Filter = "all" | Cat;
 const initials = (name: string) => name.split(/\s+/).filter((w) => /^[A-Z]/.test(w)).slice(0, 2).map((w) => w[0]).join("") || name.slice(0, 2).toUpperCase();
@@ -53,119 +51,25 @@ function MapView({ places, selected, stamped, onSelect }: { places: Place[]; sel
   );
 }
 
-function PlaceSheet({ place, onClose }: { place: Place; onClose: () => void }) {
+/** The Places set: one stamp per place, dotted until you've been. */
+function PlacesBook({ places, onSelect }: { places: Place[]; onSelect: (id: string) => void }) {
   const { c } = useTheme();
-  const pal = usePal();
-  const ins = useSafeAreaInsets();
-  const m = useMotion();
-  const passport = useStore((s) => s.passport);
-  const stamped = passport.includes(place.id);
-  const [msg, setMsg] = useState<{ text: string; tone: "good" | "warn" | "soft" } | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [confirm, setConfirm] = useState(false);
-  const cat = CATS[place.category];
-  const colour = cat?.colour(c) ?? c.accent;
-
-  const stamp = () => {
-    useStore.getState().set((s) => ({ passport: s.passport.includes(place.id) ? s.passport : [...s.passport, place.id] }));
-  };
-  const checkIn = async () => {
-    setBusy(true);
-    setMsg(null);
-    const r = await locateOnce();
-    setBusy(false);
-    if (!r.ok) return setMsg({ text: r.message, tone: "warn" });
-    const chk = stampCheck(place, r.lat, r.lon);
-    if (chk.ok) {
-      tap("success");
-      stamp();
-      setMsg({ text: `Stamped. You are ${kmText(chk.km)} from ${chk.label}.`, tone: "good" });
-    } else {
-      setMsg({ text: `You are about ${kmText(chk.km)} from ${chk.label}. Stamps work within ${STAMP_RADIUS_KM} km. Been before? Use Mark as visited.`, tone: "soft" });
-    }
-  };
-
-  return (
-    <Animated.View
-      entering={m.sheetIn()}
-      exiting={m.sheetOut()}
-      accessibilityViewIsModal
-      style={{ position: "absolute", left: 0, right: 0, bottom: 0, maxHeight: "58%", backgroundColor: c.surface, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, borderWidth: 1, borderColor: c.line, shadowColor: "#000", shadowOpacity: 0.18, shadowRadius: 18, shadowOffset: { width: 0, height: -4 }, elevation: 12 }}
-    >
-      <View style={{ alignItems: "center", paddingTop: 8 }}>
-        <View style={{ width: 40, height: 5, borderRadius: 3, backgroundColor: c.line }} />
-      </View>
-      <ScrollView contentContainerStyle={{ padding: space.l, paddingBottom: ins.bottom + space.l, gap: space.s, maxWidth: 760, width: "100%", alignSelf: "center" }}>
-        <Row style={{ justifyContent: "space-between", alignItems: "flex-start" }}>
-          <View style={{ flex: 1, gap: 4 }}>
-            <Chip label={cat?.label ?? place.category} color={colour} />
-            <H2 accessibilityRole="header">{place.name}</H2>
-          </View>
-          <Button small kind="ghost" label="Close" onPress={onClose} accessibilityLabel={`Close ${place.name}`} />
-        </Row>
-        <View style={{ borderRadius: radius.m, overflow: "hidden", backgroundColor: c.bg }}>
-          <Sketch w={320} h={170} pal={pal} deps={[place.category, c.surface]} paint={(p) => paintPlace(p, place.category, c, colour)} accessibilityLabel={`Drawing: ${cat?.label ?? "place"}`} />
-        </View>
-        <BodyB>Get off at: {place.station}</BodyB>
-        <Body>{place.fact}</Body>
-        <TopicChip topic={topicFromLinkString((place as Place & { link?: string }).link)} prefix="Linked:" />
-        {place.confidence && place.confidence !== "checked" && <Small color={c.soft}>Draft: wording still being checked against the source.</Small>}
-        <Sources sources={place.sources} />
-
-        <View style={{ marginTop: space.s, gap: space.s, padding: space.m, borderRadius: radius.m, backgroundColor: c.sunk }}>
-          <Eyebrow>Rail passport</Eyebrow>
-          {stamped ? (
-            <>
-              <Row gap={space.s}>
-                <Animated.View entering={m.pop()} style={{ width: 56 }}>
-                  <Sketch w={100} h={100} pal={pal} deps={[colour, place.id]} paint={(p) => paintStamp(p, true, colour, c, initials(place.name))} />
-                </Animated.View>
-                <BodyB style={{ flex: 1 }}>Stamped in your rail passport.</BodyB>
-              </Row>
-              <Button small kind="ghost" label="Remove stamp" onPress={() => useStore.getState().set((s) => ({ passport: s.passport.filter((id) => id !== place.id) }))} accessibilityLabel={`Remove the ${place.name} stamp`} />
-            </>
-          ) : (
-            <>
-              <Small color={c.soft}>Stand within {STAMP_RADIUS_KM} km of the station and tap below. Your location is checked once, on this phone, and not stored.</Small>
-              <Button kind="primary" label={busy ? "Checking where you are..." : "I'm here: stamp it"} onPress={checkIn} disabled={busy} accessibilityLabel={`Check my location and stamp ${place.name}`} />
-              {confirm ? (
-                <View style={{ gap: space.s }}>
-                  <Small>Only if you have really been. Mark {place.name} as visited?</Small>
-                  <Row gap={space.s}>
-                    <Button small kind="pass" haptic="success" label="Yes, I've been" onPress={() => { stamp(); setConfirm(false); setMsg({ text: "Marked as visited.", tone: "good" }); }} />
-                    <Button small kind="ghost" label="Cancel" onPress={() => setConfirm(false)} />
-                  </Row>
-                </View>
-              ) : (
-                <Button small label="Mark as visited" onPress={() => setConfirm(true)} accessibilityLabel={`Mark ${place.name} as visited without location`} />
-              )}
-            </>
-          )}
-          {msg && <Small accessibilityLiveRegion="polite" color={msg.tone === "good" ? c.good : msg.tone === "warn" ? c.warn : c.soft}>{msg.text}</Small>}
-        </View>
-      </ScrollView>
-    </Animated.View>
-  );
-}
-
-function Passport({ places, stamped, onSelect }: { places: Place[]; stamped: string[]; onSelect: (id: string) => void }) {
-  const { c } = useTheme();
-  const pal = usePal();
+  const spots = useStore((s) => s.fieldbook.spots);
+  const got = places.filter((p) => (spots[placeKey(p.id)]?.grade ?? 0) > 0).length;
   return (
     <View style={{ gap: space.m }}>
       <View style={{ gap: 2 }}>
-        <Eyebrow>Rail passport</Eyebrow>
-        <H2 accessibilityRole="header">{stamped.length} of {places.length} stamped</H2>
-        <Small color={c.soft}>Visit a place by train and stamp it while you are there.</Small>
+        <Eyebrow>Field Book · Places</Eyebrow>
+        <H2 accessibilityRole="header">{got} of {places.length} stamped</H2>
+        <Small color={c.soft}>Visit a place by train and stamp it while you are there, or mark a visit you have already made.</Small>
       </View>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: space.s }} accessibilityRole="list">
         {places.map((p) => {
-          const on = stamped.includes(p.id), colour = CATS[p.category]?.colour(c) ?? c.accent;
+          const rec = spots[placeKey(p.id)];
+          const on = (rec?.grade ?? 0) > 0;
           return (
-            <Pressable key={p.id} accessibilityRole="button" accessibilityLabel={`${p.name}, ${on ? "stamped" : "not stamped yet"}`} onPress={() => { tap(); onSelect(p.id); }} style={({ pressed }) => ({ width: "31.5%", minWidth: 96, alignItems: "center", gap: 4, padding: space.s, borderRadius: radius.l, borderWidth: on ? 1.5 : 1, borderColor: on ? colour : c.line, backgroundColor: pressed ? c.sunk : c.surface })}>
-              <View style={{ width: 64 }}>
-                <Sketch w={100} h={100} pal={pal} deps={[on, colour, p.id]} paint={(pt) => paintStamp(pt, on, colour, c, initials(p.name))} />
-              </View>
+            <Pressable key={p.id} accessibilityRole="button" accessibilityLabel={`${p.name}, ${on ? "stamped" : "not stamped yet"}`} onPress={() => { tap(); onSelect(p.id); }} style={({ pressed }) => ({ width: "31.5%", minWidth: 96, alignItems: "center", gap: 4, padding: space.s, borderRadius: radius.l, borderWidth: on ? 1 : 1.5, borderStyle: on ? "solid" : "dashed", borderColor: on ? c.line : c.soft, backgroundColor: pressed ? c.sunk : on ? c.surface : "transparent" })}>
+              {on ? <InkStamp k={placeKey(p.id)} grade={1} single day={rec!.days[rec!.days.length - 1] ?? ""} label={initials(p.name)} size={64} /> : <EmptyStamp size={64} />}
               <Text numberOfLines={2} style={{ fontFamily: F.bodySemi, fontSize: 12, lineHeight: 15, color: on ? c.ink : c.soft, textAlign: "center" }}>{p.name}</Text>
             </Pressable>
           );
@@ -178,20 +82,22 @@ function Passport({ places, stamped, onSelect }: { places: Place[]; stamped: str
 export function ExploreScreen() {
   const { c } = useTheme();
   const ins = useSafeAreaInsets();
-  const places = pack.places ?? [];
-  const passport = useStore((s) => s.passport);
+  const places = pack.places;
+  const spots = useStore((s) => s.fieldbook.spots);
+  const stampedIds = useMemo(() => places.filter((p) => (spots[placeKey(p.id)]?.grade ?? 0) > 0).map((p) => p.id), [places, spots]);
   const [filter, setFilter] = useState<Filter>("all");
   const [sel, setSel] = useState<string | null>(null);
   const visible = useMemo(() => places.filter((p) => filter === "all" || p.category === filter), [places, filter]);
   const selected = places.find((p) => p.id === sel) ?? null;
   const counts = useMemo(() => Object.fromEntries(CAT_ORDER.map((k) => [k, places.filter((p) => p.category === k).length])) as Record<Cat, number>, [places]);
 
-  const back = () => (router.canGoBack() ? router.back() : router.replace("/"));
+  const back = () => (router.canGoBack() ? router.back() : router.replace("/fieldbook"));
   const scroller = useRef<React.ComponentRef<typeof ScrollView>>(null);
   const mapBox = useRef({ y: 0, h: 0 });
   const win = useWindowDimensions();
   const choose = (id: string) => {
     setSel(id);
+    router.push({ pathname: "/place/[id]", params: { id } });
     const p = places.find((x) => x.id === id);
     if (p && filter !== "all" && p.category !== filter) setFilter("all");
     // Keep the chosen pin visible above the detail sheet, which covers the lower part of the screen.
@@ -205,12 +111,12 @@ export function ExploreScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: c.bg }}>
       <PaperGrid />
-      <ScrollView ref={scroller} contentContainerStyle={{ paddingHorizontal: space.l, paddingTop: ins.top + space.m, paddingBottom: ins.bottom + (selected ? win.height * 0.6 : 96), gap: space.l, maxWidth: 760, width: "100%", alignSelf: "center" }}>
-        <BackButton onPress={back} />
+      <ScrollView ref={scroller} contentContainerStyle={{ paddingHorizontal: space.l, paddingTop: ins.top + space.m, paddingBottom: ins.bottom + 96, gap: space.l, maxWidth: 760, width: "100%", alignSelf: "center" }}>
+        <BackButton label="Field Book" onPress={back} />
         <Enter style={{ gap: space.xs }}>
           <Eyebrow>Explore</Eyebrow>
           <H1 accessibilityRole="header">Great places to reach by train</H1>
-          <Body color={c.soft}>Tap a pin to see where to get off and what to look for. Stamp your rail passport when you visit.</Body>
+          <Body color={c.soft}>{"Tap a pin to see where to get off and why it's worth the trip. Stamp it in your Field Book when you visit."}</Body>
         </Enter>
 
         <View accessibilityRole="radiogroup" accessibilityLabel="Filter places" style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
@@ -233,14 +139,13 @@ export function ExploreScreen() {
           </View>
         ) : (
           <View onLayout={(e) => { mapBox.current = { y: e.nativeEvent.layout.y, h: e.nativeEvent.layout.height }; }}>
-            <MapView places={visible} selected={sel} stamped={passport} onSelect={choose} />
+            <MapView places={visible} selected={sel} stamped={stampedIds} onSelect={choose} />
           </View>
         )}
         <Small color={c.soft}>Lines are simplified to show the main routes, not every branch. Map outline from Natural Earth.</Small>
 
-        {places.length > 0 && <Passport places={places} stamped={passport} onSelect={choose} />}
+        {places.length > 0 && <PlacesBook places={places} onSelect={choose} />}
       </ScrollView>
-      {selected && <PlaceSheet key={selected.id} place={selected} onClose={() => setSel(null)} />}
     </View>
   );
 }

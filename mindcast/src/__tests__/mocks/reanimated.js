@@ -1,7 +1,7 @@
 /* Minimal stand-in for react-native-reanimated in tests: animations resolve to their final value immediately. */
 const RN = require("react-native");
 const anim = () => { const b = { duration: () => b, delay: () => b, springify: () => b, damping: () => b, easing: () => b, withInitialValues: () => b, reduceMotion: () => b }; return b; };
-const entering = ["FadeIn", "FadeInDown", "FadeInUp", "FadeInRight", "FadeOut", "FlipInXUp", "SlideInDown", "SlideOutDown", "ZoomIn", "ZoomOut"];
+const entering = ["FadeIn", "FadeInDown", "FadeInUp", "FadeInRight", "FadeInLeft", "FadeOut", "FlipInXUp", "SlideInDown", "SlideOutDown", "ZoomIn", "ZoomOut"];
 const Animated = { View: RN.View, Text: RN.Text, ScrollView: RN.ScrollView, Image: RN.Image, createAnimatedComponent: (c) => c };
 const m = {
   __esModule: true, default: Animated, ...Animated,
