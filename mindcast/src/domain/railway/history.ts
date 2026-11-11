@@ -9,13 +9,20 @@ import type { HistoryEvent, Source } from "../types";
  * breakthrough), Eurostar, Elizabeth line, Rainhill, Liverpool and Manchester, Stockton and
  * Darlington, Fifteen Guinea Special, Forth Bridge, City and South London, Railtrack, Mallard,
  * HST record. Date checked against Wikidata only: Royal Albert Bridge, Royal Border Bridge, Box
- * Tunnel, Tay Bridge disaster, Hatfield, Ouse Valley (via Balcombe station opening).
- * NOT yet checked against a source text (Wikipedia was rate-limiting): Penydarren (21 Feb 1804),
- * Dawlish (5 Feb 2014, two-month closure), Mallaig extension (1 Apr 1901), Settle to Carlisle
- * passenger opening (1 May 1876), GWR first section (4 Jun 1838), 2022 heat (19 Jul 2022),
- * HS1 section 1 (28 Sep 2003), Network Rail (3 Oct 2002), Flying Scotsman 100 mph (30 Nov 1934),
- * St Pancras International (14 Nov 2007), Hatfield and Tay Bridge narrative details.
- * Treat those as "approx" until rechecked.
+ * Tunnel, Ouse Valley (via Balcombe station opening).
+ * Rechecked Nov 2026 against Wikipedia article wikitext (date and every claim in the card):
+ * Penydarren 21 Feb 1804 (Richard Trevithick; text corrected: it broke some cast iron plates);
+ * Dawlish (South Devon Railway sea wall: breach on the night of 4 Feb 2014, date moved from 5 Feb;
+ * repair took two months); Mallaig extension 1 Apr 1901 (Mallaig Extension Railway, Glenfinnan
+ * Viaduct; "one of the first mass concrete structures" dropped as unsupported); Settle to
+ * Carlisle passengers 1 May 1876 (Ribblehead Viaduct; the Settle–Carlisle line article only says
+ * April 1876); GWR first section 4 Jun 1838 (Great Western Main Line; gauge is 7 ft 1/4 in);
+ * 2022 heat 19 Jul 2022 (2022 United Kingdom heatwaves); HS1 section 1 28 Sep 2003 (High Speed 1;
+ * "Britain's first high-speed line" dropped as unsupported); Network Rail 3 Oct 2002 (Network
+ * Rail, Railtrack); Flying Scotsman 100 mph 30 Nov 1934 (LNER Class A3 4472 Flying Scotsman;
+ * purpose of the run reworded); St Pancras International 14 Nov 2007 (St Pancras railway
+ * station, High Speed 1); Hatfield 17 Oct 2000 (Hatfield rail crash; "hundreds of speed
+ * restrictions" reworded); Tay Bridge disaster 28 Dec 1879 (Tay Bridge disaster).
  */
 
 const wp = (title: string): Source => ({
@@ -59,21 +66,19 @@ export const history: HistoryEvent[] = [
   // February
   {
     id: "h-1804-penydarren",
-    confidence: "approx",
     month: 2, day: 21, year: 1804,
     title: "The first locomotive-hauled railway journey",
-    text: "Richard Trevithick's steam locomotive hauls iron and passengers along the Penydarren tramroad in south Wales. It is so heavy that it breaks the cast iron rails, an early lesson that track and train must be designed together.",
+    text: "Richard Trevithick's steam locomotive hauls 10 tons of iron and 70 men along the tramroad from the Penydarren Ironworks in Merthyr Tydfil, Wales. It breaks some of the cast iron plates, which were made for lighter horse-drawn wagons, an early lesson that track and train must be designed together.",
     art: "loco", link: S1,
     sources: [wp("Richard Trevithick")],
   },
   {
     id: "h-2014-dawlish",
-    confidence: "approx",
-    month: 2, day: 5, year: 2014,
+    month: 2, day: 4, year: 2014,
     title: "Storms break the line at Dawlish",
-    text: "Huge waves wash away part of the sea wall at Dawlish, leaving the rails hanging in mid-air. The main line to Devon and Cornwall stays closed for about two months while it is rebuilt.",
+    text: "In a night of high winds and very rough seas, part of the sea wall at Dawlish is washed away, along with the ballast under the track. The main line west of Exeter stays closed for about two months while it is repaired.",
     art: "station", link: S4,
-    sources: [wp("Dawlish railway station"), wp("Exeter–Plymouth line")],
+    sources: [wp("South Devon Railway sea wall"), wp("Dawlish railway station"), wp("Exeter–Plymouth line")],
   },
   // March
   {
@@ -95,12 +100,11 @@ export const history: HistoryEvent[] = [
   // April
   {
     id: "h-1901-mallaig",
-    confidence: "approx",
     month: 4, day: 1, year: 1901,
     title: "The line to Mallaig opens",
-    text: "The extension of the West Highland Line from Fort William to Mallaig opens. It crosses the Glenfinnan Viaduct, one of the first big structures built in mass concrete.",
+    text: "The extension of the West Highland Line from Fort William to Mallaig opens. It crosses the Glenfinnan Viaduct, 21 arches of mass concrete with no steel reinforcement inside.",
     art: "viaduct", link: S4,
-    sources: [wp("West Highland Line"), wp("Glenfinnan Viaduct")],
+    sources: [wp("Mallaig Extension Railway"), wp("West Highland Line"), wp("Glenfinnan Viaduct")],
   },
   {
     id: "h-1994-railtrack",
@@ -121,7 +125,6 @@ export const history: HistoryEvent[] = [
   },
   {
     id: "h-1876-settle-carlisle",
-    confidence: "approx",
     month: 5, day: 1, year: 1876,
     title: "Passengers on the Settle to Carlisle line",
     text: "Passenger trains start running over the Settle to Carlisle line across the Pennines. Building it took viaducts like Ribblehead and long tunnels through the hills.",
@@ -147,10 +150,9 @@ export const history: HistoryEvent[] = [
   // June
   {
     id: "h-1838-gwr",
-    confidence: "approx",
     month: 6, day: 4, year: 1838,
     title: "The Great Western opens",
-    text: "The first section of Brunel's Great Western Railway opens from Paddington towards Maidenhead. It was built to a wide gauge of 7 feet, later converted to the standard 4 feet 8½ inches.",
+    text: "The first section of Brunel's Great Western Railway opens from Paddington towards Maidenhead. It was built to a broad gauge of just over 7 feet, later converted to the standard 4 feet 8½ inches.",
     art: "station", link: "s1-12",
     sources: [wp("Great Western Main Line"), wp("London Paddington station")],
   },
@@ -189,12 +191,11 @@ export const history: HistoryEvent[] = [
   },
   {
     id: "h-2022-heat",
-    confidence: "approx",
     month: 7, day: 19, year: 2022,
     title: "Britain's hottest day",
     text: "The air temperature in England passes 40°C for the first time on record. Rails in full sun get much hotter than the air, so many lines run slower or close to reduce the risk of buckles.",
     art: "signal", link: "s1-08",
-    sources: [wp("2022 United Kingdom heat waves")],
+    sources: [wp("2022 United Kingdom heatwaves")],
   },
   // August
   {
@@ -232,10 +233,9 @@ export const history: HistoryEvent[] = [
   },
   {
     id: "h-2003-hs1",
-    confidence: "approx",
     month: 9, day: 28, year: 2003,
-    title: "Britain's first high-speed line",
-    text: "The first section of the Channel Tunnel Rail Link, now High Speed 1, opens through Kent. Eurostar trains can now run at up to 186 mph in Britain.",
+    title: "High-speed track in Kent",
+    text: "The first section of the Channel Tunnel Rail Link, now High Speed 1, opens through Kent. Eurostar trains can run at up to 186 mph on it, cutting about 21 minutes from London to Paris.",
     art: "streamline", link: S6,
     sources: [wp("High Speed 1")],
   },
@@ -250,29 +250,26 @@ export const history: HistoryEvent[] = [
   },
   {
     id: "h-2000-hatfield",
-    confidence: "approx",
     month: 10, day: 17, year: 2000,
     title: "The Hatfield derailment",
-    text: "A rail weakened by fine fatigue cracks shatters under an express train at Hatfield, and four people die. Hundreds of speed restrictions follow while rails are checked and replaced across the country.",
+    text: "A rail weakened by many small fatigue cracks breaks up under an express train at Hatfield, and four people die. Speed limits are cut across much of the network for more than a year while cracked rails are replaced.",
     art: "paper", link: "s1-15",
     sources: [wp("Hatfield rail crash"), wd("Q2822729", "Hatfield rail crash")],
   },
   {
     id: "h-2002-network-rail",
-    confidence: "approx",
     month: 10, day: 3, year: 2002,
     title: "Network Rail takes over",
-    text: "Network Rail takes over Britain's track, signals and stations from Railtrack. It has run the national rail infrastructure ever since.",
+    text: "Network Rail buys Railtrack, and with it Britain's track, signals and most stations. It still owns and manages most of the network today.",
     art: "paper", link: S5,
     sources: [wp("Network Rail"), wp("Railtrack")],
   },
   // November
   {
     id: "h-1934-flying-scotsman",
-    confidence: "approx",
     month: 11, day: 30, year: 1934,
     title: "The first 100 mph",
-    text: "Flying Scotsman becomes the first steam locomotive officially recorded at 100 mph in Britain. The run was a test to plan faster express services.",
+    text: "Flying Scotsman becomes the first steam locomotive officially recorded at 100 mph. It was hauling a light test train between Leeds and London.",
     art: "streamline", link: "s1-11",
     sources: [wp("LNER Class A3 4472 Flying Scotsman")],
   },
@@ -286,7 +283,6 @@ export const history: HistoryEvent[] = [
   },
   {
     id: "h-2007-st-pancras",
-    confidence: "approx",
     month: 11, day: 14, year: 2007,
     title: "St Pancras International",
     text: "High Speed 1 is completed into a restored and extended St Pancras station. Eurostar trains move there from Waterloo.",
@@ -296,10 +292,9 @@ export const history: HistoryEvent[] = [
   // December
   {
     id: "h-1879-tay-bridge",
-    confidence: "approx",
     month: 12, day: 28, year: 1879,
     title: "The Tay Bridge disaster",
-    text: "The first Tay Bridge collapses in a storm as a train crosses it, and everyone on board dies. The inquiry found faults in its design, building and upkeep, and engineers took far more care over wind loads afterwards.",
+    text: "The first Tay Bridge collapses in a storm as a train crosses it, and everyone on board dies. The inquiry found faults in its design, building and upkeep, and future British bridges had to be designed for strong wind loads.",
     art: "bridge", link: S4,
     sources: [wp("Tay Bridge disaster"), wd("Q1287158", "Tay Bridge disaster")],
   },

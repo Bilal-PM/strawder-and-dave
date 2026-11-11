@@ -42,7 +42,7 @@ This version stores everything on the device. Answer:
 - Add a privacy policy URL (a simple page saying the above) before submission.
 
 ## 5. Before you submit
-- [ ] Every fact shown to users is `checked`, or labelled `approx`/`unverified` in the UI. Today: 21 train classes are `approx` (mostly heights missing from the source), 12 history cards and 7 places are marked draft. See the comments at the top of `src/domain/railway/*.ts` for exactly what is outstanding.
+- [ ] Every fact shown to users is `checked`, or labelled `approx`/`unverified` in the UI. Today: 21 train classes are `approx` (mostly heights missing from the source), history cards and places are all checked against sources. See the comments at the top of `src/domain/railway/*.ts` for exactly what is outstanding.
 - [ ] Open-Meteo: move to their commercial plan or to the Met Office DataHub before charging money (see DATA_SOURCES.md).
 - [ ] Live departures: confirm the data provider's terms allow app use; for production, register with the Rail Data Marketplace for the official feed.
 - [ ] Run `npm test`, `npm run typecheck`, and a TestFlight round.

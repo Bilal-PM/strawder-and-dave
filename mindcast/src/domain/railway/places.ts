@@ -8,10 +8,15 @@ import type { Place, Source } from "../types";
  * Verification: opening years, arch counts and heights checked against Wikidata for Glenfinnan,
  * Forth Bridge, Ribblehead, Conwy, Barmouth, Royal Albert, Royal Border, Ouse Valley (37 arches),
  * St Pancras (1868), Corrour (408 m) and Dent (1,150 ft). The 17 original facts were in the draft.
- * NOT yet checked against a source text (Wikipedia was rate-limiting): Ryde Pier "one of the
- * oldest", St Pancras "largest single span", Calstock (1908, concrete blocks), Ouse Valley oval
- * piers, Tay Bridge length and old piers, Locomotion and Cumbrian Coast descriptions. Treat those
- * as "approx" until rechecked.
+ * Rechecked Nov 2026 against Wikipedia article wikitext (every claim in the fact):
+ * Ryde Pier (Ryde Pier: corrected to "the world's oldest seaside pleasure pier", 1814);
+ * St Pancras (St Pancras railway station: Barlow's single-span roof, largest when completed);
+ * Calstock (Calstock, Calstock railway station: 11,148 concrete blocks, first passengers 1908);
+ * Ouse Valley (Ouse Valley Viaduct: opened July 1841, finished 1842; piers have tall voids, not
+ * "oval" openings); Tay Bridge (Tay Bridge: 10,711 ft, stumps of the first bridge's piers);
+ * Locomotion (Locomotion Museum, National Railway Museum, Shildon: "free to enter" dropped as
+ * unsupported); Cumbrian Coast (Cumbrian Coast Line, Ravenglass and Eskdale Railway: "right
+ * along the shore for long stretches" reworded to what the article says).
  */
 
 const wp = (title: string): Source => ({
@@ -113,7 +118,6 @@ export const places: Place[] = [
   },
   {
     id: "st-pancras",
-    confidence: "approx",
     name: "St Pancras",
     station: "London St Pancras International",
     lat: 51.53, lon: -0.1253,
@@ -159,12 +163,11 @@ export const places: Place[] = [
   },
   {
     id: "ryde-pier",
-    confidence: "approx",
     name: "Ryde Pier",
     station: "Ryde Pier Head",
     lat: 50.737, lon: -1.1609,
     category: "coast",
-    fact: "Trains run along one of the world's oldest seaside piers to meet the ferries.",
+    fact: "Trains run along the world's oldest seaside pleasure pier, opened in 1814, to meet the ferries to Portsmouth.",
     sources: [wp("Ryde Pier"), wd("Q7384881", "Ryde Pier")],
   },
   {
@@ -206,37 +209,33 @@ export const places: Place[] = [
   },
   {
     id: "ouse-valley-viaduct",
-    confidence: "approx",
     name: "Ouse Valley Viaduct",
     station: "Balcombe",
     lat: 51.0347, lon: -0.1144,
     category: "bridges",
-    fact: "37 brick arches carrying the London to Brighton line, finished in 1841. Each pier is pierced with an oval opening.",
+    fact: "37 brick arches carrying the London to Brighton line, opened in 1841. Each pier has a tall opening through it to save weight and bricks.",
     sources: [wp("Ouse Valley Viaduct"), wd("Q3556646", "Ouse Valley Viaduct")],
   },
   {
     id: "calstock-viaduct",
-    confidence: "approx",
     name: "Calstock Viaduct",
     station: "Calstock",
     lat: 50.4967, lon: -4.2099,
     category: "bridges",
     fact: "A tall viaduct over the River Tamar, built from concrete blocks and opened in 1908.",
-    sources: [wp("Calstock"), wp("Tamar Valley line"), wd("Q17536967", "Calstock Viaduct")],
+    sources: [wp("Calstock"), wp("Calstock railway station"), wp("Tamar Valley line"), wd("Q17536967", "Calstock Viaduct")],
   },
   {
     id: "locomotion-shildon",
-    confidence: "approx",
     name: "Locomotion",
     station: "Shildon",
     lat: 54.6243, lon: -1.6306,
     category: "museums",
-    fact: "Part of the National Railway Museum, free to enter and right by the station, in a town that grew up with the Stockton and Darlington Railway.",
-    sources: [wp("Locomotion Museum"), wd("Q3482098", "Locomotion Museum")],
+    fact: "Part of the National Railway Museum, right by the station, in a town that grew up with the Stockton and Darlington Railway.",
+    sources: [wp("Locomotion Museum"), wp("National Railway Museum"), wp("Shildon"), wd("Q3482098", "Locomotion Museum")],
   },
   {
     id: "tay-bridge",
-    confidence: "approx",
     name: "Tay Bridge",
     station: "Dundee",
     lat: 56.4389, lon: -2.9886,
@@ -246,12 +245,11 @@ export const places: Place[] = [
   },
   {
     id: "cumbrian-coast",
-    confidence: "approx",
     name: "Cumbrian Coast line",
     station: "Ravenglass",
     lat: 54.356, lon: -3.409,
     category: "coast",
-    fact: "The line runs right along the shore for long stretches. At Ravenglass you can change onto a narrow-gauge railway into the hills.",
-    sources: [wp("Cumbrian Coast Line"), wp("Ravenglass railway station"), wd("Q2401288", "Ravenglass railway station")],
+    fact: "The line follows the Cumbrian coast, in places squeezed between the rocks and the sea. At Ravenglass you can change onto a narrow-gauge railway up Eskdale into the Lake District.",
+    sources: [wp("Cumbrian Coast Line"), wp("Ravenglass railway station"), wp("Ravenglass and Eskdale Railway"), wd("Q2401288", "Ravenglass railway station")],
   },
 ];

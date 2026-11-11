@@ -17,7 +17,8 @@ Fastest way to check: `npx expo start --tunnel` on your own computer and open it
 
 ## Content still labelled in the app
 - 21 train classes "Approx." (mostly heights the source doesn't give).
-- 12 history cards and 7 places shown as "Draft" until rechecked (Wikipedia and Wikidata were rate-limiting during verification). Details at the top of `src/domain/railway/history.ts` and `places.ts`.
+- History cards and places: all now checked against Wikipedia article text (fetched via the raw-wikitext endpoint, which was not rate-limited). Of the 19 that were drafts, 6 were right as written and 13 were corrected. The audit trail is at the top of `src/domain/railway/history.ts` and `places.ts`.
+- Reference drawings from the illustration library (9 lessons) are captioned "awaiting an expert check" until their labels and sizes are signed off.
 
 ## Decisions for you
 - Departures: TransitRadar has no published terms. Confirm with them or move to the Rail Data Marketplace.
