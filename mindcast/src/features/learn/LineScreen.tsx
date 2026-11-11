@@ -5,6 +5,7 @@ import { ScrollView, Text, View, type ScrollViewInstance } from "react-native";
 import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { pack } from "@/domain";
+import { useFieldBook } from "@/features/fieldbook/hooks";
 import { useStore } from "@/state/store";
 import { Bubble, Button, Card, Chip, Eyebrow, H1, H2, H3, PaperGrid, Row, Small, Stat, Hand } from "@/ui/kit";
 import { useTheme } from "@/ui/theme";
@@ -19,6 +20,9 @@ export function LineScreen() {
   const ins = useSafeAreaInsets();
   const focused = useIsFocused();
   const progress = useStore((s) => s.progress);
+  const book = useFieldBook();
+  const stampCount = book.stamps;
+  const noticedDays = book.noticedWeek;
   const unlocked = useStore((s) => s.companions.unlocked);
   const season = seasonInfo(progress.season);
   const slots = useMemo(() => seasonSlots(progress.season), [progress.season]);
@@ -73,8 +77,8 @@ export function LineScreen() {
 
           <Animated.View entering={enter[1]} style={{ flexDirection: "row", gap: space.s }}>
             <Stat value={`${current + 1}/${slots.length}`} label="Stop" />
-            <Stat value={progress.miles} label="Miles" />
-            <Stat value={progress.streak} label={progress.streak === 1 ? "Day streak" : "Days streak"} />
+            <Stat value={stampCount} label="Stamps" />
+            <Stat value={noticedDays} label="Noticed this week" />
           </Animated.View>
 
           {here && !hereDone ? (

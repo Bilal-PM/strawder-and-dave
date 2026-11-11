@@ -1,9 +1,12 @@
 /** The "stop complete" moment: the train pulls in, the stop is stamped, the score, next stop open. (Miles are no longer shown.) */
 import React, { useEffect } from "react";
-import { Modal, Text, View } from "react-native";
+import { router, type Href } from "expo-router";
+import { Modal, Pressable, Text, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { Lesson } from "@/domain/types";
+import { pack } from "@/domain";
+import { entryByKey, spotsForLesson } from "@/features/fieldbook";
 import { useStore } from "@/state/store";
 import { Bubble, Button, Eyebrow, H1, Small, usePal } from "@/ui/kit";
 import { dur, ease, stagger, useMotion } from "@/ui/motion";
@@ -91,6 +94,7 @@ export function Celebration({ data, onDone, onNext }: { data: CelebrationData | 
                 <Text style={{ fontFamily: F.displaySemi, fontSize: 19, lineHeight: 24, color: c.ink }}>Stop {data.next.stop}: {data.next.title}</Text>
               </Animated.View>
             )}
+            <TakeItOutside lessonId={data.lesson.id} beatDelay={beat(4)} onLeave={onDone} />
             {data.who && data.line && <Animated.View entering={m.rise(0, beat(4))}><Bubble who={data.who} text={data.line} /></Animated.View>}
             <Animated.View entering={m.rise(0, beat(5))} style={{ gap: space.s }}>
               {data.next && onNext ? (
@@ -106,5 +110,29 @@ export function Celebration({ data, onDone, onNext }: { data: CelebrationData | 
         </Animated.View>
       )}
     </Modal>
+  );
+}
+
+/** The bridge from a stop into real life: spot the thing on your next journey, and use the idea this week. */
+function TakeItOutside({ lessonId, beatDelay, onLeave }: { lessonId: string; beatDelay: number; onLeave: () => void }) {
+  const { c } = useTheme();
+  const m = useMotion();
+  const key = spotsForLesson(lessonId)[0];
+  const entry = key ? entryByKey(pack, key) : undefined;
+  const go = (href: Href) => { onLeave(); setTimeout(() => router.push(href), 0); };
+  const row = { flex: 1, minHeight: 56, borderRadius: radius.m, borderWidth: 1.5, borderColor: c.line, backgroundColor: c.surface, paddingHorizontal: space.m, paddingVertical: space.s, justifyContent: "center" as const, gap: 2 };
+  return (
+    <Animated.View entering={m.rise(0, beatDelay)} style={{ flexDirection: "row", gap: space.m }}>
+      {entry && (
+        <Pressable accessibilityRole="button" accessibilityLabel={`Spot it: ${entry.name}. Opens it in your Field Book.`} onPress={() => go(`/spot/${key}` as Href)} style={({ pressed }) => [row, { opacity: pressed ? 0.85 : 1 }]}>
+          <Eyebrow color={c.ppe}>Spot it</Eyebrow>
+          <Text style={{ fontFamily: F.bodySemi, fontSize: 15, color: c.ink }} numberOfLines={2}>{entry.name}</Text>
+        </Pressable>
+      )}
+      <Pressable accessibilityRole="button" accessibilityLabel="Use it: where did you see this idea today? Earns a practice stamp." onPress={() => go(`/practice?lesson=${lessonId}` as Href)} style={({ pressed }) => [row, { opacity: pressed ? 0.85 : 1 }]}>
+        <Eyebrow color={c.accent}>Use it</Eyebrow>
+        <Text style={{ fontFamily: F.bodySemi, fontSize: 15, color: c.ink }} numberOfLines={2}>Where did you see it today?</Text>
+      </Pressable>
+    </Animated.View>
   );
 }

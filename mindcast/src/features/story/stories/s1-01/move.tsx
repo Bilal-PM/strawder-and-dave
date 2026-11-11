@@ -123,11 +123,11 @@ export function MoveScene({ active, reduced, lesson }: ArtProps) {
       <View style={{ position: "absolute", left: 72, right: 72, bottom: space.m }}>
         {added ? (
           <Animated.View entering={m.fade()} accessibilityLiveRegion="polite" style={{ minHeight: 50, alignItems: "center", justifyContent: "center", gap: 2 }}>
-            <Text style={{ fontFamily: F.bodySemi, fontSize: 16, color: th.good }}>✓ In your Loop</Text>
-            <Text style={{ fontFamily: F.body, fontSize: 13, color: th.soft }}>Your action list, on the You tab</Text>
+            <Text style={{ fontFamily: F.bodySemi, fontSize: 16, color: th.good }}>✓ In Your week</Text>
+            <Text style={{ fontFamily: F.body, fontSize: 13, color: th.soft }}>Plan, do, notice, on the You tab</Text>
           </Animated.View>
         ) : (
-          <Button label="Add to my Loop" kind="primary" haptic="success" onPress={add} accessibilityLabel="Add this action to my Loop" />
+          <Button label="Add to Your week" kind="primary" haptic="success" onPress={add} accessibilityLabel="Add this action to Your week" />
         )}
       </View>
     </>

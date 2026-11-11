@@ -104,9 +104,9 @@ describe("s1-01 story", () => {
 
   it("adds the action to the Loop once", async () => {
     const r = await render(wrap(story.scenes.findIndex((s) => s.id === "move")));
-    await fireEvent.press(r.getByLabelText("Add this action to my Loop"));
+    await fireEvent.press(r.getByLabelText("Add this action to Your week"));
     expect(useStore.getState().loop.items.filter((i) => i.text === lesson.lens.action)).toHaveLength(1);
-    expect(r.queryByLabelText("Add this action to my Loop")).toBeNull();
+    expect(r.queryByLabelText("Add this action to Your week")).toBeNull();
     await r.unmount();
   });
 
