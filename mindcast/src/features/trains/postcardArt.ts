@@ -47,8 +47,9 @@ export function paintPostcard(D: Painter, a: PostcardArt) {
   const px = 40, py = 40, pw = 900, ph = 920, sc = a.scene, groundY = 700, right = px + pw, bottom = py + ph;
 
   // card stock with faint ruled lines
+  const ruled = (x0: number, x1: number, y0: number, y1: number) => { for (let x = 40; x < W; x += 40) if (x > x0 && x < x1) D.line(x, y0, x, y1, { stroke: "#EEE6D4", strokeWidth: 1.5, roughness: 0.3 }); };
   flat(D, 0, 0, W, H, "#FBF7EE");
-  for (let x = 40; x < W; x += 40) D.line(x, 0, x, H, { stroke: "#EEE6D4", strokeWidth: 1.5, roughness: 0.3 });
+  ruled(0, W, 0, H);
 
   // picture panel: sky gradient in bands
   const top = sc === "city" ? "#DCE6F2" : "#BFD9EA", n = 18;
@@ -78,8 +79,10 @@ export function paintPostcard(D: Painter, a: PostcardArt) {
 
   // ground and track bed
   if (sc === "viaduct") {
-    flat(D, px, 760, pw, bottom - 760, "#9DBE8E");
-    for (let i = 0; i < 6; i++) { const x = px + i * 150; D.path(`M${x} ${bottom} L${x} 820 Q${x + 75} 740 ${x + 150} 820 L${x + 150} ${bottom}`, "#D27A4B", { fillStyle: "hachure", hachureGap: 8 }); }
+    // brick viaduct: a solid wall from the deck down, with arched openings onto the valley
+    flat(D, px, groundY + 20, pw, bottom - groundY - 20, "#9DBE8E");
+    D.rect(px, groundY + 20, pw, bottom - groundY - 20, "#D27A4B", { fillStyle: "hachure", hachureGap: 8, strokeWidth: 1.6 });
+    for (let i = 0; i < 6; i++) { const x = px + i * 150; D.path(`M${x + 22} ${bottom} L${x + 22} 850 Q${x + 75} 770 ${x + 128} 850 L${x + 128} ${bottom} Z`, "#9DBE8E", { strokeWidth: 2 }); }
     D.rect(px, groundY + 6, pw, 26, "#C5683A");
   } else if (sc === "city" && a.tram) {
     flat(D, px, groundY + 8, pw, bottom - groundY - 8, "#B9B4AA");
@@ -89,13 +92,15 @@ export function paintPostcard(D: Painter, a: PostcardArt) {
     D.rect(px, groundY + 8, pw, 50, "#8E8A83", { fillStyle: "hachure", hachureGap: 6 });
   }
 
-  // the train, at 1.28 x the library drawing
-  const k = 1.28, ox = px + 40, l0 = (px - ox) / k, l1 = (right - ox) / k;
+  // the train, at 1.28 x the library drawing. Long trains run off the right edge of the picture.
+  const k = 1.28, ox = px + 40, l0 = (px - ox) / k, l1 = (right - ox) / k, kind = a.spec.model.kind;
+  const fitLen = kind === "unit" || kind === "mpv" ? a.spec.len + 9 : kind === "nmt" ? a.spec.len + 11 : kind === "tram7" ? 30 : undefined;
   D.group(`translate(${ox} ${groundY - 184 * k}) scale(${k})`, () => {
     if (!(sc === "city" && a.tram)) for (let x = l0 + 6; x < l1 - 10; x += 22) D.line(x, 188, x + 10, 196, { stroke: "#5A564F", strokeWidth: 3 });
     D.line(l0 + 2, 184, l1 - 2, 184, { strokeWidth: 3 });
-    drawClass(D, a.spec, a.livery);
+    drawClass(D, a.spec, { ...a.livery, noMore: true }, 640, 184, 172, false, fitLen);
   });
+  if (fitLen) { flat(D, right + 2, py - 10, W - right - 2, ph + 20, "#FBF7EE"); ruled(right + 2, W, py - 10, bottom + 10); }
   if (sc === "city" && !a.tram) {
     D.rect(px, groundY - 330, pw, 16, "#5A6069");
     for (let x = px + 60; x < right; x += 200) D.line(x, groundY - 314, x, groundY + 10, { strokeWidth: 4, stroke: "#5A6069" });
@@ -115,11 +120,11 @@ export function paintPostcard(D: Painter, a: PostcardArt) {
 
   // postmark
   const pm = "#7A869A";
-  D.circle(1230, 190, 170, null, { stroke: pm, strokeWidth: 3 });
-  D.circle(1230, 190, 120, null, { stroke: pm, strokeWidth: 2 });
-  D.text(1230, 172, "GROUNDWORK", 18, pm, "mono");
-  D.text(1230, 198, `${a.date.getDate()} ${MONTHS[a.date.getMonth()]} ${a.date.getFullYear()}`, 18, pm, "mono");
-  D.text(1230, 224, "ONE RAILWAY", 16, pm, "mono");
+  D.circle(1210, 190, 196, null, { stroke: pm, strokeWidth: 3 });
+  D.circle(1210, 190, 150, null, { stroke: pm, strokeWidth: 2 });
+  D.text(1210, 170, "GROUNDWORK", 16, pm, "mono");
+  D.text(1210, 196, `${a.date.getDate()} ${MONTHS[a.date.getMonth()]} ${a.date.getFullYear()}`, 16, pm, "mono");
+  D.text(1210, 222, "ONE RAILWAY", 15, pm, "mono");
   for (let i = 0; i < 5; i++) D.curve([[1330, 140 + i * 18], [1400, 128 + i * 18], [1470, 140 + i * 18]], { stroke: pm, strokeWidth: 2 });
 
   // message side

@@ -602,8 +602,8 @@ export function paintScale(D: P, s: DrawSpec, L: Livery, personColour: string) {
   D.line(px, rail - ph + 5, px, rail - 7, { roughness: 0.3, strokeWidth: 2 });
   D.line(px, rail - 7, px - 3, rail, { roughness: 0.3, strokeWidth: 1.6 });
   D.line(px, rail - 7, px + 3, rail, { roughness: 0.3, strokeWidth: 1.6 });
-  D.line(10, 104, 10 + 10 * S2, 104, { roughness: 0.3, strokeWidth: 2 });
-  [0, 5, 10].forEach((mm) => D.line(10 + mm * S2, 100, 10 + mm * S2, 108, { roughness: 0.2, strokeWidth: 1.4 }));
-  D.text(10 + 10 * S2 + 8, 108, "10 m", 11, soft, "mono", "start");
-  D.text(px + 6, 104 + 4, "1.75 m person", 10, soft, "mono", "end");
+  D.line(10, 102, 10 + 10 * S2, 102, { roughness: 0.3, strokeWidth: 2 });
+  [0, 5, 10].forEach((mm) => D.line(10 + mm * S2, 97, 10 + mm * S2, 107, { roughness: 0.2, strokeWidth: 1.4 }));
+  D.text(10 + 10 * S2 + 10, 109, "10 m", 18, soft, "mono", "start");
+  D.text(px + 12, 112, "1.75 m person", 18, soft, "mono", "end");
 }
