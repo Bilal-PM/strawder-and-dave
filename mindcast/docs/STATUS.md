@@ -1,7 +1,8 @@
 # Status (11 November 2026)
 
 ## Verified in the build environment
-- `npm run typecheck`: clean. `npm test`: 59 tests pass, including every seed Mindcast and lesson lens passing the integrity check as "strong".
+- `npm run typecheck`: clean. `npm test`: 76 tests pass, including every seed Mindcast and lesson lens passing the integrity check as "strong".
+- iOS render test (`src/__tests__/screens.test.tsx`): all 17 screens render through React Native's iOS code path (jest-expo, `Platform.OS = "ios"`, native-only files such as `*.native.tsx`) with no React errors. GL drawing is stubbed because there is no GPU in CI, and animations jump to their end state.
 - iOS bundle: `npx expo export -p ios` compiles to Hermes bytecode (6.9 MB), so every native-only import (3D canvas, sharing, haptics, location) resolves.
 - Web build: all main screens (Today, Line, lesson, Mindcast, composer, Trains, train detail, You, Explore, Open Line, Pass, Postcard, onboarding) screenshot cleanly at iPhone size in light and dark with no console errors.
 - Expo Doctor: 18 of 20 checks pass; the other 2 need Expo's servers, which this environment can't reach.

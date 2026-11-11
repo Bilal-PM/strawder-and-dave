@@ -51,7 +51,7 @@ const screens: [string, () => { default: React.ComponentType }, Record<string, s
 ];
 
 beforeAll(() => {
-  global.fetch = jest.fn(() => Promise.reject(new Error("offline in tests"))) as never;
+  globalThis.fetch = jest.fn(() => Promise.reject(new Error("offline in tests"))) as never;
   useStore.getState().set(() => ({ onboarded: true }));
 });
 
