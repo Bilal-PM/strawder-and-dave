@@ -116,3 +116,29 @@ export function useCountTo(target: number, { from = target, ms = dur.slow + 200,
   }, [target, reduce, ms, steps]);
   return reduce ? target : v;
 }
+
+/**
+ * A fractional value that eases towards `target` over `ms` (for hand-drawn diagrams that redraw per value).
+ * Jumps straight there with reduce motion on. Intended to replace the step-based `useTween` in diagrams.
+ */
+export function useTweenTo(target: number, ms: number = dur.base, fps = 30) {
+  const reduce = useReducedMotion();
+  const [v, setV] = useState(target);
+  const cur = useRef(target);
+  useEffect(() => {
+    if (reduce) { cur.current = target; return; }
+    const start = cur.current, steps = Math.max(1, Math.round((ms / 1000) * fps));
+    if (start === target) return;
+    let k = 0;
+    const id = setInterval(() => {
+      k++;
+      const t = Math.min(1, k / steps);
+      const next = start + (target - start) * (1 - Math.pow(1 - t, 3));
+      cur.current = next;
+      setV(next);
+      if (t >= 1) clearInterval(id);
+    }, ms / steps);
+    return () => clearInterval(id);
+  }, [target, reduce, ms, fps]);
+  return reduce ? target : v;
+}

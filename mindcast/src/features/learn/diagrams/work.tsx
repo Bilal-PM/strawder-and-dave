@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Pressable, Text, View, type LayoutChangeEvent } from "react-native";
 import type { Lesson } from "@/domain/types";
-import { Button, tap, usePal } from "@/ui/kit";
+import { Button, Tappable, tap, usePal } from "@/ui/kit";
 import { Sketch, type Painter } from "@/ui/sketch";
 import { useTheme } from "@/ui/theme";
 import { F, radius, type Palette } from "@/ui/tokens";
@@ -265,7 +265,7 @@ export function Safety({ lesson }: { lesson: Lesson }) {
   const fact = factMatching(lesson, /position of safety|cess|four-foot|six-foot|safety|trained/i);
   return (
     <Frame title="Where is it safe to stand?" hint="Tap each place. Never go on the line without training and permission." status={zone.text} statusColor={col} fact={fact}
-      control={<Pills label="Place" value={z} onChange={(v) => { setZ(v); const t = ZONES.find((x) => x.value === v)!; tap(t.tone === "warn" ? "warn" : "light"); announce(t.text); }} options={ZONES.map((x) => ({ value: x.value, label: x.label }))} />}>
+      control={<Pills silent label="Place" value={z} onChange={(v) => { setZ(v); const t = ZONES.find((x) => x.value === v)!; tap(t.tone === "warn" ? "warn" : "light"); announce(t.text); }} options={ZONES.map((x) => ({ value: x.value, label: x.label }))} />}>
       <Sketch w={W} h={190} pal={pal} deps={[z, c.ink]} accessibilityLabel={`Cross-section of a two-track railway. ${zone.label}: ${zone.text}`} paint={(p) => {
         const band: Record<Zone, [number, number][]> = { fence: [[0, 30]], cess: [[52, 94], [296, 340]], four: [[104, 152], [196, 244]], six: [[160, 188]] };
         for (const [a, b] of band[z]) p.rect(a, 104, b - a, 52, col, { fillStyle: "hachure", hachureGap: 5, strokeWidth: 1.2, stroke: col });
@@ -326,16 +326,16 @@ export function Case({ lesson }: { lesson: Lesson }) {
   const fact = factMatching(lesson, /buckl|heat|shoulder/i);
   return (
     <Frame title="The case: what went wrong?" hint="Tap each clue card to turn it over." status={status} statusColor={verdict === null ? c.pass : right ? c.good : c.warn} fact={fact}
-      control={ready ? <Pills label="Your verdict" value={verdict} color={verdict ? (right ? c.good : c.warn) : undefined} onChange={(v) => { setVerdict(v); tap(v === "buckle" ? "success" : "warn"); announce(v === "buckle" ? "Solved" : "Not this one"); }} options={VERDICTS.map((v) => ({ value: v.value, label: v.label }))} /> : undefined}>
+      control={ready ? <Pills silent label="Your verdict" value={verdict} color={verdict ? (right ? c.good : c.warn) : undefined} onChange={(v) => { setVerdict(v); tap(v === "buckle" ? "success" : "warn"); announce(v === "buckle" ? "Solved" : "Not this one"); }} options={VERDICTS.map((v) => ({ value: v.value, label: v.label }))} /> : undefined}>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, padding: 8 }}>
         {CLUES.map((cl) => {
           const on = open.includes(cl.k);
           return (
-            <Pressable key={cl.k} accessibilityRole="button" accessibilityLabel={on ? `${cl.title}: ${cl.text}` : `Clue: ${cl.title}. Tap to open`} onPress={() => { if (!on) { setOpen([...open, cl.k]); tap(); announce(cl.text); } }}
-              style={({ pressed }) => ({ width: "48%", flexGrow: 1, minHeight: 120, borderRadius: radius.m, borderWidth: 1.5, borderColor: on ? c.ink : c.line, backgroundColor: on ? c.surface : c.sunk, padding: 10, gap: 6, opacity: pressed ? 0.85 : 1 })}>
+            <Tappable key={cl.k} accessibilityRole="button" accessibilityLabel={on ? `${cl.title}: ${cl.text}` : `Clue: ${cl.title}. Tap to open`} onPress={() => { if (!on) { setOpen([...open, cl.k]); announce(cl.text); } }}
+              style={{ width: "48%", flexGrow: 1, minHeight: 120, borderRadius: radius.m, borderWidth: 1.5, borderColor: on ? c.ink : c.line, backgroundColor: on ? c.surface : c.sunk, padding: 10, gap: 6 }}>
               <Text style={{ fontFamily: F.mono, fontSize: 11, letterSpacing: 0.8, textTransform: "uppercase", color: c.soft }}>{cl.title}</Text>
               {on ? (<><ClueArt k={cl.k} /><Text style={{ fontFamily: F.body, fontSize: 14, lineHeight: 19, color: c.ink }}>{cl.text}</Text></>) : <Text style={{ fontFamily: F.hand, fontSize: 26, color: c.soft, marginTop: 14 }}>?</Text>}
-            </Pressable>
+            </Tappable>
           );
         })}
       </View>

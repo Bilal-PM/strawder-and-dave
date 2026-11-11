@@ -101,7 +101,7 @@ export function Slider({ value, onChange, label, valueText, left, right, color, 
 /* ---------- Pills ---------- */
 
 /** Single-choice pills with 44pt targets. */
-export function Pills<T extends string>({ value, options, onChange, label, color }: { value: T | null; options: { value: T; label: string }[]; onChange: (v: T) => void; label: string; color?: string }) {
+export function Pills<T extends string>({ value, options, onChange, label, color, silent }: { value: T | null; options: { value: T; label: string }[]; onChange: (v: T) => void; label: string; color?: string; /** The handler gives its own result haptic. */ silent?: boolean }) {
   const { c } = useTheme();
   const col = color ?? c.ink;
   return (
@@ -109,7 +109,7 @@ export function Pills<T extends string>({ value, options, onChange, label, color
       {options.map((o) => {
         const on = o.value === value;
         return (
-          <Pressable key={o.value} accessibilityRole="radio" accessibilityLabel={o.label} accessibilityState={{ selected: on }} onPress={() => { tap(); onChange(o.value); }}
+          <Pressable key={o.value} accessibilityRole="radio" accessibilityLabel={o.label} accessibilityState={{ selected: on }} onPress={() => { if (!silent) tap(); onChange(o.value); }}
             style={({ pressed }) => ({ paddingHorizontal: 14, minHeight: 44, justifyContent: "center", borderRadius: radius.m, borderWidth: 1.5, borderColor: on ? col : c.line, backgroundColor: on ? col : c.surface, opacity: pressed ? 0.85 : 1 })}>
             <Text style={{ fontFamily: F.bodySemi, fontSize: 14, color: on ? (col === c.ink ? c.bg : "#1B1F24") : c.ink }}>{o.label}</Text>
           </Pressable>

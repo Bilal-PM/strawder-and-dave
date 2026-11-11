@@ -62,7 +62,7 @@ export default function Onboarding() {
         <Animated.View key="s1" entering={m.next()} style={{ gap: 14 }}>
           <Progress step={1} />
           <Eyebrow>Step 1 of 3</Eyebrow>
-          <H1>Who's learning?</H1>
+          <H1>{"Who's learning?"}</H1>
           <Small color={c.soft}>Every lesson comes at three depths. This sets where lessons start, and you can switch inside any lesson or on the You tab.</Small>
           {WHO.map((w) => {
             const on = who === w.v;
@@ -96,7 +96,7 @@ export default function Onboarding() {
           <Progress step={3} />
           <Eyebrow>Step 3 of 3</Eyebrow>
           <H1>Meet your companion</H1>
-          <Small color={c.soft}>Tap them. They know a thing or two, and they'll keep you company on the line.</Small>
+          <Small color={c.soft}>{"Tap them. They know a thing or two, and they'll keep you company on the line."}</Small>
           <CompanionSpeaker id="sleeper" size={110} first={pack.companions.find((x) => x.id === "sleeper")?.hello} />
           <View style={{ height: 8 }} />
           <Button label={name.trim() ? `Let's go, ${name.trim()}` : "Let's go"} kind="primary" haptic="success" onPress={finish} />

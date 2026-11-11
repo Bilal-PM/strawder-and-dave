@@ -9,6 +9,9 @@
 
 - Live data (`npm run test:live`, on 11 Nov 2026 at about 18:30): the app's own departures code pulled real National Rail (Darwin) boards via TransitRadar for London King's Cross, Manchester Piccadilly and Edinburgh, 10 trains each with on-time and late statuses. A real Open-Meteo forecast fetched by curl parsed into 7 days, and the rail-impact rules flagged leaf fall for London in November. (Node's own fetch through this container's proxy timed out on Open-Meteo; curl got the same data in under a second, so that is a container quirk, not an app fault.)
 
+- Polish pass (11 Nov 2026): one motion system (`src/ui/motion.ts`: durations, easings, springs, stagger, reduce-motion fallbacks to fades) used by every screen and diagram; shared BackButton, Input/Field, EmptyState; 44 pt touch targets; audience-aware copy (Explorer, Starter, Leader). Lessons explain principles, not one railway's tolerances, and end with a note that figures differ between railways.
+- Lint: `npx expo lint` runs. 49 errors remain, all React Compiler rules in the 3D scene, slider and sketch code that predate the polish pass; the compiler skips optimising those components rather than miscompiling them. Worth a follow-up refactor.
+
 ## Not yet verified (needs a Mac or an iPhone)
 - Running on a real iPhone or the iOS Simulator. Highest risk: the 3D views (expo-gl), slider gestures in diagrams, the share sheet, Save to Photos and location for passport stamps.
 - Live departures and weather inside the app on a phone (the services and parsers are verified against live data above; what remains is the phone network path).

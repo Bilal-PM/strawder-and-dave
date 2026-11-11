@@ -6,7 +6,8 @@ import { Button, tap, usePal } from "@/ui/kit";
 import { Sketch } from "@/ui/sketch";
 import { useTheme } from "@/ui/theme";
 import { factMatching, factQuantity } from "../content";
-import { Frame, Pills, Slider, announce, useTween } from "../ui";
+import { dur, useTweenTo } from "@/ui/motion";
+import { Frame, Pills, Slider, announce } from "../ui";
 import { arrow, tag } from "./draw";
 
 const W = 340;
@@ -44,7 +45,7 @@ export function Geometry({ lesson }: { lesson: Lesson }) {
   return (
     <Frame title="Spot the fault" hint="Look at the track, then name the geometry fault." status={status} statusColor={guess === null ? c.pass : right ? c.good : c.warn} fact={fact}
       control={<View style={{ gap: 10 }}>
-        <Pills label="Which fault" value={guess} onChange={choose} color={guess && right ? c.good : guess ? c.warn : undefined} options={FAULTS.map((f) => ({ value: f.value, label: f.label }))} />
+        <Pills silent label="Which fault" value={guess} onChange={choose} color={guess && right ? c.good : guess ? c.warn : undefined} options={FAULTS.map((f) => ({ value: f.value, label: f.label }))} />
         {guess && <Button label={round % 4 === 3 ? `You spotted ${score} of 4. Play again` : "Next fault"} kind="primary" onPress={() => { if (round % 4 === 3) setScore(0); setRound(round + 1); setGuess(null); }} />}
       </View>}>
       <Sketch w={W} h={170} pal={pal} deps={[fault, guess, c.ink]} accessibilityLabel={`Track ${side ? "seen from the side" : "seen from above"}. Which fault is shown?`} paint={(p) => {
@@ -160,10 +161,10 @@ export function Switch({ lesson }: { lesson: Lesson }) {
   const { c } = useTheme();
   const pal = usePal();
   const [route, setRoute] = useState<"main" | "diverge">("main");
-  const k = useTween(route === "diverge" ? 1 : 0, 0.12, 30); // 0 = set for main, 1 = set for diverging
+  const k = useTweenTo(route === "diverge" ? 1 : 0, dur.base); // 0 = set for main, 1 = set for diverging
   const status = route === "main" ? "Set for the main line: the straight switch rail is closed against its stock rail, so wheels run straight on." : "Set for the branch: the curved switch rail is closed against the other stock rail, so wheel flanges are steered onto the diverging route.";
   const fact = factMatching(lesson, /switch|points|crossing|turnout/i);
-  const throwIt = () => { const n = route === "main" ? "diverge" : "main"; setRoute(n); tap("medium"); announce(n === "main" ? "Set for the main line" : "Set for the branch"); };
+  const throwIt = () => { const n = route === "main" ? "diverge" : "main"; setRoute(n); tap(); announce(n === "main" ? "Set for the main line" : "Set for the branch"); };
   return (
     <Frame title="Throw the switch" hint="Move the switch rails and watch the route change." status={status} statusColor={c.accent} fact={fact}
       control={<Button label={route === "main" ? "Throw to the branch" : "Throw to the main line"} kind="primary" onPress={throwIt} />}>

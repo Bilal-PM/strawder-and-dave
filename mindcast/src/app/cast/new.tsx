@@ -50,7 +50,7 @@ export default function NewCast() {
           <Animated.View entering={mo.fade()}>
             <Card tone="sunk">
               <BodyB>Discard this draft?</BodyB>
-              <Small color={c.soft}>Drafts aren't saved yet. If you close now, what you've written is lost.</Small>
+              <Small color={c.soft}>{"Drafts aren't saved yet. If you close now, what you've written is lost."}</Small>
               <Row wrap>
                 <Button small label="Keep writing" kind="primary" onPress={() => setLeaving(false)} />
                 <Button small label="Discard and close" kind="ghost" onPress={() => router.back()} />
@@ -105,7 +105,7 @@ export default function NewCast() {
             )}
             {example && (
               <Card tone="sunk">
-                <Eyebrow>Example from "{example.title}"</Eyebrow>
+                <Eyebrow>{`Example from "${example.title}"`}</Eyebrow>
                 {m.key === "mapping" ? <MappingView mapping={example.mapping.slice(0, 2)} /> : <Small color={c.soft}>{(example as never)[m.key] as string}</Small>}
               </Card>
             )}

@@ -152,7 +152,7 @@ function LoopCard() {
           <Row style={{ justifyContent: "space-between" }}><Mono color="#6B5D45">SEASON TICKET · LOOP</Mono><Mono color="#6B5D45">{loop.laps} LAPS</Mono></Row>
           <Text style={{ fontFamily: F.bodySemi, fontSize: 20, color: "#1D1D1D" }}>{loop.want || "Say what you want first"}</Text>
           {next.map((n, i) => <Text key={n.id} style={{ fontFamily: F.mono, fontSize: 13, color: "#1D1D1D" }}>{i + 1}. {n.text}</Text>)}
-          <View style={{ borderTopWidth: 1, borderStyle: "dashed", borderColor: "#CDBE9C", marginTop: 6, paddingTop: 6 }}><Mono color="#6B5D45">VALID UNTIL YOU'VE DONE IT · GROUNDWORK</Mono></View>
+          <View style={{ borderTopWidth: 1, borderStyle: "dashed", borderColor: "#CDBE9C", marginTop: 6, paddingTop: 6 }}><Mono color="#6B5D45">{"VALID UNTIL YOU'VE DONE IT · GROUNDWORK"}</Mono></View>
         </View>
       </View>
       <Button label="Share my ticket" onPress={share} />
@@ -187,7 +187,7 @@ export default function You() {
         <Chip label="Season Pass" color={c.pass} filled />
         <H3>The knowledge is free. The extras are yours.</H3>
         <Small color={c.soft}>Optional extras for this season: a reward at every stop, unlimited loops, ticket designs and your season certificate. Lessons stay free.</Small>
-        <BodyB color={c.accent}>See what's included ›</BodyB>
+        <BodyB color={c.accent}>{"See what's included ›"}</BodyB>
       </Card>
 
       <Card>
@@ -195,7 +195,7 @@ export default function You() {
         <Segmented label="Appearance" showLabel value={st.settings.theme} onChange={(v) => useStore.getState().set((s) => ({ settings: { ...s.settings, theme: v } }))} options={[{ value: "system", label: "Match phone" }, { value: "light", label: "Light" }, { value: "dark", label: "Dark" }]} />
         <Segmented label="Companions" showLabel value={st.settings.chatty ? "on" : "off"} onChange={(v) => useStore.getState().set((s) => ({ settings: { ...s.settings, chatty: v === "on" } }))} options={[{ value: "on", label: "Chatty" }, { value: "off", label: "Quiet" }]} />
         {!confirm ? <Button label="Reset my progress" kind="ghost" onPress={() => setConfirm(true)} /> : (
-          <View style={{ gap: 8 }}><Small color={c.warn}>This clears your progress, crew and Loop on this phone. It can't be undone.</Small><Row wrap><Button label="Reset everything" small onPress={() => { useStore.getState().reset(); router.replace("/onboarding"); }} /><Button label="Keep my progress" small kind="primary" onPress={() => setConfirm(false)} /></Row></View>
+          <View style={{ gap: 8 }}><Small color={c.warn}>{"This clears your progress, crew and Loop on this phone. It can't be undone."}</Small><Row wrap><Button label="Reset everything" small onPress={() => { useStore.getState().reset(); router.replace("/onboarding"); }} /><Button label="Keep my progress" small kind="primary" onPress={() => setConfirm(false)} /></Row></View>
         )}
       </Card>
     </Screen>

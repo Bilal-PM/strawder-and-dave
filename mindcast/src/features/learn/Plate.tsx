@@ -26,13 +26,13 @@ const BY_LESSON: Record<string, Plate> = {
 };
 
 export function LessonPlate({ lessonId }: { lessonId: string }) {
-  const { c } = useTheme();
+  const { c, dark } = useTheme();
   const plate = BY_LESSON[lessonId];
   if (!plate) return null;
   return (
     <View style={{ gap: 6 }}>
-      <View style={{ width: "100%", aspectRatio: 690 / 494, backgroundColor: "#FFFFFF", borderRadius: radius.l, borderWidth: 1, borderColor: c.line, overflow: "hidden" }}>
-        <Image source={plate.src} accessibilityLabel={plate.alt} accessibilityIgnoresInvertColors style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, width: "100%", height: "100%" }} resizeMode="contain" />
+      <View style={{ width: "100%", aspectRatio: 690 / 494, backgroundColor: dark ? c.surface : "#FFFFFF", borderRadius: radius.l, borderWidth: 1, borderColor: c.line, overflow: "hidden" }}>
+        <Image source={plate.src} accessibilityLabel={plate.alt} accessibilityIgnoresInvertColors style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, width: "100%", height: "100%", opacity: dark ? 0.86 : 1 }} resizeMode="contain" />
       </View>
       <Small color={c.soft}>{plate.title}. Illustrative drawing, not to scale.</Small>
     </View>

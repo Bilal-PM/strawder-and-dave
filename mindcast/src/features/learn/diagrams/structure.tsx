@@ -5,7 +5,8 @@ import { usePal } from "@/ui/kit";
 import { Sketch } from "@/ui/sketch";
 import { useTheme } from "@/ui/theme";
 import { factMatching, glossaryTerm } from "../content";
-import { Frame, Pills, Slider, announce, useTween } from "../ui";
+import { dur, useTweenTo } from "@/ui/motion";
+import { Frame, Pills, Slider, announce } from "../ui";
 import { arrow, mix, railSection, tag } from "./draw";
 
 const W = 340;
@@ -226,7 +227,7 @@ export function Drainage({ lesson }: { lesson: Lesson }) {
   const [rain, setRain] = useState<"dry" | "rain">("dry");
   const [drain, setDrain] = useState<"clear" | "blocked">("clear");
   const target = rain === "dry" ? 0 : drain === "clear" ? 0.25 : 1;
-  const level = useTween(target, 0.05, 90);
+  const level = useTweenTo(target, dur.slow * 3);
   const pumping = level > 0.7;
   const status = pumping ? "The drain is blocked, so water rises into the ballast. Each train pumps the sleeper up and down and squeezes mud up through the stones." : rain === "rain" ? (drain === "clear" ? "Rain runs through the ballast and away down the drain. The track stays firm." : "Water is building up. Nowhere for it to go.") : "Dry. The water table sits well below the track.";
   useEffect(() => { if (pumping) announce("Mud pumping under the sleeper"); }, [pumping]);

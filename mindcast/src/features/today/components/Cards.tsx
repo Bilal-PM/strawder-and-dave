@@ -107,7 +107,7 @@ export function FeaturedCast() {
   if (!cast) return null;
   return (
     <Card onPress={() => go(`/cast/${cast.id}`)} accessibilityLabel={`Featured Mindcast: ${cast.title}. ${cast.principle}`}>
-      <Eyebrow color={c.accent}>Today's Mindcast</Eyebrow>
+      <Eyebrow color={c.accent}>{"Today's Mindcast"}</Eyebrow>
       <H3>{cast.title}</H3>
       <Hand color={c.accent}>{cast.principle}</Hand>
       <Small color={c.soft} numberOfLines={3}>{cast.observe}</Small>
