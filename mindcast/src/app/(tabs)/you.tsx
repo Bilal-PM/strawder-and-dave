@@ -177,7 +177,7 @@ export default function You() {
         <Segmented label="Learning as" showLabel value={st.profile.audience} onChange={(v: Audience) => useStore.getState().set((s) => ({ profile: { ...s.profile, audience: v } }))} options={[{ value: "explorer", label: "Explorer" }, { value: "starter", label: "Starter" }, { value: "leader", label: "Leader" }]} />
         <Small color={c.soft}>{AUDIENCE_NOTE[st.profile.audience]} Lessons open at this depth; you can switch inside any lesson.</Small>
       </Enter>
-      <Enter i={2}><Row style={{ alignItems: "stretch" }}><Stat value={`${done}/${ready}`} label="stops" /><Stat value={st.progress.miles} label="miles" /><Stat value={st.progress.streak} label="day streak" /><Stat value={st.loop.laps} label="loops" /></Row></Enter>
+      <Enter i={2}><Row style={{ alignItems: "stretch" }}><Stat value={`${done}/${ready}`} label="stops" /><Stat value={st.progress.miles} label="miles" /><Stat value={st.progress.streak} label="streak" /><Stat value={st.loop.laps} label="loops" /></Row></Enter>
 
       <Enter i={3}><Card><H2>Your crew member</H2><Small color={c.soft}>Real kit from the real railway. Tap them to talk.</Small><Avatar /><CrewOptions /></Card></Enter>
       <Enter i={4}><Card><H2>Companions</H2><Small color={c.soft}>Earn some for free by learning. Others come with the Season Pass, or for £1 each.</Small><Companions /></Card></Enter>
