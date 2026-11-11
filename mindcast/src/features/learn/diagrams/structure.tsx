@@ -243,7 +243,7 @@ export function Drainage({ lesson }: { lesson: Lesson }) {
         p.rect(-4, 160, W + 8, 64, c.sunk, { fillStyle: "cross-hatch", hachureGap: 10, fill: c.soft, strokeWidth: 1.2 });
         p.poly([[100, 104], [300, 104], [330, 160], [70, 160]], c.soft, { fillStyle: "hachure", hachureGap: 6, strokeWidth: 1.4 });
         const wy = 216 - level * 108;
-        if (level > 0.02) p.rect(-2, wy, W + 4, 220 - wy, c.accent, { fillStyle: "hachure", hachureGap: 4, hachureAngle: 0, strokeWidth: 0, stroke: "none" });
+        if (level > 0.02) p.rect(-2, wy, W + 4, 220 - wy, c.accent, { fillStyle: "hachure", hachureGap: 5, hachureAngle: 0, fillWeight: 1, strokeWidth: 0, stroke: "none" });
         p.line(-2, wy, W + 2, wy, { stroke: c.accent, strokeWidth: 2, roughness: 1.4 });
         const bob = pumping ? 4 : 0;
         p.rect(112, 92 + bob, 176, 14, c.surface, { strokeWidth: 2 });
@@ -257,8 +257,8 @@ export function Drainage({ lesson }: { lesson: Lesson }) {
         if (pumping) {
           const mud = mix(c.ppe, c.ink, 0.55);
           for (const x of [100, 124, 280, 302]) p.ellipse(x, 104, 20, 8, mud, { strokeWidth: 1 });
-          arrow(p, 200, 60, 200, 84, c.warn, 2.5); arrow(p, 216, 84, 216, 60, c.warn, 2.5);
-          p.text(236, 70, "pumping", 15, c.warn, "hand", "start");
+          arrow(p, 192, 58, 192, 84, c.warn, 2.5); arrow(p, 208, 84, 208, 58, c.warn, 2.5);
+          p.text(200, 46, "pumping", 16, c.warn, "hand");
         }
         tag(p, W - 8, wy - 6 < 20 ? 20 : wy - 6, "water table", 11, c.accent, c.bg, "mono", "end");
       }} />

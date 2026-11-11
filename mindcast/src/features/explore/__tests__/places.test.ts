@@ -21,7 +21,8 @@ describe("explore", () => {
     expect(stampPoints({ station: "Dalmeny or North Queensferry", lat: 56, lon: -3.39 })).toHaveLength(2);
   });
   test("every GB place resolves to a bundled station", () => {
-    const missing = pack.places.filter((p) => p.lat < 54.0 || p.lon > -5.5 ? stampPoints(p)[0].label === "the place" : false).map((p) => `${p.id}: ${p.station}`);
+    const inNI = (p: { lat: number; lon: number }) => p.lat > 54 && p.lat < 55.4 && p.lon < -5.4; // NaPTAN is GB only
+    const missing = pack.places.filter((p) => !inNI(p) && stampPoints(p)[0].label === "the place").map((p) => `${p.id}: ${p.station}`);
     expect(missing).toEqual([]);
   });
   test("stamp radius", () => {
