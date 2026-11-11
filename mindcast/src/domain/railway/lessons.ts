@@ -35,7 +35,7 @@ export const lessons: Lesson[] = [
     starter: [
       "Steel expands as it warms and contracts as it cools. For a short piece the change is tiny, but rails are long, and a rail in full sun can get much hotter than the air around it. A small change multiplied over many metres of steel becomes movement you can see.",
       "On jointed track, rails are laid in fixed lengths and joined with steel plates called fishplates, bolted through the ends of both rails. For many years the standard British rail was 60 feet long, about 18 metres. Between the rail ends sits a small expansion gap.",
-      "The gap is set to suit the temperature. Network Rail's permanent way guide gives a target that steps down as it gets warmer: about 10 mm on a cold day, closing to nothing in very hot weather. A closed gap in summer is correct. The rail has used the room it was given.",
+      "The gap is set to suit the rail temperature on the day the joint is set. Each railway publishes its own table, but the pattern is always the same: a wider gap when the rail is cold, closing to nothing when it is very hot. A closed gap in summer is correct. The rail has used the room it was given.",
       "The gaps also tell inspectors a story. Wide gaps on a hot day suggest the fishplates have seized, so the rail cannot slide into its gap. The expansion then has nowhere to go along the rail and may push the track sideways, which is how a buckle starts. Closed gaps on a cold day suggest the rails have crept along and need resetting before summer.",
       "Gaps have a cost. Every joint is a small step for the wheel, which wears the rail ends, loosens bolts and makes the ride noisy. That is why main lines now weld rails into long continuous lengths, which is the next stop.",
     ],
@@ -47,7 +47,7 @@ export const lessons: Lesson[] = [
         sources: [nr("Section 3, Rails and joints: expansion gaps"), pre(TRACK, "5.13 Desirability of removing rail joints")],
       },
       {
-        text: "The set gap depends on temperature, from about 10 mm in cold weather down to closed in very hot weather.",
+        text: "The set gap depends on the rail temperature: wider in cold weather, closing up completely in very hot weather.",
         sources: [nr("Extremes of weather: expansion gap table")],
       },
       {
@@ -91,7 +91,7 @@ export const lessons: Lesson[] = [
       author: AUTHOR,
       audience: ["starter", "leader"],
       observe:
-        "On jointed track the gap at each rail joint is set by temperature: wide in winter, closed tight on a hot day. Network Rail's guide steps the target gap down from about 10 mm in cold weather to none above 38°C.",
+        "On jointed track the gap at each rail joint is set by temperature: wide in winter, closed tight on a hot day. Network Rail's guide gives a wider target gap when the rail is cold, stepping down to none at all when the rail is very hot.",
       mechanism:
         "Steel expands as it warms and contracts as it cools. The gap gives the expansion somewhere to go. If the fishplates seize and the rail cannot slide into its gap, the expansion becomes compressive force in the rail, and where ballast at the sleeper ends is weak the rail moves sideways instead.",
       mapping: [
@@ -133,8 +133,8 @@ export const lessons: Lesson[] = [
     starter: [
       "Continuous welded rail, or CWR, is rail welded into lengths that can run for kilometres without a joint. There are no gaps for the steel to expand into. So where does the expansion go?",
       "The answer is that the rail is held so firmly that it cannot change length. Clips grip it to the sleepers, and the sleepers are held in place by ballast. When the temperature rises, the steel still tries to expand. Because it cannot, that urge becomes a squeezing force inside the rail. When it gets cold, the opposite happens and the rail is pulled tight.",
-      "These forces are large. In Practical Railway Engineering, Clifford Bonnett works out that a fully restrained main line rail warmed by 45°C carries a squeezing force of more than 70 tonnes. In hot weather that is enough to push the track sideways into a buckle. In very cold weather, high pulling force can crack a rail right through, which is why rail breaks are more common in winter.",
-      "The middle of a long welded rail does not move, but its ends can. Where welded rail meets jointed track or fixed layouts such as points, Network Rail fits adjustment switches: overlapping, angled rail ends that let roughly the last 100 metres of welded rail slide as it expands and contracts. They need regular lubrication, or they seize.",
+      "These forces are large. In Practical Railway Engineering, Clifford Bonnett works through an example: a fully restrained main line rail, after a big rise in temperature, carries a squeezing force of more than 70 tonnes. In hot weather that is enough to push the track sideways into a buckle. In very cold weather, high pulling force can crack a rail right through, which is why rail breaks are more common in winter.",
+      "The middle of a long welded rail does not move, but its ends can. Where welded rail meets jointed track or fixed layouts such as points, Network Rail fits adjustment switches: overlapping, angled rail ends that let the last stretch of welded rail slide as it expands and contracts. They need regular lubrication, or they seize.",
       "So CWR does not beat physics. It swaps a little movement at thousands of joints for a large, controlled force held inside the steel. That swap only works if the rail is fixed down at the right temperature, which is the subject of stop 7.",
     ],
     leader:
@@ -145,7 +145,7 @@ export const lessons: Lesson[] = [
         sources: [pre(TRACK, "5.17 Stressing or locking-up of CWR")],
       },
       {
-        text: "By Bonnett's calculation, a restrained main line rail warmed by 45°C carries a force of more than 70 tonnes.",
+        text: "In a worked example, Bonnett shows a fully restrained main line rail carrying a squeezing force of more than 70 tonnes after a large rise in temperature.",
         sources: [pre(TRACK, "5.17 Stressing or locking-up of CWR")],
       },
       {
@@ -153,7 +153,7 @@ export const lessons: Lesson[] = [
         sources: [pre(TRACK, "5.17 Stressing or locking-up of CWR")],
       },
       {
-        text: "Adjustment switches let about the last 100 m of CWR move where it meets jointed track or fixed points, and must be lubricated regularly.",
+        text: "Adjustment switches let the last stretch of CWR move where it meets jointed track or fixed points, and must be lubricated regularly.",
         sources: [nr("Section 4, Track geometry: line, adjustment switches")],
       },
     ],
@@ -199,7 +199,7 @@ export const lessons: Lesson[] = [
       author: AUTHOR,
       audience: ["starter", "leader"],
       observe:
-        "Where continuous welded rail meets jointed track or fixed points and crossings, Network Rail fits an adjustment switch. It lets roughly the last 100 metres of welded rail slide as it expands and contracts, and it must be lubricated regularly or it seizes.",
+        "Where continuous welded rail meets jointed track or fixed points and crossings, Network Rail fits an adjustment switch. It lets the last stretch of welded rail slide when it expands in heat and contracts in cold, and it must be lubricated regularly or it seizes.",
       mechanism:
         "In the middle of a long welded rail, clips and ballast stop any change in length, so temperature change is held as force inside the steel. At the ends, that movement has to be released somewhere, because the fixed layout next door cannot take it. The adjustment switch gives the movement a controlled path. If it seizes, the movement passes into the neighbouring track, which can push it out of line.",
       mapping: [
@@ -241,8 +241,8 @@ export const lessons: Lesson[] = [
     starter: [
       "Sleepers are the beams that lie across the track under the rails. Bonnett gives them a short list of jobs: spread each wheel's load into the ballast, hold the rails at the right gauge and angle, pass sideways and lengthways forces into the ballast, keep the two rails electrically separate, and give the fastenings something to grip.",
       "The electrical job matters more than it sounds. On many lines a small current runs through the rails to detect trains, so the sleepers and fastenings must keep the two rails insulated from each other.",
-      "Britain has used three main materials. Timber came first: treated softwood lasts roughly 15 to 25 years on the surface, while dense hardwoods such as jarrah have lasted more than 50 years in dry tube tunnels. Prestressed concrete is now standard on main lines. A standard British concrete sleeper is about 2.5 metres long and weighs about 285 kg, far too heavy to lift by hand, so machines lay and replace them. Steel sleepers are light and easy to handle but harder to pack with ballast, and are rare in Britain.",
-      "The rails do not stand straight up. They lean slightly inwards, at 1 in 20, set by the baseplate or the rail seat on the sleeper. With the rail at that angle, the wheel meets it close to the middle of the rail head, which reduces twisting and wear at the corner.",
+      "Britain has used three main materials. Timber came first. It is easy to handle, but in time it splits and rots, so it needs replacing; dense hardwoods such as jarrah last far longer, especially in dry tube tunnels. Prestressed concrete is now standard on main lines. A concrete sleeper is far too heavy to lift by hand, so machines lay and replace them. Steel sleepers are light and easy to handle but harder to pack with ballast, and are rare in Britain.",
+      "The rails do not stand straight up. They lean slightly inwards, set by the baseplate or the rail seat on the sleeper. Each railway chooses the exact angle to match its wheels. With the rail leaning in, the wheel meets it close to the middle of the rail head, which reduces twisting and wear at the corner.",
       "Each wheel load is shared by several sleepers at once. If one sleeper rots, cracks or loses the ballast packed under it, its neighbours carry more of every passing wheel. They wear faster and start to fail too, so a run of poor sleepers is far more worrying than one.",
     ],
     leader:
@@ -253,15 +253,11 @@ export const lessons: Lesson[] = [
         sources: [pre(TRACK, "5.5 Sleeper functions"), nr("Section 3, Sleepers")],
       },
       {
-        text: "A standard British prestressed concrete sleeper is about 2515 mm long and weighs about 285 kg.",
-        sources: [pre(TRACK, "5.7 Prestressed concrete sleepers (monobloc)")],
-      },
-      {
-        text: "Treated softwood sleepers last about 15 to 25 years on the surface. Jarrah hardwood sleepers have lasted over 50 years in London's tube tunnels.",
+        text: "Treated softwood sleepers eventually split or rot on the surface. Dense jarrah hardwood sleepers have lasted far longer in London's dry tube tunnels.",
         sources: [pre(TRACK, "5.6 Timber sleepers")],
       },
       {
-        text: "Rails are set leaning inwards at 1 in 20.",
+        text: "Rails are set leaning slightly inwards, with the angle fixed by the baseplate or the rail seat.",
         sources: [pre(TRACK, "5.11 Rails"), nr("Section 3, Chairs and baseplates")],
       },
     ],
@@ -275,7 +271,7 @@ export const lessons: Lesson[] = [
       },
       {
         q: "Why are concrete sleepers usually laid and replaced by machine?",
-        options: ["They are fragile", "At about 285 kg each they are too heavy to handle by hand", "They must be laid at night", "They need heating first"],
+        options: ["They are fragile", "They are far too heavy to handle by hand", "They must be laid at night", "They need heating first"],
         answer: 1,
         why: "Timber sleepers could be manhandled. Concrete ones are much heavier, so laying and replacing them needs mechanical help.",
       },
@@ -332,20 +328,20 @@ export const lessons: Lesson[] = [
       "The stones under the track are sharp and broken on purpose. Their rough edges lock together like a jigsaw, so the track stays put when heavy trains rumble over. Round pebbles would roll about like marbles.",
     starter: [
       "Ballast is the bed of crushed stone the sleepers sit in. It carries the load down to the ground, holds the sleepers in place and lets rainwater drain away quickly. Early railways used whatever was cheap nearby, including ash, chalk and clay, and learned the hard way that it did not last.",
-      "Good ballast is crushed hard rock, with stones mostly between about 28 and 50 mm. Size matters in both directions. Stones that are too big leave only two or three stones between the sleeper and the ground, which cannot spread the load. Too many small stones clog the spaces between them, so water can no longer drain.",
+      "Good ballast is crushed hard rock, graded so that most stones fall within a set size range. Each railway sets its own range, but size matters in both directions everywhere. Stones that are too big leave only two or three stones between the sleeper and the ground, which cannot spread the load. Too many small stones clog the spaces between them, so water can no longer drain.",
       "Shape matters too. Angular stones lock together, and that interlock is what stops the sleepers sliding along or sideways. Over years, traffic and maintenance wear the corners off and crush some stones. Rounded stones lose their grip, and the crushed dust, called fines, holds water. Granite wears well; some softer stones break down quickly when wet.",
-      "There must be enough of it. Bonnett gives a minimum depth under the sleeper of 150 mm on even a lightly used line and up to about 280 mm on heavy main lines. For welded rail, ballast is filled up between the sleepers and heaped into a shoulder beyond the sleeper ends, because that shoulder resists the rail pushing sideways on a hot day.",
+      "There must be enough of it. The heavier and busier the line, the deeper the bed of ballast it needs under the sleepers. For welded rail, ballast is filled up between the sleepers and heaped into a shoulder beyond the sleeper ends, because that shoulder resists the rail pushing sideways on a hot day.",
       "Network Rail's guide names a shortage of ballast as one of the main causes of track buckles. It also warns that people crossing the track in the same place wear the shoulder away, and in summer that spot becomes a likely buckle site.",
     ],
     leader:
       "Ballast holds the track through thousands of small contacts, not one big anchor, and those contacts wear away quietly. Stability in delivery also comes from many small working connections, and it erodes where people keep taking the same shortcut. Inspect the shoulders before the hot weather, not after.",
     keyFacts: [
       {
-        text: "Good track ballast is crushed rock, angular, with particles mostly between about 28 mm and 50 mm.",
+        text: "Good track ballast is angular crushed rock, graded so most stones fall within a set size range.",
         sources: [pre(TRACK, "5.4 Materials for track ballast")],
       },
       {
-        text: "Minimum ballast depth under sleepers is about 150 mm on lightly loaded lines and up to about 280 mm on heavily loaded main lines.",
+        text: "Heavily loaded main lines need a deeper bed of ballast under the sleepers than lightly loaded lines.",
         sources: [pre(TRACK, "5.3 Track ballast")],
       },
       {
@@ -384,7 +380,7 @@ export const lessons: Lesson[] = [
       author: AUTHOR,
       audience: ["starter", "leader"],
       observe:
-        "Track ballast is graded, with stones mostly between about 28 and 50 mm. Bonnett notes that oversized stones leave only two or three stones under a sleeper, while too many small stones clog the ballast so water stops draining.",
+        "Track ballast is graded so that most stones fall within a set size range. Bonnett notes that oversized stones leave only two or three stones under a sleeper, while too many small stones clog the ballast so water stops draining.",
       mechanism:
         "Load passes from sleeper to ground through stone-to-stone contacts. With oversized stones there are too few contacts, so each carries a large share and the load is not spread. With too many fines the voids fill, water cannot drain, and wet fines soften the bed so the track settles. Grading keeps both enough contacts and enough open space.",
       mapping: [
@@ -427,7 +423,7 @@ export const lessons: Lesson[] = [
       "Older British track used bullhead rail sitting in cast iron chairs, held by wooden or steel keys hammered in between chair and rail. When flat bottom rail came into use from the late 1940s, engineers found that rigid fixings worked loose under vibration. The answer was resilience: a fastening with some spring in it.",
       "Bonnett groups modern fastenings into three types: elastic spikes driven into timber, spring clips held down by a nut and bolt, and spring clips driven into a shoulder cast into the sleeper or part of a baseplate. In Britain the last type, such as the Pandrol clip, is the usual choice. Driving the clip in bends it, and its spring presses down on the foot of the rail. That clamping force is called toe load.",
       "Toe load is what grips the rail and resists creep and buckling, so keeping it up matters. Under the rail sits a rail pad. Network Rail lists its jobs: spread the load evenly over the rail seat, cushion vibration and impact, help spread braking and traction forces along the rail, and insulate the rail electrically. Insulators at the rail foot also keep the clip from carrying current.",
-      "Small parts matter. Network Rail's guide shows ferrules in timber sleepers that should stand about 6 mm proud of the casting. Driven too far, or missing, and the screw no longer grips. A fastening system is only as good as its worst part on that sleeper.",
+      "Small parts matter. Network Rail's guide shows ferrules in timber sleepers that should stand slightly proud of the casting. Driven too far, or missing, and the screw no longer grips. A fastening system is only as good as its worst part on that sleeper.",
     ],
     leader:
       "Rigid fixings looked strong and loosened under repeated small shocks. Springy fixings flex with each shock and return, so they keep their grip. Controls on a large programme face the same vibration. Rules with no give get worked around; rules with a stated tolerance hold.",
@@ -445,7 +441,7 @@ export const lessons: Lesson[] = [
         sources: [nr("Section 3, Insulating rail pads")],
       },
       {
-        text: "Ferrules in timber sleepers should protrude about 6 mm above the chair or baseplate so the screw keeps its grip.",
+        text: "Ferrules in timber sleepers should stand slightly proud of the chair or baseplate so the screw keeps its grip.",
         sources: [nr("Section 3, Ferrules")],
       },
     ],
@@ -521,8 +517,8 @@ export const lessons: Lesson[] = [
       "Rails are joined by welding. In a factory, a big machine heats two rail ends with electricity and squeezes them together until they become one. Out on the railway, workers pour glowing liquid steel into a mould around the gap, and it sets into a solid joint.",
     starter: [
       "To make continuous welded rail, rails have to be joined so well that the joint is as strong as the rail. Two methods do most of the work in Britain.",
-      "Flash butt welding happens in a depot. The two rail ends are clamped close together and a very large electric current passes across the gap. The ends heat until they are almost molten, then they are forced together. Molten metal squeezes out and is sheared off, and the weld is straightened and ground. No metal is added; the rail ends fuse. Each weld shortens the rail by about 20 mm. Bonnett notes that British main line rail is welded this way into lengths of up to about 240 metres.",
-      "Those long rails go to site and are joined by aluminothermic welding, often called thermit welding. The rail ends are fixed and aligned with a gap of roughly 22 to 26 mm. A mould is clamped around the gap and preheated. A charge of metal oxide and aluminium powder is lit in a crucible above it. The reaction produces molten steel, which runs down into the mould. Once it has cooled, the excess is trimmed off and the joint is ground to the rail's shape.",
+      "Flash butt welding happens in a depot. The two rail ends are clamped close together and a very large electric current passes across the gap. The ends heat until they are almost molten, then they are forced together. Molten metal squeezes out and is sheared off, and the weld is straightened and ground. No metal is added; the rail ends fuse, so each weld uses up a little of the rail's length. Bonnett notes that British main line rail is welded this way into long lengths, often a few hundred metres, which are carried to site by train.",
+      "Those long rails go to site and are joined by aluminothermic welding, often called thermit welding. The rail ends are fixed and aligned with a small gap between them, set by the welding procedure. A mould is clamped around the gap and preheated. A charge of metal oxide and aluminium powder is lit in a crucible above it. The reaction produces molten steel, which runs down into the mould. Once it has cooled, the excess is trimmed off and the joint is ground to the rail's shape.",
       "Both methods work, but they are not equal. Flash butt welds are made under controlled workshop conditions and are more consistent. Site welds are made outdoors, in all weathers, often in a short possession. Bonnett notes that published figures on broken rails at welds show flash butt welds performing better.",
       "So the industry does as much welding as it can in the depot and as little as it must on site, and site welding follows a strict procedure by trained welders.",
     ],
@@ -530,11 +526,11 @@ export const lessons: Lesson[] = [
       "The railway makes its critical joins where conditions are controlled and keeps field joins few and procedural. For any large change, move integration into a controlled setting early, and treat every live join as a weaker point that needs a recipe and a check.",
     keyFacts: [
       {
-        text: "Flash butt welding joins rails by electrical resistance heating and forging, with no added metal. Each weld shortens the rail by about 20 mm.",
+        text: "Flash butt welding joins rails by electrical resistance heating and forging, with no added metal, so each weld shortens the rail slightly.",
         sources: [pre(TRACK, "5.15 Shop welding to produce long rails")],
       },
       {
-        text: "On site, long rails are joined by aluminothermic welding, with a gap of about 22 to 26 mm between rail ends.",
+        text: "On site, long rails are joined by aluminothermic welding, with a small gap between the rail ends set by the welding procedure.",
         sources: [pre(TRACK, "5.16 Site welding to produce CWR")],
       },
       {
@@ -573,7 +569,7 @@ export const lessons: Lesson[] = [
       author: AUTHOR,
       audience: ["starter", "leader"],
       observe:
-        "British main line rails are flash butt welded in the depot into long lengths, up to about 240 metres, then joined on site with aluminothermic welds. Bonnett notes that published broken-rail figures show the depot welds performing better.",
+        "British main line rails are flash butt welded in the depot into long lengths, then joined on site with aluminothermic welds once they are laid. Bonnett notes that published broken-rail figures show the depot welds performing better.",
       mechanism:
         "A depot weld is made by machine, under cover, with controlled current, force and timing, so each weld is much like the last. A site weld depends on weather, preheating, the gap, the fit of the mould and the time left in a possession. More variables mean more spread in quality, so the industry keeps site welds to the minimum and controls them by procedure.",
       mapping: [
@@ -610,11 +606,11 @@ export const lessons: Lesson[] = [
     title: "Stressing",
     hook: "Why do engineers stretch a rail before they clip it down?",
     explorer:
-      "Before clipping long rails down, workers often stretch them a little with a hydraulic machine. They make the rail the length it would be on a warm day. Then on very hot or very cold days, the rail is never pushed or pulled too much.",
+      "Before clipping long rails down, workers often stretch them a little with a hydraulic machine. This makes the rail the length it would be on a day that is neither very hot nor very cold. Then on scorching or freezing days, the rail is never pushed or pulled too much.",
     starter: [
-      "Continuous welded rail cannot change length once it is clipped down, so the temperature at which it is clipped matters. At that temperature the rail carries no force at all. Engineers call it the stress-free temperature. Hotter than that, the rail is squeezed. Colder, it is pulled.",
-      "The aim is to put the stress-free temperature roughly halfway between the hottest and coldest rail temperatures the track will see, so neither extreme is too severe. Bonnett gives the generally accepted British figure as about 27°C. That is a rail temperature, not an air temperature, and rails in the sun get much hotter than the air.",
-      "Track is often laid on days colder than that. A rail clipped down on a cold day would be stress-free at that cold temperature, and every warm day after would squeeze it. So the rail is first made the length it would be at about 27°C. It can be warmed, but the usual way now is to stretch it with a hydraulic tensor, then clip it down while it is held.",
+      "Continuous welded rail cannot change length once it is clipped down, so the temperature at which it is clipped matters. At that temperature the rail carries no force at all. Engineers call it the stress-free, or neutral, temperature. Hotter than that, the rail is squeezed. Colder, it is pulled.",
+      "The aim is to put the stress-free temperature roughly halfway between the hottest and coldest rail temperatures the track will see, so neither extreme is too severe. Each railway chooses its own figure to suit its climate, so a railway in a hot country picks a higher one than a railway in a cool one. It is a rail temperature, not an air temperature, and rails in the sun get much hotter than the air.",
+      "Track is often laid on days colder than that. A rail clipped down on a cold day would be stress-free at that cold temperature, and every warm day after would squeeze it. So the rail is first made the length it would be at its chosen neutral temperature. It can be warmed, but the usual way now is to stretch it with a hydraulic tensor, then clip it down while it is held.",
       "Network Rail's guide describes stressing as building a controlled pulling force into the rail on cooler days, so that the rail expands and contracts only within the range it was designed for.",
       "The stress-free temperature can drift. If a broken rail is cut out and a new piece welded in without restressing, or the rail creeps, its true stress-free temperature can end up lower than designed. That rail reaches dangerous squeezing forces on ordinary hot days. Stressing records are kept for exactly this reason.",
     ],
@@ -622,7 +618,7 @@ export const lessons: Lesson[] = [
       "Engineers set the rail's neutral point for the conditions it will face, not the conditions on the day it was fitted. Plans set in a quiet week carry a hidden stress into every busy week after. Set the baseline for the middle of the range you expect, and reset it after every repair.",
     keyFacts: [
       {
-        text: "CWR is fixed at the length it would have at a temperature about halfway between the hottest and coldest likely rail temperatures. In the UK this is generally taken as about 27°C.",
+        text: "CWR is fixed at the length it would have at a temperature about halfway between the hottest and coldest likely rail temperatures, so the figure depends on the local climate.",
         sources: [pre(TRACK, "5.17 Stressing or locking-up of CWR")],
       },
       {
@@ -650,7 +646,7 @@ export const lessons: Lesson[] = [
       {
         q: "Why stretch a rail before clipping it down on a cold day?",
         options: [
-          "To make it the length it would be at about 27°C, so summer forces stay within limits",
+          "To make it the length it would be at its neutral temperature, so summer forces stay within limits",
           "To make it thinner",
           "To test the clips",
           "To remove rust",
@@ -676,7 +672,7 @@ export const lessons: Lesson[] = [
       author: AUTHOR,
       audience: ["starter", "leader"],
       observe:
-        "Continuous welded rail is clipped down at the length it would have at a rail temperature of about 27°C, roughly halfway between the hottest and coldest rail temperatures expected in Britain. On cooler days the rail is first stretched with a hydraulic tensor.",
+        "Continuous welded rail is clipped down at the length it would have at a chosen rail temperature, roughly halfway between the hottest and coldest rail temperatures expected where it is laid. Each railway sets that figure for its own climate. On cooler days the rail is first stretched with a hydraulic tensor.",
       mechanism:
         "Once clipped, the rail carries no force at its stress-free temperature. Above it, the rail is in compression; below it, in tension. Setting the neutral point in the middle of the expected range keeps both the summer squeeze and the winter pull within safe limits. Clip it down cold without stretching and the neutral point is low, so ordinary hot days later push the force to dangerous levels.",
       mapping: [
@@ -816,8 +812,8 @@ export const lessons: Lesson[] = [
       "Rain is the track's slow enemy. If water stays under the track, the ground goes soft and the track sinks. So railways have pipes and pits beside the track to carry the water away.",
     starter: [
       "Water is the slow enemy of track. Ballast drains freely, but the ground beneath it may not. If water collects at the bottom of the ballast on a clay base, the clay softens, the ballast punches into it, and the track settles unevenly.",
-      "So the ground under the track is shaped to shed water. Bonnett recommends that its top surface slopes down to the sides at no flatter than 1 in 25, so water runs towards the cess, the strip beside the track, where drains collect it. Tests suggest about 80 percent of rain reaches the side drains straight through the ballast, nearly all of it within an hour.",
-      "Cess drains are pipes laid alongside the track in free-draining material. At intervals of no more than 30 metres there is a catchpit: a chamber with a removable lid and a sump at least 450 mm below the lowest pipe, where silt settles and from which the pipes can be rodded clear.",
+      "So the ground under the track is shaped to shed water. Bonnett recommends that its top surface slopes down to the sides, so water runs towards the cess, the strip beside the track, where drains collect it. Tests suggest that most rain passes straight through good ballast to the side drains, and quickly.",
+      "Cess drains are pipes laid alongside the track in free-draining material. At regular intervals there is a catchpit: a chamber with a removable lid and a sump below the lowest pipe, where silt settles and from which the pipes can be rodded clear.",
       "Drains only work if they are kept clear. Catchpits fill with silt, pipes break and outfalls into streams block. Bonnett notes that drainage is often given low priority because other work looks more urgent, and that long neglect can lead to slips of whole cuttings and embankments. The best time to inspect drains is during or soon after heavy rain, when problems show.",
       "A drain can look fine and still do nothing. If the ballast above it has clogged with fines, the water never reaches the pipe. Then the cure is to clean or replace the ballast, not the drain.",
     ],
@@ -825,11 +821,11 @@ export const lessons: Lesson[] = [
       "Drainage is the work nobody sees until it fails, and it fails slowly, then suddenly. Protect a small, regular budget for invisible maintenance, and check that it works under load, not on a dry day.",
     keyFacts: [
       {
-        text: "The sub-grade surface should slope no flatter than 1 in 25 down to the cess drains. About 80 percent of rain reaches side drains through the ballast, almost all within an hour.",
+        text: "The sub-grade surface should slope down to the cess drains. Most rain reaches the side drains straight through the ballast, and quickly.",
         sources: [pre(EARTH, "6.10 Side or cess drains")],
       },
       {
-        text: "Catchpits should be no more than 30 m apart, with sumps at least 450 mm below the lowest drain.",
+        text: "Catchpits are placed at regular intervals along cess drains, with sumps below the lowest drain where silt can settle.",
         sources: [pre(EARTH, "6.10 Side or cess drains")],
       },
       {
@@ -913,7 +909,7 @@ export const lessons: Lesson[] = [
     starter: [
       "Below the ballast is the ground the whole railway rests on. Bonnett calls the natural soil, or the soil of an embankment, once the topsoil is stripped off, the sub-grade. The ballast and any layers laid on it make up the trackbed. The prepared top of the sub-grade, where the trackbed starts, is called the formation.",
       "The trackbed's job is to spread the load from each sleeper so that the pressure reaching the sub-grade is low enough for the ground to bear. Grounds differ. Sands and gravels drain well. Clays let water through very slowly, so water that reaches them sits there and softens them. Peat shrinks and settles. Hard rock is rarely a problem.",
-      "Where the sub-grade is clay, engineers may lay a sand blanket: a draining layer at least 100 mm thick, with a geotextile fabric above it to stop ballast stones pushing down into the sand, and often a plastic sheet below it to keep water off the clay.",
+      "Where the sub-grade is clay, engineers may lay a sand blanket: a draining layer of sand, with a geotextile fabric above it to stop ballast stones pushing down into the sand, and often a plastic sheet below it to keep water off the clay.",
       "Earthworks are part of the story. Railway builders traditionally chose the route and level to balance cut and fill, using soil from cuttings to build nearby embankments. Bonnett points out that this saved money at the start but sometimes meant unsuitable material and long-term maintenance problems. Some old clay earthworks can fail after many decades of good service.",
       "Formation problems show up at the top, as track that keeps settling out of level. Tamping lifts it back, but if the cause is a soft, wet formation, it settles again.",
     ],
@@ -929,7 +925,7 @@ export const lessons: Lesson[] = [
         sources: [pre(EARTH, "6.8 Drainage of the trackbed")],
       },
       {
-        text: "A sand blanket over clay should be at least 100 mm thick, with a geotextile separator above it.",
+        text: "A sand blanket over clay is a draining layer of sand with a geotextile separator above it.",
         sources: [pre(EARTH, "6.9 Sand blankets")],
       },
       {
@@ -1004,7 +1000,7 @@ export const lessons: Lesson[] = [
       "Track geometry is the exact shape of the track. Network Rail's guide groups it into four measures. Gauge is the distance between the two rails. Top is how smooth each rail is along its length, up and down. Cross level is the height of one rail compared with the other. Line is the side-to-side alignment, straight or curving smoothly.",
       "Twist, called warp in North America, is built from cross level: it is how much cross level changes over a short length of track. It matters because a vehicle's frame is fairly stiff. On a sharp twist, one wheel can be unloaded, and an unloaded wheel is easier to lift over the rail. So twist has its own limits even where the overall level is fine.",
       "Geometry goes wrong for many reasons. Network Rail lists vehicles pushing outwards on curves and through points, badly aligned welds, seized fishplates, loose fastenings, a poor ballast profile and weakened sideways strength. Each one shows up as a fault in top, level or line.",
-      "Bonnett says both visual inspection and machine measurement are needed. People walking the track see things a machine misses, and measurement sets a standard and shows whether it is being kept. In Britain, the New Measurement Train, a converted high speed train nicknamed the Flying Banana, records track condition on most main lines on a four-weekly cycle.",
+      "Bonnett says both visual inspection and machine measurement are needed. People walking the track see things a machine misses, and measurement sets a standard and shows whether it is being kept. In Britain, the New Measurement Train, a converted high speed train nicknamed the Flying Banana, records track condition on most main lines again and again, so each run can be compared with the last.",
       "The trend matters as much as the reading. A fault that gets a little worse on every run tells you its cause is still active underneath.",
     ],
     leader:
@@ -1027,7 +1023,7 @@ export const lessons: Lesson[] = [
         sources: [pre(TRACK, "5.27 Day-to-day maintenance of track")],
       },
       {
-        text: "The New Measurement Train assesses the condition of most British main lines on a four-weekly cycle.",
+        text: "The New Measurement Train regularly assesses the condition of most British main lines.",
         sources: [wiki("New Measurement Train", "New_Measurement_Train")],
       },
     ],
@@ -1105,7 +1101,7 @@ export const lessons: Lesson[] = [
       "Gauge is the distance between the running edges of the two rails, the inner faces that the wheel flanges run against. On British main lines the nominal gauge is 1435 mm, or 4 feet 8½ inches. This standard gauge is also used across most of Europe and North America.",
       "The number has a small story. From the 1960s, British engineers tightened the gauge on new track to 1432 mm, on the theory that it would give a more comfortable ride. Network Rail's guide records that in 1996 it was decided there was no benefit, and the standard went back to 1435 mm. Older track laid to the tighter figure still exists.",
       "Sleepers and fastenings hold gauge, so when they fail, gauge drifts. Network Rail's guide shows the classic culprits: timber sleepers rotten inside, screw holes worn so large that the chair leans outwards, and sleepers so cracked that spikes cannot grip. Track that is wide to gauge is dangerous because a wheel can drop between the rails.",
-      "On curves, wheel flanges rub against the outer rail. That is normal on tighter curves, but it wears the side of the rail head and slowly widens the gauge. Bonnett stresses checking side wear on curves, and on curves tighter than about 200 metres radius a check rail is fitted inside the inner rail to share the sideways load.",
+      "On curves, wheel flanges rub against the outer rail. That is normal on tighter curves, but it wears the side of the rail head and slowly widens the gauge. Bonnett stresses checking side wear on curves, and on the tightest curves a check rail is fitted inside the inner rail to share the sideways load.",
       "Gauge is a small number on a big system. A few millimetres out over a length of track is a defect, which is why it is checked by hand gauges and recording trains.",
     ],
     leader:
@@ -1124,7 +1120,7 @@ export const lessons: Lesson[] = [
         sources: [nr("Section 4, Gauge problems")],
       },
       {
-        text: "Flange contact wears the outer rail on curves, so side wear must be checked. Curves tighter than about 200 m radius should have a check rail.",
+        text: "Flange contact wears the outer rail on curves, so side wear must be checked. The tightest curves should have a check rail.",
         sources: [pre(TRACK, "5.12 Rail wear")],
       },
     ],
@@ -1202,18 +1198,18 @@ export const lessons: Lesson[] = [
       "On a curve, a train tends to carry on in a straight line, so it pushes outwards against the outer rail. To balance that, engineers raise the outer rail. The height difference between the two rails is called cant.",
       "Cant tilts the train so that part of its weight helps pull it towards the centre of the curve. At one speed, the balancing speed, the tilt exactly matches the outward push, and passengers feel no sideways force at all.",
       "But a line carries trains at many speeds. A fast passenger train going quicker than the balancing speed is still pushed outwards; the shortfall is called cant deficiency. A slow, heavy freight train going slower leans inwards and presses on the inner rail, called cant excess. Either way, flanges touch the rails and wear them. Engineers set cant as a compromise for the traffic actually using the line.",
-      "Network Rail's guide lists what decides the cant: train speeds and types, curve radius, transition length, the type of track, and clearances at platforms and points. Cant is applied in 5 mm steps. The highest standard cant on Network Rail is 150 mm; more needs special approval.",
+      "Network Rail's guide lists what decides the cant: train speeds and types, curve radius, transition length, the type of track, and clearances at platforms and points. Cant is applied in small, set steps, and every railway sets a maximum. Too much cant and a slow or stopped train would lean too far towards the inside of the curve.",
       "Cant cannot appear all at once. Between straight track and a curve there is a transition, where the cant rises gradually over many sleepers. Marks on the sleepers show where each step changes, and tamping machines smooth the track between them. The faster the line, the longer the transition needs to be.",
     ],
     leader:
       "Cant is set for a mix of speeds, so nearly every train feels some force, one way or the other. Policies for mixed groups behave the same way. Set them for the mix you actually have, and watch where the wear shows.",
     keyFacts: [
       {
-        text: "Cant depends on speed, type of trains, curve radius, transition length, track construction and clearances at platforms and S&C. It is applied in 5 mm increments.",
+        text: "Cant depends on speed, type of trains, curve radius, transition length, track construction and clearances at platforms and S&C. It is applied in small, set increments.",
         sources: [nr("Curves, cant and transitions")],
       },
       {
-        text: "The highest standard cant allowed on Network Rail is 150 mm (6 in); more needs special approval.",
+        text: "Network Rail sets a highest standard cant; going above it needs special approval.",
         sources: [nr("Curves, cant and transitions")],
       },
       {
@@ -1240,10 +1236,10 @@ export const lessons: Lesson[] = [
         why: "Below the balancing speed, the tilt is more than the curve needs, so the train leans in and loads the inner rail.",
       },
       {
-        q: "What is the highest standard cant on Network Rail without special approval?",
-        options: ["50 mm", "100 mm", "150 mm", "300 mm"],
+        q: "Why does every railway set a maximum cant?",
+        options: ["Raised rails cost more to paint", "Signals would be hidden", "A slow or stopped train would lean too far towards the inside of the curve", "Cant makes trains go faster"],
         answer: 2,
-        why: "Network Rail's guide gives 150 mm as the highest standard cant. Anything more needs special approval.",
+        why: "Cant suits trains at speed. A train that is slow or stopped on a steeply canted curve leans inwards and loads the inner rail, so the tilt has to be limited.",
       },
     ],
     lens: {
@@ -1252,7 +1248,7 @@ export const lessons: Lesson[] = [
       author: AUTHOR,
       audience: ["starter", "leader"],
       observe:
-        "On a curve the outer rail is raised to balance the outward push on trains at one speed. Faster trains are still pushed outwards and slower trains press on the inner rail, so Network Rail sets cant, in 5 mm steps up to a standard maximum of 150 mm, to suit the mix of traffic.",
+        "On a curve the outer rail is raised to balance the outward push on trains at one speed. Faster trains are still pushed outwards and slower trains press on the inner rail, so engineers set cant, in small steps up to a set maximum, to suit the mix of traffic.",
       mechanism:
         "Cant tilts the vehicle so that gravity supplies part of the inward force it needs to turn. At the balancing speed the two match exactly. Above it, the shortfall pushes wheels against the outer rail; below it, the surplus tilt loads the inner rail. One fixed height cannot suit every speed, so engineers choose a compromise and watch which rail wears faster.",
       mapping: [
@@ -1391,7 +1387,7 @@ export const lessons: Lesson[] = [
       "Inspection is how the railway finds faults while they are still small. It works in layers.",
       "The first layer is people on foot. Patrollers walk the track at set intervals, looking for broken or missing fastenings, cracked sleepers, wet spots, damaged fencing and anything that has changed since last time. Bonnett adds that anyone walking the railway should report defects they notice, including on bridges and other structures.",
       "The second layer is measurement. Recording trains measure track geometry at speed, and rails are tested with ultrasound to find cracks inside the steel that cannot be seen from outside. Bonnett's point is that you need both: inspection of condition, and measurement to set a standard and check it is being kept.",
-      "The third layer is less frequent, deeper examination. For bridges, Bonnett describes a light visual examination every year and a detailed one at least every four years, with special extra inspections whenever something worrying is found.",
+      "The third layer is less frequent, deeper examination. For bridges, Bonnett describes light visual examinations at frequent, regular intervals and detailed ones less often, with special extra inspections whenever something worrying is found. Each railway sets its own intervals.",
       "Good inspectors read signs, not just failures. A wide rail gap on a hot day, a patch of ballast pumping up wet slurry, or a shiny band on the side of a rail are early clues. Records matter too, so each inspection can be compared with the last.",
     ],
     leader:
@@ -1402,7 +1398,7 @@ export const lessons: Lesson[] = [
         sources: [pre(TRACK, "5.27 Day-to-day maintenance of track")],
       },
       {
-        text: "Structures under dynamic loading are typically inspected in detail at least every four years, with superficial inspections annually and special inspections when concerns arise.",
+        text: "Structures under dynamic loading are typically given frequent superficial inspections, less frequent detailed inspections, and special inspections when concerns arise.",
         sources: [pre("ch. 7 Bridges and Structures", "7.7 Examination of structures")],
       },
       {
@@ -1428,10 +1424,10 @@ export const lessons: Lesson[] = [
         why: "Each layer catches different faults. Walking finds what has changed; measuring shows whether the shape is within standard.",
       },
       {
-        q: "How often does Bonnett say most railways examine bridges in detail?",
-        options: ["Every week", "At least every four years, with lighter yearly checks", "Only after an accident", "Every fifty years"],
+        q: "How are railway bridges usually examined?",
+        options: ["Only after an accident", "Light checks often, detailed examinations less often, and extra checks when something is found", "Once when built, then never again", "Only by watching trains go over"],
         answer: 1,
-        why: "A detailed examination at least every four years is backed by a light check each year and extra inspections when needed.",
+        why: "Light checks catch sudden damage, detailed examinations catch slow decay, and extra checks follow up anything worrying.",
       },
       {
         q: "Which of these is an early clue an inspector might spot?",
@@ -1446,7 +1442,7 @@ export const lessons: Lesson[] = [
       author: AUTHOR,
       audience: ["starter", "leader"],
       observe:
-        "Bonnett describes bridge examination in layers: a light visual check every year, a detailed examination at least every four years, special extra inspections when something is found, and permanent way staff reporting anything they notice in between.",
+        "Bonnett describes bridge examination in layers: frequent light visual checks, less frequent detailed examinations, special extra inspections when something is found, and permanent way staff reporting anything they notice in between.",
       mechanism:
         "Different faults grow at different speeds. Frequent light checks catch sudden damage such as vehicle strikes. Periodic detailed examinations catch slow deterioration that only shows close up. When either finds a concern, inspection frequency rises for that structure until the cause is understood. Reports from track patrollers and others passing by cover the gaps between scheduled visits.",
       mapping: [
@@ -1688,7 +1684,7 @@ export const lessons: Lesson[] = [
     explorer:
       "Track wears out, a bit like shoes. For a while you can mend it, but one day it is better to put in new rails, sleepers and stones. Big machines can now lay new track much faster than people could by hand.",
     starter: [
-      "Every part of the track has a working life. Treated softwood sleepers last roughly 15 to 25 years on the surface. Rails wear on top and, on curves, on the side. Ballast is ground down and fouled. At some point, keeping a worn length going costs more, and risks more, than replacing it. That is a renewal.",
+      "Every part of the track has a working life. Timber sleepers split and rot, how fast depending on the timber, the climate and the traffic. Rails wear on top and, on curves, on the side. Ballast is ground down and fouled. At some point, keeping a worn length going costs more, and risks more, than replacing it. That is a renewal.",
       "Renewal used to be done piece by piece with large gangs of skilled workers. Bonnett describes how purpose-built machines now lay panels of sleepered track or individual sleepers, followed by long welded rails. In small tube tunnels, much of the work is still done by hand with power tools, because large machines cannot fit.",
       "Renewals are planned years ahead and done in possessions. Some combine several jobs, such as cleaning or replacing ballast, new sleepers and new rails, so the track is reset completely at once. Others renew one part where the rest still has life left.",
       "Deciding when to renew is a balance. Writing about rolling stock, Bonnett says it is hard to get the balance right between over-maintaining and under-maintaining, and that procedures and frequencies should be adjusted when experience shows they are wrong. The same is true of track. Signs it is time include defects returning soon after repair, rising maintenance effort and more speed restrictions.",
@@ -1702,7 +1698,7 @@ export const lessons: Lesson[] = [
         sources: [pre(TRACK, "5.26 Track installation and renewal")],
       },
       {
-        text: "Treated softwood sleepers usually need renewal after 15 to 25 years because of splitting or rot.",
+        text: "Treated softwood sleepers eventually need renewal because of splitting or rot, after a life that depends on location and traffic.",
         sources: [pre(TRACK, "5.6 Timber sleepers")],
       },
       {
@@ -1717,10 +1713,10 @@ export const lessons: Lesson[] = [
     diagram: "renewal",
     quiz: [
       {
-        q: "Roughly how long do treated softwood sleepers last on the surface?",
-        options: ["1 to 2 years", "15 to 25 years", "100 years", "For ever"],
+        q: "Why do timber sleepers eventually need renewing?",
+        options: ["They turn into concrete", "They split and rot over time", "Trains get lighter", "Rails stop fitting them"],
         answer: 1,
-        why: "Bonnett gives 15 to 25 years, depending on location and traffic. Splitting and rot are the usual reasons for renewal.",
+        why: "Timber splits and rots. How long it lasts depends on the timber, the location and the traffic, but in the end it can no longer hold the rail.",
       },
       {
         q: "Why is much tube tunnel track still renewed by hand?",
@@ -1741,7 +1737,7 @@ export const lessons: Lesson[] = [
       author: AUTHOR,
       audience: ["starter", "leader"],
       observe:
-        "Track components wear out on known timescales: Bonnett gives treated softwood sleepers about 15 to 25 years on the surface. As a length of track ages, defects return sooner after each repair, until replacing it costs less than keeping it going.",
+        "Track components wear out with age and traffic: timber sleepers split and rot, rails wear and ballast fouls. As a length of track ages, defects return sooner after each repair, until replacing it costs less than keeping it going.",
       mechanism:
         "Early in its life, a length of track needs occasional, cheap attention. As sleepers decay, ballast fouls and rails wear, faults start to interact: a soft sleeper lets the rail flex, which loosens fastenings, which lets the geometry drift. Each repair fixes one fault but not the ageing underneath, so repair frequency and cost rise until renewal resets the whole length at once.",
       mapping: [
@@ -1780,7 +1776,7 @@ export const lessons: Lesson[] = [
     explorer:
       "Railway workers always know where they will go before a train comes: a safe spot well away from the rails. Some places, like narrow bridges, have no safe spot, so trains must be stopped before anyone works there. Workers wear bright orange clothes and hard hats so they can be seen.",
     starter: [
-      "The track is a dangerous place to work. Trains are heavy and fast, can be surprisingly quiet as they approach, and cannot stop quickly or swerve. Electrified lines add another hazard: overhead wires at 25,000 volts on many main lines, or conductor rails beside the running rails on others.",
+      "The track is a dangerous place to work. Trains are heavy and fast, can be surprisingly quiet as they approach, and cannot stop quickly or swerve. Electrified lines add another hazard: overhead wires at a very high voltage on many main lines, or conductor rails beside the running rails on others. Either can kill.",
       "So the first habit of track safety is to know your position of safety: a place far enough from the line to stand clear when a train passes. Where staff can stand clear, some inspection and minor work can happen while trains run, under proper warning arrangements. Bonnett notes that on surface lines much daily inspection is done in traffic hours for this reason, while on underground lines staff usually cannot be on the track while trains run.",
       "Some places have no position of safety. Network Rail marks them with boards. Red and white chequered boards mean limited clearance: there is no place of safety there. Blue and white chequered boards mean there are no refuges, the recesses built into the walls of bridges and tunnels for staff to step into. In such places, work only happens once the line is blocked to trains.",
       "Protective equipment matters, but it is the last line of defence, not the first. Network Rail's guide makes hard hats mandatory when working on or near the line and reminds staff to protect their skin in hot weather. High-visibility orange clothing helps drivers and colleagues see you.",
@@ -1821,10 +1817,10 @@ export const lessons: Lesson[] = [
         why: "Refuges give a place of safety where there is no room at the side of the line. Blue and white boards warn where there are none.",
       },
       {
-        q: "At what voltage do most British main line overhead wires operate?",
-        options: ["230 volts", "750 volts", "25,000 volts", "1 million volts"],
+        q: "Why must staff treat overhead wires as live at all times?",
+        options: ["They are only live at night", "They are painted to look live", "They carry a voltage high enough to kill, and may be live at any moment", "It is a tradition with no reason"],
         answer: 2,
-        why: "British main line overhead electrification normally runs at 25 kV, which is why the wires must always be treated as live.",
+        why: "Overhead wires carry a very high voltage. Unless they have been switched off and proven safe, assume they are live.",
       },
     ],
     lens: {
@@ -1872,9 +1868,9 @@ export const lessons: Lesson[] = [
     explorer:
       "A driver feels a big wobble on a hot afternoon. The rail has pushed sideways in the heat. Can you find the clues? Missing stones, the hot sun and a quick repair from last winter all add up.",
     starter: [
-      "The scenario. A hot July afternoon, with the air in the low thirties Celsius and the rails in full sun much hotter. At 16:05 a driver reports a rough ride and a sideways lurch on a gentle curve of continuous welded rail. The signaller stops trains on that line and calls out the on-call track team.",
+      "The scenario. A July afternoon, the hottest of the year, with the rails in full sun much hotter than the air. At 16:05 a driver reports a rough ride and a sideways lurch on a gentle curve of continuous welded rail. The signaller stops trains on that line and calls out the on-call track team.",
       "What the team finds. The track has kinked sideways over about 20 metres. Beside the kink, a well-worn footpath crosses the line, and the ballast shoulder there is thin and scattered. Records show that in February a broken rail at this spot was cut out and a new piece welded in during a short night possession, but there is no stressing record for the repair. The section was also tamped ten days ago.",
-      "Work through the causes using the season. The load: welded rail is held at a fixed length, so heat above its stress-free temperature, about 27°C by design, becomes a squeezing force (stops 2 and 7). The weaknesses: a thin ballast shoulder worn by the footpath (stops 4 and 8), ballast loosened by recent tamping (stop 16), and a winter repair that may have left the rail with a lower stress-free temperature than designed, so it was carrying more force than intended on this hot day (stop 7).",
+      "Work through the causes using the season. The load: welded rail is held at a fixed length, so heat above its stress-free temperature, the neutral point chosen for the local climate, becomes a squeezing force (stops 2 and 7). The weaknesses: a thin ballast shoulder worn by the footpath (stops 4 and 8), ballast loosened by recent tamping (stop 16), and a winter repair that may have left the rail with a lower stress-free temperature than designed, so it was carrying more force than intended on this hot day (stop 7).",
       "The response. First make it safe: trains stay stopped until the rail has cooled enough for emergency work, as Network Rail's guide requires. Record the evidence: rail temperatures, the shape of the kink, the ballast profile and the repair records. Then fix the shape and every cause: realign the track, restore the ballast shoulder, check and if needed restress the rail to bring its stress-free temperature back to design, and deal with the footpath through fencing and a conversation with the local community.",
       "Finally, check the system. Why was the stressing record missing, and were other winter repairs handled the same way? Buckles rarely have one cause. Heat is the load. Ballast, workmanship and records decide where it fails.",
     ],
@@ -1894,7 +1890,7 @@ export const lessons: Lesson[] = [
         sources: [nr("Extremes of weather: hot weather")],
       },
       {
-        text: "CWR is designed to be stress-free at about 27°C in the UK.",
+        text: "CWR is designed to be stress-free at a chosen neutral temperature, roughly halfway between the hottest and coldest rail temperatures expected.",
         sources: [pre(TRACK, "5.17 Stressing or locking-up of CWR")],
       },
       {

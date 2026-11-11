@@ -46,7 +46,7 @@ export const glossary: GlossaryTerm[] = [
   },
   {
     term: "Ballast",
-    plain: "The bed of crushed rock the sleepers sit in. It spreads the load, holds the sleepers in place and lets water drain away. Good ballast is hard, angular stone, roughly 28 to 50 mm across, so the pieces lock together.",
+    plain: "The bed of crushed rock the sleepers sit in. It spreads the load, holds the sleepers in place and lets water drain away. Good ballast is hard, angular stone, graded to a set range of sizes, so the pieces lock together.",
     sources: [pre("ch. 5, s. 5.3 and 5.4"), wp("Track ballast")],
   },
   {
@@ -175,7 +175,7 @@ export const glossary: GlossaryTerm[] = [
   },
   {
     term: "Stress-free temperature",
-    plain: "The rail temperature at which a welded rail has no pushing or pulling force in it. In Britain the target is 27°C, roughly halfway between the hottest and coldest rail temperatures expected.",
+    plain: "The rail temperature at which a welded rail has no pushing or pulling force in it, also called the neutral temperature. Each railway sets it for its climate, roughly halfway between the hottest and coldest rail temperatures expected.",
     sources: [pre("ch. 5, s. 5.17")],
   },
   {
@@ -212,7 +212,7 @@ export const glossary: GlossaryTerm[] = [
   },
   {
     term: "Cant",
-    plain: "Raising the outer rail on a curve above the inner rail, so the track leans into the bend. It helps trains round curves comfortably. In Britain it is set in steps of 5 mm, usually up to 150 mm.",
+    plain: "Raising the outer rail on a curve above the inner rail, so the track leans into the bend. It helps trains round curves comfortably. Each railway sets it in small steps, up to a maximum.",
     sources: [nrb("Curves, cant and transitions"), wp("Cant (road and rail)")],
   },
   {

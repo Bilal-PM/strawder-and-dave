@@ -4,7 +4,7 @@ import type { Lesson } from "@/domain/types";
 import { usePal } from "@/ui/kit";
 import { Sketch } from "@/ui/sketch";
 import { useTheme } from "@/ui/theme";
-import { factMatching, factQuantity, glossaryTerm } from "../content";
+import { factMatching, glossaryTerm } from "../content";
 import { Frame, Pills, Slider, announce, useTween } from "../ui";
 import { arrow, mix, railSection, tag } from "./draw";
 
@@ -76,7 +76,7 @@ export function SleeperSpacing({ lesson }: { lesson: Lesson }) {
   const share = raw.map((r) => r / sum);
   const sharing = share.filter((v) => v > 0.001).length;
   const status = s < 0.4 ? `Close spacing: ${sharing} sleepers share the wheel's load, so each presses gently on the ballast.` : s > 0.7 ? `Wide spacing: only ${sharing} sleepers share the load. Each presses harder and the rail bends more between them.` : `${sharing} sleepers share the load under the wheel.`;
-  const fact = factMatching(lesson, /spacing|sleepers? (per|every)|mm apart|centres/i) ?? factMatching(lesson, /sleeper/i);
+  const fact = factMatching(lesson, /spacing|sleepers? (per|every)|centres/i) ?? factMatching(lesson, /sleeper/i);
   return (
     <Frame title="Space the sleepers" hint="Slide to move the sleepers closer or further apart. Watch how the load shares out." status={status} fact={fact}
       control={<Slider value={s} onChange={setS} label="Sleeper spacing" valueText={s < 0.4 ? "close" : s > 0.7 ? "wide" : "medium"} left="Close" right="Wide" />}>
@@ -159,12 +159,11 @@ export function Fastening({ lesson }: { lesson: Lesson }) {
   const pal = usePal();
   const [sel, setSel] = useState<PartId>("clip");
   const part = PARTS.find((x) => x.value === sel)!;
-  const toe = factQuantity(lesson, /toe load|clamp/i, /kN/);
   const fact = factMatching(lesson, new RegExp(sel, "i")) ?? factMatching(lesson, /clip|fasten|toe/i);
   return (
     <Frame title="Take apart a rail fastening" hint="Tap a part to find it on the drawing." status={`${part.label}: ${describe(part.value, part.role)}`} fact={fact}
       control={<Pills label="Fastening part" value={sel} onChange={(v) => { setSel(v); announce(v); }} options={PARTS.map((x) => ({ value: x.value, label: x.label }))} />}>
-      <Sketch w={W} h={220} pal={pal} deps={[sel, toe, c.ink]} accessibilityLabel={`Rail fastening cross-section with the ${part.label} highlighted`} paint={(p) => {
+      <Sketch w={W} h={220} pal={pal} deps={[sel, c.ink]} accessibilityLabel={`Rail fastening cross-section with the ${part.label} highlighted`} paint={(p) => {
         const on = (id: PartId) => sel === id;
         p.rect(-4, 160, W + 8, 64, c.sunk, { fillStyle: "dots", hachureGap: 7, fill: c.soft, strokeWidth: 1.6 });
         tag(p, 12, 212, "concrete sleeper", 11, c.soft, c.bg);
@@ -179,7 +178,7 @@ export function Fastening({ lesson }: { lesson: Lesson }) {
         }
         p.rect(130, 150, 80, 10, on("pad") ? c.accent : c.ink, { strokeWidth: 1, roughness: 0.3 });
         railSection(p, 170, 150, 2.8, c.surface);
-        if (on("toe load")) { p.text(10, 52, "toe load", 18, c.ppe, "hand", "start"); if (toe) p.text(10, 72, `${toe} each`, 16, c.ppe, "hand", "start"); }
+        if (on("toe load")) p.text(10, 52, "toe load", 18, c.ppe, "hand", "start");
       }} />
     </Frame>
   );

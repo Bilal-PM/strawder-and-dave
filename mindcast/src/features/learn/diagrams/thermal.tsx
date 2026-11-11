@@ -4,7 +4,7 @@ import type { Lesson } from "@/domain/types";
 import { usePal } from "@/ui/kit";
 import { Sketch } from "@/ui/sketch";
 import { useTheme } from "@/ui/theme";
-import { factMatching, factQuantity } from "../content";
+import { factMatching } from "../content";
 import { Frame, Pills, Slider, announce } from "../ui";
 import { arrow, mix } from "./draw";
 
@@ -21,7 +21,7 @@ export function RailExpansion({ lesson }: { lesson: Lesson }) {
     mode === "jointed"
       ? heat === "cold" ? "Cold: each rail shrinks and the joint gap opens." : heat === "hot" ? "Hot: each rail grows and the joint gap closes up." : "Mild: the rails sit with a small gap at the joint."
       : Math.abs(k) < 0.1 ? "At its stress-free temperature the welded rail carries no thermal force." : k > 0 ? "Hot: the welded rail wants to grow, but sleepers and clips hold it. It stays put and builds up compression." : "Cold: the welded rail wants to shrink, so it is pulled in tension. It still stays put.";
-  const fact = factMatching(lesson, /expan|contract|°C|temperature|stress[- ]free|neutral/i);
+  const fact = factMatching(lesson, /expan|contract|temperature|stress[- ]free|neutral/i);
   return (
     <Frame title="Heat the rail" hint="Slide from cold to hot. Switch between jointed track and continuous welded rail." status={status} statusColor={k > 0.1 ? c.ppe : c.accent} fact={fact}
       control={<>
@@ -67,14 +67,13 @@ export function Stressing({ lesson }: { lesson: Lesson }) {
   const { c } = useTheme();
   const pal = usePal();
   const [t, setT] = useState(0);
-  const sft = factQuantity(lesson, /stress[- ]free|neutral|halfway|stressing|CWR is fixed/i, /°C/);
   const closed = t >= 0.96;
   const status = t === 0 ? "The rail was cut and freed on rollers. It is cooler than its stress-free temperature, so it is shorter than it should be." : closed ? "Gap closed: weld now. Once clipped down, the rail behaves as if it had been laid at its stress-free temperature." : "Pulling: the tensor stretches the rail to the length it would have at its stress-free temperature.";
-  const fact = factMatching(lesson, /stress|tensor|°C|neutral/i);
+  const fact = factMatching(lesson, /stress|tensor|neutral/i);
   return (
     <Frame title="Stress the rail" hint="Pull with the hydraulic tensor until the gap closes." status={status} statusColor={closed ? c.good : c.accent} fact={fact}
       control={<Slider value={t} onChange={(v) => { setT(v); if (v >= 0.96 && t < 0.96) announce("Gap closed. Ready to weld."); }} label="Tensor pull" valueText={closed ? "gap closed" : `${Math.round(t * 100)} percent pulled`} left="Free" right="Pulled" />}>
-      <Sketch w={W} h={190} pal={pal} deps={[t, sft, c.ink]} accessibilityLabel={`Rail stressing. ${status}`} paint={(p) => {
+      <Sketch w={W} h={190} pal={pal} deps={[t, c.ink]} accessibilityLabel={`Rail stressing. ${status}`} paint={(p) => {
         const gap = 6 + 34 * (1 - t);
         const lEnd = 150 - gap / 2 + 0, rStart = 150 + gap / 2;
         for (let x = 20; x < 262; x += 34) p.circle(x, 128, 10, c.sunk, { strokeWidth: 1.2 });
@@ -96,7 +95,7 @@ export function Stressing({ lesson }: { lesson: Lesson }) {
         p.circle(tx, 146, 22, c.accent, { roughness: 0.5 });
         p.rect(tx - 3, 100, 6, 44, c.accent, { roughness: 0.2, strokeWidth: 0 });
         p.line(tx - 14, 56, tx + 14, 56, { stroke: c.good, strokeWidth: 2.5 });
-        p.text(tx - 16, 46, sft ? `SFT ${sft}` : "stress-free", 11, c.good, "mono", "end");
+        p.text(tx - 16, 46, "neutral temperature", 11, c.good, "mono", "end");
         p.line(tx - 14, 100, tx + 14, 100, { stroke: c.accent, strokeWidth: 2 });
         p.text(tx - 16, 92, "rail now", 11, c.accent, "mono", "end");
       }} />
@@ -116,7 +115,7 @@ export function Buckle({ lesson }: { lesson: Lesson }) {
   const A = t > thr ? Math.min(1, (t - thr) / 0.1) * 24 : 0;
   const buckled = A > 0;
   const status = buckled ? "Buckle: compression beat the track's sideways resistance. It has jumped into an S shape. Trains must stop." : t > 0.5 ? (weak === "weak" ? "Compression is building, and this spot has less ballast holding it sideways." : "Compression is building, but a full ballast shoulder holds the track straight.") : "Cool enough: little thermal force in the rail.";
-  const fact = factMatching(lesson, /buckl|shoulder|lateral|°C|heat/i);
+  const fact = factMatching(lesson, /buckl|shoulder|lateral|heat/i);
   return (
     <Frame title="Turn up the heat" hint="Raise the rail temperature. Then try again with a weak spot in the ballast shoulder." status={status} statusColor={buckled ? c.warn : t > 0.5 ? c.ppe : c.accent} fact={fact}
       control={<>

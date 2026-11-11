@@ -28,7 +28,7 @@ export const casts: Mindcast[] = [
     author: AUTHOR,
     audience: ["starter", "leader"],
     observe:
-      "On a main line with three-aspect colour light signals, Bonnett notes that at maximum line speed the signals must be about three quarters of a mile apart to give an adequate braking distance. Four-aspect signalling gives faster trains an earlier warning so they can start braking sooner.",
+      "On a main line with three-aspect colour light signals, Bonnett notes that at maximum line speed the signals must be spaced at least a full braking distance apart, so a driver who sees a caution has room to stop. Four-aspect signalling gives faster trains an earlier warning so they can start braking sooner.",
     mechanism:
       "A train's stopping distance depends on its speed and on the grip between steel wheel and steel rail, which is low compared with a tyre on a road. At a steady braking rate, stopping distance rises with the square of speed: double the speed and the train needs about four times the distance. So the warning must reach the driver at least one full braking distance before the danger, and signals are spaced to make sure it does.",
     mapping: [
@@ -59,7 +59,7 @@ export const casts: Mindcast[] = [
     author: AUTHOR,
     audience: ["starter", "leader"],
     observe:
-      "Jointed track lets each rail expand into a small gap at every joint. Continuous welded rail removes the joints, giving a smoother, quieter ride and less wear, but Bonnett calculates that a restrained main line rail warmed by 45°C carries more than 70 tonnes of compressive force.",
+      "Jointed track lets each rail expand into a small gap at every joint. Continuous welded rail removes the joints, giving a smoother, quieter ride and less wear, but Bonnett's worked example shows a restrained main line rail carrying more than 70 tonnes of compressive force after a large rise in temperature.",
     mechanism:
       "The gaps in jointed track absorbed movement locally, at the cost of wear and maintenance at every joint. Welding removes that slack, so the rail cannot change length. The temperature change does not disappear: it becomes force inside the steel. Welded rail is safe only because that force is managed, with the rail stressed at the right temperature, strong fastenings and a full ballast shoulder.",
     mapping: [
@@ -214,7 +214,7 @@ export const casts: Mindcast[] = [
     author: AUTHOR,
     audience: ["starter", "leader"],
     observe:
-      "Track cannot go straight from level to full cant at the start of a curve. Network Rail's guide describes a transition in which cant rises gradually in 5 mm steps over many sleepers, with marks showing where each step changes. The faster the line, the longer the transition.",
+      "Track cannot go straight from level to full cant at the start of a curve. Network Rail's guide describes a transition in which cant rises gradually in small steps over many sleepers, with marks showing where each step changes. The faster the line, the longer the transition.",
     mechanism:
       "A vehicle entering a curve needs the curve and the tilt to build up together. If cant changed suddenly, one end of the vehicle would tilt before the other, twisting the frame and unloading a wheel, and passengers would feel a jolt. A transition limits the rate of change so the vehicle, and the people in it, adjust smoothly. At higher speed the same change arrives faster, so it is spread over a longer length.",
     mapping: [
@@ -223,7 +223,7 @@ export const casts: Mindcast[] = [
         target: "A new way of working must arrive gradually, because a sudden change pulls a team in two directions and leaves someone unsupported.",
       },
       {
-        railway: "Each 5 mm step is marked, so the tamper builds the change precisely between known points.",
+        railway: "Each small step is marked, so the tamper builds the change precisely between known points.",
         target: "Each stage of the change is named with a date, so people can build it step by step between known points.",
       },
       {
@@ -275,9 +275,9 @@ export const casts: Mindcast[] = [
     author: AUTHOR,
     audience: ["starter", "leader"],
     observe:
-      "Overhead contact wire on faster lines is usually auto-tensioned: weights hung from pulleys keep the tension nearly constant whatever the temperature, typically about 9 to 20 kN per wire. Fixed-termination wire, used at low speeds or in tunnels, sags in hot weather and goes taut in cold.",
+      "Overhead contact wire on faster lines is usually auto-tensioned: weights hung from pulleys keep the tension nearly constant whatever the temperature. Fixed-termination wire, used at low speeds or in tunnels, sags when it is hot and goes taut when it is cold.",
     mechanism:
-      "Copper wire expands as it warms and contracts as it cools. With fixed ends, that change shows up as sag or tightness, so the wire's height and stiffness vary with the weather. With balance weights, the wire is free to change length; the weights rise and fall instead, and tension stays constant. Tension also makes waves along the wire travel faster than the train, so the pantograph does not build up damaging standing waves.",
+      "Copper wire expands as it warms and contracts as it cools. If the ends are fixed, that change shows up as sag or tightness, so the wire's height and stiffness vary with the weather. With balance weights, the wire is free to change length; the weights rise and fall instead, and tension stays constant. Tension also makes waves along the wire travel faster than the train, so the pantograph does not build up damaging standing waves.",
     mapping: [
       {
         railway: "Fixed-termination wire holds its length fixed, so heat shows up as sag and cold as tightness.",
@@ -368,7 +368,7 @@ export const casts: Mindcast[] = [
     author: AUTHOR,
     audience: ["starter", "leader"],
     observe:
-      "Where wheel meets rail, the contact patch is tiny, about 100 square millimetres under the heaviest wheels, and Bonnett notes the pressure there can exceed the yield point of the steel. Rail grinding removes a thin surface layer to take out defects such as head checks, squats and corrugation.",
+      "Where wheel meets rail, the contact patch is tiny, roughly the size of a fingernail even under the heaviest wheels, and Bonnett notes the pressure there can exceed the yield point of the steel. Rail grinding removes a thin surface layer to take out defects such as head checks, squats and corrugation.",
     mechanism:
       "Repeated contact at stresses above yield makes the surface steel flow and tire. Fine fatigue cracks start at the surface of the railhead. Ground away early, while shallow, they disappear with only a thin layer of rail. Left alone, some grow down into the rail, where they mean replacing it or risk a break. Preventive grinding removes a little metal often instead of a lot of rail later.",
     mapping: [
