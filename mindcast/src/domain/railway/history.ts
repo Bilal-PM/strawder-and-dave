@@ -290,7 +290,7 @@ export const history: HistoryEvent[] = [
     id: "h-1890-city-south-london",
     month: 12, day: 18, year: 1890,
     title: "The first electric deep-level tube",
-    text: "The City and South London Railway opens to the public, with electric trains running in tunnels deep under London. It is the first deep-level tube line to be worked by electricity.",
+    text: "The City and South London Railway opens to the public, with electric trains running in tunnels deep under London. It is the first successful deep-level tube railway in the world, and the first major railway to use electric trains.",
     art: "tunnel", link: S3,
     sources: [wp("City and South London Railway")],
   },

@@ -327,36 +327,38 @@ function Overlay({ children }: { children: React.ReactNode }) {
 }
 
 function IntroOverlay({ miles, tod, setTod, cond, setCond, onStart, onBack }: { miles: number; tod: Tod; setTod: (t: Tod) => void; cond: Cond; setCond: (c: Cond) => void; onStart: () => void; onBack: () => void }) {
-  const { c } = useTheme();
-  const rows = [
-    ["Power and brake", "Right thumb for power, left thumb for the brake. Applying the brake cuts the power."],
-    ["Signals", "Green: clear. Double yellow: be ready. Single yellow: brake now. Red: stop before it."],
-    ["The yellow marker", "It shows where you would stop if you braked now. Keep it short of reds and stop markers."],
-    ["Stations", "Stop with the front of the train at each stop marker. The closer, the better."],
+  const { c, dark } = useTheme();
+  const ins = useSafeAreaInsets();
+  const rows: [string, string][] = [
+    ["Drive", "Power on the right, brake on the left. Braking cuts the power."],
+    ["Signals", "Double yellow: be ready. Yellow: brake now. Red: stop before it."],
+    ["Yellow marker", "Where you would stop if you braked now. Keep it short of reds."],
+    ["Stations", "Stop with the front of the train at the stop marker."],
   ];
   return (
-    <Overlay>
-      <Eyebrow color={c.accent}>The Open Line</Eyebrow>
-      <H1>Drive the loop</H1>
-      <Body color={c.soft}>Take a three-car train round the line, call at every station and obey the signals. A train runs ahead of you, so expect yellows and reds.</Body>
-      <View style={{ gap: 10 }}>
-        {rows.map(([h, t]) => (
-          <View key={h} style={{ gap: 2 }}>
-            <BodyB>{h}</BodyB>
-            <Small color={c.soft}>{t}</Small>
-          </View>
-        ))}
+    <View style={[StyleSheet.absoluteFill, { justifyContent: "flex-end" }]}>
+      <View style={{ position: "absolute", top: ins.top + 8, left: space.m }}>
+        <RoundButton label="Back" onPress={onBack}><Text style={{ fontSize: 20, color: c.ink }}>×</Text></RoundButton>
       </View>
-      <Panel style={{ gap: 8, borderWidth: 1, borderColor: c.line }}>
-        <Text style={{ fontFamily: F.mono, fontSize: 11, letterSpacing: 1, color: c.soft }}>TIME OF DAY</Text>
-        <Segmented label="Time of day" value={tod} onChange={setTod} options={[{ value: "morning", label: "Morning" }, { value: "day", label: "Day" }, { value: "dusk", label: "Dusk" }]} />
-        <Text style={{ fontFamily: F.mono, fontSize: 11, letterSpacing: 1, color: c.soft, marginTop: 4 }}>CONDITIONS</Text>
-        <Segmented label="Conditions" value={cond} onChange={setCond} options={[{ value: "dry", label: "Dry" }, { value: "leaves", label: "Wet leaves" }, { value: "hot", label: "Hot" }]} />
-        <Small color={c.soft}>{COND_NOTE[cond]}</Small>
-      </Panel>
-      <Button kind="primary" label="Start driving" onPress={onStart} />
-      <Button kind="ghost" label="Back" onPress={onBack} />
-      <Small color={c.soft} center>{`Line speed ${Math.round(LINE_SPEED / MPH)} mph. About ${miles.toFixed(1)} miles round.`}</Small>
-    </Overlay>
+      <ScrollView style={{ flexGrow: 0 }} contentContainerStyle={{ padding: space.m, paddingBottom: ins.bottom + space.m }}>
+        <Card style={{ gap: space.s, borderWidth: 1.5, borderColor: c.ink, maxWidth: 560, width: "100%", alignSelf: "center", backgroundColor: dark ? "rgba(26,30,36,0.96)" : "rgba(255,255,255,0.96)" }}>
+          <Eyebrow color={c.accent}>The Open Line</Eyebrow>
+          <H2>Drive the loop</H2>
+          <Small color={c.soft}>{`Call at all five stations and obey the signals. A train runs ahead of you, so expect yellows and reds. About ${miles.toFixed(1)} miles round, line speed ${Math.round(LINE_SPEED / MPH)} mph.`}</Small>
+          <View style={{ gap: 4, marginVertical: 2 }}>
+            {rows.map(([h, t]) => (
+              <Text key={h} style={{ fontFamily: F.body, fontSize: 14, lineHeight: 19, color: c.ink }}>
+                <Text style={{ fontFamily: F.bodySemi }}>{h}. </Text>
+                {t}
+              </Text>
+            ))}
+          </View>
+          <Segmented label="Time of day" value={tod} onChange={setTod} options={[{ value: "morning", label: "Morning" }, { value: "day", label: "Day" }, { value: "dusk", label: "Dusk" }]} />
+          <Segmented label="Conditions" value={cond} onChange={setCond} options={[{ value: "dry", label: "Dry" }, { value: "leaves", label: "Wet leaves" }, { value: "hot", label: "Hot" }]} />
+          <Small color={c.soft}>{COND_NOTE[cond]}</Small>
+          <Button kind="primary" label="Start driving" onPress={onStart} />
+        </Card>
+      </ScrollView>
+    </View>
   );
 }
