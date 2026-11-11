@@ -5,7 +5,7 @@
 import { router } from "expo-router";
 import React, { useMemo, useRef, useState } from "react";
 import { Pressable, ScrollView, Text, useWindowDimensions, View } from "react-native";
-import Animated, { SlideInDown, useReducedMotion } from "react-native-reanimated";
+import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { pack } from "@/domain";
 import type { Place } from "@/domain/types";
@@ -13,10 +13,11 @@ import { Sources, TopicChip } from "@/features/today/components/bits";
 import { topicFromLinkString } from "@/features/today/services/links";
 import { locateOnce } from "@/features/today/services/weather";
 import { useStore } from "@/state/store";
-import { Body, BodyB, Button, Chip, Eyebrow, H1, H2, H3, PaperGrid, Row, Small, tap, usePal } from "@/ui/kit";
+import { BackButton, Body, BodyB, Button, Chip, Enter, Eyebrow, H1, H2, H3, PaperGrid, Row, Small, tap, usePal } from "@/ui/kit";
+import { useMotion } from "@/ui/motion";
 import { Sketch } from "@/ui/sketch";
 import { useTheme } from "@/ui/theme";
-import { F, radius, space } from "@/ui/tokens";
+import { F, radius, space, TOUCH } from "@/ui/tokens";
 import { paintMap, paintPins, paintPlace, paintStamp, type Pin } from "./art";
 import { GB_MAP, project } from "./gbmap";
 import { CAT_ORDER, CATS, kmText, stampCheck, STAMP_RADIUS_KM, type Cat } from "./places";
@@ -56,7 +57,7 @@ function PlaceSheet({ place, onClose }: { place: Place; onClose: () => void }) {
   const { c } = useTheme();
   const pal = usePal();
   const ins = useSafeAreaInsets();
-  const reduce = useReducedMotion();
+  const m = useMotion();
   const passport = useStore((s) => s.passport);
   const stamped = passport.includes(place.id);
   const [msg, setMsg] = useState<{ text: string; tone: "good" | "warn" | "soft" } | null>(null);
@@ -67,7 +68,6 @@ function PlaceSheet({ place, onClose }: { place: Place; onClose: () => void }) {
 
   const stamp = () => {
     useStore.getState().set((s) => ({ passport: s.passport.includes(place.id) ? s.passport : [...s.passport, place.id] }));
-    tap("success");
   };
   const checkIn = async () => {
     setBusy(true);
@@ -77,6 +77,7 @@ function PlaceSheet({ place, onClose }: { place: Place; onClose: () => void }) {
     if (!r.ok) return setMsg({ text: r.message, tone: "warn" });
     const chk = stampCheck(place, r.lat, r.lon);
     if (chk.ok) {
+      tap("success");
       stamp();
       setMsg({ text: `Stamped. You are ${kmText(chk.km)} from ${chk.label}.`, tone: "good" });
     } else {
@@ -86,7 +87,8 @@ function PlaceSheet({ place, onClose }: { place: Place; onClose: () => void }) {
 
   return (
     <Animated.View
-      entering={reduce ? undefined : SlideInDown.duration(260)}
+      entering={m.sheetIn()}
+      exiting={m.sheetOut()}
       accessibilityViewIsModal
       style={{ position: "absolute", left: 0, right: 0, bottom: 0, maxHeight: "58%", backgroundColor: c.surface, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, borderWidth: 1, borderColor: c.line, shadowColor: "#000", shadowOpacity: 0.18, shadowRadius: 18, shadowOffset: { width: 0, height: -4 }, elevation: 12 }}
     >
@@ -115,9 +117,9 @@ function PlaceSheet({ place, onClose }: { place: Place; onClose: () => void }) {
           {stamped ? (
             <>
               <Row gap={space.s}>
-                <View style={{ width: 56 }}>
+                <Animated.View entering={m.pop()} style={{ width: 56 }}>
                   <Sketch w={100} h={100} pal={pal} deps={[colour, place.id]} paint={(p) => paintStamp(p, true, colour, c, initials(place.name))} />
-                </View>
+                </Animated.View>
                 <BodyB style={{ flex: 1 }}>Stamped in your rail passport.</BodyB>
               </Row>
               <Button small kind="ghost" label="Remove stamp" onPress={() => useStore.getState().set((s) => ({ passport: s.passport.filter((id) => id !== place.id) }))} accessibilityLabel={`Remove the ${place.name} stamp`} />
@@ -130,7 +132,7 @@ function PlaceSheet({ place, onClose }: { place: Place; onClose: () => void }) {
                 <View style={{ gap: space.s }}>
                   <Small>Only if you have really been. Mark {place.name} as visited?</Small>
                   <Row gap={space.s}>
-                    <Button small kind="pass" label="Yes, I've been" onPress={() => { stamp(); setConfirm(false); setMsg({ text: "Marked as visited.", tone: "good" }); }} />
+                    <Button small kind="pass" haptic="success" label="Yes, I've been" onPress={() => { stamp(); setConfirm(false); setMsg({ text: "Marked as visited.", tone: "good" }); }} />
                     <Button small kind="ghost" label="Cancel" onPress={() => setConfirm(false)} />
                   </Row>
                 </View>
@@ -160,7 +162,7 @@ function Passport({ places, stamped, onSelect }: { places: Place[]; stamped: str
         {places.map((p) => {
           const on = stamped.includes(p.id), colour = CATS[p.category]?.colour(c) ?? c.accent;
           return (
-            <Pressable key={p.id} accessibilityRole="button" accessibilityLabel={`${p.name}, ${on ? "stamped" : "not stamped yet"}`} onPress={() => { tap(); onSelect(p.id); }} style={({ pressed }) => ({ width: "31.5%", minWidth: 96, alignItems: "center", gap: 4, padding: space.s, borderRadius: radius.m, borderWidth: 1, borderColor: on ? colour : c.line, backgroundColor: c.surface, opacity: pressed ? 0.8 : 1 })}>
+            <Pressable key={p.id} accessibilityRole="button" accessibilityLabel={`${p.name}, ${on ? "stamped" : "not stamped yet"}`} onPress={() => { tap(); onSelect(p.id); }} style={({ pressed }) => ({ width: "31.5%", minWidth: 96, alignItems: "center", gap: 4, padding: space.s, borderRadius: radius.l, borderWidth: on ? 1.5 : 1, borderColor: on ? colour : c.line, backgroundColor: pressed ? c.sunk : c.surface })}>
               <View style={{ width: 64 }}>
                 <Sketch w={100} h={100} pal={pal} deps={[on, colour, p.id]} paint={(pt) => paintStamp(pt, on, colour, c, initials(p.name))} />
               </View>
@@ -204,21 +206,19 @@ export function ExploreScreen() {
     <View style={{ flex: 1, backgroundColor: c.bg }}>
       <PaperGrid />
       <ScrollView ref={scroller} contentContainerStyle={{ paddingHorizontal: space.l, paddingTop: ins.top + space.m, paddingBottom: ins.bottom + (selected ? win.height * 0.6 : 96), gap: space.l, maxWidth: 760, width: "100%", alignSelf: "center" }}>
-        <Row>
-          <Button small kind="ghost" label="‹ Back" onPress={back} accessibilityLabel="Go back" />
-        </Row>
-        <View style={{ gap: space.xs }}>
+        <BackButton onPress={back} />
+        <Enter style={{ gap: space.xs }}>
           <Eyebrow>Explore</Eyebrow>
           <H1 accessibilityRole="header">Great places to reach by train</H1>
-          <Body color={c.soft}>Tap a pin to see where to get off and what to look for.</Body>
-        </View>
+          <Body color={c.soft}>Tap a pin to see where to get off and what to look for. Stamp your rail passport when you visit.</Body>
+        </Enter>
 
         <View accessibilityRole="radiogroup" accessibilityLabel="Filter places" style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
           {(["all", ...CAT_ORDER] as Filter[]).map((f) => {
             const on = f === filter, col = f === "all" ? c.ink : CATS[f].colour(c);
             const label = f === "all" ? `All (${places.length})` : `${CATS[f].short} (${counts[f]})`;
             return (
-              <Pressable key={f} accessibilityRole="radio" accessibilityState={{ selected: on }} accessibilityLabel={f === "all" ? "All places" : CATS[f].label} onPress={() => { tap(); setFilter(f); if (sel && f !== "all" && selected?.category !== f) setSel(null); }} style={{ flexDirection: "row", alignItems: "center", gap: 6, minHeight: 40, paddingHorizontal: 12, borderRadius: radius.m, borderWidth: 1.5, borderColor: on ? col : c.line, backgroundColor: on ? c.surface : "transparent" }}>
+              <Pressable key={f} accessibilityRole="radio" accessibilityState={{ selected: on }} accessibilityLabel={f === "all" ? "All places" : CATS[f].label} onPress={() => { tap(); setFilter(f); if (sel && f !== "all" && selected?.category !== f) setSel(null); }} style={{ flexDirection: "row", alignItems: "center", gap: 6, minHeight: TOUCH, paddingHorizontal: 12, borderRadius: radius.m, borderWidth: 1.5, borderColor: on ? col : c.line, backgroundColor: on ? c.surface : "transparent" }}>
                 {f !== "all" && <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: col }} />}
                 <Text style={{ fontFamily: F.bodySemi, fontSize: 14, color: on ? c.ink : c.soft }}>{label}</Text>
               </Pressable>
@@ -227,7 +227,7 @@ export function ExploreScreen() {
         </View>
 
         {places.length === 0 ? (
-          <View style={{ padding: space.l, borderRadius: radius.l, backgroundColor: c.sunk }}>
+          <View style={{ padding: space.l, borderRadius: radius.l, backgroundColor: c.sunk, gap: space.s }}>
             <H3>Places are on their way.</H3>
             <Body color={c.soft}>The list of great places is being checked. Come back soon.</Body>
           </View>

@@ -1,14 +1,14 @@
 /**
  * Reference drawings from the Groundwork illustration library (Claude Design canvas), shown under a lesson's
- * interactive diagram. They carry labels and some dimensions that are still awaiting an expert check, so the
- * caption says so until each one is signed off.
+ * interactive diagram. They show how the parts relate, not exact sizes, so the caption says they are illustrative
+ * and not to scale.
  */
 import { Image, View } from "react-native";
 import { Small } from "@/ui/kit";
 import { useTheme } from "@/ui/theme";
 import { radius } from "@/ui/tokens";
 
-type Plate = { src: number; title: string; alt: string; checked?: boolean };
+type Plate = { src: number; title: string; alt: string };
 const P = {
   joint: { src: require("../../../assets/illustrations/plates/joint.png"), title: "Rail joint", alt: "Two rail ends with a small gap, held by fishplates and bolts" },
   rail: { src: require("../../../assets/illustrations/plates/rail.png"), title: "Flat-bottom rail in cross-section", alt: "Rail cross-section: head, web and foot" },
@@ -34,7 +34,7 @@ export function LessonPlate({ lessonId }: { lessonId: string }) {
       <View style={{ width: "100%", aspectRatio: 690 / 494, backgroundColor: "#FFFFFF", borderRadius: radius.l, borderWidth: 1, borderColor: c.line, overflow: "hidden" }}>
         <Image source={plate.src} accessibilityLabel={plate.alt} accessibilityIgnoresInvertColors style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, width: "100%", height: "100%" }} resizeMode="contain" />
       </View>
-      <Small color={c.soft}>{plate.title}. {plate.checked ? "Checked against sources." : "Reference drawing: labels and sizes awaiting an expert check."}</Small>
+      <Small color={c.soft}>{plate.title}. Illustrative drawing, not to scale.</Small>
     </View>
   );
 }

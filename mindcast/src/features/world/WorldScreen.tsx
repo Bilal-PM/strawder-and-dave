@@ -4,11 +4,12 @@
 import { router, useIsFocused } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, AppState, PanResponder, ScrollView, StyleSheet, Text, View } from "react-native";
-import { useReducedMotion } from "react-native-reanimated";
+import Animated, { useReducedMotion } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useStore } from "@/state/store";
 import { Body, Button, Card, Eyebrow, H2, Row, Segmented, Small, Stat, tap } from "@/ui/kit";
 import { useTheme } from "@/ui/theme";
+import { motionFor } from "@/ui/motion";
 import { F, space } from "@/ui/tokens";
 import { GLCanvas } from "./canvas";
 import { buildWorldData } from "./data";
@@ -36,6 +37,7 @@ export default function WorldScreen() {
   const sysReduce = useReducedMotion();
   const [reducePref, setReducePref] = useState<boolean | null>(null);
   const reduceMotion = reducePref ?? sysReduce;
+  const m = motionFor(reduceMotion);
 
   const [data, setData] = useState<WorldData | null>(null);
   const [phase, setPhase] = useState<Phase>("loading");
@@ -219,22 +221,24 @@ export default function WorldScreen() {
             </Row>
             <View pointerEvents="none" accessibilityLiveRegion="polite" style={{ alignItems: "center", gap: 4 }}>
               {toasts.map((t) => (
-                <View key={t.id} style={{ backgroundColor: t.tone === "warn" ? c.warn : t.tone === "good" ? c.good : c.ink, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6, maxWidth: "100%" }}>
+                <Animated.View key={t.id} entering={m.rise()} exiting={m.exit()} style={{ backgroundColor: t.tone === "warn" ? c.warn : t.tone === "good" ? c.good : c.ink, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6, maxWidth: "100%" }}>
                   <Text style={{ fontFamily: F.bodySemi, fontSize: 13, color: "#FFFFFF" }}>{t.text}{t.points ? `  ${t.points > 0 ? "+" : ""}${t.points}` : ""}</Text>
-                </View>
+                </Animated.View>
               ))}
             </View>
             {moment && phase === "running" && (
+              <Animated.View key={moment.title} entering={m.rise()}>
               <Panel>
                 <View accessibilityLiveRegion="polite" style={{ gap: 4 }}>
                   <Eyebrow color={c.accent}>{moment.title}</Eyebrow>
                   <Small>{moment.text}</Small>
                   <Row gap={8} style={{ marginTop: 2 }}>
                     {moment.lessonId && <Button small kind="primary" label="Go to the lesson" onPress={() => openLesson(moment.lessonId!)} />}
-                    <Button small kind="ghost" label="Got it" onPress={() => setMoments((m) => m.slice(1))} />
+                    <Button small kind="ghost" label="Got it" onPress={() => setMoments((x) => x.slice(1))} />
                   </Row>
                 </View>
               </Panel>
+              </Animated.View>
             )}
           </View>
 
@@ -271,8 +275,8 @@ export default function WorldScreen() {
             <Stat value={sim.stats.stops} label="Stops" />
             <Stat value={sim.stats.reds} label="Reds held" />
           </Row>
-          <Segmented label="Camera" value={camMode} onChange={setCamMode} options={[{ value: "chase", label: "Chase" }, { value: "cab", label: "Cab" }, { value: "drone", label: "Drone" }]} />
-          <Segmented label="Reduce motion" value={reduceMotion ? "on" : "off"} onChange={(v) => setReducePref(v === "on")} options={[{ value: "off", label: "Motion on" }, { value: "on", label: "Reduce motion" }]} />
+          <Segmented label="Camera" showLabel value={camMode} onChange={setCamMode} options={[{ value: "chase", label: "Chase" }, { value: "cab", label: "Cab" }, { value: "drone", label: "Drone" }]} />
+          <Segmented label="Motion" showLabel value={reduceMotion ? "on" : "off"} onChange={(v) => setReducePref(v === "on")} options={[{ value: "off", label: "Motion on" }, { value: "on", label: "Reduce motion" }]} />
           <Small color={c.soft}>Reduce motion stops the cab view swaying and the intro camera turning.</Small>
           <Button kind="primary" label="Resume" onPress={() => setPhase("running")} />
           <Row gap={8}>
@@ -317,12 +321,13 @@ function StatusChip({ text, color }: { text: string; color: string }) {
 function Overlay({ children }: { children: React.ReactNode }) {
   const { c, dark } = useTheme();
   const ins = useSafeAreaInsets();
+  const m = motionFor(useReducedMotion());
   return (
-    <View style={[StyleSheet.absoluteFill, { backgroundColor: dark ? "rgba(18,21,25,0.72)" : "rgba(246,245,241,0.72)" }]}>
+    <Animated.View entering={m.scrim()} style={[StyleSheet.absoluteFill, { backgroundColor: dark ? "rgba(18,21,25,0.72)" : "rgba(246,245,241,0.72)" }]}>
       <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: "center", padding: space.l, paddingTop: ins.top + space.l, paddingBottom: ins.bottom + space.l }}>
-        <Card style={{ gap: space.m, borderWidth: 1.5, borderColor: c.ink, maxWidth: 520, width: "100%", alignSelf: "center" }}>{children}</Card>
+        <Animated.View entering={m.rise()}><Card style={{ gap: space.m, borderWidth: 1.5, borderColor: c.ink, maxWidth: 520, width: "100%", alignSelf: "center" }}>{children}</Card></Animated.View>
       </ScrollView>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -353,8 +358,8 @@ function IntroOverlay({ miles, tod, setTod, cond, setCond, onStart, onBack }: { 
               </Text>
             ))}
           </View>
-          <Segmented label="Time of day" value={tod} onChange={setTod} options={[{ value: "morning", label: "Morning" }, { value: "day", label: "Day" }, { value: "dusk", label: "Dusk" }]} />
-          <Segmented label="Conditions" value={cond} onChange={setCond} options={[{ value: "dry", label: "Dry" }, { value: "leaves", label: "Wet leaves" }, { value: "hot", label: "Hot" }]} />
+          <Segmented label="Time of day" showLabel value={tod} onChange={setTod} options={[{ value: "morning", label: "Morning" }, { value: "day", label: "Day" }, { value: "dusk", label: "Dusk" }]} />
+          <Segmented label="Conditions" showLabel value={cond} onChange={setCond} options={[{ value: "dry", label: "Dry" }, { value: "leaves", label: "Wet leaves" }, { value: "hot", label: "Hot" }]} />
           <Small color={c.soft}>{COND_NOTE[cond]}</Small>
           <Button kind="primary" label="Start driving" onPress={onStart} />
         </Card>

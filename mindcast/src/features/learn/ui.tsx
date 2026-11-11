@@ -4,21 +4,22 @@
  */
 import React, { useEffect, useRef, useState } from "react";
 import { AccessibilityInfo, Linking, Modal, PanResponder, Pressable, Text, View, type LayoutChangeEvent, type StyleProp, type ViewStyle } from "react-native";
-import Animated, { FadeIn, FadeInDown, SlideInDown, useReducedMotion } from "react-native-reanimated";
+import Animated, { useReducedMotion } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { Source } from "@/domain/types";
 import { Body, Button, Eyebrow, H2, Small, tap } from "@/ui/kit";
+import { stagger, useMotion } from "@/ui/motion";
 import { useTheme } from "@/ui/theme";
 import { F, radius, space } from "@/ui/tokens";
 import type { Fact } from "./content";
 
 export const announce = (msg: string) => { try { AccessibilityInfo.announceForAccessibility(msg); } catch { /* web without a reader */ } };
 
-/** Entering animation that respects reduced motion. */
+/** Entering animation from the shared motion tokens (respects reduce motion). `delay` is in ms. */
 export function useEnter(delay = 0) {
-  const reduce = useReducedMotion();
-  return reduce ? undefined : FadeInDown.duration(380).delay(delay);
+  return useMotion().rise(0, delay);
 }
+export { stagger };
 
 /**
  * Moves a number towards `target` in small steps (a cheap tween for hand-drawn redraws).
@@ -139,14 +140,14 @@ export function Stepper({ i, n, onChange, label, names }: { i: number; n: number
 export function Sheet({ open, onClose, children, label }: { open: boolean; onClose: () => void; children: React.ReactNode; label: string }) {
   const { c } = useTheme();
   const ins = useSafeAreaInsets();
-  const reduce = useReducedMotion();
+  const m = useMotion();
   return (
     <Modal visible={open} transparent animationType="none" onRequestClose={onClose} statusBarTranslucent>
       <View style={{ flex: 1, justifyContent: "flex-end" }}>
-        <Animated.View entering={reduce ? undefined : FadeIn.duration(200)} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(10,12,15,0.38)" }}>
+        <Animated.View entering={m.scrim()} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(10,12,15,0.38)" }}>
           <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={onClose} style={{ flex: 1 }} />
         </Animated.View>
-        <Animated.View entering={reduce ? undefined : SlideInDown.duration(300)} accessibilityViewIsModal accessibilityLabel={label}
+        <Animated.View entering={m.sheetIn()} accessibilityViewIsModal accessibilityLabel={label}
           style={{ backgroundColor: c.surface, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, borderWidth: 1, borderColor: c.line, paddingHorizontal: space.xl, paddingTop: space.m, paddingBottom: ins.bottom + space.xl, gap: space.m, maxWidth: 760, width: "100%", alignSelf: "center" }}>
           <View style={{ alignSelf: "center", width: 40, height: 5, borderRadius: 3, backgroundColor: c.line, marginBottom: space.s }} />
           {children}

@@ -2,11 +2,13 @@
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { Platform, Pressable, ScrollView, Text, View } from "react-native";
+import Animated from "react-native-reanimated";
 import { pack, trainById } from "@/domain";
 import type { TrainClass } from "@/domain/types";
 import { useStore, type Postcard } from "@/state/store";
-import { Body, Button, Card, Eyebrow, H1, H3, Row, Screen, Segmented, Small, tap } from "@/ui/kit";
+import { Body, Button, Card, Enter, Eyebrow, Field as Labelled, H1, H3, Input, Row, Screen, Segmented, Small, tap } from "@/ui/kit";
+import { useMotion } from "@/ui/motion";
 import { Sketch } from "@/ui/sketch";
 import { useTheme } from "@/ui/theme";
 import { F, radius, space } from "@/ui/tokens";
@@ -34,21 +36,10 @@ function useDebounced<T>(v: T, ms: number) {
 }
 
 function Field({ label, value, onChange, max, multiline, hint }: { label: string; value: string; onChange: (s: string) => void; max: number; multiline?: boolean; hint?: string }) {
-  const { c } = useTheme();
   return (
-    <View style={{ gap: 6 }}>
-      <Text style={{ fontFamily: F.mono, fontSize: 12, letterSpacing: 0.8, textTransform: "uppercase", color: c.soft }}>{label}</Text>
-      <TextInput
-        value={value}
-        onChangeText={(s) => onChange(s.slice(0, max))}
-        accessibilityLabel={label}
-        accessibilityHint={hint}
-        placeholderTextColor={c.soft}
-        multiline={multiline}
-        maxLength={max}
-        style={{ minHeight: multiline ? 96 : 46, paddingHorizontal: 12, paddingVertical: 10, borderWidth: 1.5, borderColor: c.line, borderRadius: radius.m, backgroundColor: c.surface, fontFamily: F.body, fontSize: 16, color: c.ink, textAlignVertical: multiline ? "top" : "center" }}
-      />
-    </View>
+    <Labelled label={label}>
+      <Input value={value} onChangeText={(s) => onChange(s.slice(0, max))} accessibilityLabel={label} accessibilityHint={hint} lines={multiline ? 3 : 1} maxLength={max} />
+    </Labelled>
   );
 }
 
@@ -56,7 +47,7 @@ function Swatches({ label, list, value, onChange }: { label: string; list: [stri
   const { c } = useTheme();
   return (
     <View style={{ gap: 6 }}>
-      <Text style={{ fontFamily: F.mono, fontSize: 12, letterSpacing: 0.8, textTransform: "uppercase", color: c.soft }}>{label}</Text>
+      <Eyebrow>{label}</Eyebrow>
       <View accessibilityRole="radiogroup" accessibilityLabel={label} style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
         {list.map(([hex, name]) => {
           const on = hex.toLowerCase() === value.toLowerCase();
@@ -101,6 +92,7 @@ export default function PostcardScreen() {
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
   const shot = useRef<React.ComponentRef<typeof View>>(null);
+  const m = useMotion();
 
   // a train passed in the link wins over the saved choice
   useEffect(() => {
@@ -152,12 +144,15 @@ export default function PostcardScreen() {
   return (
     <Screen>
       <BackLink />
-      <View style={{ gap: 4 }}>
+      <Enter style={{ gap: 4 }}>
         <Eyebrow>Postcard</Eyebrow>
         <H1 accessibilityRole="header">Make a postcard</H1>
-      </View>
+        <Small color={c.soft}>Pick a train, paint it, give it a name, then share it.</Small>
+      </Enter>
 
       <View ref={shot} collapsable={false} style={{ borderRadius: 6, overflow: "hidden", backgroundColor: POSTCARD_PAL.paper, borderWidth: 1, borderColor: c.line }}>
+        {/* A new train or scene fades in; typing redraws in place. */}
+        <Animated.View key={`${train.id}-${scene}`} entering={m.fade()}>
         <Sketch
           w={POSTCARD_W}
           h={POSTCARD_H}
@@ -166,6 +161,7 @@ export default function PostcardScreen() {
           paint={(p) => paintPostcard(p, { spec: toDraw(train), className: train.name, fact: train.fact, livery, scene, message: text.message, from: text.from, tram: isTram(train), date })}
           accessibilityLabel={`Postcard preview: a ${train.name} in the ${scene} scene. Message: ${text.message || "none"}`}
         />
+        </Animated.View>
       </View>
 
       <Card>
@@ -176,7 +172,7 @@ export default function PostcardScreen() {
           <Button label={canCopyText ? "Copy caption" : "Share caption"} accessibilityLabel={canCopyText ? "Copy a caption for your post" : "Share a caption for your post"} onPress={() => run(async () => (await copyCaption(caption)) === "copied" ? "Caption copied." : "")} />
         </Row>
         <Text selectable style={{ fontFamily: F.body, fontSize: 14, lineHeight: 20, color: c.soft }}>{caption}</Text>
-        {status ? <Small accessibilityLiveRegion="polite" color={c.ink}>{status}</Small> : null}
+        {status ? <Animated.View key={status} entering={m.fade()}><Small accessibilityLiveRegion="polite" color={c.ink}>{status}</Small></Animated.View> : null}
       </Card>
 
       <Card>
@@ -191,14 +187,14 @@ export default function PostcardScreen() {
         <H3 accessibilityRole="header">Name and badge</H3>
         <Field label="Nameplate" value={pc.name} max={28} onChange={(v) => update({ name: v })} hint="The name painted on the side" />
         <Field label="Number" value={pc.number} max={10} onChange={(v) => update({ number: v })} />
-        <Segmented label="Logo" value={pc.logo} options={LOGOS} onChange={(v) => { if (v === "image" && !img) pickImage(); else update({ logo: v }); }} />
+        <Segmented label="Logo" showLabel value={pc.logo} options={LOGOS} onChange={(v) => { if (v === "image" && !img) pickImage(); else update({ logo: v }); }} />
         {pc.logo === "initials" && <Field label="Initials" value={pc.initials} max={3} onChange={(v) => update({ initials: v })} />}
         {pc.logo === "image" && <Button small label={img ? "Choose another image" : "Choose an image"} accessibilityLabel="Choose an image for your logo" onPress={pickImage} style={{ alignSelf: "flex-start" }} />}
       </Card>
 
       <Card>
         <H3 accessibilityRole="header">Scene and message</H3>
-        <Segmented label="Scene" value={scene} options={SCENES} onChange={(v) => update({ scene: v })} />
+        <Segmented label="Scene" showLabel value={scene} options={SCENES} onChange={(v) => update({ scene: v })} />
         <Field label="Message" value={pc.message} max={160} multiline onChange={(v) => update({ message: v })} />
         <Field label="From" value={pc.from} max={24} onChange={(v) => update({ from: v })} />
       </Card>

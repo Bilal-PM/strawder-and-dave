@@ -4,7 +4,8 @@ import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withSeque
 import { companionById, pack } from "@/domain";
 import { CompanionArt } from "./Art";
 import { useStore } from "@/state/store";
-import { Bubble, Tappable, tap } from "@/ui/kit";
+import { Bubble, Tappable } from "@/ui/kit";
+import { dur, ease, spring } from "@/ui/motion";
 
 /** Reading time: about 3 words a second plus thinking time. */
 export const readMs = (t: string) => 5000 + t.split(/\s+/).length * 380;
@@ -18,16 +19,17 @@ export function CompanionSpeaker({ id, size = 84, first, onLine }: { id?: string
   const n = useRef(0); const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reduce = useReducedMotion();
   const y = useSharedValue(0), sx = useSharedValue(1);
-  const style = useAnimatedStyle(() => ({ transform: [{ translateY: y.value }, { scaleX: sx.value }, { scaleY: 2 - sx.value }] }));
+  const style = useAnimatedStyle(() => ({ transform: [{ translateY: y.get() }, { scaleX: sx.get() }, { scaleY: 2 - sx.get() }] }));
   const say = useCallback((t: string) => { setText(t); if (timer.current) clearTimeout(timer.current); timer.current = setTimeout(() => setText(null), readMs(t)); }, []);
   useEffect(() => { if (first && chatty) say(first); return () => { if (timer.current) clearTimeout(timer.current); }; }, [first, chatty, say]);
   if (!comp) return null;
   const next = () => {
-    tap();
+    // Tappable already gives the light tap haptic. Each companion has its own small move; none with reduce motion on.
     if (!reduce) {
-      if (comp.anim === "hop") y.value = withSequence(withTiming(-14, { duration: 160 }), withSpring(0));
-      else if (comp.anim === "stretch") sx.value = withSequence(withTiming(1.15, { duration: 220 }), withSpring(1));
-      else sx.value = withSequence(withTiming(1.05, { duration: 60 }), withTiming(0.96, { duration: 60 }), withTiming(1.04, { duration: 60 }), withSpring(1));
+      const tick = dur.instant / 2;
+      if (comp.anim === "hop") y.set(withSequence(withTiming(-14, { duration: dur.quick, easing: ease.out }), withSpring(0, spring.lively)));
+      else if (comp.anim === "stretch") sx.set(withSequence(withTiming(1.12, { duration: dur.quick, easing: ease.out }), withSpring(1, spring.lively)));
+      else sx.set(withSequence(withTiming(1.05, { duration: tick }), withTiming(0.96, { duration: tick }), withTiming(1.03, { duration: tick }), withSpring(1, spring.settle)));
     }
     const k = n.current++;
     say(onLine?.(k) ?? comp.lines[k % comp.lines.length]);

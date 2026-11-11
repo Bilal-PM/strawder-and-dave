@@ -5,7 +5,7 @@ import { useStore } from "@/state/store";
 import { Body, BodyB, Button, Card, Eyebrow, H2, Row, Small, tap, usePal } from "@/ui/kit";
 import { Sketch } from "@/ui/sketch";
 import { useTheme } from "@/ui/theme";
-import { F, radius, space, type Palette } from "@/ui/tokens";
+import { F, radius, space, TOUCH, type Palette } from "@/ui/tokens";
 import { LEAF, paintSky } from "../art";
 import { useLive, useNow } from "../hooks";
 import { ago } from "../services/cache";
@@ -55,7 +55,7 @@ function PlacePicker({ onDone }: { onDone: () => void }) {
         {CITIES.map((p) => {
           const on = p.name === place.name;
           return (
-            <Pressable key={p.name} accessibilityRole="radio" accessibilityState={{ selected: on }} accessibilityLabel={p.name} onPress={() => { tap(); choose(p); }} style={{ minHeight: 40, justifyContent: "center", paddingHorizontal: 12, borderRadius: radius.m, borderWidth: 1.5, borderColor: on ? c.ink : c.line, backgroundColor: on ? c.ink : c.surface }}>
+            <Pressable key={p.name} accessibilityRole="radio" accessibilityState={{ selected: on }} accessibilityLabel={p.name} onPress={() => { tap(); choose(p); }} style={{ minHeight: TOUCH, justifyContent: "center", paddingHorizontal: 12, borderRadius: radius.m, borderWidth: 1.5, borderColor: on ? c.ink : c.line, backgroundColor: on ? c.ink : c.surface }}>
               <Text style={{ fontFamily: F.bodySemi, fontSize: 14, color: on ? c.bg : c.ink }}>{p.name}</Text>
             </Pressable>
           );

@@ -1,10 +1,11 @@
 /** Live departures in a split-flap board. Reasons link to the lessons that explain them. */
 import React, { useState } from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
-import Animated, { FlipInXUp, useReducedMotion } from "react-native-reanimated";
+import Animated, { FlipInXUp } from "react-native-reanimated";
 import { useStore } from "@/state/store";
 import { Card, tap } from "@/ui/kit";
 import { useTheme } from "@/ui/theme";
+import { dur, ease, stagger, useMotion } from "@/ui/motion";
 import { F, radius, space } from "@/ui/tokens";
 import { useLive, useNow } from "../hooks";
 import { ago } from "../services/cache";
@@ -52,10 +53,11 @@ function rowLabel(d: Departure) {
 }
 
 function BoardRow({ d, i }: { d: Departure; i: number }) {
-  const reduce = useReducedMotion();
+  const m = useMotion();
   const s = statusText(d);
+  // Rows flip in like a split-flap board; a plain fade with reduce motion on.
   return (
-    <Animated.View entering={reduce ? undefined : FlipInXUp.delay(i * 50).duration(320)} style={{ paddingVertical: 10, borderTopWidth: i ? 1 : 0, borderTopColor: B.line, gap: 6 }}>
+    <Animated.View entering={m.reduce ? m.fade() : FlipInXUp.delay(stagger(i, 40, 8)).duration(dur.base).easing(ease.out)} style={{ paddingVertical: 10, borderTopWidth: i ? 1 : 0, borderTopColor: B.line, gap: 6 }}>
       <View accessible accessibilityLabel={rowLabel(d)} style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
         <Flaps text={d.due} />
         <View style={{ flex: 1, minWidth: 0 }}>

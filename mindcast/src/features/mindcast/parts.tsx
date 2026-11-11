@@ -4,9 +4,10 @@ import { Text, View } from "react-native";
 import { pack, type Mindcast } from "@/domain";
 import { useStore } from "@/state/store";
 import { Body, BodyB, Card, Chip, Eyebrow, H3, Hand, Row, Small, usePal } from "@/ui/kit";
+import { useCountTo } from "@/ui/motion";
 import { Sketch } from "@/ui/sketch";
 import { useTheme } from "@/ui/theme";
-import { F } from "@/ui/tokens";
+import { F, onColour, radius, type as T } from "@/ui/tokens";
 import { checkIntegrity, type Integrity } from "./integrity";
 
 export const METHOD = [
@@ -17,6 +18,9 @@ export const METHOD = [
   { key: "principle", name: "Principle", ask: "What's the idea in one sentence?", help: "Plain words. Something someone could repeat to a colleague." },
   { key: "action", name: "Action", ask: "What can someone do this week?", help: "Start with a verb. Small enough to do in the next seven days." },
 ] as const;
+
+/** One line that explains the integrity score wherever it appears. */
+export const INTEGRITY_LINE = "The integrity score, out of 100, checks that a Mindcast is specific, explains why, carries relationships across, says where it stops working and avoids clichés.";
 
 export const integrityOf = (m: Pick<Mindcast, "observe" | "mechanism" | "mapping" | "limits" | "principle" | "action" | "title">): Integrity => checkIntegrity(m, pack.lexicon);
 
@@ -36,27 +40,35 @@ export function MethodLine({ at = -1, done = -1 }: { at?: number; done?: number 
       METHOD.forEach((m, i) => {
         const on = i === at, ok = i <= done;
         p.circle(xs[i], 40, on ? 30 : 22, ok ? c.good : on ? c.accent : c.surface, { strokeWidth: on ? 2.6 : 1.8 });
-        p.text(xs[i], 45, String(i + 1), 13, ok || on ? "#FFFFFF" : c.ink, "mono");
-        p.text(xs[i], 84, m.name, 20, on ? c.accent : c.ink, "hand");
+        p.text(xs[i], 47, String(i + 1), 16, ok ? onColour(c.good) : on ? onColour(c.accent) : c.ink, "mono");
+        p.text(xs[i], 86, m.name, 24, on ? c.accent : c.ink, "hand");
       });
     }} />
   );
 }
 
-/** Integrity score as a ring with the verdict. */
-export function ScoreBadge({ score, small }: { score: number; small?: boolean }) {
+/**
+ * Integrity score as a hand-drawn ring. `animate` draws the ring round to the score (and follows it as it changes,
+ * as in the composer); `caption` prints "Integrity" under it so the number never stands unexplained.
+ */
+export function ScoreBadge({ score, small, animate, caption }: { score: number; small?: boolean; animate?: boolean; caption?: boolean }) {
   const pal = usePal(); const { c } = useTheme();
-  const col = score >= 85 ? c.good : score >= 60 ? c.pass : c.warn;
+  const shown = useCountTo(score, { from: animate ? 0 : score });
+  const v = animate ? shown : score;
+  const col = v >= 85 ? c.good : v >= 60 ? c.pass : c.warn;
   const size = small ? 44 : 72;
   return (
-    <View style={{ width: size, height: size }} accessibilityLabel={`Integrity ${score} out of 100`}>
-      <Sketch w={80} h={80} pal={pal} deps={[score, col]} paint={(p) => {
-        p.circle(40, 40, 68, null, { stroke: c.line, strokeWidth: 6, roughness: 0.6 });
-        p.arc(40, 40, 68, 68, -Math.PI / 2, -Math.PI / 2 + Math.max(0.05, score / 100) * Math.PI * 2, false, null, { stroke: col, strokeWidth: 6, roughness: 0.7 });
-      }} />
-      <View style={{ position: "absolute", inset: 0, alignItems: "center", justifyContent: "center" }}>
-        <Text style={{ fontFamily: F.display, fontSize: small ? 15 : 22, color: c.ink }}>{score}</Text>
+    <View style={{ alignItems: "center", gap: 2 }} accessible accessibilityLabel={`Integrity score ${score} out of 100`}>
+      <View style={{ width: size, height: size }}>
+        <Sketch w={80} h={80} pal={pal} deps={[v, col]} paint={(p) => {
+          p.circle(40, 40, 68, null, { stroke: c.line, strokeWidth: 6, roughness: 0.6 });
+          p.arc(40, 40, 68, 68, -Math.PI / 2, -Math.PI / 2 + Math.max(0.05, v / 100) * Math.PI * 2, false, null, { stroke: col, strokeWidth: 6, roughness: 0.7 });
+        }} />
+        <View style={{ position: "absolute", inset: 0, alignItems: "center", justifyContent: "center" }}>
+          <Text style={{ fontFamily: F.display, fontSize: small ? 15 : 22, color: c.ink, fontVariant: ["tabular-nums"] }}>{v}</Text>
+        </View>
       </View>
+      {caption ? <Text style={{ fontFamily: F.mono, fontSize: T.label[0] - 1, letterSpacing: 0.8, textTransform: "uppercase", color: c.soft }}>Integrity</Text> : null}
     </View>
   );
 }
@@ -75,7 +87,7 @@ export function CastCard({ cast }: { cast: Mindcast }) {
         <ScoreBadge score={integ.score} small />
       </Row>
       <Hand style={{ color: c.accent }}>{cast.principle}</Hand>
-      <Small color={c.soft}>{cast.author} · {cast.audience.map((a) => a[0].toUpperCase() + a.slice(1)).join(", ")}</Small>
+      <Small color={c.soft}>{cast.author} · for {cast.audience.map((a) => audienceLabel[a] + "s").join(" and ")}</Small>
     </Card>
   );
 }
@@ -88,9 +100,9 @@ export function MappingView({ mapping }: { mapping: Mindcast["mapping"] }) {
       <Row style={{ justifyContent: "space-between" }}><Eyebrow color={c.ppe}>On the railway</Eyebrow><Eyebrow color={c.accent}>In your world</Eyebrow></Row>
       {mapping.map((m, i) => (
         <View key={i} style={{ flexDirection: "row", gap: 10, alignItems: "stretch" }}>
-          <View style={{ flex: 1, backgroundColor: c.sunk, borderRadius: 8, padding: 10, borderLeftWidth: 4, borderLeftColor: c.ppe }}><Small>{m.railway}</Small></View>
+          <View style={{ flex: 1, backgroundColor: c.sunk, borderRadius: radius.m, padding: 10, borderLeftWidth: 4, borderLeftColor: c.ppe }}><Small>{m.railway}</Small></View>
           <View style={{ width: 14, justifyContent: "center", alignItems: "center", gap: 6 }}>{[0, 1, 2].map((k) => <View key={k} style={{ width: 14, height: 3, backgroundColor: c.soft, borderRadius: 2 }} />)}</View>
-          <View style={{ flex: 1, backgroundColor: c.sunk, borderRadius: 8, padding: 10, borderRightWidth: 4, borderRightColor: c.accent }}><Small>{m.target}</Small></View>
+          <View style={{ flex: 1, backgroundColor: c.sunk, borderRadius: radius.m, padding: 10, borderRightWidth: 4, borderRightColor: c.accent }}><Small>{m.target}</Small></View>
         </View>
       ))}
     </View>
@@ -105,7 +117,7 @@ export function ChecksList({ integ }: { integ: Integrity }) {
       {integ.checks.map((k) => (
         <Row key={k.id} style={{ alignItems: "flex-start" }}>
           <View style={{ width: 22, height: 22, borderRadius: 11, alignItems: "center", justifyContent: "center", backgroundColor: k.pass ? c.good : c.sunk, borderWidth: 1.5, borderColor: k.pass ? c.good : c.line }}>
-            <Text style={{ color: k.pass ? "#fff" : c.soft, fontSize: 12, fontFamily: F.bodySemi }}>{k.pass ? "✓" : "·"}</Text>
+            <Text style={{ color: k.pass ? onColour(c.good) : c.soft, fontSize: 12, fontFamily: F.bodySemi }}>{k.pass ? "✓" : "·"}</Text>
           </View>
           <View style={{ flex: 1 }}>
             <BodyB style={{ fontSize: 15 }}>{k.label}{k.max ? `  ${k.points}/${k.max}` : ""}</BodyB>

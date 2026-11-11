@@ -1,12 +1,12 @@
 /** The Line tab: season header, stats, companion, the hand-drawn line of stops, and the season map. */
-import { router } from "expo-router";
+import { router, useIsFocused } from "expo-router";
 import React, { useMemo, useRef, useState } from "react";
 import { ScrollView, Text, View, type ScrollViewInstance } from "react-native";
 import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { pack } from "@/domain";
 import { useStore } from "@/state/store";
-import { Bubble, Button, Chip, Eyebrow, H1, H2, PaperGrid, Small, Stat, Hand } from "@/ui/kit";
+import { Bubble, Button, Card, Chip, Eyebrow, H1, H2, H3, PaperGrid, Row, Small, Stat, Hand } from "@/ui/kit";
 import { useTheme } from "@/ui/theme";
 import { F, radius, space } from "@/ui/tokens";
 import { lineCompanion, pick, seasonInfo, seasonSlots } from "./content";
@@ -16,6 +16,7 @@ import { Sheet, useEnter } from "./ui";
 export function LineScreen() {
   const { c } = useTheme();
   const ins = useSafeAreaInsets();
+  const focused = useIsFocused();
   const progress = useStore((s) => s.progress);
   const unlocked = useStore((s) => s.companions.unlocked);
   const season = seasonInfo(progress.season);
@@ -39,7 +40,9 @@ export function LineScreen() {
   const facts = here?.keyFacts ?? [];
   const sayings = [...facts.map((f) => (comp?.tag ?? "") + f.text), ...(comp?.lines ?? [])];
   const greeting = say === 0 && comp ? `${comp.hello} ${sayings[0] ?? ""}`.trim() : pick(sayings, say) ?? comp?.hello ?? "";
-  const enter = [useEnter(0), useEnter(80), useEnter(160), useEnter(240)];
+  const enter = [useEnter(0), useEnter(55), useEnter(110), useEnter(165), useEnter(220)];
+  const open = (id: string) => router.push({ pathname: "/lesson/[id]", params: { id } });
+  const hereDone = here ? progress.completed.includes(here.id) : true;
 
   const scrollToCurrent = (w: number) => {
     if (scrolled.current || !w || current < 3) return;
@@ -64,7 +67,7 @@ export function LineScreen() {
               <Eyebrow>Season {season?.n ?? progress.season}{season?.time ? ` · ${season.time}` : ""}</Eyebrow>
             </View>
             <H1 accessibilityRole="header">{season?.title ?? "The Line"}</H1>
-            {season?.event ? <Small color={c.soft}>Season event: {season.event}</Small> : null}
+            <Small color={c.soft}>{slots.length} stops, one topic each. Finish a stop to open the next.{season?.event ? ` This season's event: ${season.event.toLowerCase()}.` : ""}</Small>
           </Animated.View>
 
           <Animated.View entering={enter[1]} style={{ flexDirection: "row", gap: space.s }}>
@@ -72,6 +75,24 @@ export function LineScreen() {
             <Stat value={progress.miles} label="Miles" />
             <Stat value={progress.streak} label={progress.streak === 1 ? "Day streak" : "Days streak"} />
           </Animated.View>
+
+          {here && !hereDone ? (
+            <Animated.View entering={enter[4]}>
+              <Card tone="pass" onPress={() => open(here.id)} accessibilityLabel={`Your next stop: stop ${current + 1}, ${here.title}`}>
+                <Eyebrow>Your next stop</Eyebrow>
+                <Row gap={space.m} style={{ alignItems: "flex-start" }}>
+                  <View style={{ width: 44, height: 44, borderRadius: 22, borderWidth: 2, borderColor: c.ink, alignItems: "center", justifyContent: "center", backgroundColor: c.pass }}>
+                    <Text style={{ fontFamily: F.display, fontSize: 18, color: "#1B1F24" }}>{current + 1}</Text>
+                  </View>
+                  <View style={{ flex: 1, gap: 2 }}>
+                    <H3>{here.title}</H3>
+                    <Small color={c.soft} numberOfLines={2}>{here.hook}</Small>
+                  </View>
+                </Row>
+                <Button label={progress.completed.length ? "Carry on" : "Start the first stop"} kind="primary" onPress={() => open(here.id)} />
+              </Card>
+            </Animated.View>
+          ) : null}
 
           {comp && greeting ? (
             <Animated.View entering={enter[2]}>
@@ -85,7 +106,7 @@ export function LineScreen() {
               <Hand color={c.soft}>{progress.completed.filter((id) => slots.some((l) => l?.id === id)).length} of {slots.length} done</Hand>
             </View>
             <View onLayout={(e) => scrollToCurrent(e.nativeEvent.layout.width)}>
-              <LineMap slots={slots} states={states} current={current} scores={scores} onSelect={setSel} />
+              <LineMap slots={slots} states={states} current={current} scores={scores} onSelect={setSel} active={focused} />
             </View>
           </Animated.View>
 
@@ -129,11 +150,11 @@ export function LineScreen() {
             {selLesson ? <Text style={{ fontFamily: F.hand, fontSize: 26, lineHeight: 28, color: c.ink }}>{selLesson.hook}</Text> : <Small color={c.soft}>This stop is still being written.</Small>}
             {selLesson && (selState === "locked" ? (
               <>
-                <Small color={c.soft}>Finish stop {current + 1} to open the line further.</Small>
-                <Button label="Locked" kind="secondary" disabled onPress={() => {}} />
+                <Small color={c.soft}>Stops open in order. Finish stop {current + 1} first, then this one opens.</Small>
+                <Button label={`Go to stop ${current + 1} instead`} kind="primary" onPress={() => { setSel(null); if (here) open(here.id); }} />
               </>
             ) : (
-              <Button label={selState === "done" ? "Revisit this stop" : "Start"} kind={selState === "current" ? "pass" : "primary"} onPress={() => { const id = selLesson.id; setSel(null); router.push({ pathname: "/lesson/[id]", params: { id } }); }} />
+              <Button label={selState === "done" ? "Revisit this stop" : selState === "current" ? "Start this stop" : "Open this stop"} kind="primary" onPress={() => { const id = selLesson.id; setSel(null); open(id); }} />
             ))}
           </>
         )}

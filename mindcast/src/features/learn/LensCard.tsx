@@ -1,10 +1,11 @@
 /** The Mindcast lens: Observe → Mechanism → Mapping → Limits → Principle → Action. */
 import React from "react";
 import { Text, View } from "react-native";
-import Animated, { FadeIn, useReducedMotion } from "react-native-reanimated";
+import Animated from "react-native-reanimated";
 import type { Mindcast } from "@/domain/types";
 import { useStore } from "@/state/store";
-import { Body, Button, Eyebrow, H2, Small, tap } from "@/ui/kit";
+import { Body, Button, Eyebrow, H2, Small } from "@/ui/kit";
+import { useMotion } from "@/ui/motion";
 import { useTheme } from "@/ui/theme";
 import { F, radius, space } from "@/ui/tokens";
 import { SourceChips, announce } from "./ui";
@@ -29,14 +30,13 @@ function Step({ n, label, children, last }: { n: number; label: string; children
 
 export function LensCard({ lens }: { lens: Mindcast }) {
   const { c } = useTheme();
-  const reduce = useReducedMotion();
+  const m = useMotion();
   const items = useStore((s) => s.loop.items);
   const added = items.some((it) => it.text === lens.action);
   const add = () => {
     if (added) return;
     useStore.getState().set((s) => ({ loop: { ...s.loop, items: [...s.loop.items, { id: `loop-${lens.id}-${Date.now()}`, text: lens.action, stage: "plan" }] } }));
-    tap("success");
-    announce("Added to your Loop");
+    announce("Added to your Loop, your action list on the You tab");
   };
   return (
     <View style={{ backgroundColor: c.surface, borderRadius: radius.l, borderWidth: 1, borderColor: c.line, borderTopWidth: 6, borderTopColor: c.accent, padding: space.xl, gap: space.l }}>
@@ -72,11 +72,12 @@ export function LensCard({ lens }: { lens: Mindcast }) {
             <Text style={{ fontFamily: F.hand, fontSize: 24, lineHeight: 26, color: c.ink }}>{lens.action}</Text>
           </View>
           {added ? (
-            <Animated.View entering={reduce ? undefined : FadeIn} style={{ minHeight: 48, flexDirection: "row", alignItems: "center", gap: 8 }}>
-              <Text style={{ fontFamily: F.bodySemi, fontSize: 16, color: c.good }}>✓ In your Loop, ready to plan</Text>
+            <Animated.View entering={m.fade()} style={{ minHeight: 48, justifyContent: "center", gap: 2 }}>
+              <Text style={{ fontFamily: F.bodySemi, fontSize: 16, color: c.good }}>✓ Added to your Loop</Text>
+              <Small color={c.soft}>Your Loop is your action list, on the You tab.</Small>
             </Animated.View>
           ) : (
-            <Button label="Add this action to my Loop" kind="primary" onPress={add} />
+            <Button label="Add this action to my Loop" kind="primary" haptic="success" onPress={add} />
           )}
         </Step>
       </View>

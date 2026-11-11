@@ -1,11 +1,12 @@
 /** The season line: 20 stops on a gently curving, hand-drawn track. */
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, Text, View, type LayoutChangeEvent } from "react-native";
-import Animated, { Easing, cancelAnimation, useAnimatedStyle, useReducedMotion, useSharedValue, withRepeat, withSequence, withTiming } from "react-native-reanimated";
+import Animated, { cancelAnimation, useAnimatedStyle, useReducedMotion, useSharedValue, withDelay, withRepeat, withTiming } from "react-native-reanimated";
 import type { Lesson } from "@/domain/types";
 import { usePal } from "@/ui/kit";
 import { Sketch } from "@/ui/sketch";
 import { useTheme } from "@/ui/theme";
+import { dur, ease } from "@/ui/motion";
 import { F } from "@/ui/tokens";
 
 export const MAP_W = 340;
@@ -32,7 +33,11 @@ function sample(n: number) {
   return out;
 }
 
-export function LineMap({ slots, states, current, scores, onSelect }: { slots: (Lesson | undefined)[]; states: StopState[]; current: number; scores: (number | undefined)[]; onSelect: (i: number) => void }) {
+/**
+ * `active` is false while the Line tab is behind another screen: the map then holds its last shown position,
+ * so the train glides and the finished stop is stamped when the learner actually comes back to see it.
+ */
+export function LineMap({ slots, states, current, scores, onSelect, active = true }: { slots: (Lesson | undefined)[]; states: StopState[]; current: number; scores: (number | undefined)[]; onSelect: (i: number) => void; active?: boolean }) {
   const { c } = useTheme();
   const pal = usePal();
   const reduce = useReducedMotion();
@@ -43,21 +48,33 @@ export function LineMap({ slots, states, current, scores, onSelect }: { slots: (
   const samples = useMemo(() => sample(n), [n]);
   const key = states.join(",");
 
-  // train position (animated between stops)
-  const [cx, cy] = stopXY(current);
-  const tx = useSharedValue(cx), ty = useSharedValue(cy), bob = useSharedValue(0);
+  // What the learner last saw. Stops that became done since then get a one-off stamp when they look again.
+  const seen = useRef<{ key: string; current: number } | null>(null);
+  const [shownCurrent, setShownCurrent] = useState(current);
+  const [stamps, setStamps] = useState<number[]>([]);
   useEffect(() => {
-    const [x, y] = stopXY(current);
+    if (!active) return;
+    const before = seen.current;
+    if (before && before.key !== key) {
+      const old = before.key.split(",");
+      setStamps(states.map((st, i) => (st === "done" && old[i] !== "done" ? i : -1)).filter((i) => i >= 0));
+    }
+    seen.current = { key, current };
+    setShownCurrent(current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active, key, current]);
+
+  // train position: glides between stops (after any stamp has landed)
+  const [cx, cy] = stopXY(shownCurrent);
+  const tx = useSharedValue(cx), ty = useSharedValue(cy);
+  useEffect(() => {
+    const [x, y] = stopXY(shownCurrent);
     if (reduce) { tx.set(x); ty.set(y); return; }
-    tx.set(withTiming(x, { duration: 1100, easing: Easing.inOut(Easing.cubic) }));
-    ty.set(withTiming(y, { duration: 1100, easing: Easing.inOut(Easing.cubic) }));
-  }, [current, reduce, tx, ty]);
-  useEffect(() => {
-    if (reduce) { cancelAnimation(bob); bob.set(0); return; }
-    bob.set(withRepeat(withSequence(withTiming(-2.5, { duration: 650 }), withTiming(0, { duration: 650 })), -1, true));
-    return () => cancelAnimation(bob);
-  }, [reduce, bob]);
-  const trainStyle = useAnimatedStyle(() => ({ transform: [{ translateX: tx.get() * k - 26 }, { translateY: ty.get() * k - 46 + bob.get() }] }));
+    const delay = stamps.length ? dur.slow : 0;
+    tx.set(withDelay(delay, withTiming(x, { duration: dur.glide, easing: ease.inOut })));
+    ty.set(withDelay(delay, withTiming(y, { duration: dur.glide, easing: ease.inOut })));
+  }, [shownCurrent, reduce, tx, ty, stamps.length]);
+  const trainStyle = useAnimatedStyle(() => ({ transform: [{ translateX: tx.get() * k - 26 }, { translateY: ty.get() * k - 46 }] }));
 
   return (
     <View onLayout={(e: LayoutChangeEvent) => setW(e.nativeEvent.layout.width)}>
@@ -94,6 +111,8 @@ export function LineMap({ slots, states, current, scores, onSelect }: { slots: (
         });
         p.text(stopXY(n - 1)[0], H - 8, "end of season", 16, c.soft, "hand");
       }} />
+      {w > 0 && states[shownCurrent] === "current" && <Pulse x={stopXY(shownCurrent)[0] * k} y={stopXY(shownCurrent)[1] * k} size={40 * k} color={c.pass} />}
+      {w > 0 && stamps.map((i) => <Stamp key={`stamp-${i}`} x={stopXY(i)[0] * k} y={stopXY(i)[1] * k} size={28 * k} color={c.good} />)}
       {w > 0 && (
         <Animated.View pointerEvents="none" style={[{ position: "absolute", left: 0, top: 0 }, trainStyle]}>
           <Train />
@@ -120,6 +139,33 @@ export function LineMap({ slots, states, current, scores, onSelect }: { slots: (
       })}
     </View>
   );
+}
+
+/** A slow ring breathing out from the current stop: "you are here". Nothing moves with reduce motion on. */
+function Pulse({ x, y, size, color }: { x: number; y: number; size: number; color: string }) {
+  const reduce = useReducedMotion();
+  const t = useSharedValue(0);
+  useEffect(() => {
+    if (reduce) { cancelAnimation(t); t.set(0); return; }
+    t.set(withRepeat(withTiming(1, { duration: dur.pulse, easing: ease.out }), -1, false));
+    return () => cancelAnimation(t);
+  }, [reduce, t]);
+  const st = useAnimatedStyle(() => ({ opacity: 0.75 * (1 - t.get()), transform: [{ scale: 0.9 + t.get() * 0.7 }] }));
+  if (reduce) return null;
+  return <Animated.View pointerEvents="none" style={[{ position: "absolute", left: x - size / 2, top: y - size / 2, width: size, height: size, borderRadius: size / 2, borderWidth: 3, borderColor: color }, st]} />;
+}
+
+/** One-off confirmation on a stop that has just been finished: a green ring swells out and fades. */
+function Stamp({ x, y, size, color }: { x: number; y: number; size: number; color: string }) {
+  const reduce = useReducedMotion();
+  const t = useSharedValue(0);
+  useEffect(() => {
+    if (reduce) return;
+    t.set(withTiming(1, { duration: dur.slow + 200, easing: ease.out }));
+  }, [reduce, t]);
+  const st = useAnimatedStyle(() => ({ opacity: 1 - t.get(), transform: [{ scale: 1 + t.get() * 1.2 }] }));
+  if (reduce) return null;
+  return <Animated.View pointerEvents="none" style={[{ position: "absolute", left: x - size / 2, top: y - size / 2, width: size, height: size, borderRadius: size / 2, borderWidth: 4, borderColor: color }, st]} />;
 }
 
 function Train() {

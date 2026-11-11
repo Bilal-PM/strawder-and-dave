@@ -4,21 +4,16 @@ import React, { useState } from "react";
 import { Linking, Pressable, Text, View } from "react-native";
 import { trainById } from "@/domain";
 import type { Source, TrainClass } from "@/domain/types";
-import { Body, Button, Card, Chip, Eyebrow, H1, H3, Hand, Row, Screen, Segmented, Small, tap } from "@/ui/kit";
+import { BackButton, Body, Button, Card, Chip, EmptyState, Enter, Eyebrow, H1, H3, Hand, Row, Screen, Segmented, Small } from "@/ui/kit";
 import { useTheme } from "@/ui/theme";
 import { F, space } from "@/ui/tokens";
 import { ScaleStrip, SideView } from "./art";
 import { classLivery, toDraw } from "./model";
 import Viewer3D from "./Viewer3D";
 
+/** The shared back control, falling back to the Trains tab when there is no history (a deep link). */
 export function BackLink({ label = "Back" }: { label?: string }) {
-  const { c } = useTheme();
-  return (
-    <Pressable accessibilityRole="button" accessibilityLabel={label} hitSlop={8} onPress={() => { tap(); if (router.canGoBack()) router.back(); else router.replace("/trains"); }}
-      style={{ alignSelf: "flex-start", minHeight: 44, justifyContent: "center", paddingRight: 12 }}>
-      <Text style={{ fontFamily: F.bodySemi, fontSize: 16, color: c.accent }}>‹ {label}</Text>
-    </Pressable>
-  );
+  return <BackButton label={label} fallback="/trains" />;
 }
 
 const metres = (v: number, dp: number) => `${v.toFixed(dp)} m`;
@@ -83,9 +78,7 @@ export default function TrainDetail({ id }: { id: string }) {
     return (
       <Screen>
         <BackLink label="Trains" />
-        <H1>Train not found</H1>
-        <Body>We couldn't find that class. It may have been renamed.</Body>
-        <Button label="See all trains" onPress={() => router.replace("/trains")} />
+        <EmptyState eyebrow="Trains" title="Train not found" body="We couldn't find that class. It may have been renamed." action="See all trains" onAction={() => router.replace("/trains")} />
       </Screen>
     );
   }
@@ -93,10 +86,10 @@ export default function TrainDetail({ id }: { id: string }) {
   return (
     <Screen>
       <BackLink label="Trains" />
-      <View style={{ gap: 4 }}>
+      <Enter style={{ gap: 4 }}>
         <Eyebrow>{t.type}</Eyebrow>
         <H1 accessibilityRole="header">{t.name}</H1>
-      </View>
+      </Enter>
       <Segmented label="Choose a view" value={view} onChange={setView} options={[{ value: "side", label: "Side view" }, { value: "3d", label: "3D view" }]} />
       {view === "side" ? (
         <Card style={{ paddingHorizontal: 8 }}>

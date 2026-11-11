@@ -2,10 +2,11 @@
 import { router } from "expo-router";
 import React, { useMemo, useState } from "react";
 import { Pressable, Text, View } from "react-native";
-import Animated, { FadeIn, useReducedMotion } from "react-native-reanimated";
+import Animated from "react-native-reanimated";
 import type { Audience, Lesson } from "@/domain/types";
 import { useStore } from "@/state/store";
-import { Body, Button, Eyebrow, H1, Screen, Small, tap } from "@/ui/kit";
+import { BackButton, Body, Button, EmptyState, Eyebrow, H1, Note, Screen, Small, tap } from "@/ui/kit";
+import { useMotion } from "@/ui/motion";
 import { useTheme } from "@/ui/theme";
 import { F, radius, space } from "@/ui/tokens";
 import { Celebration, type CelebrationData } from "./Celebration";
@@ -18,7 +19,7 @@ import { Quiz } from "./Quiz";
 import { Pills, SourceChips, useEnter } from "./ui";
 
 const AUDIENCES: { value: Audience; label: string; note: string }[] = [
-  { value: "explorer", label: "Explorer", note: "Short and simple. Great for younger learners." },
+  { value: "explorer", label: "Explorer", note: "Short and simple, for younger learners." },
   { value: "starter", label: "Starter", note: "The full picture in plain English." },
   { value: "leader", label: "Leader", note: "What it means when you run the work." },
 ];
@@ -41,7 +42,7 @@ function goBack() {
 
 export function LessonScreen({ lesson }: { lesson: Lesson }) {
   const { c } = useTheme();
-  const reduce = useReducedMotion();
+  const m = useMotion();
   const profileAudience = useStore((s) => s.profile.audience);
   const best = useStore((s) => s.progress.quizBest[lesson.id]);
   const completed = useStore((s) => s.progress.completed.includes(lesson.id));
@@ -53,6 +54,7 @@ export function LessonScreen({ lesson }: { lesson: Lesson }) {
   const season = seasonInfo(lesson.season);
   const total = lesson.quiz.length;
   const hookEnter = useEnter(60);
+  const [grownUp, setGrownUp] = useState(false);
 
   const finish = () => {
     const s = score ?? 0;
@@ -61,7 +63,6 @@ export function LessonScreen({ lesson }: { lesson: Lesson }) {
     const after = useStore.getState().progress;
     const next = lessonAt(lesson.season, lesson.stop + 1);
     const comp = lineCompanion(useStore.getState().companions.unlocked);
-    tap("success");
     setCele({ lesson, miles: after.miles - before.miles, score: s, total, next, newlyOpen: before.stop < lesson.stop + 1 && after.stop >= lesson.stop + 1, who: comp?.name, line: comp ? pick(comp.lines, lesson.stop) : undefined });
   };
 
@@ -71,11 +72,7 @@ export function LessonScreen({ lesson }: { lesson: Lesson }) {
     <View style={{ flex: 1 }}>
       <Screen>
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-          <Pressable accessibilityRole="button" accessibilityLabel="Back to the Line" onPress={() => { tap(); goBack(); }} hitSlop={6}
-            style={({ pressed }) => ({ minHeight: 44, minWidth: 44, paddingHorizontal: 12, borderRadius: radius.m, borderWidth: 1.5, borderColor: c.line, backgroundColor: c.surface, flexDirection: "row", alignItems: "center", gap: 6, opacity: pressed ? 0.8 : 1 })}>
-            <Text style={{ fontFamily: F.bodySemi, fontSize: 18, color: c.ink }}>‹</Text>
-            <Text style={{ fontFamily: F.bodySemi, fontSize: 15, color: c.ink }}>Line</Text>
-          </Pressable>
+          <BackButton label="Line" onPress={goBack} />
           <Text style={{ fontFamily: F.mono, fontSize: 12, letterSpacing: 1, color: c.soft }}>STOP {lesson.stop} OF {STOPS}{completed ? " · DONE" : ""}</Text>
         </View>
 
@@ -104,7 +101,7 @@ export function LessonScreen({ lesson }: { lesson: Lesson }) {
         </Section>
 
         <Section label={aud === "explorer" ? "The simple version" : aud === "leader" ? "For leaders" : "How it works"}>
-          <Animated.View key={aud} entering={reduce ? undefined : FadeIn.duration(260)} style={{ gap: space.m }}>
+          <Animated.View key={aud} entering={m.fade()} style={{ gap: space.m }}>
             {depthText.map((t, i) => <GlossaryText key={i} text={t} terms={terms} onTerm={openTerm} size={aud === "explorer" ? "big" : "body"} />)}
           </Animated.View>
           {terms.length > 0 && (
@@ -142,9 +139,20 @@ export function LessonScreen({ lesson }: { lesson: Lesson }) {
           <Quiz questions={lesson.quiz} best={best} onDone={(s) => setScore(s)} />
         </Section>
 
-        <Section label="Carry it into your work">
-          <LensCard lens={lesson.lens} />
-        </Section>
+        {aud === "explorer" ? (
+          <Section label="For grown-ups">
+            {grownUp ? <LensCard lens={lesson.lens} /> : (
+              <View style={{ backgroundColor: c.surface, borderRadius: radius.l, borderWidth: 1, borderColor: c.line, padding: space.l, gap: space.m }}>
+                <Body color={c.soft}>There is a part of this stop for grown-ups: what it teaches about leading people at work.</Body>
+                <Button label="Show the grown-up part" onPress={() => setGrownUp(true)} />
+              </View>
+            )}
+          </Section>
+        ) : (
+          <Section label="Carry it into your work">
+            <LensCard lens={lesson.lens} />
+          </Section>
+        )}
 
         {lesson.action && lesson.action !== lesson.lens.action && (
           <Section label="Try this week">
@@ -155,24 +163,25 @@ export function LessonScreen({ lesson }: { lesson: Lesson }) {
         )}
 
         <View style={{ gap: space.s, marginTop: space.xl }}>
-          <Button label={completed ? "Finish stop again" : "Finish stop"} kind="primary" disabled={score === null} onPress={finish} accessibilityLabel={score === null ? "Finish stop. Answer the quiz first." : "Finish stop"} />
-          {score === null && <Small color={c.soft} center>Answer the three questions to finish this stop.</Small>}
+          <Button label={completed ? "Finish stop again" : "Finish stop"} kind="primary" haptic="success" disabled={score === null} onPress={finish} accessibilityLabel={score === null ? "Finish stop. Answer the quiz first." : "Finish stop"} />
+          {score === null && <Small color={c.soft} center>Answer the {total === 3 ? "three" : total} questions above to finish this stop.</Small>}
+        </View>
+
+        <View style={{ marginTop: space.l }}>
+          <Note title="About the figures">{"Figures and limits differ from railway to railway. Groundwork explains the principle; at work, always follow your own railway's standards."}</Note>
         </View>
       </Screen>
       {sheet}
-      <Celebration data={cele} onDone={() => { setCele(null); router.navigate("/line"); }} />
+      <Celebration data={cele} onDone={() => { setCele(null); router.navigate("/line"); }} onNext={(next) => { setCele(null); router.replace({ pathname: "/lesson/[id]", params: { id: next.id } }); }} />
     </View>
   );
 }
 
 export function LessonMissing() {
-  const { c } = useTheme();
   return (
     <Screen>
-      <Eyebrow>Not found</Eyebrow>
-      <H1>This stop isn't on the line yet</H1>
-      <Body color={c.soft}>It may still be being written. Head back and pick another stop.</Body>
-      <Button label="Back to the Line" kind="primary" onPress={() => router.replace("/line")} />
+      <BackButton label="Line" onPress={goBack} />
+      <EmptyState eyebrow="Not found" title="This stop isn't on the line yet" body="It may still be being written. Head back and pick another stop." action="Back to the Line" onAction={() => router.replace("/line")} />
     </Screen>
   );
 }

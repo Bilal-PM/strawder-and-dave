@@ -1,35 +1,46 @@
 import { router } from "expo-router";
 import { useState } from "react";
-import { Pressable, TextInput, View } from "react-native";
-import Animated, { FadeInDown, FadeOut } from "react-native-reanimated";
+import { Pressable, View } from "react-native";
+import Animated from "react-native-reanimated";
 import { pack, type Audience } from "@/domain";
 import { CompanionSpeaker } from "@/features/companions/Companion";
 import { useStore } from "@/state/store";
-import { Body, BodyB, Button, Eyebrow, H1, Hand, Hero, Screen, Small, tap, usePal } from "@/ui/kit";
+import { Body, BodyB, Button, Eyebrow, H1, Hand, Hero, Input, Screen, Small, tap, usePal } from "@/ui/kit";
+import { useMotion } from "@/ui/motion";
 import { Sketch } from "@/ui/sketch";
 import { useTheme } from "@/ui/theme";
-import { F, radius } from "@/ui/tokens";
+import { radius, space } from "@/ui/tokens";
 
 const WHO: { v: Audience; t: string; d: string }[] = [
-  { v: "explorer", t: "Explorer", d: "Curious about trains. Stories, games and drawings. Great with a grown-up." },
-  { v: "starter", t: "Starter", d: "Student, career changer or new to rail. How it works and how to get in." },
-  { v: "leader", t: "Leader", d: "Working in or around the railway. What it teaches about delivering at scale." },
+  { v: "explorer", t: "Explorer", d: "For children. Short, simple lessons with drawings and games. Great with a grown-up." },
+  { v: "starter", t: "Starter", d: "Student, career changer or new to rail. How it works, in plain English." },
+  { v: "leader", t: "Leader", d: "Working in or around the railway. A refresher, and what it teaches about delivering at scale." },
 ];
+
+/** Three short bars showing where you are in setup. */
+function Progress({ step }: { step: number }) {
+  const { c } = useTheme();
+  return (
+    <View style={{ flexDirection: "row", gap: 6 }} accessible accessibilityLabel={`Step ${step} of 3`}>
+      {[1, 2, 3].map((k) => <View key={k} style={{ flex: 1, height: 4, borderRadius: 2, backgroundColor: k <= step ? c.ink : c.line }} />)}
+    </View>
+  );
+}
 
 export default function Onboarding() {
   const { c } = useTheme(); const pal = usePal();
+  const m = useMotion();
   const [step, setStep] = useState(0);
   const [who, setWho] = useState<Audience>("starter");
   const [name, setName] = useState("");
   const finish = () => {
-    tap("success");
     useStore.getState().set((s) => ({ onboarded: true, profile: { ...s.profile, name: name.trim(), audience: who } }));
     router.replace("/");
   };
   return (
     <Screen>
       {step === 0 && (
-        <Animated.View entering={FadeInDown.duration(500)} exiting={FadeOut} style={{ gap: 18 }}>
+        <Animated.View key="s0" entering={m.rise()} style={{ gap: 18 }}>
           <Sketch w={360} h={220} pal={pal} deps={[c.ppe, c.accent]} accessibilityLabel="A train crossing a viaduct at sunrise" paint={(p) => {
             p.circle(290, 60, 70, c.pass, { strokeWidth: 1.5 });
             p.poly([[0, 170], [80, 110], [160, 170]], null, { stroke: c.soft, fillStyle: "hachure", fill: c.line, hachureGap: 8 });
@@ -48,41 +59,48 @@ export default function Onboarding() {
         </Animated.View>
       )}
       {step === 1 && (
-        <Animated.View entering={FadeInDown.duration(400)} style={{ gap: 14 }}>
+        <Animated.View key="s1" entering={m.next()} style={{ gap: 14 }}>
+          <Progress step={1} />
           <Eyebrow>Step 1 of 3</Eyebrow>
           <H1>Who's learning?</H1>
-          <Small color={c.soft}>Every lesson comes at three depths. You can switch any time.</Small>
+          <Small color={c.soft}>Every lesson comes at three depths. This sets where lessons start, and you can switch inside any lesson or on the You tab.</Small>
           {WHO.map((w) => {
             const on = who === w.v;
             return (
-              <Pressable key={w.v} accessibilityRole="radio" accessibilityState={{ selected: on }} onPress={() => { tap(); setWho(w.v); }} style={{ backgroundColor: c.surface, borderWidth: on ? 2.5 : 1, borderColor: on ? c.ink : c.line, borderRadius: radius.l, padding: 16, gap: 4 }}>
-                <BodyB style={{ fontSize: 19 }}>{w.t}</BodyB>
+              <Pressable key={w.v} accessibilityRole="radio" accessibilityLabel={`${w.t}. ${w.d}`} accessibilityState={{ selected: on }} onPress={() => { tap(); setWho(w.v); }} style={({ pressed }) => ({ backgroundColor: pressed ? c.sunk : c.surface, borderWidth: on ? 2.5 : 1, borderColor: on ? c.ink : c.line, borderRadius: radius.l, padding: space.l, margin: on ? 0 : 1.5, gap: 4 })}>
+                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                  <BodyB style={{ fontSize: 19 }}>{w.t}</BodyB>
+                  <View style={{ width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: on ? c.ink : c.line, alignItems: "center", justifyContent: "center" }}>{on && <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: c.ink }} />}</View>
+                </View>
                 <Small color={c.soft}>{w.d}</Small>
               </Pressable>
             );
           })}
           <Button label="Next" kind="primary" onPress={() => setStep(2)} />
+          <Button label="Back" kind="ghost" onPress={() => setStep(0)} />
         </Animated.View>
       )}
       {step === 2 && (
-        <Animated.View entering={FadeInDown.duration(400)} style={{ gap: 14 }}>
+        <Animated.View key="s2" entering={m.next()} style={{ gap: 14 }}>
+          <Progress step={2} />
           <Eyebrow>Step 2 of 3</Eyebrow>
           <H1>What should we call you?</H1>
-          <Small color={c.soft}>Optional. It stays on this phone.</Small>
-          <TextInput accessibilityLabel="Your first name" value={name} onChangeText={setName} placeholder="First name" placeholderTextColor={c.soft} autoCapitalize="words" maxLength={30}
-            style={{ fontFamily: F.body, fontSize: 18, color: c.ink, backgroundColor: c.surface, borderWidth: 1.5, borderColor: c.line, borderRadius: radius.m, padding: 14 }} />
+          <Small color={c.soft}>{who === "explorer" ? "Optional. A first name or a nickname is fine. It stays on this phone." : "Optional. It stays on this phone."}</Small>
+          <Input accessibilityLabel="Your first name" value={name} onChangeText={setName} placeholder={who === "explorer" ? "First name or nickname" : "First name"} autoCapitalize="words" maxLength={30} returnKeyType="next" onSubmitEditing={() => setStep(3)} />
           <Button label="Next" kind="primary" onPress={() => setStep(3)} />
           <Button label="Back" kind="ghost" onPress={() => setStep(1)} />
         </Animated.View>
       )}
       {step === 3 && (
-        <Animated.View entering={FadeInDown.duration(400)} style={{ gap: 14 }}>
+        <Animated.View key="s3" entering={m.next()} style={{ gap: 14 }}>
+          <Progress step={3} />
           <Eyebrow>Step 3 of 3</Eyebrow>
           <H1>Meet your companion</H1>
           <Small color={c.soft}>Tap them. They know a thing or two, and they'll keep you company on the line.</Small>
           <CompanionSpeaker id="sleeper" size={110} first={pack.companions.find((x) => x.id === "sleeper")?.hello} />
           <View style={{ height: 8 }} />
-          <Button label={name ? `Let's go, ${name}` : "Let's go"} kind="primary" onPress={finish} />
+          <Button label={name.trim() ? `Let's go, ${name.trim()}` : "Let's go"} kind="primary" haptic="success" onPress={finish} />
+          <Button label="Back" kind="ghost" onPress={() => setStep(2)} />
         </Animated.View>
       )}
     </Screen>

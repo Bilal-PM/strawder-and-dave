@@ -1,16 +1,17 @@
 /** Three questions, one at a time, with instant feedback, the `why`, haptics and a score. */
 import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
-import Animated, { FadeIn, FadeInRight, useReducedMotion } from "react-native-reanimated";
+import Animated from "react-native-reanimated";
 import type { Quiz as Q } from "@/domain/types";
 import { Body, Button, Eyebrow, H2, H3, tap } from "@/ui/kit";
+import { useMotion } from "@/ui/motion";
 import { useTheme } from "@/ui/theme";
 import { F, radius, space } from "@/ui/tokens";
 import { announce } from "./ui";
 
 export function Quiz({ questions, onDone, best }: { questions: Q[]; onDone: (score: number) => void; best?: number }) {
   const { c } = useTheme();
-  const reduce = useReducedMotion();
+  const m = useMotion();
   const [i, setI] = useState(0);
   const [picked, setPicked] = useState<number | null>(null);
   const [score, setScore] = useState(0);
@@ -21,9 +22,9 @@ export function Quiz({ questions, onDone, best }: { questions: Q[]; onDone: (sco
   if (finished) {
     const msg = score === total ? "Full marks." : score === 0 ? "Worth another go: read the why and try again." : "Good. Have another look at the one you missed.";
     return (
-      <Animated.View entering={reduce ? undefined : FadeIn.duration(300)} style={{ backgroundColor: c.surface, borderRadius: radius.l, borderWidth: 1, borderColor: c.line, padding: space.xl, gap: space.m, alignItems: "flex-start" }}>
+      <Animated.View entering={m.rise()} style={{ backgroundColor: c.surface, borderRadius: radius.l, borderWidth: 1, borderColor: c.line, padding: space.xl, gap: space.m, alignItems: "flex-start" }}>
         <Eyebrow>Quiz score</Eyebrow>
-        <Text accessibilityLabel={`${score} out of ${total}`} style={{ fontFamily: F.display, fontSize: 56, lineHeight: 60, color: score === total ? c.good : c.ink, fontVariant: ["tabular-nums"] }}>{score}/{total}</Text>
+        <Animated.Text entering={m.pop(120)} accessibilityLabel={`${score} out of ${total}`} style={{ fontFamily: F.display, fontSize: 56, lineHeight: 60, color: score === total ? c.good : c.ink, fontVariant: ["tabular-nums"] }}>{score}/{total}</Animated.Text>
         <Body color={c.soft}>{msg}{best != null && best > 0 ? ` Your best: ${best}/${total}.` : ""}</Body>
         <Button label="Try the quiz again" kind="ghost" onPress={() => { setI(0); setPicked(null); setScore(0); setFinished(false); }} />
       </Animated.View>
@@ -54,7 +55,7 @@ export function Quiz({ questions, onDone, best }: { questions: Q[]; onDone: (sco
           {questions.map((_, k) => <View key={k} style={{ width: 22, height: 6, borderRadius: 3, backgroundColor: k < i || (k === i && answered) ? c.ink : c.line }} />)}
         </View>
       </View>
-      <Animated.View key={i} entering={reduce ? undefined : FadeInRight.duration(260)} style={{ gap: space.m }}>
+      <Animated.View key={i} entering={m.next()} style={{ gap: space.m }}>
         <H3>{q.q}</H3>
         <View style={{ gap: 8 }} accessibilityRole="radiogroup">
           {q.options.map((o, k) => {
@@ -74,7 +75,7 @@ export function Quiz({ questions, onDone, best }: { questions: Q[]; onDone: (sco
         </View>
       </Animated.View>
       {answered && (
-        <Animated.View entering={reduce ? undefined : FadeIn.duration(240)} style={{ gap: space.s, borderLeftWidth: 3, borderLeftColor: right ? c.good : c.warn, paddingLeft: 12 }}>
+        <Animated.View entering={m.fade()} style={{ gap: space.s, borderLeftWidth: 3, borderLeftColor: right ? c.good : c.warn, paddingLeft: 12 }}>
           <H2 color={right ? c.good : c.warn}>{right ? "Yes." : "Not quite."}</H2>
           <Body>{q.why}</Body>
         </Animated.View>

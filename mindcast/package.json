@@ -51,6 +51,8 @@
     "@types/jest": "^30.0.0",
     "@types/react": "~19.3.0",
     "@types/three": "^0.187.0",
+    "eslint": "^9.0.0",
+    "eslint-config-expo": "~58.0.4",
     "jest": "^30.5.2",
     "jest-expo": "^58.0.14",
     "typescript": "~6.0.3"
@@ -71,8 +73,12 @@
   "jest": {
     "preset": "jest-expo",
     "testMatch": [
-      "**/__tests__/**/*.test.ts", "**/__tests__/**/*.test.tsx"],
-    "testPathIgnorePatterns": ["/node_modules/", "/__tests__/live/"
+      "**/__tests__/**/*.test.ts",
+      "**/__tests__/**/*.test.tsx"
+    ],
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/__tests__/live/"
     ],
     "transformIgnorePatterns": [
       "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|roughjs|hachure-fill|points-on-curve|points-on-path|path-data-parser|zustand|three|@react-three/.*)"

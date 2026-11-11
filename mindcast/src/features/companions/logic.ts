@@ -16,8 +16,8 @@ export function unlockText(c: Companion) {
   if (u.type === "start") return "With you from day one.";
   if (u.type === "streak") return `Free: keep a ${u.days}-day learning streak.`;
   if (u.type === "stop") return `Free: finish Season ${u.season}.`;
-  if (u.type === "pass") return `Season Pass reward at stop ${u.stop}, or a Single ticket.`;
-  return `Free during the Season ${u.season} event, later on a Single ticket.`;
+  if (u.type === "pass") return `Season Pass reward at stop ${u.stop}, or £1 on its own.`;
+  return `Free during the Season ${u.season} event, then £1 on its own.`;
 }
 
 /** Ids that are unlocked now but were not before. */

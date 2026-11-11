@@ -72,7 +72,22 @@ export const F = {
 } as const;
 
 export const space = { xs: 4, s: 8, m: 12, l: 16, xl: 24, xxl: 32, xxxl: 48 } as const;
-export const radius = { s: 6, m: 10, l: 14, xl: 20 } as const;
+/** s = chips and tags, m = buttons and inputs, l = cards, xl = sheets, pill = round badges. */
+export const radius = { s: 6, m: 10, l: 14, xl: 20, pill: 999 } as const;
+
+/** Minimum touch target (pt) for anything tappable. */
+export const TOUCH = 44;
+
+/** Ink used on top of the hi-vis yellow and other light fills, in both themes. */
+export const ON_FILL = "#1B1F24";
+
+/** Pick readable text for a solid fill: dark ink on light fills, white on dark ones. */
+export function onColour(hex: string) {
+  const m = /^#?([0-9a-f]{6})/i.exec(hex);
+  if (!m) return ON_FILL;
+  const n = parseInt(m[1], 16), r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  return 0.299 * r + 0.587 * g + 0.114 * b > 150 ? ON_FILL : "#FFFFFF";
+}
 
 /** Type scale (size / line height). */
 export const type = {
@@ -84,4 +99,7 @@ export const type = {
   small: [14, 20],
   tiny: [12, 16],
   hand: [24, 26],
+  /** Mono labels: eyebrows (12) and chips/stat labels (11). */
+  eyebrow: [12, 16],
+  label: [11, 14],
 } as const;
