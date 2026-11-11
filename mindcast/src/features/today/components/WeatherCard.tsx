@@ -47,7 +47,7 @@ function PlacePicker({ onDone }: { onDone: () => void }) {
   };
   return (
     <View style={{ gap: space.s, backgroundColor: c.sunk, borderRadius: radius.m, padding: space.m }}>
-      <Small color={c.soft}>Your location is only used on this phone to fetch the forecast. We keep a rounded place, never an address.</Small>
+      <Small color={c.soft}>Your location is checked once to fetch the forecast. We keep a rounded place on this phone, never an address.</Small>
       <Button small kind="primary" label={busy ? "Finding you..." : "Use my location"} onPress={useMine} disabled={busy} accessibilityLabel="Use my location for railway weather" />
       {msg && <Small color={c.warn} accessibilityLiveRegion="polite">{msg}</Small>}
       <Small color={c.soft}>Or pick a place:</Small>
