@@ -3,6 +3,10 @@
  * Dimensions are per vehicle (per car for units). Every class carries its sources.
  * "checked": length, height, speed, year and number built agree with the cited source.
  * "approx": at least one figure (usually height or a typical length) is not confirmed by a cited source.
+ * The approx classes were re-checked against Wikipedia article wikitext on 11 Nov 2026. Class 777 and DLR B92
+ * are now "checked". 17 remain approx, each with a comment saying why: five classes and the measurement train
+ * have no height in any article (c68, c43, black5, c800, c700, nmt). The generic wagons and engineering machines
+ * are illustrative types, and no article gives a class-specific length, height, speed or year for them.
  * Body and stripe colours are deliberately unbranded. The model objects drive the drawings: do not edit by hand.
  */
 import type { TrainClass } from "../types";
@@ -189,6 +193,8 @@ export const trains: TrainClass[] = [
     stripe: "#FFFFFF",
     fact: "A mixed-traffic locomotive, used on freight and on passenger trains. 34 were built in Spain.",
     spotting: "Angular, sloping cab fronts at both ends and only two axles on each bogie.",
+    // Still approx: the Class 68 article leaves length and height blank. The Stadler Eurolight article's
+    // 20.32 m / 4.26 m are for the continental-gauge loco, not the UK one. Speed, year and number built agree.
     confidence: "approx",
     sources: [
       {
@@ -277,6 +283,8 @@ export const trains: TrainClass[] = [
     stripe: "#F2B705",
     fact: "Power cars for the high-speed train. One set reached 148 mph in 1987, a world record for a diesel train.",
     spotting: "A wedge-shaped nose with a single cab, usually one at each end of a set of coaches.",
+    // Still approx: height is not given in the Class 43 or InterCity 125 articles.
+    // Length 17.79 m, 125 mph, 1976, 197 built and the 148 mph record (1 Nov 1987) all agree.
     confidence: "approx",
     sources: [
       {
@@ -393,6 +401,7 @@ export const trains: TrainClass[] = [
     stripe: "#B23A3A",
     fact: "842 were built. A do-anything workhorse that pulled passenger and freight trains alike.",
     spotting: "Four small leading wheels, six medium-sized driving wheels, usually in plain black.",
+    // Still approx: the article gives no height. Length 19.40 m (63 ft 7 3/4 in), 1934 and 842 built agree.
     confidence: "approx",
     sources: [
       {
@@ -465,6 +474,8 @@ export const trains: TrainClass[] = [
     stripe: "#E8C66A",
     fact: "Bi-mode: it can run from the overhead wires or from diesel engines under the floor.",
     spotting: "A long, smooth nose and long cars, with doors near each end of every car.",
+    // Still approx: the article leaves height blank. Car length 26.000 m, 200 km/h (125 mph), 2017
+    // and 80 built (36 + 13 + 10 + 21) agree.
     confidence: "approx",
     sources: [
       {
@@ -504,6 +515,7 @@ export const trains: TrainClass[] = [
     stripe: "#FFFFFF",
     fact: "Works from both overhead wires and third rail, so it can run right through London from north to south.",
     spotting: "Two sets of sliding doors on each side of every car and long, open interiors with no doors between cars.",
+    // Still approx: the article leaves height blank. Car length 20.2 m, 100 mph, 2016 and 115 built agree.
     confidence: "approx",
     sources: [
       {
@@ -614,7 +626,9 @@ export const trains: TrainClass[] = [
     stripe: "#1F2933",
     fact: "Built for Merseyrail. Seven of the 53 carry batteries so they can run beyond the third rail.",
     spotting: "Wide doors with a step that slides out to meet the platform, so you can step straight on.",
-    confidence: "approx",
+    // Checked 11 Nov 2026: height 3.828 m, 120 km/h (75 mph), 2023, 53 built, 7 with batteries.
+    // lengthM is the article's 64.98 m unit length over 4 articulated cars.
+    confidence: "checked",
     sources: [
       {
         label: "Wikipedia: British Rail Class 777",
@@ -780,7 +794,9 @@ export const trains: TrainClass[] = [
     stripe: "#3A86FF",
     fact: "The Docklands Light Railway runs automatically, with a member of staff on board but no driver's cab.",
     spotting: "Short vehicles that bend in the middle, with no driver's cab at the front.",
-    confidence: "approx",
+    // Checked 11 Nov 2026: height 3.51 m, 80 km/h (50 mph), B92 from 1993, 47 built.
+    // lengthM is the article's 28 m vehicle length over its 2 articulated sections.
+    confidence: "checked",
     sources: [
       {
         label: "Wikipedia: Docklands Light Railway B90, B92, and B2K Stock",
@@ -883,6 +899,7 @@ export const trains: TrainClass[] = [
     stripe: "#F2B705",
     fact: "Open box wagons carry stone and aggregates from quarries to building sites and depots.",
     spotting: "An open-topped steel box on two bogies, usually in a long line behind a freight loco.",
+    // Still approx: illustrative type. No Wikipedia article gives a length, height or speed for a UK bogie box wagon.
     confidence: "approx",
     sources: [
       {
@@ -914,6 +931,7 @@ export const trains: TrainClass[] = [
     stripe: "#B23A3A",
     fact: "Tank wagons carry fuel and other liquids. Orange hazard plates on the side tell staff what's inside.",
     spotting: "A long, round tank on two bogies, often with orange hazard plates on the side.",
+    // Still approx: illustrative type. The Tank car article gives no UK bogie tank wagon dimensions, speed or year.
     confidence: "approx",
     sources: [
       {
@@ -945,6 +963,8 @@ export const trains: TrainClass[] = [
     stripe: "#F2B705",
     fact: "Carries shipping containers from ports to inland terminals. A 40-foot container is about 12.2 metres long.",
     spotting: "A low, flat frame on bogies carrying one or more shipping containers.",
+    // Still approx: illustrative type. No article gives a UK container wagon's length, height or speed.
+    // The 40 ft = 12.2 m container figure in the fact is confirmed.
     confidence: "approx",
     sources: [
       {
@@ -976,6 +996,8 @@ export const trains: TrainClass[] = [
     stripe: "#F2B705",
     fact: "Drop new ballast onto the track through doors underneath, exactly where it's needed.",
     spotting: "Wagons with sloping sides and doors underneath, usually in engineering trains at night or at weekends.",
+    // Still approx: British Rail Departmental Wagons lists the bogie ballast hoppers (Seacow, Sealion, etc.)
+    // but gives no dimensions, speed or dates.
     confidence: "approx",
     sources: [
       {
@@ -1008,6 +1030,8 @@ export const trains: TrainClass[] = [
     stripe: "#B23A3A",
     fact: "Lifts, lines and packs the track as it moves along, vibrating steel tines into the ballast under each sleeper.",
     spotting: "A long yellow machine with workheads under the middle that plunge steel tines into the ballast beside each sleeper.",
+    // Still approx: Tamping machine and Plasser & Theurer give no length, height or year for a UK plain-line tamper
+    // (no article on the 09-3X).
     confidence: "approx",
     sources: [
       {
@@ -1043,6 +1067,7 @@ export const trains: TrainClass[] = [
     stripe: "#1F2933",
     fact: "Built to tamp switches and crossings, with extra arms to lift the heavy rails while it packs.",
     spotting: "Like a plain-line tamper, but with extra lifting arms that reach out to the rails of a junction.",
+    // Still approx: Tamping machine gives no length, height or year for a switch and crossing tamper.
     confidence: "approx",
     sources: [
       {
@@ -1074,6 +1099,8 @@ export const trains: TrainClass[] = [
     stripe: "#1F2933",
     fact: "Blows measured amounts of small stones under the sleepers to fix dips, without disturbing the whole ballast bed.",
     spotting: "A yellow machine carrying hoppers of small stones, with tubes that push down beside the sleepers.",
+    // Still approx: Stoneblower gives no dimensions. It says Harsco built them and they were in use
+    // across the UK by 1999, so 2000 is too late for a first-use year, but the article gives no exact year.
     confidence: "approx",
     sources: [
       {
@@ -1105,6 +1132,7 @@ export const trains: TrainClass[] = [
     stripe: "#B23A3A",
     fact: "Ploughs and brushes the ballast back into the right shape after track work.",
     spotting: "A short yellow machine with ploughs at the sides and a rotating brush underneath.",
+    // Still approx: Ballast regulator gives no length, height or year for a UK machine.
     confidence: "approx",
     sources: [
       {
@@ -1137,6 +1165,8 @@ export const trains: TrainClass[] = [
     stripe: "#1F2933",
     fact: "In autumn it blasts crushed leaves off the rails with high-pressure water, then lays a gritty gel to help wheels grip.",
     spotting: "Two yellow vehicles coupled cab-to-cab outwards, with equipment modules on the decks. Busiest in autumn.",
+    // Still approx: British Rail MPV confirms 1999 but leaves length, height and speed blank. Windhoff CargoSprinter
+    // gives 75 mph only for the 2000-order units with both cars powered.
     confidence: "approx",
     sources: [
       {
@@ -1146,6 +1176,10 @@ export const trains: TrainClass[] = [
       {
         label: "Wikipedia: Slippery rail",
         url: "https://en.wikipedia.org/wiki/Slippery_rail"
+      },
+      {
+        label: "Wikipedia: Windhoff CargoSprinter",
+        url: "https://en.wikipedia.org/wiki/Windhoff_CargoSprinter"
       }
     ],
     model: {
@@ -1168,6 +1202,8 @@ export const trains: TrainClass[] = [
     stripe: "#1F2933",
     fact: "A yellow high-speed train that measures the shape of the track at up to 125 mph, so faults are found early.",
     spotting: "A bright yellow high-speed train with two power cars and coaches fitted with measuring equipment.",
+    // Still approx: power-car height is in neither the Class 43 nor the New Measurement Train article.
+    // Length 17.79 m, 125 mph and 2003 agree.
     confidence: "approx",
     sources: [
       {
@@ -1198,6 +1234,7 @@ export const trains: TrainClass[] = [
     stripe: "#1F2933",
     fact: "Lifts whole sections of switches and crossings into place during big renewals.",
     spotting: "A big yellow crane on rail wheels with a long jib that swings round over the track.",
+    // Still approx: Crane (rail) and Kirow Ardelt give no UK rail crane length, height or year.
     confidence: "approx",
     sources: [
       {
@@ -1228,6 +1265,7 @@ export const trains: TrainClass[] = [
     stripe: "#1F2933",
     fact: "Drives on the road to the site, then lowers small rail wheels to work on the track.",
     spotting: "A digger on road tyres with small steel rail wheels that fold down for working on the track.",
+    // Still approx: Road-rail vehicle gives no excavator length, height or UK introduction year.
     confidence: "approx",
     sources: [
       {

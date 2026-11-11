@@ -16,7 +16,7 @@
 Fastest way to check: `npx expo start --tunnel` on your own computer and open it in Expo Go, or an EAS preview build (docs/LAUNCH.md).
 
 ## Content still labelled in the app
-- 21 train classes "Approx." (mostly heights the source doesn't give).
+- 17 train classes "Approx.": every figure was rechecked against Wikipedia on 11 Nov 2026 and none was wrong, but the articles do not print a height (or any size, for generic wagons and engineering machines). Each entry says what is missing. The stoneblower's introduction year (2000) looks late: the article says they were in use by 1999.
 - History cards and places: all now checked against Wikipedia article text (fetched via the raw-wikitext endpoint, which was not rate-limited). Of the 19 that were drafts, 6 were right as written and 13 were corrected. The audit trail is at the top of `src/domain/railway/history.ts` and `places.ts`.
 - Reference drawings from the illustration library (9 lessons) are captioned "awaiting an expert check" until their labels and sizes are signed off.
 
