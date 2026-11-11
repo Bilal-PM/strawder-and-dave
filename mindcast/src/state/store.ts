@@ -31,7 +31,8 @@ export type State = {
 
   // actions
   set: (fn: (s: State) => Partial<State>) => void;
-  completeLesson: (id: string, stop: number, score: number) => void;
+  /** Credit a stop. `score` is the quiz score (0-3); leave it out when no quiz was taken (an illustrated story's check), so the quiz best is untouched. */
+  completeLesson: (id: string, stop: number, score?: number) => void;
   touchStreak: () => void;
   reset: () => void;
 };
@@ -64,7 +65,7 @@ export const useStore = create<State>()(
             progress: {
               ...s.progress,
               completed: done ? s.progress.completed : [...s.progress.completed, id],
-              quizBest: { ...s.progress.quizBest, [id]: Math.max(score, s.progress.quizBest[id] ?? 0) },
+              quizBest: score === undefined ? s.progress.quizBest : { ...s.progress.quizBest, [id]: Math.max(score, s.progress.quizBest[id] ?? 0) },
               stop: Math.max(s.progress.stop, Math.min(stop + 1, 20)),
               miles: s.progress.miles + (done ? 2 : 12),
             },

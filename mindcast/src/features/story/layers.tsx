@@ -92,7 +92,7 @@ export function Layer({ c, pose, pivot, nodes, children }: LayerProps) {
   const px = pivot ? pivot[0] : 0;
   const py = pivot ? pivot[1] : 0;
   const { loop, shot, x } = c;
-  const props = useAnimatedProps(() => {
+  const props = useAnimatedProps((): Record<string, unknown> => {
     const p = pose({ loop: loop.value, shot: shot.value, x: x.value });
     const m = poseMatrix(p, px, py);
     const o = p.o ?? 1;

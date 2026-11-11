@@ -9,8 +9,8 @@ import { BackButton, Body, Button, EmptyState, Eyebrow, H1, Note, Screen, Small,
 import { useMotion } from "@/ui/motion";
 import { useTheme } from "@/ui/theme";
 import { F, radius, space } from "@/ui/tokens";
-import { Celebration, type CelebrationData } from "./Celebration";
-import { lessonAt, lessonGlossary, lineCompanion, pick, seasonInfo, STOPS } from "./content";
+import { Celebration, completeStop, type CelebrationData } from "./Celebration";
+import { lessonGlossary, seasonInfo, STOPS } from "./content";
 import { Diagram } from "./diagrams";
 import { LessonPlate } from "./Plate";
 import { GlossaryText, useTermSheet } from "./GlossaryText";
@@ -40,7 +40,7 @@ function goBack() {
   else router.replace("/line");
 }
 
-export function LessonScreen({ lesson }: { lesson: Lesson }) {
+export function LessonScreen({ lesson, hasStory }: { lesson: Lesson; hasStory?: boolean }) {
   const { c } = useTheme();
   const m = useMotion();
   const profileAudience = useStore((s) => s.profile.audience);
@@ -56,15 +56,7 @@ export function LessonScreen({ lesson }: { lesson: Lesson }) {
   const hookEnter = useEnter(60);
   const [grownUp, setGrownUp] = useState(false);
 
-  const finish = () => {
-    const s = score ?? 0;
-    const before = useStore.getState().progress;
-    useStore.getState().completeLesson(lesson.id, lesson.stop, s);
-    const after = useStore.getState().progress;
-    const next = lessonAt(lesson.season, lesson.stop + 1);
-    const comp = lineCompanion(useStore.getState().companions.unlocked);
-    setCele({ lesson, miles: after.miles - before.miles, score: s, total, next, newlyOpen: before.stop < lesson.stop + 1 && after.stop >= lesson.stop + 1, who: comp?.name, line: comp ? pick(comp.lines, lesson.stop) : undefined });
-  };
+  const finish = () => setCele(completeStop(lesson, { score: score ?? 0, total, quiz: true }));
 
   const depthText = aud === "explorer" ? [lesson.explorer] : aud === "leader" ? [lesson.leader] : lesson.starter;
 
@@ -80,6 +72,10 @@ export function LessonScreen({ lesson }: { lesson: Lesson }) {
           <Eyebrow>Season {lesson.season}{season ? ` · ${season.title}` : ""}</Eyebrow>
           <H1 accessibilityRole="header">{lesson.title}</H1>
         </View>
+
+        {hasStory && (
+          <Button label="Watch the illustrated story" kind="pass" onPress={() => { if (router.canGoBack()) router.back(); else router.replace({ pathname: "/lesson/[id]", params: { id: lesson.id } }); }} accessibilityLabel="Watch this stop as an illustrated story" />
+        )}
 
         <View style={{ gap: 6 }}>
           <Pills label="Choose your depth" value={aud} onChange={setAud} options={AUDIENCES.map((a) => ({ value: a.value, label: a.label }))} />

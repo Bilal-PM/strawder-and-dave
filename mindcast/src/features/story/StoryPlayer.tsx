@@ -20,8 +20,7 @@ import { PaperGrid, tap } from "@/ui/kit";
 import { dur, ease } from "@/ui/motion";
 import { useTheme } from "@/ui/theme";
 import { F, radius, space, TOUCH } from "@/ui/tokens";
-import { Celebration, type CelebrationData } from "@/features/learn/Celebration";
-import { completeStop } from "@/features/learn/content";
+import { Celebration, completeStop, type CelebrationData } from "@/features/learn/Celebration";
 import { announce } from "@/features/learn/ui";
 import { StageCtx, stageBox, type StageBox } from "./layers";
 import { speakCaption, stopSpeaking } from "./speech";
@@ -213,7 +212,7 @@ export function StoryPlayer({ lesson, story, start = 0 }: { lesson: Lesson; stor
       </Pressable>
 
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: space.l, paddingBottom: ins.bottom + space.s, paddingTop: 4 }}>
-        <SmallButton label={speaking ? "Stop" : "Read to me"} icon={speaking ? "■" : "♪"} a11y={speaking ? "Stop reading" : "Read the words aloud"} onPress={read} />
+        <SmallButton label={speaking ? "Stop" : "Read to me"} a11y={speaking ? "Stop reading" : "Read the words aloud"} onPress={read} />
         <Text style={{ fontFamily: F.mono, fontSize: 12, color: c.soft, fontVariant: ["tabular-nums"] }}>{i + 1} / {n}</Text>
         <SmallButton label="Full notes" a11y="Open the full notes for this stop" onPress={openNotes} />
       </View>

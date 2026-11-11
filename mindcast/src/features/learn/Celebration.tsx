@@ -4,14 +4,30 @@ import { Modal, Text, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { Lesson } from "@/domain/types";
+import { useStore } from "@/state/store";
 import { Bubble, Button, Eyebrow, H1, Small, usePal } from "@/ui/kit";
 import { dur, ease, stagger, useMotion } from "@/ui/motion";
 import { Sketch } from "@/ui/sketch";
 import { useTheme } from "@/ui/theme";
 import { F, onColour, radius, space } from "@/ui/tokens";
+import { lessonAt, lineCompanion, pick } from "./content";
 import { announce } from "./ui";
 
-export type CelebrationData = { lesson: Lesson; miles: number; score: number; total: number; next?: Lesson; newlyOpen: boolean; who?: string; line?: string };
+export type CelebrationData = { lesson: Lesson; miles: number; score: number; total: number; scoreLabel?: string; next?: Lesson; newlyOpen: boolean; who?: string; line?: string };
+
+/**
+ * Credit a stop and build its celebration: completeLesson in the store (miles, next stop open), the next
+ * stop and the line companion's line. Used by the lesson notes (quiz score) and by illustrated stories
+ * (their quick check, which leaves the quiz best untouched).
+ */
+export function completeStop(lesson: Lesson, r: { score: number; total: number; scoreLabel?: string; quiz?: boolean }): CelebrationData {
+  const before = useStore.getState().progress;
+  useStore.getState().completeLesson(lesson.id, lesson.stop, r.quiz ? r.score : undefined);
+  const after = useStore.getState().progress;
+  const next = lessonAt(lesson.season, lesson.stop + 1);
+  const comp = lineCompanion(useStore.getState().companions.unlocked);
+  return { lesson, miles: after.miles - before.miles, score: r.score, total: r.total, scoreLabel: r.scoreLabel, next, newlyOpen: before.stop < lesson.stop + 1 && after.stop >= lesson.stop + 1, who: comp?.name, line: comp ? pick(comp.lines, lesson.stop) : undefined };
+}
 
 /** When the train has pulled in (ms after the modal opens). Later beats key off this. */
 const ARRIVE = 150 + dur.glide;
@@ -70,7 +86,7 @@ export function Celebration({ data, onDone, onNext }: { data: CelebrationData | 
               </Animated.View>
               <Animated.View entering={m.rise(0, beat(2))} style={card}>
                 <Text style={{ fontFamily: F.display, fontSize: 36, color: data.score === data.total ? c.good : c.ink, fontVariant: ["tabular-nums"] }}>{data.score}/{data.total}</Text>
-                <Small color={c.soft}>quiz score</Small>
+                <Small color={c.soft}>{data.scoreLabel ?? "quiz score"}</Small>
               </Animated.View>
             </View>
             {data.next && (
