@@ -8,6 +8,7 @@ import { ChecksList, INTEGRITY_LINE, integrityOf, MappingView, METHOD, MethodLin
 import { useStore } from "@/state/store";
 import { Body, BodyB, Button, Card, Chip, Eyebrow, H2, Hand, Input, Row, Small, tap } from "@/ui/kit";
 import { useMotion } from "@/ui/motion";
+import { ScribbleTick } from "@/ui/ScribbleTick";
 import { useTheme } from "@/ui/theme";
 import { F, radius, space, TOUCH } from "@/ui/tokens";
 
@@ -94,7 +95,17 @@ export default function NewCast() {
             <BodyB>Working title</BodyB>
             <Field label="Title" value={d.title} onChange={up("title")} placeholder="e.g. Why the warning comes a mile early" lines={1} />
             <BodyB>Who is it for? Pick one or more.</BodyB>
-            <Row wrap>{(["explorer", "starter", "leader"] as Audience[]).map((a) => <Button key={a} small kind={d.audience.includes(a) ? "primary" : "secondary"} label={`${d.audience.includes(a) ? "✓ " : ""}${a[0].toUpperCase() + a.slice(1)}s`} accessibilityLabel={`${a}s${d.audience.includes(a) ? ", selected" : ""}`} onPress={() => toggleAud(a)} />)}</Row>
+            <Row wrap>{(["explorer", "starter", "leader"] as Audience[]).map((a) => {
+              const on = d.audience.includes(a);
+              const name = `${a[0].toUpperCase() + a.slice(1)}s`;
+              return (
+                <Pressable key={a} accessibilityRole="checkbox" accessibilityState={{ checked: on }} accessibilityLabel={name} onPress={() => { tap(); toggleAud(a); }}
+                  style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: 8, minHeight: TOUCH, paddingLeft: 8, paddingRight: 14, borderRadius: radius.m, borderWidth: 1.5, borderColor: on ? c.ink : c.line, backgroundColor: pressed ? c.sunk : c.surface })}>
+                  <ScribbleTick checked={on} size={24} seed={a.length * 3} />
+                  <Text style={{ fontFamily: F.bodySemi, fontSize: 14, color: c.ink }}>{name}</Text>
+                </Pressable>
+              );
+            })}</Row>
           </Animated.View>
         )}
 

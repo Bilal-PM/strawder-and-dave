@@ -1,8 +1,9 @@
 /** Railway weather: 7 hand-drawn days, what each means for the track, and this week's seasonal event. */
 import React, { useState } from "react";
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { useStore } from "@/state/store";
 import { Body, BodyB, Button, Card, Eyebrow, H2, Row, Small, tap, usePal } from "@/ui/kit";
+import { PencilLoader } from "@/ui/PencilLoader";
 import { Sketch } from "@/ui/sketch";
 import { useTheme } from "@/ui/theme";
 import { F, radius, space, TOUCH, type Palette } from "@/ui/tokens";
@@ -129,10 +130,7 @@ export function WeatherCard() {
       ) : (
         <View style={{ minHeight: 120, alignItems: "center", justifyContent: "center", gap: space.s, backgroundColor: c.sunk, borderRadius: radius.m, padding: space.l }}>
           {loading ? (
-            <>
-              <ActivityIndicator color={c.soft} accessibilityLabel="Loading forecast" />
-              <Small color={c.soft}>Fetching the forecast...</Small>
-            </>
+            <PencilLoader label="Fetching the forecast" />
           ) : (
             <>
               <Body center>No forecast yet. We need a connection the first time.</Body>

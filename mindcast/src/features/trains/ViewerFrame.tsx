@@ -7,6 +7,7 @@ import { PanResponder, Platform, View, type GestureResponderEvent } from "react-
 import { useReducedMotion } from "react-native-reanimated";
 import type * as THREE from "three";
 import { Body, Button, Row } from "@/ui/kit";
+import { PencilLoader } from "@/ui/PencilLoader";
 import { useTheme } from "@/ui/theme";
 import { radius } from "@/ui/tokens";
 import { build3D, type Built } from "./build3d";
@@ -14,7 +15,7 @@ import { INK, type DrawSpec, type Livery } from "./model";
 
 export type Orbit = { yaw: number; pitch: number; zoom: number; spin: boolean; invalidate?: () => void };
 export type ViewerProps = { spec: DrawSpec; livery: Livery; label: string; height?: number };
-export type CanvasRenderer = (args: { orbit: React.RefObject<Orbit>; built: Built; bg: string }) => React.ReactNode;
+export type CanvasRenderer = (args: { orbit: React.RefObject<Orbit>; built: Built; bg: string; onReady: () => void }) => React.ReactNode;
 
 const HOME = { yaw: 0.65, pitch: 0.28, zoom: 1 };
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
@@ -35,10 +36,10 @@ export function stepSpin(o: Orbit, dt: number) {
   return true;
 }
 
-class Boundary extends React.Component<{ children: React.ReactNode; fallback: React.ReactNode }, { failed: boolean }> {
+class Boundary extends React.Component<{ children: React.ReactNode; fallback: React.ReactNode; onFail?: () => void }, { failed: boolean }> {
   state = { failed: false };
   static getDerivedStateFromError() { return { failed: true }; }
-  componentDidCatch(e: unknown) { if (__DEV__) console.warn("3D view failed", e); }
+  componentDidCatch(e: unknown) { if (__DEV__) console.warn("3D view failed", e); this.props.onFail?.(); }
   render() { return this.state.failed ? this.props.fallback : this.props.children; }
 }
 
@@ -53,6 +54,8 @@ export function ViewerFrame({ spec, livery, label, height = 300, renderCanvas }:
   const reduced = useReducedMotion();
   const orbit = useRef<Orbit>({ ...HOME, spin: !reduced });
   const [spin, setSpinState] = useState(!reduced);
+  // The GL context takes a moment to start (longer on older phones): the pencil shows until it does.
+  const [ready, setReady] = useState(false);
   const built = useMemo(() => build3D(spec, livery, { ink: INK, labels: Platform.OS === "web" }), [spec, livery]);
   useEffect(() => () => built.dispose(), [built]);
   useEffect(() => { orbit.current.invalidate?.(); }, [built]);
@@ -105,7 +108,12 @@ export function ViewerFrame({ spec, livery, label, height = 300, renderCanvas }:
   return (
     <View style={{ gap: 10 }}>
       <View style={{ height, borderRadius: radius.l, overflow: "hidden", borderWidth: 1, borderColor: c.line, backgroundColor: c.bg }}>
-        <Boundary fallback={fallback}>{renderCanvas({ orbit, built, bg: c.bg })}</Boundary>
+        <Boundary fallback={fallback} onFail={() => setReady(true)}>{renderCanvas({ orbit, built, bg: c.bg, onReady: () => setReady(true) })}</Boundary>
+        {!ready && (
+          <View pointerEvents="none" style={{ position: "absolute", left: 0, top: 0, right: 0, bottom: 0, alignItems: "center", justifyContent: "center", backgroundColor: c.bg }}>
+            <PencilLoader label="Drawing the 3D model" />
+          </View>
+        )}
         <View
           ref={overlay}
           {...pan.panHandlers}

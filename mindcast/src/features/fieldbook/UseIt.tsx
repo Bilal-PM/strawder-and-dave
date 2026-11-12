@@ -9,8 +9,9 @@ import { Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { lessonById, pack } from "@/domain";
 import { useStore } from "@/state/store";
-import { BodyB, Button, Eyebrow, Input, Row, Small, tap } from "@/ui/kit";
+import { BodyB, Button, Eyebrow, Row, Small, tap } from "@/ui/kit";
 import { useMotion } from "@/ui/motion";
+import { RuledInput } from "@/ui/Ruled";
 import { useTheme } from "@/ui/theme";
 import { F, radius, space } from "@/ui/tokens";
 import { practicePrompt, type PracticeStamp } from "./logic";
@@ -60,7 +61,7 @@ export function UseIt({ lessonId, onStamped }: { lessonId: string; onStamped?: (
       <Text style={{ fontFamily: F.displaySemi, fontSize: 19, lineHeight: 24, color: c.ink }}>{prompt}</Text>
       <Small color={c.soft}>{hint}</Small>
       {example && <Small color={c.soft}>Try this week: {example}</Small>}
-      <Input accessibilityLabel={prompt} value={text} onChangeText={setText} lines={3} maxLength={600} placeholder={kid ? "What did you see?" : "At work, at home, on the way in..."} />
+      <RuledInput accessibilityLabel={prompt} value={text} onChangeText={setText} lines={3} maxLength={600} placeholder={kid ? "What did you see?" : "At work, at home, on the way in..."} />
       <Button kind="primary" haptic="light" label="Stamp it" disabled={!text.trim()} onPress={save} accessibilityLabel="Save this and earn a practice stamp" />
     </View>
   );

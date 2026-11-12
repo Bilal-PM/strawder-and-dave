@@ -10,7 +10,7 @@ import Svg, { Line } from "react-native-svg";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { dur, PRESS_SCALE, spring, useMotion } from "./motion";
 import { useTheme } from "./theme";
-import { F, ON_FILL, onColour, radius, space, TOUCH, type as T } from "./tokens";
+import { F, ON_FILL, onColour, radius, space, TOUCH, type as T, type Palette } from "./tokens";
 
 /**
  * Haptics. One rule everywhere: "light" for taps and choices, "success" when something is completed or saved,
@@ -86,9 +86,18 @@ export function Screen({ children, scroll = true, pad = true, grid = true, style
   );
 }
 
-export function Card({ children, style, tone, onPress, accessibilityLabel }: { children: React.ReactNode; style?: StyleProp<ViewStyle>; tone?: "pass" | "board" | "sunk"; onPress?: () => void; accessibilityLabel?: string }) {
+/**
+ * The one primary surface on a screen (the next stop on Today, the sets on the Field Book): a heavier ink border and
+ * a flat offset edge, like a card laid on the page. Everything else stays quieter: secondary cards keep the hairline,
+ * and tertiary content sits flat on the paper.
+ */
+export function primarySurface(c: Palette): ViewStyle {
+  return { backgroundColor: c.surface, borderRadius: radius.l, borderWidth: 2, borderColor: c.ink, boxShadow: `4px 4px 0px ${c.line}` };
+}
+
+export function Card({ children, style, tone, primary, onPress, accessibilityLabel }: { children: React.ReactNode; style?: StyleProp<ViewStyle>; tone?: "pass" | "board" | "sunk"; primary?: boolean; onPress?: () => void; accessibilityLabel?: string }) {
   const { c } = useTheme();
-  const base: ViewStyle = { backgroundColor: tone === "board" ? c.board : tone === "sunk" ? c.sunk : c.surface, borderRadius: radius.l, borderWidth: 1, borderColor: tone === "board" ? c.board : c.line, padding: space.l, gap: space.s, ...(tone === "pass" ? { borderTopWidth: 6, borderTopColor: c.pass } : null) };
+  const base: ViewStyle = { backgroundColor: tone === "board" ? c.board : tone === "sunk" ? c.sunk : c.surface, borderRadius: radius.l, borderWidth: 1, borderColor: tone === "board" ? c.board : c.line, padding: space.l, gap: space.s, ...(tone === "pass" ? { borderTopWidth: 6, borderTopColor: c.pass } : null), ...(primary ? primarySurface(c) : null) };
   if (!onPress) return <View style={[base, style]}>{children}</View>;
   return <PressCard base={[base, style]} onPress={onPress} accessibilityLabel={accessibilityLabel}>{children}</PressCard>;
 }

@@ -3,13 +3,14 @@
  */
 import { router, useIsFocused } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, AppState, PanResponder, ScrollView, StyleSheet, Text, View } from "react-native";
+import { AppState, PanResponder, ScrollView, StyleSheet, Text, View } from "react-native";
 import Animated, { useReducedMotion } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { pack } from "@/domain";
 import { entries } from "@/features/fieldbook/logic";
 import { useStore } from "@/state/store";
 import { Body, Button, Card, Eyebrow, H2, Row, Segmented, Small, Stat, tap } from "@/ui/kit";
+import { PencilLoader } from "@/ui/PencilLoader";
 import { useTheme } from "@/ui/theme";
 import { motionFor } from "@/ui/motion";
 import { F, space } from "@/ui/tokens";
@@ -216,8 +217,7 @@ export default function WorldScreen() {
 
       {phase === "loading" && (
         <View style={[StyleSheet.absoluteFill, { alignItems: "center", justifyContent: "center", gap: 12 }]}>
-          <ActivityIndicator color={c.ink} />
-          <Small color={c.soft}>Building the line</Small>
+          <PencilLoader label="Building the line" />
         </View>
       )}
 

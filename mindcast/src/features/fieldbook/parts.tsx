@@ -47,7 +47,7 @@ export const ItemArt = memo(function ItemArt({ entry, ghost = false, label }: { 
 
 export function RarityTag({ entry }: { entry: Entry }) {
   const { c } = useTheme();
-  const col = entry.rarity === "rare" ? c.ppe : entry.rarity === "uncommon" ? c.accent : c.soft;
+  const col = entry.rarity === "rare" ? c.ppe : entry.rarity === "uncommon" ? c.ink : c.soft;
   return <Text accessibilityLabel={`${entry.rarity}, ${POINTS[entry.rarity]} points`} style={{ fontFamily: F.mono, fontSize: 10, letterSpacing: 0.8, textTransform: "uppercase", color: col }}>{entry.rarity} · {POINTS[entry.rarity]}</Text>;
 }
 
@@ -202,18 +202,21 @@ function AbcStrip({ list, spots }: { list: Entry[]; spots: Record<string, SpotRe
   );
 }
 
-export function SetCard({ p, list, spots, href }: { p: SetProgress; list: Entry[]; spots: Record<string, SpotRecord>; href: Href }) {
+/** One set. `row` draws it as a row inside the Field Book's set grid (no card of its own, a hairline above). */
+export function SetCard({ p, list, spots, href, row, first }: { p: SetProgress; list: Entry[]; spots: Record<string, SpotRecord>; href: Href; row?: boolean; first?: boolean }) {
   const { c, dark } = useTheme();
   return (
     <PeekLink href={href} preview={false} accessibilityLabel={`${p.set.title}. ${p.spotted} of ${p.total} spotted. ${p.tier ? `${p.tier} tier.` : ""} ${meaningLine(p)}`}
-      style={{ backgroundColor: c.surface, borderRadius: radius.l, borderWidth: 1, borderColor: c.line, padding: space.l, gap: space.m }}>
+      style={row
+        ? { paddingHorizontal: space.l, paddingVertical: space.l - 2, gap: space.m, borderTopWidth: first ? 0 : 1, borderTopColor: c.line }
+        : { backgroundColor: c.surface, borderRadius: radius.l, borderWidth: 1, borderColor: c.line, padding: space.l, gap: space.m }}>
       <View style={{ flexDirection: "row", gap: space.m, alignItems: "center" }}>
         <View style={{ flex: 1, gap: 2 }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
             <H3 style={{ flexShrink: 1 }}>{p.set.title}</H3>
             {p.tier && <View style={{ paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, backgroundColor: tierColour(p.tier, dark) }}><Text style={{ fontFamily: F.mono, fontSize: 10, letterSpacing: 0.8, color: dark ? "#121519" : "#FFFFFF" }}>{p.tier.toUpperCase()}</Text></View>}
           </View>
-          <Text style={{ fontFamily: F.hand, fontSize: 21, lineHeight: 23, color: c.accent }}>{meaningLine(p)}</Text>
+          <Text style={{ fontFamily: F.hand, fontSize: 21, lineHeight: 23, color: c.soft }}>{meaningLine(p)}</Text>
         </View>
         <Ring value={p.total ? p.spotted / p.total : 0} size={54} label={`${p.spotted} of ${p.total}`}>
           <Text style={{ fontFamily: F.display, fontSize: 15, color: c.ink, fontVariant: ["tabular-nums"] }}>{p.spotted}</Text>

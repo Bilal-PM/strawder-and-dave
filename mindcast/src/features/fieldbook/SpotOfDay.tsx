@@ -45,7 +45,7 @@ export function SpotOfDayCard() {
     <PeekLink href={`/spot/${e.key}` as Href} accessibilityLabel={`Spot of the day: ${e.name}. ${reason ? `${reason} ` : ""}Look for: ${e.look}`}
       style={{ backgroundColor: c.surface, borderRadius: radius.l, borderWidth: 1, borderColor: c.line, padding: space.l, gap: space.m }}>
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-        <Eyebrow color={c.accent}>Spot of the day</Eyebrow>
+        <Eyebrow>Spot of the day</Eyebrow>
         <Text style={{ fontFamily: F.mono, fontSize: 10, letterSpacing: 0.8, color: stampedToday ? c.good : c.soft }}>{stampedToday ? "STAMPED TODAY" : spotted ? "IN YOUR BOOK" : "NOT IN YOUR BOOK YET"}</Text>
       </View>
       {reason && <Text style={{ fontFamily: F.hand, fontSize: 22, lineHeight: 24, color: c.ppe }}>{reason}</Text>}
@@ -61,7 +61,7 @@ export function SpotOfDayCard() {
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: space.s }}>
         <View style={{ flex: 1 }}><FenceRule /></View>
       </View>
-      <BodyB color={c.accent}>{stampedToday ? "See your stamp ›" : "Spotted it? Stamp it ›"}</BodyB>
+      <BodyB>{stampedToday ? "See your stamp ›" : "Spotted it? Stamp it ›"}</BodyB>
     </PeekLink>
   );
 }
@@ -75,9 +75,9 @@ export function DueTodayCard() {
   const parts = [due.look.length ? `${due.look.length} to look for again` : "", due.revisit.length ? `${due.revisit.length} ${due.revisit.length === 1 ? "stop" : "stops"} to revisit` : ""].filter(Boolean);
   return (
     <PeekLink href={"/due" as Href} preview={false} accessibilityLabel={`Due today: ${parts.join(", ")}`}
-      style={{ flexDirection: "row", alignItems: "center", gap: space.m, padding: space.m, borderRadius: radius.l, backgroundColor: c.surface, borderWidth: 1, borderColor: c.line, borderLeftWidth: 5, borderLeftColor: c.accent }}>
+      style={{ flexDirection: "row", alignItems: "center", gap: space.m, padding: space.m, borderRadius: radius.l, backgroundColor: c.surface, borderWidth: 1, borderColor: c.line }}>
       <View style={{ flex: 1, gap: 2 }}>
-        <Eyebrow color={c.accent}>Due today</Eyebrow>
+        <Eyebrow>Due today</Eyebrow>
         <BodyB>{parts.join(" · ")}</BodyB>
         <Small color={c.soft} numberOfLines={1}>{[...due.look.map((e) => e.name), ...due.revisit.map((l) => l.title)].slice(0, 3).join(", ")}</Small>
       </View>

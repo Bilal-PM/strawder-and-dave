@@ -4,10 +4,11 @@
  */
 import { router, type Href } from "expo-router";
 import React, { useMemo } from "react";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { lessonById, pack } from "@/domain";
 import { useStore } from "@/state/store";
-import { BodyB, Button, Eyebrow, H1, H2, H3, Hand, Screen, Small } from "@/ui/kit";
+import { BodyB, Button, Eyebrow, H1, H2, H3, Hand, primarySurface, Screen, Small, tap } from "@/ui/kit";
+import { RULE, RuledPage } from "@/ui/Ruled";
 import { useTheme } from "@/ui/theme";
 import { F, radius, space } from "@/ui/tokens";
 import { useFieldBook } from "./hooks";
@@ -58,6 +59,9 @@ export function YourLine() {
   );
 }
 
+/** Width of the journal's stamp margin. */
+const STAMP_COL = 76;
+
 function PracticeJournal() {
   const { c } = useTheme();
   const practice = useStore((s) => s.fieldbook.practice);
@@ -75,19 +79,28 @@ function PracticeJournal() {
           <Small color={c.soft}>Finish a stop, then notice its idea somewhere in your day. One line earns a stamp.</Small>
         </View>
       ) : (
-        recent.map((p) => {
-          const l = p.lessonId ? lessonById(p.lessonId) : undefined;
-          return (
-            <View key={p.id} style={{ flexDirection: "row", gap: space.m, paddingVertical: space.s, borderBottomWidth: 1, borderBottomColor: c.line }}>
-              <PracticeMark k={p.id} day={p.day} size={60} />
-              <View style={{ flex: 1, gap: 2 }}>
-                {l ? <Eyebrow>Stop {l.stop}: {l.title}</Eyebrow> : <Eyebrow>Your week</Eyebrow>}
-                <Hand style={{ fontSize: 21, lineHeight: 24 }}>{p.text}</Hand>
-                {!kid && <Text accessibilityRole="button" onPress={() => castFromPractice(p)} style={{ fontFamily: F.bodySemi, fontSize: 14, color: c.accent, paddingVertical: 8 }}>Turn into a Mindcast ›</Text>}
+        // An exercise-book page: stamps in the margin, the notes written on the rules.
+        <RuledPage marginX={STAMP_COL} top={RULE / 2}>
+          {recent.map((p) => {
+            const l = p.lessonId ? lessonById(p.lessonId) : undefined;
+            return (
+              <View key={p.id} style={{ flexDirection: "row", minHeight: RULE * 3 }}>
+                <View style={{ width: STAMP_COL, alignItems: "center", paddingTop: 4 }}>
+                  <PracticeMark k={p.id} day={p.day} size={56} />
+                </View>
+                <View style={{ flex: 1, paddingLeft: 10, paddingRight: space.m }}>
+                  <Text numberOfLines={1} style={{ fontFamily: F.mono, fontSize: 11, lineHeight: RULE, letterSpacing: 1, textTransform: "uppercase", color: c.soft }}>{l ? `Stop ${l.stop}: ${l.title}` : "Your week"}</Text>
+                  <Hand style={{ fontSize: 21, lineHeight: RULE }}>{p.text}</Hand>
+                  {!kid && (
+                    <Pressable accessibilityRole="button" onPress={() => { tap(); castFromPractice(p); }} hitSlop={{ top: 8, bottom: 8 }} style={({ pressed }) => ({ alignSelf: "flex-start", height: RULE, justifyContent: "center", opacity: pressed ? 0.6 : 1 })}>
+                      <Text style={{ fontFamily: F.bodySemi, fontSize: 14, lineHeight: RULE, color: c.ink }}>Turn into a Mindcast ›</Text>
+                    </Pressable>
+                  )}
+                </View>
               </View>
-            </View>
-          );
-        })
+            );
+          })}
+        </RuledPage>
       )}
       <Button label="Add a practice stamp" onPress={() => router.push("/practice")} />
     </View>
@@ -115,15 +128,18 @@ export function FieldBookScreen() {
           <Num value={fb.sets.filter((p) => p.tier).length} label="sets started" />
         </View>
       ) : (
-        <Text style={{ fontFamily: F.hand, fontSize: 24, lineHeight: 27, color: c.accent }}>Nothing stamped yet. Every dotted outline below is something real to find.</Text>
+        <Text style={{ fontFamily: F.hand, fontSize: 24, lineHeight: 27, color: c.ink }}>Nothing stamped yet. Every dotted outline below is something real to find.</Text>
       )}
       <LevelLadder stamps={fb.stamps} />
       <DueTodayCard />
 
       <View style={{ gap: space.m }}>
         <H2 accessibilityRole="header">Sets</H2>
+        {/* The primary surface on this screen: every set in one grid, rows inside one card. */}
+        <View style={[primarySurface(c), { overflow: "hidden" }]}>
+          {fb.sets.map((p, i) => <SetCard key={p.set.id} row first={i === 0} p={p} list={lists[p.set.id] ?? []} spots={fb.fb.spots} href={setHref(p.set.id)} />)}
+        </View>
         <FenceRule />
-        {fb.sets.map((p) => <SetCard key={p.set.id} p={p} list={lists[p.set.id] ?? []} spots={fb.fb.spots} href={setHref(p.set.id)} />)}
       </View>
 
       {preview && s2 && (

@@ -6,7 +6,9 @@
 import React, { useState } from "react";
 import { View } from "react-native";
 import { useStore, type LoopItem } from "@/state/store";
-import { Body, BodyB, Button, Chip, Eyebrow, Hand, Input, Row, Segmented, Small, tap } from "@/ui/kit";
+import { Body, BodyB, Button, Chip, Eyebrow, Hand, Row, Segmented, Small, tap } from "@/ui/kit";
+import { RuledInput } from "@/ui/Ruled";
+import { ScribbleTick } from "@/ui/ScribbleTick";
 import { useTheme } from "@/ui/theme";
 import { radius, space } from "@/ui/tokens";
 import { useFieldBook } from "./hooks";
@@ -40,6 +42,7 @@ export function YourWeek() {
   const kid = useStore((s) => s.profile.audience === "explorer");
   const [draft, setDraft] = useState("");
   const [notes, setNotes] = useState<Record<string, string>>({});
+  const [justNoticed, setJustNoticed] = useState<string | null>(null);
   const set = (fn: (l: typeof loop) => Partial<typeof loop>) => useStore.getState().set((s) => ({ loop: { ...s.loop, ...fn(s.loop) } }));
   const add = () => { const t = draft.trim(); if (!t) return; tap(); set((l) => ({ items: [...l.items, { id: `w${Date.now()}`, text: t, stage: "plan" }] })); setDraft(""); };
   const notice = (it: LoopItem) => {
@@ -48,6 +51,7 @@ export function YourWeek() {
     const p = useStore.getState().stampPractice(lessonFromItem(it.id), t, { from: "week" });
     if (!p) return;
     tap("success");
+    setJustNoticed(it.id);
     set((l) => ({ items: l.items.map((x) => (x.id === it.id ? { ...x, stage: "learn", learned: t, doneAt: p.at } : x)) }));
   };
   const open = loop.items.filter((i) => i.stage !== "learn");
@@ -58,18 +62,18 @@ export function YourWeek() {
       <WeeklyRhythm />
       <View style={{ gap: 6 }}>
         <Eyebrow>This week</Eyebrow>
-        <Input accessibilityLabel="What do you want from this week?" value={loop.want} onChangeText={(v) => set(() => ({ want: v }))} placeholder={kid ? "This week I want to..." : "This week I want to... e.g. get better at handovers"} />
+        <RuledInput accessibilityLabel="What do you want from this week?" value={loop.want} onChangeText={(v) => set(() => ({ want: v }))} placeholder={kid ? "This week I want to..." : "This week I want to... e.g. get better at handovers"} />
       </View>
       <View style={{ gap: space.s }}>
         <Row>
-          <Input accessibilityLabel="Plan one small action" value={draft} onChangeText={setDraft} placeholder="Plan: one small action" style={{ flex: 1 }} onSubmitEditing={add} returnKeyType="done" />
+          <RuledInput accessibilityLabel="Plan one small action" value={draft} onChangeText={setDraft} placeholder="Plan: one small action" style={{ flex: 1 }} onSubmitEditing={add} returnKeyType="done" />
           <Button label="Add" small disabled={!draft.trim()} onPress={add} />
         </Row>
         {open.length === 0 && <Small color={c.soft}>{"Nothing planned. Lessons add their action here when you tap \u201cAdd to Your week\u201d."}</Small>}
         {open.map((it) => (
           <View key={it.id} style={{ gap: space.s, padding: space.m, borderRadius: radius.m, backgroundColor: c.sunk }}>
             <Row style={{ alignItems: "flex-start" }}>
-              <Chip label={it.stage === "plan" ? "Plan" : "Doing"} color={it.stage === "plan" ? c.accent : c.ppe} />
+              <Chip label={it.stage === "plan" ? "Plan" : "Doing"} color={it.stage === "plan" ? c.soft : c.ppe} />
               <Body style={{ flex: 1 }}>{it.text}</Body>
             </Row>
             {it.stage === "plan" ? (
@@ -79,7 +83,7 @@ export function YourWeek() {
               </Row>
             ) : (
               <View style={{ gap: space.s }}>
-                <Input accessibilityLabel="What did you notice?" value={notes[it.id] ?? ""} onChangeText={(v) => setNotes((x) => ({ ...x, [it.id]: v }))} placeholder="What did you notice? One line." lines={2} />
+                <RuledInput accessibilityLabel="What did you notice?" value={notes[it.id] ?? ""} onChangeText={(v) => setNotes((x) => ({ ...x, [it.id]: v }))} placeholder="What did you notice? One line." lines={2} />
                 <Button small kind="primary" label="Notice it: stamp" disabled={!(notes[it.id] ?? "").trim()} onPress={() => notice(it)} accessibilityLabel="Save what you noticed and earn a practice stamp" />
               </View>
             )}
@@ -93,7 +97,11 @@ export function YourWeek() {
             <Row key={it.id} gap={space.m} style={{ alignItems: "flex-start" }}>
               <PracticeMark k={it.id} day={it.doneAt ? dayKey(new Date(it.doneAt)) : ""} size={56} />
               <View style={{ flex: 1, gap: 2 }}>
-                <BodyB>{it.text}</BodyB>
+                <Row gap={space.s} style={{ alignItems: "flex-start" }}>
+                  {/* Done: hand-shaded and ticked. It draws on only for the item you have just noticed. */}
+                  <ScribbleTick checked size={22} seed={it.id.length * 5 + 1} drawOnMount={it.id === justNoticed} style={{ marginTop: 1 }} />
+                  <BodyB style={{ flex: 1 }} accessibilityLabel={`Done: ${it.text}`}>{it.text}</BodyB>
+                </Row>
                 {it.learned ? <Hand style={{ fontSize: 20, lineHeight: 22 }} color={c.good}>{it.learned}</Hand> : null}
               </View>
               <Button small kind="ghost" label="Clear" onPress={() => set((l) => ({ items: l.items.filter((x) => x.id !== it.id) }))} accessibilityLabel={`Clear from Your week: ${it.text}. The stamp stays in your Field Book.`} />

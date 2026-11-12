@@ -5,6 +5,7 @@ import Animated from "react-native-reanimated";
 import type { Quiz as Q } from "@/domain/types";
 import { Body, Button, Eyebrow, H2, H3, tap } from "@/ui/kit";
 import { useMotion } from "@/ui/motion";
+import { ScribbleTick } from "@/ui/ScribbleTick";
 import { useTheme } from "@/ui/theme";
 import { F, radius, space } from "@/ui/tokens";
 import { announce } from "./ui";
@@ -65,9 +66,10 @@ export function Quiz({ questions, onDone, best }: { questions: Q[]; onDone: (sco
             return (
               <Pressable key={k} accessibilityRole="radio" accessibilityState={{ selected: isPick, disabled: answered }} accessibilityLabel={`${o}${answered && isAns ? ", correct answer" : answered && isPick ? ", your answer, incorrect" : ""}`} onPress={() => choose(k)}
                 style={({ pressed }) => ({ minHeight: 52, flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 14, paddingVertical: 10, borderRadius: radius.m, borderWidth: 1.5, borderColor: border, backgroundColor: bg, opacity: answered && !isAns && !isPick ? 0.55 : pressed ? 0.85 : 1, transform: [{ scale: pressed && !answered ? 0.99 : 1 }] })}>
-                <View style={{ width: 26, height: 26, borderRadius: 13, borderWidth: 1.5, borderColor: answered && (isAns || isPick) ? border : c.soft, backgroundColor: answered && isAns ? c.good : answered && isPick ? c.warn : "transparent", alignItems: "center", justifyContent: "center" }}>
-                  <Text style={{ fontFamily: F.mono, fontSize: 12, color: answered && (isAns || isPick) ? c.bg : c.soft }}>{answered && isAns ? "✓" : answered && isPick ? "✕" : String.fromCharCode(65 + k)}</Text>
-                </View>
+                {/* Your answer is hand-shaded and ticked (or crossed); the right answer you missed gets a plain tick. */}
+                <ScribbleTick shape="circle" size={30} seed={k * 7 + 3} checked={answered && (isAns || isPick)} mark={isPick && !isAns ? "cross" : "tick"} shade={isPick} color={isAns ? c.good : c.warn}>
+                  <Text style={{ fontFamily: F.mono, fontSize: 12, color: c.soft }}>{String.fromCharCode(65 + k)}</Text>
+                </ScribbleTick>
                 <Text style={{ flex: 1, fontFamily: F.body, fontSize: 16, lineHeight: 22, color: c.ink }}>{o}</Text>
               </Pressable>
             );

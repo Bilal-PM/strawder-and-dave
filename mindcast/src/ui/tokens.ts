@@ -21,6 +21,8 @@ export type Palette = {
   flap: string;
   flapBg: string;
   onAccent: string;
+  rule: string; // exercise-book rules on writing surfaces
+  margin: string; // exercise-book margin line
 };
 
 export const light: Palette = {
@@ -40,6 +42,8 @@ export const light: Palette = {
   flap: "#F5C451",
   flapBg: "#22282F",
   onAccent: "#FFFFFF",
+  rule: "#CFDBF0",
+  margin: "#E9B4A8",
 };
 
 export const dark: Palette = {
@@ -59,6 +63,8 @@ export const dark: Palette = {
   flap: "#F5C451",
   flapBg: "#1B2027",
   onAccent: "#121519",
+  rule: "#27324A",
+  margin: "#5A3631",
 };
 
 /** Font family names, as registered with expo-font in the root layout. */

@@ -11,13 +11,16 @@ import { resolveLink, type Topic } from "../services/links";
 
 export const go = (href: string) => router.push(href as Href);
 
-/** A tappable "learn more" chip that resolves a topic to a lesson or season. Renders nothing if it cannot. */
+/**
+ * A tappable "learn more" chip that resolves a topic to a lesson or season. Renders nothing if it cannot.
+ * Ink by default: accent blue is kept for what is selected, the primary action and things completed.
+ */
 export function TopicChip({ topic, prefix, color, onDark }: { topic: Topic | null | undefined; prefix?: string; color?: string; onDark?: boolean }) {
   const { c } = useTheme();
   if (!topic) return null;
   const link = resolveLink(topic, pack);
   if (!link) return null;
-  const col = color ?? (onDark ? "#F5C451" : c.accent);
+  const col = color ?? (onDark ? "#A3ABB5" : c.ink);
   const text = `${prefix ? `${prefix} ` : ""}${link.label}`;
   return (
     <Pressable
@@ -46,7 +49,7 @@ export function Sources({ sources, onDark }: { sources: Source[]; onDark?: boole
         const label = `${s.label}${s.where ? `, ${s.where}` : ""}`;
         return s.url ? (
           <Pressable key={i} accessibilityRole="link" accessibilityLabel={`Source: ${label}. Opens in your browser.`} onPress={() => Linking.openURL(s.url!).catch(() => {})} hitSlop={4}>
-            <Small color={c.accent} style={{ textDecorationLine: "underline" }}>{label}</Small>
+            <Small color={onDark ? "#ECEAE4" : c.ink} style={{ textDecorationLine: "underline", textDecorationColor: col }}>{label}</Small>
           </Pressable>
         ) : (
           <Small key={i} color={col}>{label}</Small>

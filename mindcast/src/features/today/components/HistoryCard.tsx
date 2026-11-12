@@ -1,11 +1,14 @@
-/** Railway history: today's event, or the next one coming up, with hand-drawn art and a linked lesson. */
+/**
+ * Railway history: today's event, or the next one coming up, with hand-drawn art and a linked lesson.
+ * Tertiary on Today, so it sits flat on the paper under a hairline, with no card.
+ */
 import React, { useMemo, useState } from "react";
 import { View } from "react-native";
 import { pack } from "@/domain";
-import { Body, Card, Eyebrow, H3, Mono, Row, Button, usePal } from "@/ui/kit";
+import { Body, Eyebrow, H3, Mono, Row, Button, usePal } from "@/ui/kit";
 import { Sketch } from "@/ui/sketch";
 import { useTheme } from "@/ui/theme";
-import { radius } from "@/ui/tokens";
+import { radius, space } from "@/ui/tokens";
 import { paintHistory } from "../art";
 import { calendarOrder, eventDate, pickHistory, whenLabel } from "../services/history";
 import { topicFromLinkString } from "../services/links";
@@ -23,7 +26,7 @@ export function HistoryCard() {
   const step = (d: number) => setI((v) => (v + d + ordered.length) % ordered.length);
 
   return (
-    <Card>
+    <View style={{ gap: space.s, borderTopWidth: 1, borderTopColor: c.line, paddingTop: space.l, marginTop: space.s }}>
       <Eyebrow color={i === start?.index && start.when === "today" ? c.ppe : undefined}>{whenLabel(e, new Date())}</Eyebrow>
       <View style={{ borderRadius: radius.m, overflow: "hidden", backgroundColor: c.bg }}>
         <Sketch w={320} h={170} pal={pal} deps={[e.id, e.art, c.accent]} paint={(p) => paintHistory(p, e.art, c)} accessibilityLabel={`Drawing: ${e.art}`} />
@@ -40,6 +43,6 @@ export function HistoryCard() {
           <Button small kind="ghost" label="Later ›" onPress={() => step(1)} accessibilityLabel="Next history event" />
         </Row>
       )}
-    </Card>
+    </View>
   );
 }

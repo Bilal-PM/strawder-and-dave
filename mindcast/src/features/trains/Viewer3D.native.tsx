@@ -29,8 +29,8 @@ export default function Viewer3D(props: ViewerProps) {
   return (
     <ViewerFrame
       {...props}
-      renderCanvas={(a) => (
-        <Canvas flat frameloop="demand" camera={{ fov: 30, near: 0.1, far: 400, position: [12, 6, 20] }} style={{ flex: 1 }}>
+      renderCanvas={({ onReady, ...a }) => (
+        <Canvas onCreated={onReady} flat frameloop="demand" camera={{ fov: 30, near: 0.1, far: 400, position: [12, 6, 20] }} style={{ flex: 1 }}>
           <Scene {...a} />
         </Canvas>
       )}

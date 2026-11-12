@@ -2,17 +2,20 @@ import { router } from "expo-router";
 import { useState } from "react";
 import { View } from "react-native";
 import Animated from "react-native-reanimated";
+import { Ticket } from "@/features/pass/Ticket";
 import { useStore } from "@/state/store";
 import { Body, BodyB, Button, Card, Chip, Enter, Eyebrow, H1, H3, Input, Row, Screen, Small } from "@/ui/kit";
 import { useMotion } from "@/ui/motion";
 import { useTheme } from "@/ui/theme";
 
-const TIERS = [
-  { name: "Free, always", price: "£0", tone: "good", items: ["Every lesson, Mindcast and field note", "Free rewards on every season line", "Basic crew kit and the station cat", "Departure board, Field Book and Your week"] },
-  { name: "Single ticket", price: "£1 per item", tone: "accent", items: ["One piece of kit, one companion or one ticket design", "Yours to keep, no subscription"] },
-  { name: "Season Pass", price: "£5 per season", tone: "pass", items: ["A Season Pass reward at every stop", "Extra crew kit and ticket designs", "Your season certificate", "Finish the line to earn credit for next season"] },
-  { name: "Crew Pass", price: "For teams", tone: "accent", items: ["The Season Pass for a whole team", "A team board for onboarding new joiners", "Progress for managers"] },
-  { name: "Sponsor a learner", price: "For companies", tone: "ppe", items: ["Gift passes to apprentices and schools", "A reach report for social value bids"] },
+const FREE = { name: "Free, always", price: "£0", items: ["Every lesson, Mindcast and field note", "Free rewards on every season line", "Basic crew kit and the station cat", "Departure board, Field Book and Your week"] };
+
+/** Paid options, drawn as tickets. Prices are the ones the app states; teams and companies have none yet. */
+const TICKETS = [
+  { kind: "Adult · Single", name: "Single ticket", price: "£1", per: "per item", items: ["One piece of kit, one companion or one ticket design", "Yours to keep, no subscription"] },
+  { kind: "Adult · Season", name: "Season Pass", price: "£5", per: "per season", hero: true, items: ["A Season Pass reward at every stop", "Extra crew kit and ticket designs", "Your season certificate", "Finish the line to earn credit for next season"] },
+  { kind: "Group · Season", name: "Crew Pass", price: "For teams", items: ["The Season Pass for a whole team", "A team board for onboarding new joiners", "Progress for managers"] },
+  { kind: "Gift · Season", name: "Sponsor a learner", price: "For companies", items: ["Gift passes to apprentices and schools", "A reach report for social value bids"] },
 ] as const;
 
 export default function Pass() {
@@ -27,12 +30,15 @@ export default function Pass() {
       <Row style={{ justifyContent: "space-between" }}><Eyebrow>Season Pass</Eyebrow><Button label="Close" kind="ghost" small onPress={() => router.back()} /></Row>
       <H1>The knowledge is free. The extras are yours.</H1>
       <Body color={c.soft}>Lessons, Mindcasts and safety content are never behind a paywall. Paid options are for kit, companions, tools and tickets that help you act on what you learn.</Body>
-      {TIERS.map((t, i) => (
-        <Enter key={t.name} i={i}>
-          <Card tone={t.tone === "pass" ? "pass" : undefined}>
-            <Row style={{ justifyContent: "space-between" }}><H3>{t.name}</H3><BodyB>{t.price}</BodyB></Row>
-            {t.items.map((it) => <Small key={it} color={c.soft}>• {it}</Small>)}
-          </Card>
+      <Enter i={0}>
+        <Card>
+          <Row style={{ justifyContent: "space-between" }}><H3>{FREE.name}</H3><BodyB>{FREE.price}</BodyB></Row>
+          {FREE.items.map((it) => <Small key={it} color={c.soft}>• {it}</Small>)}
+        </Card>
+      </Enter>
+      {TICKETS.map((t, i) => (
+        <Enter key={t.name} i={i + 1}>
+          <Ticket kind={t.kind} name={t.name} price={t.price} per={"per" in t ? t.per : undefined} items={t.items} hero={"hero" in t && t.hero} />
         </Enter>
       ))}
       <Card tone="sunk">

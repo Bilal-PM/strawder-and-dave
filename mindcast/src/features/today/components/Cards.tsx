@@ -47,7 +47,7 @@ export function NextStopCard() {
     );
   }
   return (
-    <Card tone="pass" onPress={() => go(`/lesson/${lesson.id}`)} accessibilityLabel={`Next stop: stop ${lesson.stop}, ${lesson.title}. ${lesson.hook}`}>
+    <Card primary onPress={() => go(`/lesson/${lesson.id}`)} accessibilityLabel={`Next stop: stop ${lesson.stop}, ${lesson.title}. ${lesson.hook}`}>
       <Eyebrow>Next stop{s ? ` · Season ${s.n}: ${s.title}` : ""}</Eyebrow>
       <Row gap={space.m} style={{ alignItems: "flex-start" }}>
         <View style={{ width: 52, height: 52, borderRadius: 26, borderWidth: 2, borderColor: c.ink, alignItems: "center", justifyContent: "center", backgroundColor: c.pass }}>
